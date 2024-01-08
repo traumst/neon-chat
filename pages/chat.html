@@ -8,7 +8,13 @@
     <div>
         <ul>
             {{ range .Messages }}
-            <li><strong>{{ .Author }}:</strong> {{ .Text }}</li>
+            <li>
+                <strong>{{ .Author }}:</strong> {{ .Text }}
+                <form action="/delete" method="POST" style="display: inline;">
+                    <input type="hidden" name="id" value="{{ .ID }}">
+                    <button type="submit">Delete</button>
+                </form>
+            </li>
             {{ end }}
         </ul>
     </div>

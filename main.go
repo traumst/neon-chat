@@ -10,7 +10,7 @@ import (
 )
 
 type PageData struct {
-	Messages []*Message
+	Messages []Message
 	Username string
 }
 
@@ -22,17 +22,19 @@ type Message struct {
 
 type MessageStore struct {
 	mu       sync.Mutex
-	messages []*Message
+	messages []Message
+	nextID   int
 }
 
-func (store *MessageStore) Add(message *Message) {
+func (store *MessageStore) Add(message Message) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
-	message.ID = len(store.messages)
+	store.nextID += 1
+	message.ID = store.nextID
 	store.messages = append(store.messages, message)
 }
 
-func (store *MessageStore) Get() []*Message {
+func (store *MessageStore) Get() []Message {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 	return store.messages
@@ -41,7 +43,12 @@ func (store *MessageStore) Get() []*Message {
 func (store *MessageStore) Delete(id int) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
-	store.messages[id] = nil
+	for i, message := range store.messages {
+		if message.ID == id {
+			store.messages = append(store.messages[:i], store.messages[i+1:]...)
+			break
+		}
+	}
 }
 
 var messageStore = MessageStore{}
@@ -94,7 +101,7 @@ func messageHandler(w http.ResponseWriter, r *http.Request) {
 		author := usernameCookie.Value
 		text := template.HTMLEscapeString(r.FormValue("text"))
 		if text != "" && author != "" {
-			messageStore.Add(&Message{Author: author, Text: text})
+			messageStore.Add(Message{Author: author, Text: text})
 		}
 	}
 	// Redirect back to the main page
