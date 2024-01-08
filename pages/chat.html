@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>min</title>
+</head>
+<body>
+    <h1>Welcome to minChat, {{ .Username }}</h1>
+    <div>
+        <ul>
+            {{ range .Messages }}
+            <li><strong>{{ .Author }}:</strong> {{ .Text }}</li>
+            {{ end }}
+        </ul>
+    </div>
+    <form action="/message" method="POST">
+        <input type="text" name="text" placeholder="...type here...">
+        <button type="submit">Send</button>
+    </form>
+</body>
+</html>
