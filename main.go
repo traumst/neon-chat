@@ -5,69 +5,10 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
+
+	"go.chat/src"
 )
-
-type PageData struct {
-	Messages []Message
-	Username string
-}
-
-type Message struct {
-	ID     int
-	Author string
-	Text   string
-}
-
-type MessageStore struct {
-	mu       sync.Mutex
-	messages []Message
-	nextID   int
-}
-
-func (store *MessageStore) Add(message Message) {
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	store.nextID += 1
-	message.ID = store.nextID
-	store.messages = append(store.messages, message)
-}
-
-func (store *MessageStore) Get() []Message {
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	return store.messages
-}
-
-func (store *MessageStore) Delete(id int) {
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	for i, message := range store.messages {
-		if message.ID == id {
-			store.messages = append(store.messages[:i], store.messages[i+1:]...)
-			break
-		}
-	}
-}
-
-var messageStore = MessageStore{}
-
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	usernameCookie, err := r.Cookie("username")
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusFound)
-		return
-	}
-
-	data := PageData{
-		Messages: messageStore.Get(),
-		Username: usernameCookie.Value,
-	}
-
-	tmpl := template.Must(template.ParseFiles("pages/chat.html"))
-	tmpl.Execute(w, data)
-}
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
@@ -91,6 +32,29 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	loginTmpl.Execute(w, nil)
 }
 
+var messageStore = src.MessageStore{}
+
+type PageData struct {
+	Messages []src.Message
+	Username string
+}
+
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	usernameCookie, err := r.Cookie("username")
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
+	data := PageData{
+		Messages: messageStore.Get(),
+		Username: usernameCookie.Value,
+	}
+
+	tmpl := template.Must(template.ParseFiles("pages/chat.html"))
+	tmpl.Execute(w, data)
+}
+
 func messageHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		usernameCookie, err := r.Cookie("username")
@@ -101,7 +65,7 @@ func messageHandler(w http.ResponseWriter, r *http.Request) {
 		author := usernameCookie.Value
 		text := template.HTMLEscapeString(r.FormValue("text"))
 		if text != "" && author != "" {
-			messageStore.Add(Message{Author: author, Text: text})
+			messageStore.Add(src.Message{Author: author, Text: text})
 		}
 	}
 	// Redirect back to the main page
