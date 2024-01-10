@@ -8,10 +8,13 @@ import (
 )
 
 func ControllerSetup() {
-	http.HandleFunc("/", controllers.HomeHandler)
-	http.HandleFunc("/login", controllers.LoginHandler)
-	http.HandleFunc("/message", controllers.AddMessageHandler)
-	http.HandleFunc("/message/delete", controllers.DeleteMessageHandler)
+	http.HandleFunc("/", controllers.Home)
+	http.HandleFunc("/login", controllers.Login)
+	//http.HandleFunc("/logout", controllers.LogoutHandler)
+	http.HandleFunc("/openchat", controllers.OpenChat)
+	http.HandleFunc("/newchat", controllers.AddChat)
+	http.HandleFunc("/message", controllers.AddMessage)
+	http.HandleFunc("/message/delete", controllers.DeleteMessage)
 }
 
 func main() {

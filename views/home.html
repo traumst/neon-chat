@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            height: 95%;
+            width: 90%;
+            margin: auto;
+        }
+        .chats {
+            width: 30%;
+        }
+        .chat-details {
+            width: 70%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- List of chats on the left -->
+        <div class="chats">
+            <ul>
+                {{ range .Chats }}
+                <li>
+                    <a href="/openchat/{{ .ID }}">{{ .Name }}</a>
+                </li>
+                {{ end }}
+            </ul>
+        </div>
+
+        <!-- Chat details on the right -->
+        <div class="chat-details">
+            <!-- Top row: chat name and users -->
+            {{ with .OpenChat }}
+            <div>
+                <h2>{{ .Name }}</h2>
+                <p>Users: {{ range .Users }}{{ . }}, {{ end }}</p>
+            </div>
+
+            <!-- Message history -->
+            <div>
+                <ul>
+                    {{ range .history.GetMessages }}
+                    <li>
+                        <strong>{{ .Author }}:</strong> {{ .Text }}
+                        <form action="/message/delete" method="POST" style="display: inline;">
+                            <input type="hidden" name="id" value="{{ .ID }}">
+                            <button type="submit">Delete</button>
+                        </form>
+                    </li>
+                    {{ end }}
+                </ul>
+            </div>
+
+            <!-- Send message form -->
+            <form action="/message" method="POST">
+                <input type="hidden" name="chatId" value="{{ .ID }}">
+                <input type="text" name="text" placeholder="...type here...">
+                <button type="submit">Send</button>
+            </form>
+            {{ else }}
+            <!-- No chat selected -->
+            <div>
+                <form action="/newchat" method="POST">
+                    <input type="text" name="chatName" placeholder="Enter chat name...">
+                    <button type="submit">Open new chat</button>
+                </form>
+            </div>
+            {{ end }}
+        </div>
+    </div>
+</body>
+</html>

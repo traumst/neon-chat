@@ -4,13 +4,12 @@
     <title>min</title>
 </head>
 <body>
-    <h1>Welcome to minChat, {{ .Username }}</h1>
     <div>
         <ul>
             {{ range .Messages }}
             <li>
                 <strong>{{ .Author }}:</strong> {{ .Text }}
-                <form action="/delete" method="POST" style="display: inline;">
+                <form action="/message/delete" method="POST" style="display: inline;">
                     <input type="hidden" name="id" value="{{ .ID }}">
                     <button type="submit">Delete</button>
                 </form>

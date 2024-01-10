@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		username := r.FormValue("username")
 		if username != "" {

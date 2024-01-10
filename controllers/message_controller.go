@@ -8,7 +8,7 @@ import (
 	"go.chat/models"
 )
 
-func AddMessageHandler(w http.ResponseWriter, r *http.Request) {
+func AddMessage(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		usernameCookie, err := r.Cookie("username")
 		if err != nil {
@@ -28,7 +28,7 @@ func AddMessageHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func DeleteMessageHandler(w http.ResponseWriter, r *http.Request) {
+func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		id, err := strconv.Atoi(r.FormValue("id"))
 		if err != nil {

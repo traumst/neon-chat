@@ -7,7 +7,7 @@ import (
 	"go.chat/models"
 )
 
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
+func Home(w http.ResponseWriter, r *http.Request) {
 	usernameCookie, err := r.Cookie("username")
 	if err != nil {
 		http.Redirect(w, r, "/login", http.StatusFound)
