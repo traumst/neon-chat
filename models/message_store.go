@@ -1,12 +1,6 @@
-package src
+package models
 
 import "sync"
-
-type Message struct {
-	ID     int
-	Author string
-	Text   string
-}
 
 type MessageStore struct {
 	mu       sync.Mutex
