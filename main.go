@@ -2,22 +2,12 @@ package main
 
 import (
 	"log"
-	"math/rand"
 	"net/http"
 	"time"
 
 	"go.chat/controllers"
+	"go.chat/utils"
 )
-
-const letterBytes = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-func RandStringBytes(n int) string {
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
-	}
-	return string(b)
-}
 
 type Middleware func(http.Handler) http.Handler
 
@@ -30,24 +20,26 @@ func ChainMiddleware(h http.Handler, middleware ...Middleware) http.Handler {
 
 func LoggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		reqId := RandStringBytes(5)
+		reqId := utils.RandStringBytes(5)
 		r.Header.Set("X-Request-Id", reqId)
 		startTime := time.Now()
 		log.Printf("--%s-> %s %s", reqId, r.Method, r.RequestURI)
-		next.ServeHTTP(w, r)
-		log.Printf("<-%s-- %s %s %v", reqId, r.Method, r.RequestURI, time.Since(startTime))
+		rec := utils.StatefulWriter{ResponseWriter: w}
+		next.ServeHTTP(&rec, r)
+		log.Printf("<-%s-- %s %s %v, status_code:[%d]",
+			reqId, r.Method, r.RequestURI, time.Since(startTime), rec.Status())
 	})
 }
 
 func ControllerSetup() {
 	middleware := []Middleware{LoggerMiddleware}
 
+	http.Handle("/login", http.HandlerFunc(controllers.Login))
+
 	http.Handle("/", ChainMiddleware(
 		http.HandlerFunc(controllers.Home), middleware...))
 	http.Handle("/favicon.ico", ChainMiddleware(
 		http.HandlerFunc(controllers.FavIcon), middleware...))
-	http.Handle("/login", ChainMiddleware(
-		http.HandlerFunc(controllers.Login), middleware...))
 	http.Handle("/chat", ChainMiddleware(
 		http.HandlerFunc(controllers.AddChat), middleware...))
 	http.Handle("/chat/", ChainMiddleware(

@@ -22,16 +22,18 @@ func Login(w http.ResponseWriter, r *http.Request) {
 func SignIn(w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> SignIn\n", reqId(r))
 	username := r.FormValue("username")
-	if username != "" {
-		http.SetCookie(w, &http.Cookie{
-			Name:    "username",
-			Value:   username,
-			Expires: time.Now().Add(8 * time.Hour),
-		})
-		http.Redirect(w, r, "/", http.StatusFound)
+	if username == "" {
+		log.Printf("--%s-> SignIn ERROR username\n", reqId(r))
+		http.Redirect(w, r, "/login", http.StatusBadRequest)
 		return
 	}
 
+	http.SetCookie(w, &http.Cookie{
+		Name:    "username",
+		Value:   username,
+		Expires: time.Now().Add(8 * time.Hour),
+	})
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func RenderLogin(w http.ResponseWriter, r *http.Request) {

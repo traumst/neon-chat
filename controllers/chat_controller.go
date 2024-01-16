@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.chat/handlers"
+	"go.chat/utils"
 )
 
 func Chat(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +39,7 @@ func OpenChat(w http.ResponseWriter, r *http.Request) {
 	chatID, err := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/chat/"))
 	if err != nil {
 		log.Printf("--%s-> OpenChat ERROR id\n", reqId(r))
-		handlers.SendBack(w, r)
+		utils.SendBack(w, r)
 		return
 	}
 

@@ -12,7 +12,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- List of chats on the left -->
         <div class="left-panel" style="border: 2px solid green;">
             <div class="active-user">
                 <p>Active user: {{ .ActiveUser }}</p>
@@ -39,9 +38,14 @@
             </div>
         </div>
 
-        <!-- Chat details on the right -->
         <div class="right-panel" style="border: 2px solid red;">
-            <div class="open-chat">...</div>        
+            <div class="open-chat">
+                {{ with .OpenChat }}
+                    {{ template "chat.html" . }}
+                {{ else }}
+                    Loading messages...
+                {{ end }}
+            </div>
         </div>
     </div>
 </body>

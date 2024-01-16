@@ -13,8 +13,9 @@ type Home struct {
 	ActiveUser string
 }
 
+var homeTmpl = template.Must(template.ParseFiles("views/home.html", "views/chat.html"))
+
 func (h *Home) GetHTML() (string, error) {
-	var homeTmpl = template.Must(template.ParseFiles("views/home.html"))
 	var buf bytes.Buffer
 	err := homeTmpl.Execute(&buf, h)
 	if err != nil {

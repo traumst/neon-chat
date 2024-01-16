@@ -4,15 +4,16 @@ import (
 	"log"
 	"net/http"
 
-	"go.chat/handlers"
 	"go.chat/models"
+	"go.chat/utils"
 )
 
 func Home(w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Home", reqId(r))
-	user, err := handlers.GetCurrentUser(r)
+	user, err := utils.GetCurrentUser(r)
 	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusFound)
+		log.Printf("--%s-> Home WARN user, %s\n", reqId(r), err)
+		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
 
@@ -24,11 +25,10 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	html, err := home.GetHTML()
 	if err != nil {
 		log.Printf("--%s-> Home ERROR, %s\n", reqId(r), err)
-		http.Redirect(w, r, "/login", http.StatusFound)
+		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }
 
