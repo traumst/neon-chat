@@ -2,27 +2,40 @@ package controllers
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 	"time"
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		username := r.FormValue("username")
-		if username != "" {
-			// Set a cookie with the username as value
-			http.SetCookie(w, &http.Cookie{
-				Name:    "username",
-				Value:   username,
-				Expires: time.Now().Add(8 * time.Hour),
-			})
+	log.Printf("--%s-> Login\n", reqId(r))
+	switch r.Method {
+	case "GET":
+		RenderLogin(w, r)
+	case "POST":
+		SignIn(w, r)
+	default:
+		http.Redirect(w, r, "/", http.StatusBadRequest)
+	}
+}
 
-			// Redirect to the chat page
-			http.Redirect(w, r, "/", http.StatusFound)
-			return
-		}
+func SignIn(w http.ResponseWriter, r *http.Request) {
+	log.Printf("--%s-> SignIn\n", reqId(r))
+	username := r.FormValue("username")
+	if username != "" {
+		http.SetCookie(w, &http.Cookie{
+			Name:    "username",
+			Value:   username,
+			Expires: time.Now().Add(8 * time.Hour),
+		})
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
 	}
 
+}
+
+func RenderLogin(w http.ResponseWriter, r *http.Request) {
+	log.Printf("--%s-> RenderLogin\n", reqId(r))
 	loginTmpl, _ := template.ParseFiles("views/login.html")
 	loginTmpl.Execute(w, nil)
 }

@@ -1,1 +1,5 @@
 TODO
+go.sum
+.vscode/settings.json
+tmp/build-errors.log
+tmp/main

@@ -1,0 +1,7 @@
+<div class="chat-message">
+    <strong>{{ .Author }}:</strong> {{ .Text }}
+    <form hx-post="/message/delete" hx-trigger="submit" hx-swap="outerHTML" style="display: inline;"></form>
+        <input type="hidden" name="id" value="{{ .ID }}">
+        <button type="submit">Delete</button>
+    </form>
+</div>

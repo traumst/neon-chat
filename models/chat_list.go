@@ -1,6 +1,8 @@
 package models
 
-import "sync"
+import (
+	"sync"
+)
 
 type ChatList struct {
 	mu     sync.Mutex
@@ -9,10 +11,9 @@ type ChatList struct {
 	nextID int
 }
 
-func (h *ChatList) AddChat(owner string, name string) {
+func (h *ChatList) AddChat(owner string, name string) int {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	h.nextID += 1
 	chat := Chat{
 		ID:      h.nextID,
 		Name:    name,
@@ -21,6 +22,15 @@ func (h *ChatList) AddChat(owner string, name string) {
 		history: MessageStore{},
 	}
 	h.chats = append(h.chats, &chat)
+	h.nextID += 1
+	return chat.ID
+}
+
+func (h *ChatList) OpenChat(id int) *Chat {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.open = h.chats[id]
+	return h.open
 }
 
 func (h *ChatList) GetOpenChat() *Chat {
@@ -29,19 +39,10 @@ func (h *ChatList) GetOpenChat() *Chat {
 	return h.open
 }
 
-func (h *ChatList) GetChatsCollapsed() []ChatCollapsed {
+func (h *ChatList) GetChats() []*Chat {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-
-	collapsed := []ChatCollapsed{}
-	for _, chat := range h.chats {
-		collapsed = append(collapsed, ChatCollapsed{
-			ID:    chat.ID,
-			Name:  chat.Name,
-			Owner: chat.Owner,
-		})
-	}
-	return collapsed
+	return h.chats
 }
 
 func (h *ChatList) DeleteChat(index int) {

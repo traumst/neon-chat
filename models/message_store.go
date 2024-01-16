@@ -8,12 +8,13 @@ type MessageStore struct {
 	nextID   int
 }
 
-func (store *MessageStore) Add(message Message) {
+func (store *MessageStore) Add(message Message) Message {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 	store.nextID += 1
 	message.ID = store.nextID
 	store.messages = append(store.messages, message)
+	return message
 }
 
 func (store *MessageStore) Get() []Message {

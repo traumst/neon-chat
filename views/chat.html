@@ -1,25 +1,26 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>min</title>
-</head>
-<body>
-    <div>
-        <ul>
-            {{ range .Messages }}
-            <li>
-                <strong>{{ .Author }}:</strong> {{ .Text }}
-                <form action="/message/delete" method="POST" style="display: inline;">
-                    <input type="hidden" name="id" value="{{ .ID }}">
-                    <button type="submit">Delete</button>
-                </form>
-            </li>
-            {{ end }}
-        </ul>
-    </div>
-    <form action="/message" method="POST">
-        <input type="text" name="text" placeholder="...type here...">
+<div class="open-chat-name" style="border: 2px solid blue;">
+    <h2>chat {{ .Name }}</h2>
+    <p>Users: {{ range .GetUsers }}{{ . }}, {{ end }}</p>
+</div>
+
+<!-- Message history -->
+<div class="open-chat-history" style="border: 2px solid gray;">
+    <ul id="message-list">
+        {{ range .GetMessages }}
+        <li>
+            <strong>{{ .GetHTML }}
+            <!-- TODO -->
+            <!-- <form action="/message/delete" method="POST" style="display: inline;">
+                <input type="hidden" name="id" value="{{ .ID }}">
+                <button type="submit">Delete</button>
+            </form> -->
+        </li>
+        {{ end }}
+    </ul>
+
+    <form action="/message" method="POST" hx-post="/message" hx-swap="beforeend" hx-target="#message-list">
+        <input type="hidden" name="chatId" value="{{ .ID }}">
+        <input type="text" name="text" placeholder="...type message here...">
         <button type="submit">Send</button>
     </form>
-</body>
-</html>
+</div>
