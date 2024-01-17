@@ -1,4 +1,4 @@
-// package models
+package models
 
 type HTML interface {
 	GetHTML() (string, error)

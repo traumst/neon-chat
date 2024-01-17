@@ -3,3 +3,5 @@ go.sum
 .vscode/settings.json
 tmp/build-errors.log
 tmp/main
+script/htmx.min.js
+script/htmx.1.9.10.min.js

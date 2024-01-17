@@ -17,10 +17,17 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	openChat, err := chats.OpenTemplate(user)
+	if err == nil {
+		log.Printf("--%s-> Home DEBUG, user[%s] has chat[%d] open\n", reqId(r), user, openChat.Chat.ID)
+	} else {
+		log.Printf("--%s-> Home DEBUG, user[%s] has no open chat\n", reqId(r), user)
+	}
+
 	home := models.Home{
-		OpenChat:   chats.GetOpenChat(),
-		Chats:      chats.GetChats(),
-		ActiveUser: user,
+		OpenTemplate: openChat,
+		Chats:        chats.GetChats(user),
+		ActiveUser:   user,
 	}
 	html, err := home.GetHTML()
 	if err != nil {
@@ -29,10 +36,6 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("--%s-> Home TRACE, user[%s] gets content\n", reqId(r), user)
 	w.Write([]byte(html))
-}
-
-func FavIcon(w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> FavIcon", reqId(r))
-	http.ServeFile(w, r, "icons/favicon.ico")
 }

@@ -2,7 +2,7 @@ package utils
 
 import "net/http"
 
-func SendBack(w http.ResponseWriter, r *http.Request) {
+func SendBack(w http.ResponseWriter, r *http.Request, status int) {
 	referer := r.Header.Get("Referer")
-	http.Redirect(w, r, referer, http.StatusBadRequest)
+	http.Redirect(w, r, referer, status)
 }

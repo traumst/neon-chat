@@ -1,6 +1,9 @@
 package models
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 type MessageStore struct {
 	mu       sync.Mutex
@@ -17,13 +20,27 @@ func (store *MessageStore) Add(message Message) Message {
 	return message
 }
 
-func (store *MessageStore) Get() []Message {
+func (store *MessageStore) GetAll() []Message {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 	return store.messages
 }
 
-func (store *MessageStore) Delete(id int) {
+func (store *MessageStore) Get(id int) (*Message, error) {
+	if id < 0 || id >= len(store.messages) {
+		return nil, fmt.Errorf("message not found")
+	}
+
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	return &store.messages[id], nil
+}
+
+func (store *MessageStore) Delete(id int) error {
+	if id < 0 || id >= len(store.messages) {
+		return fmt.Errorf("message not found")
+	}
+
 	store.mu.Lock()
 	defer store.mu.Unlock()
 	for i, message := range store.messages {
@@ -32,4 +49,5 @@ func (store *MessageStore) Delete(id int) {
 			break
 		}
 	}
+	return nil
 }

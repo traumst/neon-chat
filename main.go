@@ -34,12 +34,13 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 func ControllerSetup() {
 	middleware := []Middleware{LoggerMiddleware}
 
+	http.Handle("/favicon.ico", http.HandlerFunc(controllers.FavIcon))
 	http.Handle("/login", http.HandlerFunc(controllers.Login))
 
 	http.Handle("/", ChainMiddleware(
 		http.HandlerFunc(controllers.Home), middleware...))
-	http.Handle("/favicon.ico", ChainMiddleware(
-		http.HandlerFunc(controllers.FavIcon), middleware...))
+	http.Handle("/script/", ChainMiddleware(
+		http.HandlerFunc(controllers.ServeFile), middleware...))
 	http.Handle("/chat", ChainMiddleware(
 		http.HandlerFunc(controllers.AddChat), middleware...))
 	http.Handle("/chat/", ChainMiddleware(

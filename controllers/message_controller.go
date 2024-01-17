@@ -29,14 +29,19 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusBadRequest)
 	}
 
-	openChat := chats.GetOpenChat()
+	openChat, err := chats.OpenTemplate(author)
 	if openChat == nil {
 		log.Printf("--%s-> AddMessage ERROR openChat\n", reqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	msg := openChat.AddMessage(models.Message{ID: 0, Author: author, Text: text})
+	msg, err := openChat.Chat.AddMessage(author, models.Message{ID: 0, Author: author, Text: text})
+	if err != nil {
+		log.Printf("--%s-> AddMessage ERROR add message, %s\n", reqId(r), err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	html, err := msg.GetHTML()
 	if err != nil {
 		log.Printf("<-%s-- AddMessage ERROR html, %s\n", reqId(r), err)
@@ -47,35 +52,9 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(html))
 }
 
-func GetMessage(w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> GetMessage\n", reqId(r))
-	_, err := utils.GetCurrentUser(r)
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusUnauthorized)
-		return
-	}
-
-	msgId, err := getMessageId(r)
-	if err != nil {
-		log.Printf("--%s-> GetMessage ERROR id, %s\n", reqId(r), err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	msg := chats.GetOpenChat().GetMessage(msgId)
-	html, err := msg.GetHTML()
-	if err != nil {
-		log.Printf("<-%s-- GetMessage ERROR html, %s\n", reqId(r), err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.Write([]byte(html))
-}
-
 func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> DeleteMessage\n", reqId(r))
-	_, err := utils.GetCurrentUser(r)
+	author, err := utils.GetCurrentUser(r)
 	if err != nil {
 		http.Redirect(w, r, "/login", http.StatusUnauthorized)
 		return
@@ -91,11 +70,11 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	chat := chats.GetOpenChat()
-	if chat == nil {
+	openChat, err := chats.OpenTemplate(author)
+	if openChat == nil {
 		return
 	}
-	chat.RemoveMessage(id)
+	openChat.Chat.RemoveMessage(author, id)
 
 	w.Write(make([]byte, 0))
 }

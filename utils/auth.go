@@ -14,13 +14,13 @@ func (e *AuthError) Error() string {
 	return e.msg
 }
 
-const usernameCookie = "username"
+type Auth struct{}
 
 func AuthUser(w http.ResponseWriter, r *http.Request) (string, error) {
-	username := r.FormValue(usernameCookie)
+	username := r.FormValue(UsernameCookie)
 	if username != "" {
 		http.SetCookie(w, &http.Cookie{
-			Name:    usernameCookie,
+			Name:    UsernameCookie,
 			Value:   username,
 			Expires: time.Now().Add(8 * time.Hour),
 		})
@@ -30,7 +30,7 @@ func AuthUser(w http.ResponseWriter, r *http.Request) (string, error) {
 }
 
 func GetCurrentUser(r *http.Request) (string, error) {
-	username, err := r.Cookie(usernameCookie)
+	username, err := r.Cookie(UsernameCookie)
 	if err != nil {
 		return "ERROR", &AuthError{fmt.Sprintf("UNAUTHORIZED %s", err.Error())}
 	}

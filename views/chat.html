@@ -1,18 +1,34 @@
 <div class="open-chat-name" style="border: 2px solid blue;">
-    <h2>chat {{ .Name }}</h2>
-    <p>Users: {{ range .GetUsers }} {{ . }}, {{ end }}</p>
+    <h2>chat {{ .Chat.Name }}</h2>
+    <p>Users: 
+        {{ range .Chat.GetUsers .ActiveUser }} 
+            {{ . }}, 
+        {{ end }}
+    </p>
 </div>
+
+<div class="invite-user" style="border: 2px solid green;">
+    <form method="POST" hx-post="/chat/invite" hx-trigger="submit">
+        <input type="hidden" name="chatId" value="{{ .Chat.ID }}">
+        <input type="text" name="username" placeholder="...type username here...">
+        <button type="submit">Invite</button>
+    </form>
+</div>
+
+<hr />
 
 <div class="open-chat-history" style="border: 2px solid gray;">
     <ul id="message-list">
-        {{ range .GetMessages }}
-            {{ .GetHTML }}
+        {{ range .Chat.GetMessages .ActiveUser }}
+            {{ template "message.html" . }}
+        {{ else }}
+            Loading messages...
         {{ end }}
     </ul>
 
     <form method="POST" hx-post="/message" hx-swap="beforeend" hx-target="#message-list"
-        hx-trigger="revealed" hx-select="input[name=text]" hx-swap="outerHTML">
-        <input type="hidden" name="chatId" value="{{ .ID }}">
+        hx-trigger="submit" hx-select="input[name=text]" hx-swap="outerHTML">
+        <input type="hidden" name="chatId" value="{{ .Chat.ID }}">
         <input type="text" name="text" placeholder="...type message here...">
         <button type="submit">Send</button>
     </form>

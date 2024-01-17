@@ -1,11 +1,8 @@
 package models
 
 import (
-	"bytes"
 	"fmt"
-	"log"
 	"sync"
-	"text/template"
 )
 
 type Chat struct {
@@ -17,65 +14,104 @@ type Chat struct {
 	mu      sync.Mutex
 }
 
-var chatTmpl = template.Must(template.ParseFiles("views/chat.html"))
-
-func (c *Chat) GetHTML() (string, error) {
-	var buf bytes.Buffer
-	err := chatTmpl.Execute(&buf, c)
-	if err != nil {
-		log.Printf("------ GetHTML ERROR template, %s\n", c.Log())
-		return "", err
-	}
-	return buf.String(), nil
-}
-
 func (c *Chat) Log() string {
 	return fmt.Sprintf("Chat{id:%d,name:[%s],owner:[%s]}", c.ID, c.Name, c.Owner)
 }
 
-func (c *Chat) AddUser(user string) {
+func (c *Chat) AddUser(owner string, user string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if !c.isOwner(owner) {
+		return fmt.Errorf("only the owner can invite users")
+	}
 	c.users = append(c.users, user)
+	return nil
 }
 
-func (c *Chat) GetUsers() []string {
+func (c *Chat) GetUsers(user string) ([]string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.users
+	if !c.isUserInChat(user) {
+		return nil, fmt.Errorf("only invited users can see users in chat")
+	}
+	return c.users, nil
 }
 
-func (c *Chat) RemoveUser(user string) {
+func (c *Chat) RemoveUser(owner string, user string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if !c.isOwner(owner) {
+		return fmt.Errorf("only the owner can remove users from chat")
+	}
+	if !c.isUserInChat(user) {
+		return fmt.Errorf("only invited users can be removed from chat")
+	}
 	for i, u := range c.users {
 		if u == user {
 			c.users = append(c.users[:i], c.users[i+1:]...)
 			break
 		}
 	}
+	return nil
 }
 
-func (c *Chat) AddMessage(message Message) Message {
+func (c *Chat) AddMessage(user string, message Message) (*Message, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.history.Add(message)
+	if !c.isUserInChat(user) {
+		return nil, fmt.Errorf("only invited users can send messages")
+	}
+	msg := c.history.Add(message)
+	return &msg, nil
 }
 
-func (c *Chat) GetMessage(id int) Message {
+func (c *Chat) GetMessage(user string, id int) (*Message, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.history.Get()[id]
+	if !c.isUserInChat(user) {
+		return nil, fmt.Errorf("only invited users can get messages")
+	}
+	return c.history.Get(id)
 }
 
-func (c *Chat) GetMessages() []Message {
+func (c *Chat) GetMessages(user string) ([]Message, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.history.Get()
+	if !c.isUserInChat(user) {
+		return nil, fmt.Errorf("only invited users can see messages")
+	}
+	return c.history.GetAll(), nil
 }
 
-func (c *Chat) RemoveMessage(ID int) {
+func (c *Chat) RemoveMessage(user string, ID int) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.history.Delete(ID)
+	if !c.isUserInChat(user) {
+		return fmt.Errorf("only invited users can delete messages")
+	}
+	if !c.isAuthor(user, ID) && !c.isOwner(user) {
+		return fmt.Errorf("only user that sent the original message or chat owner can delete messages")
+	}
+	return c.history.Delete(ID)
+}
+
+func (c *Chat) isOwner(user string) bool {
+	return user == c.Owner
+}
+
+func (c *Chat) isAuthor(user string, msgID int) bool {
+	msg, _ := c.history.Get(msgID)
+	if msg != nil && msg.ID == msgID {
+		return msg.Author == user
+	}
+	return false
+}
+
+func (c *Chat) isUserInChat(user string) bool {
+	for _, u := range c.users {
+		if u == user {
+			return true
+		}
+	}
+	return false
 }

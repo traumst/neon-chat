@@ -16,6 +16,7 @@ type Message struct {
 var msgTmpl = template.Must(template.ParseFiles("views/message.html"))
 
 func (m *Message) GetHTML() (string, error) {
+	log.Printf("------ Message.GetHTML TRACE\n")
 	var buf bytes.Buffer
 	err := msgTmpl.Execute(&buf, m)
 	if err != nil {

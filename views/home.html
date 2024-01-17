@@ -31,7 +31,7 @@
             </div>
 
             <div>
-                <form action="/chat" method="POST">
+                <form hx-post="/chat" hx-trigger="submit" hx-target=".open-chat" hx-swap="innerHTML" >
                     <input type="text" name="chatName" placeholder="Enter chat name...">
                     <button type="submit">Open new chat</button>
                 </form>
@@ -40,12 +40,17 @@
 
         <div class="right-panel" style="border: 2px solid red;">
             <div class="open-chat">
-                {{ with .OpenChat }}
-                    {{ template "chat.html" . }}
-                {{ else }}
-                    Loading messages...
-                {{ end }}
-            </div>
+            {{ with .OpenTemplate }}
+                <div class="open-chat-content" 
+                    hx-get="/chat/{{ .Chat.ID }}" 
+                    hx-trigger="load"
+                    hx-target="this"
+                    hx-swap="innerHTML">
+                </div>
+            {{ else }}
+                    Open chat to see messages
+            {{ end }}
+        </div>
         </div>
     </div>
 </body>
