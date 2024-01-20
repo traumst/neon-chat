@@ -43,6 +43,8 @@ func ControllerSetup() {
 		http.HandlerFunc(controllers.ServeFile), middleware...))
 	http.Handle("/chat", ChainMiddleware(
 		http.HandlerFunc(controllers.AddChat), middleware...))
+	http.Handle("/chat/invite", ChainMiddleware(
+		http.HandlerFunc(controllers.InviteUser), middleware...))
 	http.Handle("/chat/", ChainMiddleware(
 		http.HandlerFunc(controllers.OpenChat), middleware...))
 	http.Handle("/message", ChainMiddleware(

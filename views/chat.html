@@ -13,7 +13,7 @@
 <div class="invite-user" style="border: 2px solid green;">
     <form method="POST" hx-post="/chat/invite" hx-trigger="submit">
         <input type="hidden" name="chatId" value="{{ .Chat.ID }}">
-        <input type="text" name="username" placeholder="...type username here...">
+        <input type="text" name="invitee" placeholder="...type invitee username here...">
         <button type="submit">Invite</button>
     </form>
 </div>

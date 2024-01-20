@@ -29,6 +29,11 @@ func OpenChat(w http.ResponseWriter, r *http.Request) {
 		utils.SendBack(w, r, http.StatusBadRequest)
 		return
 	}
+	if chatID < 0 {
+		log.Printf("--%s-> OpenChat ERROR id, %s\n", reqId(r), err)
+		utils.SendBack(w, r, http.StatusBadRequest)
+		return
+	}
 
 	log.Printf("--%s-> OpenChat TRACE chat[%d]\n", reqId(r), chatID)
 	openChat, err := chats.OpenChat(user, chatID)
@@ -84,4 +89,35 @@ func AddChat(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte(html))
+}
+
+func InviteUser(w http.ResponseWriter, r *http.Request) {
+	log.Printf("--%s-> InviteUser\n", reqId(r))
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	log.Printf("--%s-> InviteUser TRACE check login\n", reqId(r))
+	user, err := utils.GetCurrentUser(r)
+	if err != nil {
+		log.Printf("<-%s-- InviteUser ERROR auth, %s\n", reqId(r), err)
+		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		return
+	}
+	chatID, err := strconv.Atoi(r.FormValue("chatId"))
+	if err != nil {
+		log.Printf("<-%s-- InviteUser ERROR chat id, %s\n", reqId(r), err)
+		utils.SendBack(w, r, http.StatusBadRequest)
+		return
+	}
+	invitee := r.FormValue("invitee")
+	log.Printf("--%s-> InviteUser TRACE inviting[%s] to chat[%d]\n", reqId(r), invitee, chatID)
+	inviteeUser, err := chats.InviteUser(user, chatID, invitee)
+	if err != nil {
+		log.Printf("<-%s-- InviteUser ERROR invite, %s\n", reqId(r), err)
+		utils.SendBack(w, r, http.StatusInternalServerError)
+		return
+	}
+	log.Printf("<-%s-- InviteUser TRACE redirecting %s\n", reqId(r), inviteeUser)
+	http.Redirect(w, r, fmt.Sprintf("/chat/%d", chatID), http.StatusFound)
 }
