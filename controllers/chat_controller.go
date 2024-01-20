@@ -81,6 +81,7 @@ func AddChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("<-%s-- AddChat TRACE swriting response\n", reqId(r))
+
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte(html))
 }
