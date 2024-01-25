@@ -8,35 +8,36 @@
         .left-panel { width: 30%; }
         .right-panel { width: 70%; }
     </style>
-    <script src="https://unpkg.com/htmx.org"></script>
+    <script src="/script/htmx.1.9.10.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="left-panel" style="border: 2px solid green;">
-            <div class="active-user">
-                <p>Active user: {{ .ActiveUser }}</p>
-                <form action="/logout" method="POST">
-                    <button type="submit">Logout</button>
-                </form>
-            </div>
-            <div class="chat-list">
-                <ul>
-                    {{ range .Chats }}
-                    <li hx-get="/chat/{{.ID}}" hx-trigger="click" hx-target=".open-chat" hx-swap="innerHTML">
-                        <p>{{ .Name }}</p>
-                    </li>
-                    {{ end }}
-                </ul>
-            </div>
-            <div class="add-chat">
-                <form hx-post="/chat" hx-trigger="submit" hx-target=".open-chat" hx-swap="innerHTML" >
-                    <input type="text" name="chatName" placeholder="Enter chat name...">
-                    <button type="submit">Open new chat</button>
-                </form>
-            </div>
+<div class="container">
+    <div class="left-panel" style="border: 2px solid green;">
+        <div class="active-user">
+            <p>Active user: {{ .ActiveUser }}</p>
+            <form action="/logout" method="POST">
+                <button type="submit">Logout</button>
+            </form>
         </div>
-        <div class="right-panel" style="border: 2px solid red;">
-            <div class="open-chat">
+        <div class="chat-list">
+            <ul class="chat-headers" hx-sse="connect:/chat/poll swap:chat" hx-trigger="load" hx-swap="beforeend">
+                {{ range .Chats }}
+                <li id="msg-{{.ID}}" hx-get="/chat/{{.ID}}" hx-trigger="click" hx-target=".open-chat" hx-swap="innerHTML">
+                    <p>{{ .Name }}</p>
+                </li>
+                {{ end }}
+            </ul>
+        </div>
+        <div class="add-chat">
+            <form hx-post="/chat" hx-trigger="submit" hx-target=".open-chat" hx-swap="innerHTML" >
+                <input type="text" name="chatName" placeholder="Enter chat name...">
+                <button type="submit">Open new chat</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="right-panel" style="border: 2px solid red;">
+        <div class="open-chat">
             {{ with .OpenTemplate }}
                 <div class="open-chat-content" 
                     hx-get="/chat/{{ .Chat.ID }}" 
@@ -48,7 +49,7 @@
                     Open chat to see messages
             {{ end }}
         </div>
-        </div>
     </div>
+</div>
 </body>
 </html>

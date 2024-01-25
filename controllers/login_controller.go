@@ -8,7 +8,7 @@ import (
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> Login\n", reqId(r))
+	log.Printf("--%s-> Login\n", GetReqId(r))
 	switch r.Method {
 	case "GET":
 		RenderLogin(w, r)
@@ -20,10 +20,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> SignIn\n", reqId(r))
+	log.Printf("--%s-> SignIn\n", GetReqId(r))
 	username := r.FormValue("username")
 	if username == "" {
-		log.Printf("--%s-> SignIn ERROR username\n", reqId(r))
+		log.Printf("--%s-> SignIn ERROR username\n", GetReqId(r))
 		http.Redirect(w, r, "/login", http.StatusBadRequest)
 		return
 	}
@@ -37,7 +37,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 }
 
 func RenderLogin(w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> RenderLogin\n", reqId(r))
+	log.Printf("--%s-> RenderLogin\n", GetReqId(r))
 	loginTmpl, _ := template.ParseFiles("views/login.html")
 	loginTmpl.Execute(w, nil)
 }

@@ -15,3 +15,9 @@ func (rec *StatefulWriter) WriteHeader(code int) {
 func (rec *StatefulWriter) Status() int {
 	return rec.status
 }
+
+func (w *StatefulWriter) Flush() {
+	if flusher, ok := w.ResponseWriter.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
