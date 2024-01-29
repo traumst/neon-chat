@@ -40,6 +40,6 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 
 func RenderLogin(w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> RenderLogin\n", utils.GetReqId(r))
-	loginTmpl, _ := template.ParseFiles("views/login.html")
+	loginTmpl, _ := template.ParseFiles("html/login.html")
 	loginTmpl.Execute(w, nil)
 }

@@ -1,0 +1,231 @@
+<!--
+// v0 by Vercel.
+// https://v0.dev/t/QooQJKQeClE
+-->
+<html>
+
+<head>
+    <!-- TODO minify css on backend and serve -->
+    <!-- Tailwind designed to be installed into your project using npm or Yarn and integrated into your build process. This allows you to customize Tailwind's default configuration and generate a CSS file that includes only the styles you actually use in your project, resulting in smaller CSS file sizes and faster load times. -->
+    <!-- <link href="https://cdn.tailwindcss.com" rel="stylesheet"> -->
+    <script>
+        // let scriptsWithFallbacks = [
+        //     ["/script/htmx.1.9.10.min.js", "https://unpkg.com/htmx.org@1.9.10/dist/htmx.min.js"],
+        //     ["/script/tailwind.3.4.1.js", "https://cdn.tailwindcss.com/3.4.1"]
+        // ]
+    </script>
+    <script src="https://unpkg.com/htmx.org@1.9.10/dist/htmx.min.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+</head>
+
+<body>
+    <div class="dark min-h-screen grid grid-cols-4 gap-4 p-4 bg-gray-900 font-jetbrains">
+        <div class="left-panel col-span-1 space-y-4">
+            <div class="grid grid-cols-1 gap-4">
+                <div class="login text-card-foreground bg-gray-800 shadow-2xl rounded-lg border-4 border-gray-700"
+                    data-v0-t="card">
+                    {{ template "login" . }}
+                </div>
+                <div class="register text-card-foreground bg-gray-800 shadow-2xl rounded-lg border-4 border-gray-700"
+                    data-v0-t="card">
+                    {{ template "register" . }}
+                </div>
+                <div class="logout text-card-foreground bg-gray-800 shadow-2xl rounded-lg border-4 border-gray-700"
+                    data-v0-t="card">
+                    {{ template "logout" . }}
+                </div>
+                <div class="user-chats text-card-foreground bg-gray-800 shadow-2xl rounded-lg border-4 border-gray-700"
+                    data-v0-t="card">
+                    {{ template "user-chats" . }}
+                </div>
+            </div>
+        </div>
+        <div class="right-panel col-span-3 space-y-4 flex flex-col">
+            {{ template "open-chat" . }}
+        </div>
+    </div>
+</body>
+
+</html>
+
+{{ block "login" }}
+<div>
+    <div class="flex flex-col space-y-1.5 p-6 bg-gray-700">
+        <h3 class="font-semibold whitespace-nowrap tracking-tight text-2xl text-gray-300">
+            Login
+        </h3>
+    </div>
+    <div class="p-6 space-y-4 bg-gray-800">
+        <div class="space-y-2">
+            <label
+                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-300"
+                for="username">
+                Username
+            </label>
+            <input
+                class="flex h-10 w-full px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-gray-700 text-gray-300 border-2 border-gray-600 rounded-lg"
+                id="username" placeholder="Enter your username" required="" type="text" />
+        </div>
+        <div class="space-y-2">
+            <label
+                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-300"
+                for="password">
+                Password
+            </label>
+            <input
+                class="flex h-10 w-full px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-gray-700 text-gray-300 border-2 border-gray-600 rounded-lg"
+                id="password" required="" type="password" />
+        </div>
+    </div>
+    <div class="flex items-center p-6 bg-gray-800">
+        <button
+            class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-primary/90 h-10 px-4 py-2 w-full bg-gray-700 text-gray-300 border-2 border-gray-600 rounded-lg">
+            Login
+        </button>
+    </div>
+</div>
+{{ end }}
+
+{{ block "register" }}
+<div>
+    <div class="flex flex-col space-y-1.5 p-6 bg-gray-700">
+        <h3 class="font-semibold whitespace-nowrap tracking-tight text-2xl text-gray-300">
+            Register
+        </h3>
+    </div>
+    <div class="p-6 space-y-4 bg-gray-800">
+        <div class="space-y-2">
+            <label
+                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-300"
+                for="newUsername">
+                Username
+            </label>
+            <input
+                class="flex h-10 w-full px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-gray-700 text-gray-300 border-2 border-gray-600 rounded-lg"
+                id="newUsername" placeholder="Enter your username" required="" type="text" />
+        </div>
+        <div class="space-y-2">
+            <label
+                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-300"
+                for="newPassword">
+                Password
+            </label>
+            <input
+                class="flex h-10 w-full px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-gray-700 text-gray-300 border-2 border-gray-600 rounded-lg"
+                id="newPassword" required="" type="password" />
+        </div>
+    </div>
+    <div class="flex items-center p-6 bg-gray-800">
+        <button
+            class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full bg-gray-700 text-gray-300 border-4 border-gray-600 rounded-lg">
+            Register
+        </button>
+    </div>
+</div>
+{{ end }}
+
+{{ block "logout" }}
+<div>
+    <div class="flex flex-col space-y-1.5 p-6 bg-gray-700">
+        <h3 class="font-semibold whitespace-nowrap tracking-tight text-2xl text-gray-300">
+            Welcome, ActiveUser
+        </h3>
+    </div>
+    <div class="flex items-center p-6 bg-gray-800">
+        <button
+            class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full bg-gray-700 text-gray-300 border-2 border-gray-600 rounded-lg">
+            Logout
+        </button>
+    </div>
+</div>
+{{ end }}
+
+{{ block "user-chats" }}
+<div>
+    <div class="flex-col space-y-1.5 p-6 bg-gray-700 flex justify-between items-center">
+        <h3 class="font-semibold whitespace-nowrap tracking-tight text-2xl text-gray-300">
+            Chats
+        </h3>
+    </div>
+    <div class="p-6 bg-gray-800">
+        <div class="chat-list flex justify-between items-center py-2 hover:bg-gray-700">
+            <a class="text-gray-300" href="#">
+                Chat 1
+            </a>
+            <button
+                class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 text-red-500">
+                ⓧ
+            </button>
+        </div>
+        <div class="flex justify-between items-center py-2 hover:bg-gray-700">
+            <a class="text-gray-300" href="#">
+                Chat 2
+            </a>
+            <button
+                class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 text-red-500">
+                ⓧ
+            </button>
+        </div>
+        <div class="flex justify-between items-center py-2 hover:bg-gray-700">
+            <a class="text-gray-300" href="#">
+                Chat 3
+            </a>
+            <button
+                class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 text-red-500">
+                ⓧ
+            </button>
+        </div>
+    </div>
+</div>
+{{ end }}
+
+{{ block "open-chat" }}
+<div class="chat text-card-foreground bg-gray-800 shadow-2xl rounded-lg border-4 border-gray-700 flex flex-col flex-grow"
+    data-v0-t="card">
+    <div class="chat-users flex-col space-y-1.5 p-6 bg-gray-700 flex justify-between items-center">
+        <div>
+            <h3 class="font-semibold whitespace-nowrap tracking-tight text-2xl text-gray-300">Chat 1</h3>
+            <p class="text-sm text-gray-300">Users: User1, User2, User3</p>
+        </div>
+    </div>
+    <div class="chat-canvas p-6 space-y-4 bg-gray-800 flex flex-col flex-grow">
+        <div class="chat-history border-2 rounded-lg p-4 space-y-2 overflow-auto flex-grow bg-gray-700 text-gray-300">
+            <div class="flex justify-start border-b-2 pb-2 border-gray-600">
+                <div>
+                    <strong>User1:</strong> Hello!
+                </div>
+                <button
+                    class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 text-red-500 ml-2">
+                    ⓧ
+                </button>
+            </div>
+            <div class="flex justify-end border-b-2 pb-2 border-gray-600">
+                <div>
+                    <strong>User2:</strong> Hi, User1!
+                </div>
+            </div>
+            <div class="flex justify-end border-b-2 pb-2 border-gray-600">
+                <div>
+                    <strong>User3:</strong> Hey everyone!
+                </div>
+            </div>
+        </div>
+        <div class="chat-new-message-content space-y-2">
+            <label
+                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-300"
+                for="message">
+                Message
+            </label>
+            <input
+                class="flex h-10 w-full px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-gray-700 text-gray-300 border-2 border-gray-600 rounded-lg"
+                id="message" placeholder="Type your message here" required="" type="text" />
+        </div>
+        <div class="chat-new-message-send flex items-center p-6 bg-gray-800">
+            <button
+                class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-primary/90 h-10 px-4 py-2 w-full bg-gray-700 text-gray-300 border-2 border-gray-600 rounded-lg">
+                Send
+            </button>
+        </div>
+    </div>
+</div>
+{{ end }}

@@ -20,8 +20,8 @@ func (c *ChatTemplate) Log() string {
 	return fmt.Sprintf("ChatTemplate{id:%d,name:[%s],active_user:[%s],users:[%s]}", c.ID, c.Name, c.ActiveUser, strings.Join(c.Users, ","))
 }
 
-var chatTmpl = template.Must(template.ParseFiles("views/chat.html", "views/message.html"))
-var shortTmpl = template.Must(template.ParseFiles("views/chat_li.html"))
+var chatTmpl = template.Must(template.ParseFiles("html/chat.html", "html/message.html"))
+var shortTmpl = template.Must(template.ParseFiles("html/chat_li.html"))
 
 func (ct *ChatTemplate) GetHTML() (string, error) {
 	log.Printf("------ ChatTemplate.GetHTML TRACE enter user[%s] into chat[%s]\n", ct.ActiveUser, ct.Log())

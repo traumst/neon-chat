@@ -14,9 +14,9 @@ type HomeTemplate struct {
 }
 
 var homeTmpl = template.Must(template.ParseFiles(
-	"views/home.html",
-	"views/chat.html",
-	"views/chat_li.html"))
+	"html/home.html",
+	"html/chat.html",
+	"html/chat_li.html"))
 
 func (h *HomeTemplate) GetHTML() (string, error) {
 	log.Printf("------ Home.GetHTML TRACE %s\n", h.Log())

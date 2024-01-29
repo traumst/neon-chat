@@ -14,7 +14,7 @@ type MessageTemplate struct {
 	ActiveUser string
 }
 
-var msgTmpl = template.Must(template.ParseFiles("views/message.html"))
+var msgTmpl = template.Must(template.ParseFiles("html/message.html"))
 
 func (m *MessageTemplate) GetHTML() (string, error) {
 	log.Printf("------ MessageTemplate.GetHTML TRACE\n")
