@@ -9,6 +9,7 @@
         .right-panel { width: 70%; }
     </style>
     <script src="/script/htmx.1.9.10.min.js"></script>
+    <script src="/script/htmx.1.9.10.debug.js"></script>
 </head>
 <body>
 <div class="container">
@@ -20,11 +21,11 @@
             </form>
         </div>
         <div class="chat-list">
-            <ul class="chat-headers" hx-sse="connect:/chat/poll swap:chat" hx-trigger="load" hx-swap="beforeend">
-                {{ range .Chats }}
-                <li id="msg-{{.ID}}" hx-get="/chat/{{.ID}}" hx-trigger="click" hx-target=".open-chat" hx-swap="innerHTML">
-                    <p>{{ .Name }}</p>
-                </li>
+            <ul class="chat-headers" hx-sse="connect:/chat/poll swap:chat" hx-trigger="load" hx-swap="beforeend">    
+                {{ with $chats := .Chats }}
+                    {{ range $index, $chat := $chats }} 
+                        {{ template "chat_li.html" $chat }}
+                    {{ end }}
                 {{ end }}
             </ul>
         </div>
@@ -40,7 +41,7 @@
         <div class="open-chat">
             {{ with .OpenTemplate }}
                 <div class="open-chat-content" 
-                    hx-get="/chat/{{ .Chat.ID }}" 
+                    hx-get="/chat/{{ .ID }}" 
                     hx-trigger="load"
                     hx-target="this"
                     hx-swap="innerHTML">

@@ -18,6 +18,20 @@ func (c *Chat) Log() string {
 	return fmt.Sprintf("Chat{id:%d,name:[%s],owner:[%s]}", c.ID, c.Name, c.Owner)
 }
 
+func (c *Chat) ToTemplate(user string) *ChatTemplate {
+	messages := make([]MessageTemplate, 0)
+	for _, msg := range c.history.GetAll() {
+		messages = append(messages, *msg.ToTemplate(user))
+	}
+	return &ChatTemplate{
+		ID:         c.ID,
+		Name:       c.Name,
+		ActiveUser: user,
+		Users:      c.users,
+		Messages:   messages,
+	}
+}
+
 func (c *Chat) AddUser(owner string, user string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -61,8 +75,7 @@ func (c *Chat) AddMessage(user string, message Message) (*Message, error) {
 	if !c.isUserInChat(user) {
 		return nil, fmt.Errorf("only invited users can send messages")
 	}
-	msg := c.history.Add(message)
-	return &msg, nil
+	return c.history.Add(&message)
 }
 
 func (c *Chat) GetMessage(user string, id int) (*Message, error) {

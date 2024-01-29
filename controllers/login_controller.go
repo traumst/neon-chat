@@ -5,10 +5,12 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"go.chat/utils"
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> Login\n", GetReqId(r))
+	log.Printf("--%s-> Login\n", utils.GetReqId(r))
 	switch r.Method {
 	case "GET":
 		RenderLogin(w, r)
@@ -20,10 +22,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> SignIn\n", GetReqId(r))
+	log.Printf("--%s-> SignIn\n", utils.GetReqId(r))
 	username := r.FormValue("username")
 	if username == "" {
-		log.Printf("--%s-> SignIn ERROR username\n", GetReqId(r))
+		log.Printf("--%s-> SignIn ERROR username\n", utils.GetReqId(r))
 		http.Redirect(w, r, "/login", http.StatusBadRequest)
 		return
 	}
@@ -37,7 +39,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 }
 
 func RenderLogin(w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> RenderLogin\n", GetReqId(r))
+	log.Printf("--%s-> RenderLogin\n", utils.GetReqId(r))
 	loginTmpl, _ := template.ParseFiles("views/login.html")
 	loginTmpl.Execute(w, nil)
 }

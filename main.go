@@ -11,7 +11,7 @@ import (
 
 type Middleware func(http.Handler) http.Handler
 
-func ChainMiddleware(h http.Handler, middleware ...Middleware) http.Handler {
+func ChainMiddleware(h http.Handler, middleware []Middleware) http.Handler {
 	for _, m := range middleware {
 		h = m(h)
 	}
@@ -20,37 +20,37 @@ func ChainMiddleware(h http.Handler, middleware ...Middleware) http.Handler {
 
 func LoggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		reqId := controllers.SetReqId(r)
+		utils.SetReqId(r)
+		log.Printf("--%s-> _req_ %s %s", utils.GetReqId(r), r.Method, r.RequestURI)
 		startTime := time.Now()
-		log.Printf("--%s-> _req_ %s %s", reqId, r.Method, r.RequestURI)
 		rec := utils.StatefulWriter{ResponseWriter: w}
 		next.ServeHTTP(&rec, r)
-		log.Printf("<-%s-- _res_ %s %s %v, status_code:[%d]",
-			reqId, r.Method, r.RequestURI, time.Since(startTime), rec.Status())
+		log.Printf("<-%s-- _res_ %s %s status_code:[%d] in %v",
+			utils.GetReqId(r), r.Method, r.RequestURI, rec.Status(), time.Since(startTime))
 	})
 }
 
 func ControllerSetup() {
-	middleware := []Middleware{LoggerMiddleware}
+	noLog := []Middleware{}
+	allMiddleware := []Middleware{LoggerMiddleware}
 
-	http.Handle("/favicon.ico", http.HandlerFunc(controllers.FavIcon))
-	http.Handle("/login", http.HandlerFunc(controllers.Login))
+	http.Handle("/favicon.ico", ChainMiddleware(http.HandlerFunc(controllers.FavIcon), noLog))
+	http.Handle("/login", ChainMiddleware(http.HandlerFunc(controllers.Login), allMiddleware))
+	http.Handle("/script/", ChainMiddleware(http.HandlerFunc(controllers.ServeFile), allMiddleware))
 
-	http.Handle("/script/", ChainMiddleware(http.HandlerFunc(controllers.ServeFile), middleware...))
-
-	http.Handle("/message", ChainMiddleware(http.HandlerFunc(controllers.AddMessage), middleware...))
-	http.Handle("/message/delete", ChainMiddleware(http.HandlerFunc(controllers.DeleteMessage), middleware...))
+	http.Handle("/message", ChainMiddleware(http.HandlerFunc(controllers.AddMessage), allMiddleware))
+	http.Handle("/message/delete", ChainMiddleware(http.HandlerFunc(controllers.DeleteMessage), allMiddleware))
 
 	chatController := controllers.ChatController{}
-	http.Handle("/chat/poll", http.HandlerFunc(chatController.PollChats))
+	http.Handle("/chat/poll", ChainMiddleware(http.HandlerFunc(chatController.PollChats), noLog))
 	http.Handle("/chat/invite", ChainMiddleware(
-		http.HandlerFunc(chatController.InviteUser), middleware...))
+		http.HandlerFunc(chatController.InviteUser), allMiddleware))
 	http.Handle("/chat/", ChainMiddleware(
-		http.HandlerFunc(chatController.OpenChat), middleware...))
+		http.HandlerFunc(chatController.OpenChat), allMiddleware))
 	http.Handle("/chat", ChainMiddleware(
-		http.HandlerFunc(chatController.AddChat), middleware...))
+		http.HandlerFunc(chatController.AddChat), allMiddleware))
 
-	http.Handle("/", ChainMiddleware(http.HandlerFunc(controllers.Home), middleware...))
+	http.Handle("/", ChainMiddleware(http.HandlerFunc(controllers.Home), allMiddleware))
 }
 
 func main() {

@@ -3,6 +3,8 @@ package models
 import (
 	"fmt"
 	"sync"
+
+	"go.chat/utils"
 )
 
 type ChatList struct {
@@ -10,6 +12,7 @@ type ChatList struct {
 	chats  []*Chat
 	userAt map[string]*Chat
 	nextID int
+	isInit bool
 }
 
 type ChatError struct {
@@ -18,15 +21,6 @@ type ChatError struct {
 
 func (e *ChatError) Error() string {
 	return e.msg
-}
-
-func (cl *ChatList) init(user string) {
-	if cl.chats == nil {
-		cl.chats = []*Chat{}
-	}
-	if cl.userAt == nil {
-		cl.userAt = make(map[string]*Chat)
-	}
 }
 
 func (cl *ChatList) AddChat(owner string, chatName string) int {
@@ -47,7 +41,7 @@ func (cl *ChatList) AddChat(owner string, chatName string) int {
 	return chat.ID
 }
 
-func (cl *ChatList) OpenChat(user string, id int) (*ChatTemplate, error) {
+func (cl *ChatList) OpenChat(user string, id int) (*Chat, error) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	if id < 0 || id >= len(cl.chats) {
@@ -59,23 +53,14 @@ func (cl *ChatList) OpenChat(user string, id int) (*ChatTemplate, error) {
 		return nil, fmt.Errorf("user[%s] is not in chat[%d]", user, id)
 	}
 	cl.userAt[user] = cl.chats[id]
-	return &ChatTemplate{
-		Chat:       cl.userAt[user],
-		ActiveUser: user,
-	}, nil
+	return openChat, nil
 }
 
-func (cl *ChatList) OpenTemplate(user string) (*ChatTemplate, error) {
+func (cl *ChatList) GetOpenChat(user string) *Chat {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	openChat := cl.userAt[user]
-	if openChat == nil {
-		return nil, fmt.Errorf("user[%s] has no open chat", user)
-	}
-	return &ChatTemplate{
-		Chat:       openChat,
-		ActiveUser: user,
-	}, nil
+	cl.init(user)
+	return cl.userAt[user]
 }
 
 func (cl *ChatList) GetChats(user string) []*Chat {
@@ -86,6 +71,20 @@ func (cl *ChatList) GetChats(user string) []*Chat {
 		if chat.isOwner(user) || chat.isUserInChat(user) {
 			userChats = append(userChats, chat)
 		}
+	}
+	return userChats
+}
+
+func (cl *ChatList) GetExcept(user string, chatIDs []int) []*Chat {
+	var userChats []*Chat
+	for _, chat := range cl.GetChats(user) {
+		if !chat.isOwner(user) && !chat.isUserInChat(user) {
+			continue
+		}
+		if utils.Contains(chatIDs, chat.ID) {
+			continue
+		}
+		userChats = append(userChats, chat)
 	}
 	return userChats
 }
@@ -118,4 +117,14 @@ func (cl *ChatList) InviteUser(user string, chatID int, invitee string) (string,
 	}
 	chat.users = append(chat.users, invitee)
 	return invitee, nil
+}
+
+func (cl *ChatList) init(user string) {
+	if cl.isInit {
+		return
+	}
+
+	cl.chats = []*Chat{}
+	cl.userAt = make(map[string]*Chat)
+	cl.isInit = true
 }

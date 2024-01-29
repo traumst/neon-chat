@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 )
 
@@ -11,13 +12,18 @@ type MessageStore struct {
 	nextID   int
 }
 
-func (store *MessageStore) Add(message Message) Message {
+func (store *MessageStore) Add(message *Message) (*Message, error) {
+	author := strings.TrimSpace(message.Author)
+	msg := strings.TrimSpace(message.Text)
+	if author == "" || msg == "" {
+		return nil, fmt.Errorf("bad arguments")
+	}
 	store.mu.Lock()
 	defer store.mu.Unlock()
 	message.ID = store.nextID
-	store.messages = append(store.messages, message)
+	store.messages = append(store.messages, *message)
 	store.nextID += 1
-	return message
+	return message, nil
 }
 
 func (store *MessageStore) GetAll() []Message {
@@ -43,11 +49,6 @@ func (store *MessageStore) Delete(id int) error {
 
 	store.mu.Lock()
 	defer store.mu.Unlock()
-	for i, message := range store.messages {
-		if message.ID == id {
-			store.messages = append(store.messages[:i], store.messages[i+1:]...)
-			break
-		}
-	}
+	store.messages = append(store.messages[id:], store.messages[id+1:]...)
 	return nil
 }

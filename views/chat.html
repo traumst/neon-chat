@@ -1,10 +1,9 @@
 <div class="open-chat-name" style="border: 2px solid blue;">
-    <h2>chat {{ .Chat.Name }}</h2>
+    <h2>chat {{ .Name }}</h2>
     <p>Users: 
-        {{ with $chatUsers := .Chat.GetUsers .ActiveUser }}
+        {{ with $chatUsers := .Users }}
             {{ range $index, $user := $chatUsers }} 
                 {{ $user }}
-                {{ if eq $index (len $chatUsers) }} {{ else }}, {{ end }}
             {{ end }}
         {{ end }}
     </p>
@@ -12,7 +11,7 @@
 
 <div class="invite-user" style="border: 2px solid green;">
     <form method="POST" hx-post="/chat/invite" hx-trigger="submit">
-        <input type="hidden" name="chatId" value="{{ .Chat.ID }}">
+        <input type="hidden" name="chatId" value="{{ .ID }}">
         <input type="text" name="invitee" placeholder="...type invitee username here...">
         <button type="submit">Invite</button>
     </form>
@@ -22,17 +21,17 @@
 
 <div class="open-chat-history" style="border: 2px solid gray;">
     <ul class="message-list">
-        {{ with $chatMsgs := .Chat.GetMessages .ActiveUser }}
+        {{ with $chatMsgs := .Messages }}
             {{ range $index, $msg := $chatMsgs }} 
                 {{ template "message.html" $msg }}
             {{ end }}
         {{ else }}
-            Loading messages...
+            <li>No messages yet</li>
         {{ end }}
     </ul>
 
     <form hx-post="/message" hx-trigger="submit" hx-target=".message-list" hx-swap="beforeend">
-        <input type="hidden" name="chatId" value="{{ .Chat.ID }}">
+        <input type="hidden" name="chatId" value="{{ .ID }}">
         <input type="text" name="msg" placeholder="...type message here...">
         <button type="submit">Send</button>
     </form>
