@@ -11,6 +11,9 @@ type Message struct {
 }
 
 func (m *Message) Log() string {
+	if m == nil {
+		return "Message{nil}"
+	}
 	return fmt.Sprintf("Message{id:%d,author:[%s],text:[%s]}", m.ID, m.Author, m.Text)
 }
 

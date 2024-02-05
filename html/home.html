@@ -20,7 +20,13 @@
             </form>
         </div>
         <div class="chat-list">
-            <ul class="chat-headers" hx-sse="connect:/chat/poll swap:chat" hx-trigger="load" hx-swap="beforeend">    
+            <ul 
+                class="chat-headers" 
+                hx-sse="connect:/chat/poll swap:chat" 
+                hx-trigger="load" 
+                hx-target=".chat-headers"
+                hx-swap="beforeend"
+            >    
                 {{ with $chats := .Chats }}
                     {{ range $index, $chat := $chats }} 
                         {{ template "chat_li.html" $chat }}

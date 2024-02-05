@@ -11,67 +11,72 @@ import (
 	"go.chat/utils"
 )
 
-var chats = model.ChatList{}
-var clients = make([]*model.Client, 0)
-var userUpdateChannel = make(chan *model.UserUpdate, 1024)
+type UserConn map[string]Conn
 
-var pingFreq = 5 * time.Second
+type Conn struct {
+	User   string
+	Origin string
+	Conn   http.ResponseWriter
+}
+
+func (uc *UserConn) IsConn(user string) bool {
+	_, ok := (*uc)[user]
+	return ok
+}
+
+func (uc *UserConn) Add(user string, origin string, conn http.ResponseWriter) {
+	(*uc)[user] = Conn{
+		User:   user,
+		Origin: origin,
+		Conn:   conn,
+	}
+}
+
+func (uc *UserConn) Remove(user string) {
+	delete(*uc, user)
+}
+
+var chats = model.ChatList{}
+var userConns = make(UserConn)
+
+var userUpdateChannel = make(chan *model.UserUpdate, 256)
+
+const pingFreq = 5 * time.Second
+
+var lastPing = time.Now()
 
 func pollUpdates(w http.ResponseWriter, r *http.Request, user string) {
-	registerUser(w, r, user)
+	if !userConns.IsConn(user) {
+		log.Printf("<-%s-- pollUpdates WARN user not connected, %s\n", utils.GetReqId(r), user)
+		userConns.Add(user, utils.GetReqId(r), w)
+		defer userConns.Remove(user)
+	}
 
+	log.Printf("<-%s-- pollUpdates TRACE called by %s\n", utils.GetReqId(r), user)
 	utils.SetSseHeaders(w)
+	loopUpdates(w, r, user)
+}
+
+func loopUpdates(w http.ResponseWriter, r *http.Request, user string) {
+	log.Printf("<-%s-- loopUpdates TRACE loopin, triggered by %s\n", utils.GetReqId(r), user)
 
 	tick := time.NewTicker(pingFreq)
-	lastMsg := time.Now()
-	pingPong(w, r, lastMsg)
 	for {
 		select {
 		case <-r.Context().Done():
 			err := r.Context().Err()
 			if err != nil {
-				log.Printf("<-%s-- pollUpdates WARN conn closed, %s\n", utils.GetReqId(r), err)
+				log.Printf("<-%s-- loopUpdates WARN conn closed, %s\n", utils.GetReqId(r), err)
 			} else {
-				log.Printf("<-%s-- pollUpdates INFO conn closed\n", utils.GetReqId(r))
+				log.Printf("<-%s-- loopUpdates INFO conn closed\n", utils.GetReqId(r))
 			}
 			return
 		case <-tick.C:
-			pingPong(w, r, lastMsg)
+			pingPong(w, r, user)
 		case update := <-userUpdateChannel:
 			updateUser(w, r, update, user)
 		}
 
-		lastMsg = time.Now()
-	}
-}
-
-func registerUser(w http.ResponseWriter, r *http.Request, user string) {
-	var known *model.Client
-	for _, c := range clients {
-		if c.User == user {
-			known = c
-			break
-		}
-	}
-
-	if known != nil {
-		log.Printf("--%s-> updateClientList TRACE client already known\n", utils.GetReqId(r))
-		known.Request = r
-		known.Response = &w
-	} else {
-		log.Printf("--%s-> updateClientList TRACE adding client\n", utils.GetReqId(r))
-		clients = append(clients, &model.Client{User: user, Request: r, Response: &w})
-	}
-}
-
-func pingPong(w http.ResponseWriter, r *http.Request, lastPing time.Time) {
-	if time.Since(lastPing) > pingFreq {
-		log.Printf("--%s-> pingPong TRACE ping\n", utils.GetReqId(r))
-		fmt.Fprintf(w, "id: %s-%s\n\n", model.PingEventName, utils.RandStringBytes(5))
-		fmt.Fprintf(w, "event: %s\n", model.PingEventName)
-		fmt.Fprintf(w, "data: %s\n\n", time.Now().Format(time.RFC3339))
-
-		w.(http.Flusher).Flush()
 	}
 }
 
@@ -80,6 +85,7 @@ func updateUser(
 	r *http.Request,
 	up *model.UserUpdate,
 	user string) {
+	log.Printf("--%s-- updateUser TRACE IN, user[%s], input[%s]\n", utils.GetReqId(r), user, up.Log())
 	if up.User == "" || up.Chat == nil {
 		log.Printf("--%s-- updateUser INFO msg is empty, %s\n", utils.GetReqId(r), up.Msg.Log())
 		return
@@ -105,8 +111,7 @@ func sendChat(
 		return
 	}
 
-	log.Printf("--%s-- sendChat TRACE templating %s\n",
-		utils.GetReqId(r), up.Msg.Log())
+	log.Printf("--%s-- sendChat TRACE templating %s\n", utils.GetReqId(r), up.Chat.Log())
 	html, err := up.Chat.ToTemplate(user).GetShortHTML()
 	if err != nil {
 		log.Printf("--%s-- sendChat ERROR templating %s, %s\n",
@@ -115,10 +120,8 @@ func sendChat(
 	}
 
 	eventID := fmt.Sprintf("%s-%s", model.MessageEventName, utils.RandStringBytes(5))
-	distribute(w, r, up.Chat, model.ChatEventName, eventID, user, html)
-
+	distribute(w, r, up.Chat, model.ChatEventName, user, eventID, html)
 	log.Printf("--%s-- sendChat TRACE message from %s\n", utils.GetReqId(r), user)
-
 }
 
 func sendMessage(
@@ -131,8 +134,7 @@ func sendMessage(
 		return
 	}
 
-	log.Printf("--%s-- sendMessage TRACE templating %s\n",
-		utils.GetReqId(r), up.Msg.Log())
+	log.Printf("--%s-- sendMessage TRACE templating %s\n", utils.GetReqId(r), up.Msg.Log())
 	html, err := up.Msg.ToTemplate(user).GetHTML()
 	if err != nil {
 		log.Printf("--%s-- sendMessage ERROR templating %s, %s\n",
@@ -142,7 +144,6 @@ func sendMessage(
 
 	eventID := fmt.Sprintf("%s-%s", model.MessageEventName, utils.RandStringBytes(5))
 	distribute(w, r, up.Chat, model.MessageEventName, eventID, user, html)
-
 	log.Printf("--%s-- sendMessage TRACE message from %s\n", utils.GetReqId(r), user)
 }
 
@@ -154,14 +155,14 @@ func distribute(
 	eventID string,
 	user string,
 	html string) {
-	log.Printf("--%s-- distribute TRACE event %s-%s by user %s\n", utils.GetReqId(r), msgType, eventID, user)
+	log.Printf("---- distribute TRACE IN %s-%s by user %s\n", msgType, eventID, user)
 
 	// must escape newlines in SSE
 	html = strings.ReplaceAll(html, "\n", " ")
 
 	chatUsers, err := chat.GetUsers(user)
-	if err != nil {
-		log.Printf("--%s-- distribute ERROR get users, %s\n", utils.GetReqId(r), err)
+	if err != nil || chatUsers == nil {
+		log.Printf("---- distribute TRACE get users, %s\n", err)
 		return
 	}
 
@@ -170,12 +171,32 @@ func distribute(
 			continue
 		}
 
-		// TODO get proper client and send them
-
-		log.Printf("--%s-- distribute TRACE serving html to fucking %s\n", utils.GetReqId(r), u)
-		fmt.Fprintf(w, "id: %s\n\n", eventID)
-		fmt.Fprintf(w, "event: %s\n", model.MessageEventName)
-		fmt.Fprintf(w, "data: %s\n\n", html)
+		send(&w, r, msgType, user, eventID, html)
 	}
-	w.(http.Flusher).Flush()
+	log.Printf("---- distribute TRACE OUT %s-%s by user %s\n", msgType, eventID, user)
+	lastPing = time.Now()
+}
+
+func pingPong(w http.ResponseWriter, r *http.Request, user string) {
+	if time.Since(lastPing) > pingFreq {
+		log.Printf("--%s-> pingPong TRACE ping\n", utils.GetReqId(r))
+		eventID := fmt.Sprintf("%s-%s", model.PingEventName, utils.RandStringBytes(5))
+		data := fmt.Sprintf("data: %s\n\n", time.Now().Format(time.RFC3339))
+		send(&w, r, model.PingEventName, user, eventID, data)
+	}
+	lastPing = time.Now()
+}
+
+func send(
+	w *http.ResponseWriter,
+	r *http.Request,
+	eventName model.SSEvent,
+	user string,
+	eventID string,
+	html string) {
+	log.Printf("--%s-- send TRACE html to %s\n", utils.GetReqId(r), user)
+	fmt.Fprintf(*w, "id: %s\n\n", eventID)
+	fmt.Fprintf(*w, "event: %s\n", eventName)
+	fmt.Fprintf(*w, "data: %s\n\n", html)
+	(*w).(http.Flusher).Flush()
 }

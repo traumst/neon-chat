@@ -44,6 +44,7 @@ func (c *ChatController) PollUpdates(w http.ResponseWriter, r *http.Request) {
 	c.init()
 	c.counter.Add(1)
 	defer c.counter.Add(-1)
+
 	log.Printf("--%s-> PollChats TRACE IN as %dth\n", utils.GetReqId(r), c.counter.Load())
 	if r.Method != "GET" {
 		log.Printf("<-%s-- PollChats TRACE does not provide %s\n", utils.GetReqId(r), r.Method)
@@ -58,6 +59,7 @@ func (c *ChatController) PollUpdates(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pollUpdates(w, r, user)
+	log.Printf("--%s-> PollChats TRACE OUT as %dth\n", utils.GetReqId(r), c.counter.Load())
 }
 
 func (c *ChatController) OpenChat(w http.ResponseWriter, r *http.Request) {
@@ -148,7 +150,8 @@ func (c *ChatController) AddChat(w http.ResponseWriter, r *http.Request) {
 		utils.SendBack(w, r, http.StatusInternalServerError)
 		return
 	}
-	log.Printf("<-%s-- AddChat TRACE swriting response\n", utils.GetReqId(r))
+
+	log.Printf("<-%s-- AddChat TRACE writing response\n", utils.GetReqId(r))
 
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte(html))

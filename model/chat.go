@@ -67,7 +67,7 @@ func (c *Chat) GetUsers(user string) ([]string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if !c.isUserInChat(user) {
-		return nil, fmt.Errorf("only invited users can see users in chat")
+		return nil, fmt.Errorf("only invited users can see users in chat, %s", user)
 	}
 	return c.users, nil
 }
