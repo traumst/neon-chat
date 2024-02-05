@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"go.chat/controllers"
+	"go.chat/controller"
 	"go.chat/utils"
 )
 
@@ -34,15 +34,15 @@ func ControllerSetup() {
 	noLog := []Middleware{}
 	allMiddleware := []Middleware{LoggerMiddleware}
 
-	http.Handle("/favicon.ico", ChainMiddleware(http.HandlerFunc(controllers.FavIcon), noLog))
-	http.Handle("/login", ChainMiddleware(http.HandlerFunc(controllers.Login), allMiddleware))
-	http.Handle("/script/", ChainMiddleware(http.HandlerFunc(controllers.ServeFile), allMiddleware))
+	http.Handle("/favicon.ico", ChainMiddleware(http.HandlerFunc(controller.FavIcon), noLog))
+	http.Handle("/login", ChainMiddleware(http.HandlerFunc(controller.Login), allMiddleware))
+	http.Handle("/script/", ChainMiddleware(http.HandlerFunc(controller.ServeFile), allMiddleware))
 
-	http.Handle("/message", ChainMiddleware(http.HandlerFunc(controllers.AddMessage), allMiddleware))
-	http.Handle("/message/delete", ChainMiddleware(http.HandlerFunc(controllers.DeleteMessage), allMiddleware))
+	http.Handle("/message", ChainMiddleware(http.HandlerFunc(controller.AddMessage), allMiddleware))
+	http.Handle("/message/delete", ChainMiddleware(http.HandlerFunc(controller.DeleteMessage), allMiddleware))
 
-	chatController := controllers.ChatController{}
-	http.Handle("/chat/poll", ChainMiddleware(http.HandlerFunc(chatController.PollChats), noLog))
+	chatController := controller.ChatController{}
+	http.Handle("/chat/poll", ChainMiddleware(http.HandlerFunc(chatController.PollUpdates), noLog))
 	http.Handle("/chat/invite", ChainMiddleware(
 		http.HandlerFunc(chatController.InviteUser), allMiddleware))
 	http.Handle("/chat/", ChainMiddleware(
@@ -50,7 +50,7 @@ func ControllerSetup() {
 	http.Handle("/chat", ChainMiddleware(
 		http.HandlerFunc(chatController.AddChat), allMiddleware))
 
-	http.Handle("/", ChainMiddleware(http.HandlerFunc(controllers.Home), allMiddleware))
+	http.Handle("/", ChainMiddleware(http.HandlerFunc(controller.Home), allMiddleware))
 }
 
 func main() {

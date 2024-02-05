@@ -1,4 +1,4 @@
-package controllers
+package controller
 
 import (
 	"html/template"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"go.chat/models"
+	"go.chat/model"
 	"go.chat/utils"
 )
 
@@ -32,7 +32,7 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("--%s-> AddMessage TRACE opening current chat for[%s]\n", utils.GetReqId(r), author)
+	log.Printf("--%s-> AddMessage TRACE opening current chat for [%s]\n", utils.GetReqId(r), author)
 	openChat := chats.GetOpenChat(author)
 	if openChat == nil {
 		log.Printf("--%s-> AddMessage WARN no open chat for %s\n", utils.GetReqId(r), author)
@@ -41,12 +41,20 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("--%s-> AddMessage TRACE storing message for [%s] in [%d]\n", utils.GetReqId(r), author, openChat.ID)
-	message, err := openChat.AddMessage(author, models.Message{ID: 0, Author: author, Text: msg})
+	log.Printf("--%s-> AddMessage TRACE storing message for [%s] in [%s]\n", utils.GetReqId(r), author, openChat.Log())
+	message, err := openChat.AddMessage(author, model.Message{ID: 0, Author: author, Text: msg})
 	if err != nil {
 		log.Printf("--%s-> AddMessage ERROR add message, %s\n", utils.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+
+	log.Printf("--%s-> AddMessage TRACE distributing message in [%s]\n", utils.GetReqId(r), openChat.Log())
+	userUpdateChannel <- &model.UserUpdate{
+		Type: model.MessageUpdate,
+		Chat: openChat,
+		Msg:  message,
+		User: author,
 	}
 
 	log.Printf("--%s-> AddMessage TRACE templating [%s]\n", utils.GetReqId(r), message.Log())
@@ -75,7 +83,7 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := getMessageId(r)
+	id, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
 		return
 	}
@@ -89,8 +97,4 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusFound)
 	w.Write(make([]byte, 0))
-}
-
-func getMessageId(r *http.Request) (int, error) {
-	return strconv.Atoi(r.FormValue("id"))
 }

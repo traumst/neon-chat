@@ -46,7 +46,7 @@
                     hx-swap="innerHTML">
                 </div>
             {{ else }}
-                    Open chat to see messages
+                {{ template "welcome.html" . }}
             {{ end }}
         </div>
     </div>

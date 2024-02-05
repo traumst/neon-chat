@@ -1,4 +1,4 @@
-package models
+package model
 
 import (
 	"bytes"
@@ -15,6 +15,7 @@ type HomeTemplate struct {
 
 var homeTmpl = template.Must(template.ParseFiles(
 	"html/home.html",
+	"html/welcome.html",
 	"html/chat.html",
 	"html/chat_li.html"))
 

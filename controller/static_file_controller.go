@@ -1,4 +1,4 @@
-package controllers
+package controller
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 )
 
 func FavIcon(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "icons/favicon.ico")
+	http.ServeFile(w, r, "icon/favicon.ico")
 }
 
 func ServeFile(w http.ResponseWriter, r *http.Request) {

@@ -1,4 +1,4 @@
-package controllers
+package controller
 
 import (
 	"fmt"
@@ -8,10 +8,9 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"go.chat/model"
 	"go.chat/utils"
 )
-
-const stop = 10
 
 type ChatController struct {
 	mu sync.Mutex
@@ -41,7 +40,7 @@ func (c *ChatController) IsAnyoneConnected() bool {
 	return c.counter.Load() > 0
 }
 
-func (c *ChatController) PollChats(w http.ResponseWriter, r *http.Request) {
+func (c *ChatController) PollUpdates(w http.ResponseWriter, r *http.Request) {
 	c.init()
 	c.counter.Add(1)
 	defer c.counter.Add(-1)
@@ -57,7 +56,8 @@ func (c *ChatController) PollChats(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusUnauthorized)
 		return
 	}
-	PollUpdates(w, r, user)
+
+	pollUpdates(w, r, user)
 }
 
 func (c *ChatController) OpenChat(w http.ResponseWriter, r *http.Request) {
@@ -132,6 +132,15 @@ func (c *ChatController) AddChat(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(errMsg))
 		return
 	}
+
+	log.Printf("--%s-> AddChat TRACE distributing chat header in [%s]\n", utils.GetReqId(r), openChat.Log())
+	userUpdateChannel <- &model.UserUpdate{
+		Type: model.ChatUpdate,
+		Chat: openChat,
+		Msg:  nil,
+		User: user,
+	}
+
 	log.Printf("--%s-> AddChat TRACE templating chat[%s][%d]\n", utils.GetReqId(r), chatName, chatID)
 	html, err := openChat.ToTemplate(user).GetHTML()
 	if err != nil {

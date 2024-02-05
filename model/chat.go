@@ -1,4 +1,4 @@
-package models
+package model
 
 import (
 	"fmt"
@@ -12,6 +12,27 @@ type Chat struct {
 	users   []string
 	history MessageStore
 	mu      sync.Mutex
+}
+
+func (c *Chat) isOwner(user string) bool {
+	return user == c.Owner
+}
+
+func (c *Chat) isAuthor(user string, msgID int) bool {
+	msg, _ := c.history.Get(msgID)
+	if msg != nil && msg.ID == msgID {
+		return msg.Author == user
+	}
+	return false
+}
+
+func (c *Chat) isUserInChat(user string) bool {
+	for _, u := range c.users {
+		if u == user {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *Chat) Log() string {
@@ -73,8 +94,9 @@ func (c *Chat) AddMessage(user string, message Message) (*Message, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if !c.isUserInChat(user) {
-		return nil, fmt.Errorf("only invited users can send messages")
+		return nil, fmt.Errorf("only invited users can add messages")
 	}
+
 	return c.history.Add(&message)
 }
 
@@ -87,15 +109,6 @@ func (c *Chat) GetMessage(user string, id int) (*Message, error) {
 	return c.history.Get(id)
 }
 
-func (c *Chat) GetMessages(user string) ([]Message, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if !c.isUserInChat(user) {
-		return nil, fmt.Errorf("only invited users can see messages")
-	}
-	return c.history.GetAll(), nil
-}
-
 func (c *Chat) RemoveMessage(user string, ID int) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -106,25 +119,4 @@ func (c *Chat) RemoveMessage(user string, ID int) error {
 		return fmt.Errorf("only user that sent the original message or chat owner can delete messages")
 	}
 	return c.history.Delete(ID)
-}
-
-func (c *Chat) isOwner(user string) bool {
-	return user == c.Owner
-}
-
-func (c *Chat) isAuthor(user string, msgID int) bool {
-	msg, _ := c.history.Get(msgID)
-	if msg != nil && msg.ID == msgID {
-		return msg.Author == user
-	}
-	return false
-}
-
-func (c *Chat) isUserInChat(user string) bool {
-	for _, u := range c.users {
-		if u == user {
-			return true
-		}
-	}
-	return false
 }

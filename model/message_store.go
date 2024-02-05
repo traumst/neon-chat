@@ -1,4 +1,4 @@
-package models
+package model
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 
 type MessageStore struct {
 	mu       sync.Mutex
-	messages []Message
+	messages []*Message
 	nextID   int
 }
 
@@ -21,12 +21,12 @@ func (store *MessageStore) Add(message *Message) (*Message, error) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 	message.ID = store.nextID
-	store.messages = append(store.messages, *message)
+	store.messages = append(store.messages, message)
 	store.nextID += 1
 	return message, nil
 }
 
-func (store *MessageStore) GetAll() []Message {
+func (store *MessageStore) GetAll() []*Message {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 	return store.messages
@@ -39,7 +39,7 @@ func (store *MessageStore) Get(id int) (*Message, error) {
 
 	store.mu.Lock()
 	defer store.mu.Unlock()
-	return &store.messages[id], nil
+	return store.messages[id], nil
 }
 
 func (store *MessageStore) Delete(id int) error {

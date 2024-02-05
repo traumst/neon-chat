@@ -1,10 +1,10 @@
-package controllers
+package controller
 
 import (
 	"log"
 	"net/http"
 
-	"go.chat/models"
+	"go.chat/model"
 	"go.chat/utils"
 )
 
@@ -17,7 +17,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var template *models.ChatTemplate
+	var template *model.ChatTemplate
 	openChat := chats.GetOpenChat(user)
 	if openChat == nil {
 		log.Printf("--%s-> Home DEBUG, user[%s] has no open chat\n", utils.GetReqId(r), user)
@@ -27,7 +27,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		template = openChat.ToTemplate(user)
 	}
 
-	home := models.HomeTemplate{
+	home := model.HomeTemplate{
 		OpenTemplate: template,
 		Chats:        chats.GetChats(user),
 		ActiveUser:   user,
