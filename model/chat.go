@@ -2,6 +2,8 @@ package model
 
 import (
 	"fmt"
+	"log"
+	"strings"
 	"sync"
 )
 
@@ -27,6 +29,7 @@ func (c *Chat) isAuthor(user string, msgID int) bool {
 }
 
 func (c *Chat) isUserInChat(user string) bool {
+	log.Printf("------ Chat.isUserInChat TRACE user[%s], chat[%s]\n", user, strings.Join(c.users, ","))
 	for _, u := range c.users {
 		if u == user {
 			return true
@@ -54,6 +57,8 @@ func (c *Chat) ToTemplate(user string) *ChatTemplate {
 }
 
 func (c *Chat) AddUser(owner string, user string) error {
+	log.Printf("------ Chat.AddUser TRACE user[%s] added by owner[%s] to chat[%s]\n",
+		user, owner, strings.Join(c.users, ","))
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if !c.isOwner(owner) {

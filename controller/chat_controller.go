@@ -58,7 +58,7 @@ func (c *ChatController) PollUpdates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pollUpdates(w, r, user)
+	pollUpdates(w, *r, user)
 	log.Printf("--%s-> PollChats TRACE OUT as %dth\n", utils.GetReqId(r), c.counter.Load())
 }
 
@@ -135,12 +135,19 @@ func (c *ChatController) AddChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("--%s-> AddChat TRACE distributing chat header in [%s]\n", utils.GetReqId(r), openChat.Log())
-	userUpdateChannel <- &model.UserUpdate{
-		Type: model.ChatUpdate,
-		Chat: openChat,
-		Msg:  nil,
-		User: user,
+	conn, err := userConns.Get(user)
+	if err != nil {
+		log.Printf("--%s-> AddChat ERROR cannot distribute chat header[%s] to user[%s], %s\n",
+			utils.GetReqId(r), openChat.Log(), user, err)
+	} else {
+		log.Printf("--%s-> AddChat TRACE distributing chat header[%s] to user[%s]\n",
+			utils.GetReqId(r), openChat.Log(), user)
+		conn.Channel <- model.UserUpdate{
+			Type: model.ChatUpdate,
+			Chat: openChat,
+			Msg:  nil,
+			User: user,
+		}
 	}
 
 	log.Printf("--%s-> AddChat TRACE templating chat[%s][%d]\n", utils.GetReqId(r), chatName, chatID)
@@ -186,6 +193,9 @@ func (c *ChatController) InviteUser(w http.ResponseWriter, r *http.Request) {
 		utils.SendBack(w, r, http.StatusInternalServerError)
 		return
 	}
-	log.Printf("<-%s-- InviteUser TRACE redirecting %s\n", utils.GetReqId(r), inviteeUser)
-	http.Redirect(w, r, fmt.Sprintf("/chat/%d", chatID), http.StatusFound)
+	log.Printf("<-%s-- InviteUser TRACE user %s added to chat [%d]\n", utils.GetReqId(r), inviteeUser, chatID)
+	//http.Redirect(w, r, fmt.Sprintf("/chat/%d", chatID), http.StatusFound)
+
+	w.WriteHeader(http.StatusFound)
+	w.Write([]byte(fmt.Sprintf(" [%s] ", inviteeUser)))
 }

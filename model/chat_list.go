@@ -115,7 +115,11 @@ func (cl *ChatList) InviteUser(user string, chatID int, invitee string) (string,
 	if !chat.isOwner(user) {
 		return "", fmt.Errorf("user[%s] is not owner of chat %d", user, chatID)
 	}
-	chat.users = append(chat.users, invitee)
+	//chat.users = append(chat.users, invitee)
+	err := chat.AddUser(user, invitee)
+	if err != nil {
+		return "", err
+	}
 	return invitee, nil
 }
 

@@ -5,85 +5,61 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"time"
+	"sync"
 
 	"go.chat/model"
 	"go.chat/utils"
 )
 
-type UserConn map[string]Conn
-
-type Conn struct {
-	User   string
-	Origin string
-	Conn   http.ResponseWriter
-}
-
-func (uc *UserConn) IsConn(user string) bool {
-	_, ok := (*uc)[user]
-	return ok
-}
-
-func (uc *UserConn) Add(user string, origin string, conn http.ResponseWriter) {
-	(*uc)[user] = Conn{
-		User:   user,
-		Origin: origin,
-		Conn:   conn,
-	}
-}
-
-func (uc *UserConn) Remove(user string) {
-	delete(*uc, user)
-}
-
 var chats = model.ChatList{}
-var userConns = make(UserConn)
+var userConns = make(model.UserConn)
 
-var userUpdateChannel = make(chan *model.UserUpdate, 256)
+//var userUpdateChannel = make(chan *model.UserUpdate, 256)
 
-const pingFreq = 5 * time.Second
-
-var lastPing = time.Now()
-
-func pollUpdates(w http.ResponseWriter, r *http.Request, user string) {
-	if !userConns.IsConn(user) {
-		log.Printf("<-%s-- pollUpdates WARN user not connected, %s\n", utils.GetReqId(r), user)
-		userConns.Add(user, utils.GetReqId(r), w)
+func pollUpdates(w http.ResponseWriter, r http.Request, user string) {
+	isConn, conn := userConns.IsConn(user)
+	if !isConn {
+		log.Printf("<-%s-- pollUpdates WARN user not connected, %s\n", utils.GetReqId(&r), user)
+		conn = userConns.Add(user, utils.GetReqId(&r), w, r)
 		defer userConns.Remove(user)
 	}
 
-	log.Printf("<-%s-- pollUpdates TRACE called by %s\n", utils.GetReqId(r), user)
+	log.Printf("--%s-- pollUpdates TRACE called by %s\n", utils.GetReqId(&r), user)
 	utils.SetSseHeaders(w)
-	loopUpdates(w, r, user)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		loopUpdates(conn)
+	}()
+	wg.Wait()
 }
 
-func loopUpdates(w http.ResponseWriter, r *http.Request, user string) {
-	log.Printf("<-%s-- loopUpdates TRACE loopin, triggered by %s\n", utils.GetReqId(r), user)
+func loopUpdates(conn *model.Conn) {
+	log.Printf("---- loopUpdates TRACE IN, triggered by %s\n", conn.User)
 
-	tick := time.NewTicker(pingFreq)
+	// disconnect after 100 loops to refresh connection
 	for {
 		select {
-		case <-r.Context().Done():
-			err := r.Context().Err()
+		case <-conn.Reader.Context().Done():
+			err := conn.Reader.Context().Err()
 			if err != nil {
-				log.Printf("<-%s-- loopUpdates WARN conn closed, %s\n", utils.GetReqId(r), err)
+				log.Printf("<--- loopUpdates WARN conn closed, %s, %s\n", conn.User, err)
 			} else {
-				log.Printf("<-%s-- loopUpdates INFO conn closed\n", utils.GetReqId(r))
+				log.Printf("<--- loopUpdates INFO conn closed %s\n", conn.User)
 			}
 			return
-		case <-tick.C:
-			pingPong(w, r, user)
-		case update := <-userUpdateChannel:
-			updateUser(w, r, update, user)
+		case update := <-conn.Channel:
+			updateUser(&conn.Writer, &conn.Reader, update, conn.User)
 		}
-
 	}
 }
 
 func updateUser(
-	w http.ResponseWriter,
+	w *http.ResponseWriter,
 	r *http.Request,
-	up *model.UserUpdate,
+	up model.UserUpdate,
 	user string) {
 	log.Printf("--%s-- updateUser TRACE IN, user[%s], input[%s]\n", utils.GetReqId(r), user, up.Log())
 	if up.User == "" || up.Chat == nil {
@@ -91,20 +67,19 @@ func updateUser(
 		return
 	}
 
-	switch up.Type {
-	case model.ChatUpdate:
+	if up.Type == model.ChatUpdate {
 		sendChat(w, r, up, user)
-	case model.MessageUpdate:
+	} else if up.Type == model.MessageUpdate {
 		sendMessage(w, r, up, user)
-	default:
+	} else {
 		log.Printf("--%s-- updateUser ERROR unknown update type, %s\n", utils.GetReqId(r), up.Log())
 	}
 }
 
 func sendChat(
-	w http.ResponseWriter,
+	w *http.ResponseWriter,
 	r *http.Request,
-	up *model.UserUpdate,
+	up model.UserUpdate,
 	user string) {
 	if up.Msg != nil {
 		log.Printf("--%s-- sendChat INFO unexpected input msg %s\n", utils.GetReqId(r), up.Msg.Log())
@@ -120,14 +95,14 @@ func sendChat(
 	}
 
 	eventID := fmt.Sprintf("%s-%s", model.MessageEventName, utils.RandStringBytes(5))
-	distribute(w, r, up.Chat, model.ChatEventName, user, eventID, html)
+	distribute(w, r, up.Chat, model.ChatEventName, eventID, user, html)
 	log.Printf("--%s-- sendChat TRACE message from %s\n", utils.GetReqId(r), user)
 }
 
 func sendMessage(
-	w http.ResponseWriter,
+	w *http.ResponseWriter,
 	r *http.Request,
-	up *model.UserUpdate,
+	up model.UserUpdate,
 	user string) {
 	if up.Msg == nil {
 		log.Printf("--%s-- sendMessage INFO msg is empty, %s\n", utils.GetReqId(r), up.Msg.Log())
@@ -148,21 +123,22 @@ func sendMessage(
 }
 
 func distribute(
-	w http.ResponseWriter,
+	w *http.ResponseWriter,
 	r *http.Request,
 	chat *model.Chat,
 	msgType model.SSEvent,
 	eventID string,
 	user string,
 	html string) {
-	log.Printf("---- distribute TRACE IN %s-%s by user %s\n", msgType, eventID, user)
+	log.Printf("---- distribute TRACE IN type[%s], event[%s] by user [%s]\n", msgType, eventID, user)
 
 	// must escape newlines in SSE
 	html = strings.ReplaceAll(html, "\n", " ")
+	html = strings.ReplaceAll(html, "  ", " ")
 
 	chatUsers, err := chat.GetUsers(user)
 	if err != nil || chatUsers == nil {
-		log.Printf("---- distribute TRACE get users, %s\n", err)
+		log.Printf("---- distribute ERROR get users, %s\n", err)
 		return
 	}
 
@@ -171,20 +147,9 @@ func distribute(
 			continue
 		}
 
-		send(&w, r, msgType, user, eventID, html)
+		send(w, r, msgType, user, eventID, html)
 	}
-	log.Printf("---- distribute TRACE OUT %s-%s by user %s\n", msgType, eventID, user)
-	lastPing = time.Now()
-}
-
-func pingPong(w http.ResponseWriter, r *http.Request, user string) {
-	if time.Since(lastPing) > pingFreq {
-		log.Printf("--%s-> pingPong TRACE ping\n", utils.GetReqId(r))
-		eventID := fmt.Sprintf("%s-%s", model.PingEventName, utils.RandStringBytes(5))
-		data := fmt.Sprintf("data: %s\n\n", time.Now().Format(time.RFC3339))
-		send(&w, r, model.PingEventName, user, eventID, data)
-	}
-	lastPing = time.Now()
+	log.Printf("---- distribute TRACE OUT msg[%s], event[%s] by user [%s]\n", msgType, eventID, user)
 }
 
 func send(

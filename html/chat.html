@@ -1,16 +1,16 @@
 <div class="open-chat-name" style="border: 2px solid blue;">
     <h2>chat {{ .Name }}</h2>
-    <p>Users: 
-        {{ with $chatUsers := .Users }}
-            {{ range $index, $user := $chatUsers }} 
-                {{ $user }}
-            {{ end }}
+    <p class="open-chat-users">Users: 
+    {{ with $chatUsers := .Users }}
+        {{ range $index, $user := $chatUsers }} 
+            [{{$user}}]
         {{ end }}
+    {{ end }}
     </p>
 </div>
 
 <div class="invite-user" style="border: 2px solid green;">
-    <form method="POST" hx-post="/chat/invite" hx-trigger="submit">
+    <form method="POST" hx-target=".open-chat-users" hx-post="/chat/invite" hx-trigger="submit" hx-swap="beforeend">
         <input type="hidden" name="chatId" value="{{ .ID }}">
         <input type="text" name="invitee" placeholder="...type invitee username here...">
         <button type="submit">Invite</button>
