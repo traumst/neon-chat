@@ -7,17 +7,33 @@ import (
 type UpdateType int
 
 const (
+	UnknownUpdate UpdateType = iota
 	ChatUpdate    UpdateType = iota
 	MessageUpdate UpdateType = iota
 )
 
 type UserUpdate struct {
 	Type UpdateType
+	User string
 	Chat *Chat
 	Msg  *Message
-	User string
 }
 
 func (up *UserUpdate) Log() string {
-	return fmt.Sprintf("UserUpdate{Chat:%s,Msg:%s,User:%s}", up.Chat.Log(), up.Msg.Log(), up.User)
+	var chat string
+	if up.Chat != nil {
+		chat = up.Chat.Log()
+	} else {
+		chat = "nil"
+	}
+
+	var msg string
+	if up.Msg != nil {
+		msg = up.Msg.Log()
+	} else {
+		msg = "nil"
+	}
+
+	return fmt.Sprintf("UserUpdate{Type:%T,User:%s,Chat:%s,Msg:%s}",
+		up.Type, up.User, chat, msg)
 }

@@ -3,8 +3,6 @@ package model
 import (
 	"fmt"
 	"sync"
-
-	"go.chat/utils"
 )
 
 type ChatList struct {
@@ -13,14 +11,6 @@ type ChatList struct {
 	userAt map[string]*Chat
 	nextID int
 	isInit bool
-}
-
-type ChatError struct {
-	msg string
-}
-
-func (e *ChatError) Error() string {
-	return e.msg
 }
 
 func (cl *ChatList) AddChat(owner string, chatName string) int {
@@ -66,6 +56,7 @@ func (cl *ChatList) GetOpenChat(user string) *Chat {
 func (cl *ChatList) GetChats(user string) []*Chat {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
+	cl.init(user)
 	var userChats []*Chat
 	for _, chat := range cl.chats {
 		if chat.isOwner(user) || chat.isUserInChat(user) {
@@ -75,23 +66,10 @@ func (cl *ChatList) GetChats(user string) []*Chat {
 	return userChats
 }
 
-func (cl *ChatList) GetExcept(user string, chatIDs []int) []*Chat {
-	var userChats []*Chat
-	for _, chat := range cl.GetChats(user) {
-		if !chat.isOwner(user) && !chat.isUserInChat(user) {
-			continue
-		}
-		if utils.Contains(chatIDs, chat.ID) {
-			continue
-		}
-		userChats = append(userChats, chat)
-	}
-	return userChats
-}
-
 func (cl *ChatList) DeleteChat(user string, index int) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
+	cl.init(user)
 	if index < 0 || index >= len(cl.chats) {
 		return fmt.Errorf("invalid chat index[%d]", index)
 	}
@@ -99,28 +77,32 @@ func (cl *ChatList) DeleteChat(user string, index int) error {
 	if !removed.isOwner(user) {
 		return fmt.Errorf("user[%s] is not owner of chat %d", user, index)
 	}
-	cl.chats = append(cl.chats[:index], cl.chats[index+1:]...)
+	if len(cl.chats) == 1 {
+		cl.chats = nil
+		cl.userAt[user] = nil
+	} else {
+		cl.chats = append(cl.chats[:index], cl.chats[index+1:]...)
+	}
 	return nil
 }
 
-func (cl *ChatList) InviteUser(user string, chatID int, invitee string) (string, error) {
+func (cl *ChatList) InviteUser(user string, chatID int, invitee string) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	cl.init(user)
 	cl.init(invitee)
 	if chatID < 0 || chatID >= len(cl.chats) {
-		return "", fmt.Errorf("invalid chat index[%d]", chatID)
+		return fmt.Errorf("invalid chat index[%d]", chatID)
 	}
 	chat := cl.chats[chatID]
 	if !chat.isOwner(user) {
-		return "", fmt.Errorf("user[%s] is not owner of chat %d", user, chatID)
+		return fmt.Errorf("user[%s] is not owner of chat %d", user, chatID)
 	}
-	//chat.users = append(chat.users, invitee)
 	err := chat.AddUser(user, invitee)
 	if err != nil {
-		return "", err
+		return err
 	}
-	return invitee, nil
+	return nil
 }
 
 func (cl *ChatList) init(user string) {

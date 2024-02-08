@@ -20,12 +20,10 @@ func (c *ChatTemplate) Log() string {
 	return fmt.Sprintf("ChatTemplate{id:%d,name:[%s],active_user:[%s],users:[%s]}", c.ID, c.Name, c.ActiveUser, strings.Join(c.Users, ","))
 }
 
-var chatTmpl = template.Must(template.ParseFiles("html/chat.html", "html/message.html"))
-var shortTmpl = template.Must(template.ParseFiles("html/chat_li.html"))
-
 func (ct *ChatTemplate) GetHTML() (string, error) {
 	log.Printf("------ ChatTemplate.GetHTML TRACE enter user[%s] into chat[%s]\n", ct.ActiveUser, ct.Log())
 	var buf bytes.Buffer
+	chatTmpl := template.Must(template.ParseFiles("html/chat.html", "html/message.html"))
 	err := chatTmpl.Execute(&buf, ct)
 	if err != nil {
 		log.Printf("------ ChatTemplate.GetHTML ERROR template, %s\n", ct.Log())
@@ -38,6 +36,7 @@ func (ct *ChatTemplate) GetHTML() (string, error) {
 func (ct *ChatTemplate) GetShortHTML() (string, error) {
 	log.Printf("------ ChatTemplate.GetShortHTML TRACE\n")
 	var buf bytes.Buffer
+	shortTmpl := template.Must(template.ParseFiles("html/chat_li.html"))
 	err := shortTmpl.Execute(&buf, ct)
 	if err != nil {
 		log.Printf("------ ChatTemplate.GetShortHTML ERROR template, %s\n", shortTmpl.Name())

@@ -14,11 +14,10 @@ type MessageTemplate struct {
 	ActiveUser string
 }
 
-var msgTmpl = template.Must(template.ParseFiles("html/message.html"))
-
 func (m *MessageTemplate) GetHTML() (string, error) {
 	log.Printf("------ MessageTemplate.GetHTML TRACE\n")
 	var buf bytes.Buffer
+	msgTmpl := template.Must(template.ParseFiles("html/message.html"))
 	err := msgTmpl.Execute(&buf, m)
 	if err != nil {
 		log.Printf("------ GetHTML ERROR template, %s\n", m.Log())

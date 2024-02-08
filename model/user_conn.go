@@ -14,6 +14,13 @@ type Conn struct {
 	Channel chan UserUpdate
 }
 
+func (c *Conn) Log() string {
+	if c == nil {
+		return "Conn: NIL"
+	}
+	return fmt.Sprintf("Conn: User[%s] Origin[%s]", c.User, c.Origin)
+}
+
 type UserConn map[string]Conn
 
 func (uc *UserConn) IsConn(user string) (bool, *Conn) {
@@ -43,7 +50,7 @@ func (uc *UserConn) Get(user string) (*Conn, error) {
 	return conn, nil
 }
 
-func (uc *UserConn) Remove(user string) {
-	log.Printf("------ UserConn.Remove TRACE user[%s]\n", user)
+func (uc *UserConn) Drop(user string) {
+	log.Printf("------ UserConn.Drop TRACE user[%s]\n", user)
 	delete(*uc, user)
 }

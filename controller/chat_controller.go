@@ -184,18 +184,15 @@ func (c *ChatController) InviteUser(w http.ResponseWriter, r *http.Request) {
 		utils.SendBack(w, r, http.StatusBadRequest)
 		return
 	}
-
 	invitee := r.FormValue("invitee")
 	log.Printf("--%s-> InviteUser TRACE inviting[%s] to chat[%d]\n", utils.GetReqId(r), invitee, chatID)
-	inviteeUser, err := chats.InviteUser(user, chatID, invitee)
+	err = chats.InviteUser(user, chatID, invitee)
 	if err != nil {
 		log.Printf("<-%s-- InviteUser ERROR invite, %s\n", utils.GetReqId(r), err)
 		utils.SendBack(w, r, http.StatusInternalServerError)
 		return
 	}
-	log.Printf("<-%s-- InviteUser TRACE user %s added to chat [%d]\n", utils.GetReqId(r), inviteeUser, chatID)
-	//http.Redirect(w, r, fmt.Sprintf("/chat/%d", chatID), http.StatusFound)
-
+	log.Printf("<-%s-- InviteUser TRACE user %s added to chat [%d]\n", utils.GetReqId(r), invitee, chatID)
 	w.WriteHeader(http.StatusFound)
-	w.Write([]byte(fmt.Sprintf(" [%s] ", inviteeUser)))
+	w.Write([]byte(fmt.Sprintf(" [%s] ", invitee)))
 }
