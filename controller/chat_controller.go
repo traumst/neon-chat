@@ -13,15 +13,10 @@ import (
 )
 
 type ChatController struct {
-	mu sync.Mutex
-	//clients map[*Client]bool
+	mu      sync.Mutex
 	counter *atomic.Int32
 	isInit  bool
 }
-
-// type Client struct {
-// 	send chan string
-// }
 
 func (c *ChatController) init() {
 	c.mu.Lock()
@@ -29,37 +24,15 @@ func (c *ChatController) init() {
 	if c.isInit {
 		return
 	}
+	c.isInit = true
 
 	log.Printf("------ ChatController.init TRACE\n")
 	c.counter = &atomic.Int32{}
 	c.counter.Store(0)
-	c.isInit = true
 }
 
 func (c *ChatController) IsAnyoneConnected() bool {
 	return c.counter.Load() > 0
-}
-
-func (c *ChatController) PollUpdates(w http.ResponseWriter, r *http.Request) {
-	c.init()
-	c.counter.Add(1)
-	defer c.counter.Add(-1)
-
-	log.Printf("--%s-> PollChats TRACE IN as %dth\n", utils.GetReqId(r), c.counter.Load())
-	if r.Method != "GET" {
-		log.Printf("<-%s-- PollChats TRACE does not provide %s\n", utils.GetReqId(r), r.Method)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-	user, err := utils.GetCurrentUser(r)
-	if err != nil {
-		log.Printf("<-%s-- PollChats ERROR auth, %s\n", utils.GetReqId(r), err)
-		http.Redirect(w, r, "/login", http.StatusUnauthorized)
-		return
-	}
-
-	pollUpdates(w, *r, user)
-	log.Printf("--%s-> PollChats TRACE OUT as %dth\n", utils.GetReqId(r), c.counter.Load())
 }
 
 func (c *ChatController) OpenChat(w http.ResponseWriter, r *http.Request) {
@@ -90,7 +63,7 @@ func (c *ChatController) OpenChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("--%s-> OpenChat TRACE chat[%d]\n", utils.GetReqId(r), chatID)
-	openChat, err := chats.OpenChat(user, chatID)
+	openChat, err := app.OpenChat(user, chatID)
 	if err != nil {
 		log.Printf("<-%s-- OpenChat ERROR chat, %s\n", utils.GetReqId(r), err)
 		utils.SendBack(w, r, http.StatusInternalServerError)
@@ -116,6 +89,7 @@ func (c *ChatController) AddChat(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+
 	log.Printf("--%s-> AddChat TRACE check login\n", utils.GetReqId(r))
 	user, err := utils.GetCurrentUser(r)
 	if err != nil {
@@ -123,11 +97,12 @@ func (c *ChatController) AddChat(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusUnauthorized)
 		return
 	}
+
 	chatName := r.FormValue("chatName")
 	log.Printf("--%s-> AddChat TRACE adding chat[%s]\n", utils.GetReqId(r), chatName)
-	chatID := chats.AddChat(user, chatName)
+	chatID := app.AddChat(user, chatName)
 	log.Printf("--%s-> AddChat TRACE opening chat[%s][%d]\n", utils.GetReqId(r), chatName, chatID)
-	openChat, err := chats.OpenChat(user, chatID)
+	openChat, err := app.OpenChat(user, chatID)
 	if err != nil {
 		log.Printf("<-%s-- AddChat ERROR chat, %s\n", utils.GetReqId(r), err)
 		errMsg := fmt.Sprintf("ERROR: %s", err.Error())
@@ -135,10 +110,10 @@ func (c *ChatController) AddChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, err := userConns.Get(user)
-	if err != nil {
-		log.Printf("--%s-> AddChat ERROR cannot distribute chat header[%s] to user[%s], %s\n",
-			utils.GetReqId(r), openChat.Log(), user, err)
+	conn := app.getConn(user)
+	if conn == nil {
+		log.Printf("--%s-> AddChat ERROR cannot distribute chat header[%s] to user[%s]\n",
+			utils.GetReqId(r), openChat.Log(), user)
 	} else {
 		log.Printf("--%s-> AddChat TRACE distributing chat header[%s] to user[%s]\n",
 			utils.GetReqId(r), openChat.Log(), user)
@@ -160,7 +135,7 @@ func (c *ChatController) AddChat(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("<-%s-- AddChat TRACE writing response\n", utils.GetReqId(r))
 
-	w.WriteHeader(http.StatusFound)
+	w.WriteHeader(http.StatusPartialContent)
 	w.Write([]byte(html))
 }
 
@@ -186,7 +161,7 @@ func (c *ChatController) InviteUser(w http.ResponseWriter, r *http.Request) {
 	}
 	invitee := r.FormValue("invitee")
 	log.Printf("--%s-> InviteUser TRACE inviting[%s] to chat[%d]\n", utils.GetReqId(r), invitee, chatID)
-	err = chats.InviteUser(user, chatID, invitee)
+	err = app.InviteUser(user, chatID, invitee)
 	if err != nil {
 		log.Printf("<-%s-- InviteUser ERROR invite, %s\n", utils.GetReqId(r), err)
 		utils.SendBack(w, r, http.StatusInternalServerError)

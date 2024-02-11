@@ -17,7 +17,8 @@ type ChatTemplate struct {
 }
 
 func (c *ChatTemplate) Log() string {
-	return fmt.Sprintf("ChatTemplate{id:%d,name:[%s],active_user:[%s],users:[%s]}", c.ID, c.Name, c.ActiveUser, strings.Join(c.Users, ","))
+	return fmt.Sprintf("ChatTemplate{id:%d,name:[%s],active_user:[%s],users:[%s]}",
+		c.ID, c.Name, c.ActiveUser, strings.Join(c.Users, ","))
 }
 
 func (ct *ChatTemplate) GetHTML() (string, error) {

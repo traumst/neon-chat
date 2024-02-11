@@ -13,6 +13,16 @@ type ChatList struct {
 	isInit bool
 }
 
+func (cl *ChatList) init(user string) {
+	if cl.isInit {
+		return
+	}
+
+	cl.chats = []*Chat{}
+	cl.userAt = make(map[string]*Chat)
+	cl.isInit = true
+}
+
 func (cl *ChatList) AddChat(owner string, chatName string) int {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
@@ -103,14 +113,4 @@ func (cl *ChatList) InviteUser(user string, chatID int, invitee string) error {
 		return err
 	}
 	return nil
-}
-
-func (cl *ChatList) init(user string) {
-	if cl.isInit {
-		return
-	}
-
-	cl.chats = []*Chat{}
-	cl.userAt = make(map[string]*Chat)
-	cl.isInit = true
 }

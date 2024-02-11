@@ -20,13 +20,7 @@
 <hr />
 
 <div class="open-chat-history" style="border: 2px solid gray;">
-    <ul 
-        class="message-list" 
-        hx-sse="connect:/chat/poll swap:message" 
-        hx-trigger="load" 
-        hx-target=".message-list"
-        hx-swap="beforeend"
-    >
+    <ul class="message-list">
         {{ with $chatMsgs := .Messages }}
             {{ range $index, $msg := $chatMsgs }} 
                 {{ template "message.html" $msg }}

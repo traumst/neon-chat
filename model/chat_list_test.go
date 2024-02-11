@@ -2,7 +2,7 @@ package model
 
 import "testing"
 
-func TestInInit(t *testing.T) {
+func TestInit(t *testing.T) {
 	t.Logf("TestAddChat started")
 	cl := ChatList{}
 	if cl.isInit {
@@ -18,9 +18,44 @@ func TestInInit(t *testing.T) {
 func TestAddChat(t *testing.T) {
 	t.Logf("TestAddChat started")
 	cl := ChatList{}
-	chatID := cl.AddChat("test-user", "test-chat")
-	if chatID != 0 {
-		t.Errorf("TestAddChat expected chatID 0, got %d", chatID)
+	chatID1 := cl.AddChat("test-user", "test-chat")
+	if chatID1 != 0 {
+		t.Errorf("TestAddChat expected chatID 0, got %d", chatID1)
+		return
+	}
+	chatID2 := cl.AddChat("test-user-2", "test-chat")
+	if chatID2 != 1 {
+		t.Errorf("TestAddChat expected chatID 1, got %d", chatID2)
+	} else if chatID2 == chatID1 {
+		t.Errorf("TestAddChat added chat with duplicate id %d", chatID2)
+	}
+}
+
+func TestOpenChat(t *testing.T) {
+	t.Logf("TestOpenChat started")
+	cl := ChatList{}
+	chatID1 := cl.AddChat("test-user", "test-chat")
+	chatID2 := cl.AddChat("test-user", "test-chat-2")
+	if chatID2 == chatID1 {
+		t.Errorf("TestAddChat added chat with duplicate id %d", chatID2)
+		return
+	}
+	openChat2 := cl.GetOpenChat("test-user")
+	if openChat2 == nil {
+		t.Errorf("TestOpenChat openChat was NIL")
+		return
+	}
+	openChat1, err := cl.OpenChat("test-user", chatID1)
+	if err != nil {
+		t.Errorf("TestOpenChat failed to open chat [%s]", err)
+		return
+	}
+	if openChat1 == nil {
+		t.Errorf("TestOpenChat openChat was NIL")
+		return
+	}
+	if openChat1.ID == openChat2.ID || openChat1.ID != chatID1 {
+		t.Errorf("TestOpenChat expected chatID %d, got %d", chatID1, openChat1.ID)
 	}
 }
 
@@ -50,28 +85,42 @@ func TestGetOpenChatEmpty(t *testing.T) {
 }
 
 func TestGetOpenChat(t *testing.T) {
-	t.Logf("TestGetOpenChatEmpty started")
+	t.Logf("TestGetOpenChat started")
 	cl := ChatList{}
 	chatID := cl.AddChat("test-user", "test-chat")
 	if chatID != 0 {
-		t.Errorf("TestAddChat expected chatID 0, got [%d]", chatID)
+		t.Errorf("TestGetOpenChat expected chatID 0, got [%d]", chatID)
 		return
 	}
 	chat := cl.GetOpenChat("test-user")
 	if chat == nil {
-		t.Errorf("TestGetOpenChatEmpty chat was NIL [%s]", chat.Log())
+		t.Errorf("TestGetOpenChat chat was NIL [%s]", chat.Log())
 		return
 	}
 	chatID = cl.AddChat("test-user", "test-chat-2")
 	if chatID != 1 {
-		t.Errorf("TestAddChat expected chatID 0, got [%d]", chatID)
+		t.Errorf("TestGetOpenChat expected chatID 1, got [%d]", chatID)
 		return
 	}
 	chat = cl.GetOpenChat("test-user")
 	if chat == nil {
-		t.Errorf("TestGetOpenChatEmpty chat was NIL [%s]", chat.Log())
+		t.Errorf("TestGetOpenChat chat was NIL [%s]", chat.Log())
 	} else if chat.ID != chatID {
-		t.Errorf("TestGetOpenChatEmpty expected chatID 1, got [%d]", chat.ID)
+		t.Errorf("TestGetOpenChat expected chatID 1, got [%d]", chat.ID)
+	}
+}
+
+func TestGetChats(t *testing.T) {
+	t.Logf("TestGetChats started")
+	cl := ChatList{}
+	_ = cl.AddChat("test-user", "test-chat")
+	_ = cl.AddChat("test-user", "test-chat2")
+	_ = cl.AddChat("test-user", "test-chat3")
+	chats := cl.GetChats("test-user")
+	if chats == nil {
+		t.Errorf("TestGetChats chats were nil")
+	} else if len(chats) != 3 {
+		t.Errorf("TestGetChats expected 1 chat, got [%d]", len(chats))
 	}
 }
 

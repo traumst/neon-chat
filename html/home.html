@@ -22,9 +22,8 @@
         <div class="chat-list">
             <ul 
                 class="chat-headers" 
-                hx-sse="connect:/chat/poll swap:chat" 
+                hx-sse="connect:/poll swap:chat" 
                 hx-trigger="load" 
-                hx-target=".chat-headers"
                 hx-swap="beforeend"
             >    
                 {{ with $chats := .Chats }}

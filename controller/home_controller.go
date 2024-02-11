@@ -18,7 +18,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var template *model.ChatTemplate
-	openChat := chats.GetOpenChat(user)
+	openChat := app.GetOpenChat(user)
 	if openChat == nil {
 		log.Printf("--%s-> Home DEBUG, user[%s] has no open chat\n", utils.GetReqId(r), user)
 		template = nil
@@ -29,7 +29,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 	home := model.HomeTemplate{
 		OpenTemplate: template,
-		Chats:        chats.GetChats(user),
+		Chats:        app.GetChats(user),
 		ActiveUser:   user,
 	}
 	html, err := home.GetHTML()

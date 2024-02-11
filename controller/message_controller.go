@@ -33,7 +33,7 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("--%s-> AddMessage TRACE opening current chat for [%s]\n", utils.GetReqId(r), author)
-	openChat := chats.GetOpenChat(author)
+	openChat := app.GetOpenChat(author)
 	if openChat == nil {
 		log.Printf("--%s-> AddMessage WARN no open chat for %s\n", utils.GetReqId(r), author)
 		w.WriteHeader(http.StatusBadRequest)
@@ -59,8 +59,8 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 			utils.GetReqId(r), openChat.Log(), err)
 	} else {
 		for _, user := range chatUsers {
-			conn, err := userConns.Get(user)
-			if err != nil {
+			conn := app.getConn(user)
+			if conn == nil {
 				log.Printf("--%s-> AddChat ERROR cannot distribute message[%s] to user[%s], %s\n",
 					utils.GetReqId(r), message.Log(), user, err)
 			} else {
@@ -107,7 +107,7 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	openChat := chats.GetOpenChat(author)
+	openChat := app.GetOpenChat(author)
 	if openChat == nil {
 		log.Printf("--%s-> DeleteMessage ERROR open template for [%s]\n", utils.GetReqId(r), author)
 		return
