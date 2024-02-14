@@ -18,7 +18,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var template *model.ChatTemplate
-	openChat := app.GetOpenChat(user)
+	openChat := app.state.GetOpenChat(user)
 	if openChat == nil {
 		log.Printf("--%s-> Home DEBUG, user[%s] has no open chat\n", utils.GetReqId(r), user)
 		template = nil
@@ -29,10 +29,10 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 	home := model.HomeTemplate{
 		OpenTemplate: template,
-		Chats:        app.GetChats(user),
+		Chats:        app.state.GetChats(user),
 		ActiveUser:   user,
 	}
-	html, err := home.GetHTML()
+	html, err := home.GetHTML(utils.GetReqId(r))
 	if err != nil {
 		log.Printf("--%s-> Home ERROR, %s\n", utils.GetReqId(r), err)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)

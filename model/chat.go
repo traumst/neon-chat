@@ -39,6 +39,9 @@ func (c *Chat) isUserInChat(user string) bool {
 }
 
 func (c *Chat) Log() string {
+	if c == nil {
+		return "Chat: NIL"
+	}
 	return fmt.Sprintf("Chat{id:%d,name:[%s],owner:[%s]}", c.ID, c.Name, c.Owner)
 }
 

@@ -22,6 +22,6 @@ func PollUpdates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.PollUpdates(w, *r, user)
+	app.PollUpdatesForUser(w, *r, user)
 	log.Printf("<-%s-- PollChats TRACE OUT\n", utils.GetReqId(r))
 }

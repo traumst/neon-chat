@@ -76,6 +76,18 @@ func (cl *ChatList) GetChats(user string) []*Chat {
 	return userChats
 }
 
+func (cl *ChatList) GetChat(user string, chatID int) *Chat {
+	cl.mu.Lock()
+	defer cl.mu.Unlock()
+	cl.init(user)
+	for _, chat := range cl.chats {
+		if (chat.isOwner(user) || chat.isUserInChat(user)) && chat.ID == chatID {
+			return chat
+		}
+	}
+	return nil
+}
+
 func (cl *ChatList) DeleteChat(user string, index int) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()

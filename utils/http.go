@@ -5,8 +5,13 @@ import (
 	"strings"
 )
 
-func SetReqId(r *http.Request) string {
-	reqId := RandStringBytes(5)
+func SetReqId(r *http.Request, s *string) string {
+	var reqId string
+	if s == nil {
+		reqId = RandStringBytes(5)
+	} else {
+		reqId = *s
+	}
 	r.Header.Set("X-Request-Id", reqId)
 	return reqId
 }
@@ -15,10 +20,10 @@ func GetReqId(r *http.Request) string {
 	return r.Header.Get("X-Request-Id")
 }
 
-func SetSseHeaders(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
+func SetSseHeaders(w *http.ResponseWriter) {
+	(*w).Header().Set("Content-Type", "text/event-stream")
+	(*w).Header().Set("Cache-Control", "no-cache")
+	(*w).Header().Set("Connection", "keep-alive")
 }
 
 func ParseUrlPath(r *http.Request) []string {

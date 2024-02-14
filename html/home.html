@@ -9,9 +9,10 @@
         .right-panel { width: 70%; }
     </style>
     <script src="/script/htmx.1.9.10.min.js"></script>
+    <script src="/script/htmx.1.9.10.sse.js"></script>
 </head>
 <body>
-<div class="container">
+<div class="container" hx-ext="sse" sse-connect="/poll">
     <div class="left-panel" style="border: 2px solid green;">
         <div class="active-user">
             <p>Active user: {{ .ActiveUser }}</p>
@@ -20,12 +21,7 @@
             </form>
         </div>
         <div class="chat-list">
-            <ul 
-                class="chat-headers" 
-                hx-sse="connect:/poll swap:chat" 
-                hx-trigger="load" 
-                hx-swap="beforeend"
-            >    
+            <ul class="chat-headers" sse-swap="chat" hx-swap="beforeend"> 
                 {{ with $chats := .Chats }}
                     {{ range $index, $chat := $chats }} 
                         {{ template "chat_li.html" $chat }}

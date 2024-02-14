@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 
 	"go.chat/utils"
 )
@@ -25,20 +26,7 @@ func (c *Conn) Log() string {
 
 type UserConn []Conn
 
-func (uc *UserConn) userConns(user string) []*Conn {
-	conns := make([]*Conn, 0)
-	if uc == nil || len(*uc) == 0 {
-		log.Printf("------ UserConn.userConns TRACE user[%s] connections not found\n", user)
-		return conns
-	}
-	for connID, conn := range *uc {
-		if conn.User == user {
-			log.Printf("------ UserConn.userConns TRACE user[%s] connection[%d] found\n", user, connID)
-			conns = append(conns, &conn)
-		}
-	}
-	return conns
-}
+var mu sync.Mutex
 
 func (uc *UserConn) IsConn(user string) (bool, *Conn) {
 	for _, conn := range *uc {
@@ -50,7 +38,9 @@ func (uc *UserConn) IsConn(user string) (bool, *Conn) {
 }
 
 func (uc *UserConn) Add(user string, origin string, w http.ResponseWriter, r http.Request) *Conn {
-	log.Printf("--%s-- UserConn.Add TRACE user[%s] added from %s\n", utils.GetReqId(&r), user, origin)
+	mu.Lock()
+	defer mu.Unlock()
+	log.Printf("∞---%s---> UserConn.Add TRACE user[%s] added from %s\n", utils.GetReqId(&r), user, origin)
 	newConn := Conn{
 		User:    user,
 		Origin:  origin,
@@ -62,31 +52,37 @@ func (uc *UserConn) Add(user string, origin string, w http.ResponseWriter, r htt
 	return &newConn
 }
 
-func (uc *UserConn) Get(user string) (*Conn, error) {
-	log.Printf("------ UserConn.Get TRACE user[%s]\n", user)
-	conns := uc.userConns(user)
+func (uc UserConn) Get(reqId string, user string) (*Conn, error) {
+	mu.Lock()
+	defer mu.Unlock()
+	log.Printf("∞---%s---> UserConn.Get TRACE IN user[%s]\n", reqId, user)
+	conns := uc.userConns(reqId, user)
 	if len(conns) == 0 {
 		return nil, fmt.Errorf("user[%s] not connected", user)
 	}
 	for _, conn := range conns {
-		if conn.Reader.Context().Done() != nil {
+		if conn != nil {
+			log.Printf("<---%s---∞ UserConn.Get TRACE OUT user[%s]\n", conn.Origin, user)
 			return conn, nil
-		} else {
-			uc.Drop(conn)
 		}
 	}
 
+	log.Printf("<------∞ UserConn.Get ERROR OUT no conn to user[%s]\n", user)
 	return nil, fmt.Errorf("user[%s] has no active conneciton", user)
 }
 
-func (uc *UserConn) Drop(c *Conn) {
-	log.Printf("------ UserConn.Drop TRACE user[%s]\n", c.User)
-	if uc == nil || len(*uc) == 0 {
-		log.Printf("------ UserConn.Drop TRACE attempt to drop user[%s] origin[%s]\n", c.User, c.Origin)
+func (uc *UserConn) Drop(reqId string, c *Conn) {
+	mu.Lock()
+	defer mu.Unlock()
+	if c != nil {
+		log.Printf("∞---%s---> UserConn.Drop TRACE user[%s]\n", reqId, c.User)
+	} else {
+		log.Printf("<---%s---∞ UserConn.Drop TRACE attempt to drop NIL connection\n", reqId)
 		return
 	}
-	if c == nil {
-		log.Printf("------ UserConn.Drop TRACE attempt to drop NIL connection\n")
+
+	if uc == nil || len(*uc) == 0 {
+		log.Printf("<---%s---∞ UserConn.Drop TRACE attempt to drop user[%s]\n", reqId, c.User)
 		return
 	}
 
@@ -96,4 +92,24 @@ func (uc *UserConn) Drop(c *Conn) {
 			return
 		}
 	}
+}
+
+func (uc *UserConn) userConns(reqId string, user string) []*Conn {
+	conns := make([]*Conn, 0)
+	if len(*uc) == 0 {
+		log.Printf("<---%s---∞ UserConn.userConns TRACE user[%s] connections not found\n", reqId, user)
+		return conns
+	}
+	for connID, conn := range *uc {
+		if utils.GetReqId(&conn.Reader) == "" {
+			log.Printf("∞---%s---∞ UserConn.userConns WARN user[%s] connection[%d] is NIL\n", reqId, user, connID)
+			*uc = append((*uc)[:connID], (*uc)[connID+1:]...)
+			continue
+		}
+		if conn.User == user {
+			log.Printf("<---%s---∞ UserConn.userConns TRACE user[%s] connection[%d] found\n", reqId, user, connID)
+			conns = append(conns, &conn)
+		}
+	}
+	return conns
 }

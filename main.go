@@ -20,14 +20,14 @@ func ChainMiddleware(h http.Handler, middleware []Middleware) http.Handler {
 
 func ReqIdMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		utils.SetReqId(r)
+		utils.SetReqId(r, nil)
 		next.ServeHTTP(w, r)
 	})
 }
 
 func LoggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		utils.SetReqId(r)
+		utils.SetReqId(r, nil)
 		log.Printf("--%s-> _req_ %s %s", utils.GetReqId(r), r.Method, r.RequestURI)
 		startTime := time.Now()
 		rec := utils.StatefulWriter{ResponseWriter: w}
