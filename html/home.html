@@ -12,7 +12,7 @@
     <script src="/script/htmx.1.9.10.sse.js"></script>
 </head>
 <body>
-<div class="container" hx-ext="sse" sse-connect="/poll">
+<div class="container" hx-triggger="load" hx-ext="sse" sse-connect="/poll">
     <div class="left-panel" style="border: 2px solid green;">
         <div class="active-user">
             <p>Active user: {{ .ActiveUser }}</p>

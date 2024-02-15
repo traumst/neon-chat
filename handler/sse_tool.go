@@ -23,14 +23,14 @@ func SendEvent(
 
 	var eventName model.SSEvent
 	switch up.Type {
-	case model.ChatUpdate:
-	case model.ChatInvite:
+	case model.ChatUpdate, model.ChatInvite:
 		eventName = model.ChatEventName
 	case model.MessageUpdate:
 		eventName = model.MessageEventName
 	case model.PingUpdate:
 		eventName = model.PingEventName
 	default:
+		eventName = model.Unknown
 		log.Printf("<--%s--∞ SendEvent ERROR unknown event type, %+v\n", reqId, up)
 		return
 	}
@@ -38,10 +38,9 @@ func SendEvent(
 	eventID := fmt.Sprintf("%s-%s", eventName, utils.RandStringBytes(5))
 	// must escape newlines in SSE
 	html := strings.ReplaceAll(up.Msg, "\n", " ")
-
 	log.Printf("<--%s--∞ SendEvent TRACE type[%s], event[%s], html[%s]\n", reqId, eventName, eventID, html)
 	if w == nil {
-		log.Printf("<--%s--∞ SendEvent ERROR writer is nil\n", reqId)
+		log.Printf("<--%s--∞ SendEvent ERROR writer is nil on event[%s]\n", reqId, eventName)
 		return
 	}
 

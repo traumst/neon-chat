@@ -84,26 +84,24 @@ func (app *App) sendUpdates(reqId string, up model.UserUpdate, user string) {
 	log.Printf("<--%s--∞ sendUpdates TRACE OUT, user[%s], update[%s]\n", reqId, user, up)
 }
 
-func (app *App) trySend(reqId string, up model.UserUpdate, user string) {
+func (app *App) trySend(reqId string, up model.UserUpdate, user string) bool {
 	log.Printf("∞--%s--> trySend TRACE IN user[%s]\n", reqId, user)
 	conn := app.state.GetConn(reqId, user)
 	if conn == nil {
 		log.Printf("<--%s--∞ trySend ERROR user[%s] has no connection\n", reqId, user)
-		return
+		return false
 	}
 
 	r := conn.Reader
 	w := conn.Writer
 
 	switch up.Type {
-	case model.ChatUpdate:
-	case model.ChatInvite:
-	case model.MessageUpdate:
-	case model.PingUpdate:
-		log.Printf("<--%s--∞ trySend TRACE sending event user[%s], w[%T]\n", reqId, user, w)
+	case model.ChatUpdate, model.ChatInvite, model.MessageUpdate, model.PingUpdate:
+		log.Printf("<--%s--∞ trySend TRACE sending event[%s] to user[%s] via w[%T]\n", reqId, up.Type, user, w)
 		handler.SendEvent(reqId, &w, up, user)
+		return true
 	default:
-		log.Printf("<--%s--∞ trySend ERROR unknown update type[%s], %s\n", utils.GetReqId(&r), up.Type, up)
+		log.Printf("<--%s--∞ trySend ERROR unknown update event[%s], update[%s]\n", utils.GetReqId(&r), up.Type, up)
+		return false
 	}
-	log.Printf("<--%s--∞ trySend TRACE OUT user[%s]\n", reqId, user)
 }
