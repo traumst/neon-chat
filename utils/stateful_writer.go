@@ -17,7 +17,8 @@ func (rec *StatefulWriter) Status() int {
 }
 
 func (w *StatefulWriter) Flush() {
-	if flusher, ok := w.ResponseWriter.(http.Flusher); ok {
+	flusher, ok := w.ResponseWriter.(http.Flusher)
+	if ok {
 		flusher.Flush()
 	}
 }

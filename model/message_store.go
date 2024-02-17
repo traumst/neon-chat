@@ -12,43 +12,46 @@ type MessageStore struct {
 	nextID   int
 }
 
-func (store *MessageStore) Add(message *Message) (*Message, error) {
-	author := strings.TrimSpace(message.Author)
-	msg := strings.TrimSpace(message.Text)
+func (s *MessageStore) Add(m *Message) (*Message, error) {
+	author := strings.TrimSpace(m.Author)
+	msg := strings.TrimSpace(m.Text)
 	if author == "" || msg == "" {
 		return nil, fmt.Errorf("bad arguments")
 	}
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	message.ID = store.nextID
-	store.messages = append(store.messages, message)
-	store.nextID += 1
-	return message, nil
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	m.ID = s.nextID
+	s.messages = append(s.messages, m)
+	s.nextID += 1
+	return m, nil
 }
 
-func (store *MessageStore) GetAll() []*Message {
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	return store.messages
+func (s *MessageStore) GetAll() []*Message {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.messages
 }
 
-func (store *MessageStore) Get(id int) (*Message, error) {
-	if id < 0 || id >= len(store.messages) {
+func (s *MessageStore) Get(id int) (*Message, error) {
+	if id < 0 || id >= len(s.messages) {
 		return nil, fmt.Errorf("message not found")
 	}
 
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	return store.messages[id], nil
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.messages[id], nil
 }
 
-func (store *MessageStore) Delete(id int) error {
-	if id < 0 || id >= len(store.messages) {
+func (s *MessageStore) Delete(m *Message) error {
+	if m == nil {
+		return fmt.Errorf("cannot remove NIL")
+	}
+	if m.ID < 0 || m.ID >= len(s.messages) {
 		return fmt.Errorf("message not found")
 	}
 
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	store.messages = append(store.messages[id:], store.messages[id+1:]...)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.messages = append(s.messages[m.ID:], s.messages[m.ID+1:]...)
 	return nil
 }

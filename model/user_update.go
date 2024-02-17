@@ -1,20 +1,11 @@
 package model
 
 type UpdateType int
-
-func (u UpdateType) String() string {
-	switch u {
-	case ChatUpdate:
-		return "ChatUpdate"
-	case ChatInvite:
-		return "ChatInvite"
-	case MessageUpdate:
-		return "MessageUpdate"
-	case PingUpdate:
-		return "PingUpdate"
-	default:
-		return "UnknownUpdate"
-	}
+type UserUpdate struct {
+	Type   UpdateType
+	ChatID int
+	User   string
+	Msg    string
 }
 
 const (
@@ -22,11 +13,17 @@ const (
 	ChatUpdate    UpdateType = iota
 	ChatInvite    UpdateType = iota
 	MessageUpdate UpdateType = iota
-	PingUpdate    UpdateType = iota
 )
 
-type UserUpdate struct {
-	Type UpdateType
-	User string
-	Msg  string
+func (u UpdateType) String() string {
+	switch u {
+	case ChatUpdate:
+		return "chat"
+	case ChatInvite:
+		return "invite"
+	case MessageUpdate:
+		return "message"
+	default:
+		return "unknown"
+	}
 }

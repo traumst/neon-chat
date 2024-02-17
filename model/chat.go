@@ -2,8 +2,6 @@ package model
 
 import (
 	"fmt"
-	"log"
-	"strings"
 	"sync"
 )
 
@@ -29,7 +27,6 @@ func (c *Chat) isAuthor(user string, msgID int) bool {
 }
 
 func (c *Chat) isUserInChat(user string) bool {
-	log.Printf("------ Chat.isUserInChat TRACE user[%s], chat[%s]\n", user, strings.Join(c.users, ","))
 	for _, u := range c.users {
 		if u == user {
 			return true
@@ -38,30 +35,7 @@ func (c *Chat) isUserInChat(user string) bool {
 	return false
 }
 
-func (c *Chat) Log() string {
-	if c == nil {
-		return "Chat: NIL"
-	}
-	return fmt.Sprintf("Chat{id:%d,name:[%s],owner:[%s]}", c.ID, c.Name, c.Owner)
-}
-
-func (c *Chat) ToTemplate(user string) *ChatTemplate {
-	messages := make([]MessageTemplate, 0)
-	for _, msg := range c.history.GetAll() {
-		messages = append(messages, *msg.ToTemplate(user))
-	}
-	return &ChatTemplate{
-		ID:         c.ID,
-		Name:       c.Name,
-		ActiveUser: user,
-		Users:      c.users,
-		Messages:   messages,
-	}
-}
-
 func (c *Chat) AddUser(owner string, user string) error {
-	log.Printf("------ Chat.AddUser TRACE user[%s] added by owner[%s] to chat[%s]\n",
-		user, owner, strings.Join(c.users, ","))
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if !c.isOwner(owner) {
@@ -117,7 +91,12 @@ func (c *Chat) GetMessage(user string, id int) (*Message, error) {
 	return c.history.Get(id)
 }
 
-func (c *Chat) RemoveMessage(user string, ID int) error {
+func (c *Chat) DropMessage(user string, ID int) error {
+	msg, err := c.GetMessage(user, ID)
+	if err != nil {
+		return err
+	}
+
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if !c.isUserInChat(user) {
@@ -126,5 +105,22 @@ func (c *Chat) RemoveMessage(user string, ID int) error {
 	if !c.isAuthor(user, ID) && !c.isOwner(user) {
 		return fmt.Errorf("only user that sent the original message or chat owner can delete messages")
 	}
-	return c.history.Delete(ID)
+	return c.history.Delete(msg)
+}
+
+func (c *Chat) ToTemplate(user string) *ChatTemplate {
+	messages := make([]MessageTemplate, 0)
+	for _, msg := range c.history.GetAll() {
+		if msg == nil {
+			continue
+		}
+		messages = append(messages, *msg.ToTemplate(user))
+	}
+	return &ChatTemplate{
+		ID:         c.ID,
+		Name:       c.Name,
+		ActiveUser: user,
+		Users:      c.users,
+		Messages:   messages,
+	}
 }

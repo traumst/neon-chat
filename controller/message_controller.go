@@ -33,58 +33,73 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("--%s-> AddMessage TRACE opening current chat for [%s]\n", utils.GetReqId(r), author)
-	openChat := app.state.GetOpenChat(author)
-	if openChat == nil {
+	chat := app.State.GetOpenChat(author)
+	if chat == nil {
 		log.Printf("--%s-> AddMessage WARN no open chat for %s\n", utils.GetReqId(r), author)
 		w.WriteHeader(http.StatusBadRequest)
 		http.Redirect(w, r, "/", http.StatusBadRequest)
 		return
 	}
 
-	log.Printf("--%s-> AddMessage TRACE storing message for [%s] in [%s]\n", utils.GetReqId(r), author, openChat.Log())
-	message, err := openChat.AddMessage(author, model.Message{ID: 0, Author: author, Text: msg})
+	log.Printf("--%s-> AddMessage TRACE storing message for [%s] in [%s]\n", utils.GetReqId(r), author, chat.Name)
+	message, err := chat.AddMessage(author, model.Message{ID: 0, Author: author, Text: msg})
 	if err != nil {
 		log.Printf("--%s-> AddMessage ERROR add message, %s\n", utils.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("--%s-> AddMessage TRACE templating [%s]\n", utils.GetReqId(r), message.Log())
-	html, err := message.ToTemplate(author).GetHTML(utils.GetReqId(r))
+	log.Printf("--%s-> AddMessage TRACE templating message\n", utils.GetReqId(r))
+	html, err := message.ToTemplate(author).GetHTML()
 	if err != nil {
-		log.Printf("<-%s-- AddMessage ERROR html, %s\n", utils.GetReqId(r), err)
+		log.Printf("<-%s-- AddMessage ERROR html [%+v], %s\n", utils.GetReqId(r), message, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	chatUsers, err := openChat.GetUsers(author)
-	if err != nil || chatUsers == nil {
-		log.Printf("--%s-> AddMessage ERROR get users, chat[%s], %s\n",
-			utils.GetReqId(r), openChat.Log(), err)
-	} else if len(chatUsers) == 0 {
-		log.Printf("--%s-> AddMessage ERROR chatUsers are empty, chat[%s], %s\n",
-			utils.GetReqId(r), openChat.Log(), err)
-	} else {
-		for _, user := range chatUsers {
-			conn := app.state.GetConn(utils.GetReqId(r), user)
-			if conn == nil {
-				log.Printf("--%s-> AddMessage ERROR cannot distribute message[%s] to user[%s], %s\n",
-					utils.GetReqId(r), message.Log(), user, err)
-			} else {
-				log.Printf("--%s-> AddMessage TRACE distributing message[%s] to user[%s]\n",
-					utils.GetReqId(r), message.Log(), author)
-				conn.Channel <- model.UserUpdate{
-					Type: model.MessageUpdate,
-					User: user,
-					Msg:  html,
-				}
-			}
-		}
-	}
+	distributeBetween(chat, author, html, r)
 
 	log.Printf("<-%s-- AddMessage TRACE serving html\n", utils.GetReqId(r))
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte(html))
+}
+
+func distributeBetween(chat *model.Chat, author string, html string, r *http.Request) {
+	chatUsers, err := chat.GetUsers(author)
+	if err != nil || chatUsers == nil {
+		log.Printf("--%s-> distributeBetween ERROR get users, chat[%+v], %s\n",
+			utils.GetReqId(r), chat, err)
+		return
+	}
+	if len(chatUsers) == 0 {
+		log.Printf("--%s-> distributeBetween ERROR chatUsers are empty, chat[%+v], %s\n",
+			utils.GetReqId(r), chat, err)
+		return
+	}
+
+	for _, user := range chatUsers {
+		if user == author {
+			log.Printf("--%s-> distributeBetween INFO new message is not sent to author[%s]\n",
+				utils.GetReqId(r), user)
+			continue
+		}
+
+		conn, err := app.State.GetConn(user)
+		if err != nil {
+			log.Printf("--%s-> distributeBetween ERROR cannot distribute html[%s] to user[%s], %s\n",
+				utils.GetReqId(r), html, user, err)
+			continue
+		}
+
+		log.Printf("--%s-> distributeBetween TRACE distributing html[%s] to user[%s]\n",
+			utils.GetReqId(r), html, author)
+		conn.Channel <- model.UserUpdate{
+			Type:   model.MessageUpdate,
+			ChatID: chat.ID,
+			User:   author,
+			Msg:    html,
+		}
+	}
 }
 
 func DeleteMessage(w http.ResponseWriter, r *http.Request) {
@@ -95,23 +110,30 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method != "POST" {
-		log.Printf("--%s-> DeleteMessage ERROR request method\n", utils.GetReqId(r))
+		log.Printf("<-%s-- DeleteMessage ERROR request method\n", utils.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
 	id, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
+		log.Printf("<-%s-- DeleteMessage ERROR parse id, %s\n", utils.GetReqId(r), err)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	openChat := app.state.GetOpenChat(author)
+	openChat := app.State.GetOpenChat(author)
 	if openChat == nil {
-		log.Printf("--%s-> DeleteMessage ERROR open template for [%s]\n", utils.GetReqId(r), author)
+		log.Printf("<-%s-- DeleteMessage ERROR open template for [%s]\n", utils.GetReqId(r), author)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	openChat.RemoveMessage(author, id)
-
+	err = openChat.DropMessage(author, id)
+	if err != nil {
+		log.Printf("<-%s-- DeleteMessage ERROR remove message[%d] from [%s], %s\n",
+			utils.GetReqId(r), id, openChat.Name, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	log.Printf("<-%s-- DeleteMessage done\n", utils.GetReqId(r))
 	w.WriteHeader(http.StatusFound)
 	w.Write(make([]byte, 0))
 }

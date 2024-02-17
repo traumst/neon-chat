@@ -22,7 +22,7 @@ func TestInitUserUpdate(t *testing.T) {
 	t.Logf("TestInitUserUpdate started")
 	up := UserUpdate{User: "test_user_fdyguf"}
 	log := fmt.Sprintf("%+v", up)
-	conditions := strings.Contains(log, "UnknownUpdate") &&
+	conditions := strings.Contains(log, "unknown") &&
 		strings.Contains(log, "test_user_fdyguf")
 	if !conditions {
 		t.Errorf("TestInitUserUpdate unexpected log [%s]", log)

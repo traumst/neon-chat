@@ -17,13 +17,6 @@ type Conn struct {
 	Channel chan UserUpdate
 }
 
-func (c *Conn) Log() string {
-	if c == nil {
-		return "Conn: NIL"
-	}
-	return fmt.Sprintf("Conn:{User:\"%s\",Origin:\"%s\"}", c.User, c.Origin)
-}
-
 type UserConn []Conn
 
 var mu sync.Mutex
@@ -46,68 +39,62 @@ func (uc *UserConn) Add(user string, origin string, w http.ResponseWriter, r htt
 		Origin:  origin,
 		Writer:  w,
 		Reader:  r,
-		Channel: make(chan UserUpdate, 128),
+		Channel: make(chan UserUpdate, 8),
 	}
 	*uc = append(*uc, newConn)
 	return &newConn
 }
 
-func (uc UserConn) Get(reqId string, user string) (*Conn, error) {
+func (uc UserConn) Get(user string) (*Conn, error) {
 	mu.Lock()
 	defer mu.Unlock()
-	log.Printf("∞---%s---> UserConn.Get TRACE IN user[%s]\n", reqId, user)
-	conns := uc.userConns(reqId, user)
+	conns := uc.userConns(user)
 	if len(conns) == 0 {
 		return nil, fmt.Errorf("user[%s] not connected", user)
 	}
-	for _, conn := range conns {
+
+	var conn *Conn
+	for _, conn = range conns {
 		if conn != nil {
-			log.Printf("<---%s---∞ UserConn.Get TRACE OUT user[%s]\n", conn.Origin, user)
-			return conn, nil
+			break
 		}
 	}
 
-	log.Printf("<------∞ UserConn.Get ERROR OUT no conn to user[%s]\n", user)
-	return nil, fmt.Errorf("user[%s] has no active conneciton", user)
+	if conn == nil {
+		return nil, fmt.Errorf("user[%s] has no active conneciton", user)
+	}
+	return conn, nil
 }
 
-func (uc *UserConn) Drop(reqId string, c *Conn) {
+func (uc *UserConn) Drop(c *Conn) error {
 	mu.Lock()
 	defer mu.Unlock()
-	if c != nil {
-		log.Printf("∞---%s---> UserConn.Drop TRACE user[%s]\n", reqId, c.User)
-	} else {
-		log.Printf("<---%s---∞ UserConn.Drop TRACE attempt to drop NIL connection\n", reqId)
-		return
+	if c == nil {
+		return fmt.Errorf("attempt to drop NIL connection")
 	}
 
 	if uc == nil || len(*uc) == 0 {
-		log.Printf("<---%s---∞ UserConn.Drop TRACE attempt to drop user[%s]\n", reqId, c.User)
-		return
+		return fmt.Errorf("no connections to drop")
 	}
 
 	for i, conn := range *uc {
 		if conn.User == c.User && conn.Origin == c.Origin {
 			*uc = append((*uc)[:i], (*uc)[i+1:]...)
-			return
+			return nil
 		}
 	}
+
+	return fmt.Errorf("connection not found")
 }
 
-func (uc *UserConn) userConns(reqId string, user string) []*Conn {
+func (uc *UserConn) userConns(user string) []*Conn {
 	conns := make([]*Conn, 0)
 	if len(*uc) == 0 {
-		log.Printf("<---%s---∞ UserConn.userConns TRACE user[%s] connections not found\n", reqId, user)
 		return conns
 	}
-	for connID, conn := range *uc {
-		if utils.GetReqId(&conn.Reader) == "" {
-			log.Printf("∞---%s---∞ UserConn.userConns WARN user[%s] connection[%d] is NIL\n", reqId, user, connID)
-			*uc = append((*uc)[:connID], (*uc)[connID+1:]...)
-			continue
-		}
+	for _, conn := range *uc {
+		// TODO discard dead conn
 		if conn.User == user {
-			log.Printf("<---%s---∞ UserConn.userConns TRACE user[%s] connection[%d] found\n", reqId, user, connID)
 			conns = append(conns, &conn)
 		}
 	}

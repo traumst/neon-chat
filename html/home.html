@@ -26,6 +26,8 @@
                     {{ range $index, $chat := $chats }} 
                         {{ template "chat_li.html" $chat }}
                     {{ end }}
+                {{ else }}
+                    <li>No chats yet</li>
                 {{ end }}
             </ul>
         </div>

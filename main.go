@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"time"
 
 	"go.chat/controller"
 	"go.chat/utils"
@@ -28,12 +27,11 @@ func ReqIdMiddleware(next http.Handler) http.Handler {
 func LoggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		utils.SetReqId(r, nil)
-		log.Printf("--%s-> _req_ %s %s", utils.GetReqId(r), r.Method, r.RequestURI)
-		startTime := time.Now()
+		//log.Printf("--%s-> _req_ %s %s", utils.GetReqId(r), r.Method, r.RequestURI)
+		//startTime := time.Now()
 		rec := utils.StatefulWriter{ResponseWriter: w}
 		next.ServeHTTP(&rec, r)
-		log.Printf("<-%s-- _res_ %s %s status_code:[%d] in %v",
-			utils.GetReqId(r), r.Method, r.RequestURI, rec.Status(), time.Since(startTime))
+		//log.Printf("<-%s-- _res_ %s %s status_code:[%d] in %v", utils.GetReqId(r), r.Method, r.RequestURI, rec.Status(), time.Since(startTime))
 	})
 }
 

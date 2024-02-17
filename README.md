@@ -11,6 +11,8 @@ This app is being build as an excercise for me to
 ## TODOs
 
 ### *Right now...*
+...1st user stops getting SSE as soon as the 2nd conntect
+
 ...working on adding channels and some concurrency to distribute
 Ok, now I want to have a loop in a go routine, that listens on a channel.
 I need to hold a list of Clients, contaning: 
@@ -18,7 +20,10 @@ I need to hold a list of Clients, contaning:
 * open chat
 * connection - r and w
 
-I will then loop over channel messages and distribute them between users in chats. 
+<s>I will then loop over channel messages and distribute them between users in chats.</s>
+
+Working on message distribution. At this point, we can create chats and get live updates.
+Partially. Messages are not distribute properly. Chat headers are OK, but not for invitee.
 
 ### Message Broadcasting: 
 - When the server receives a message from a client over a regular HTTP POST request, it should broadcast that message to all other connected clients via the SSE connection.

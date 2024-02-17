@@ -94,7 +94,7 @@ func TestGetOpenChat(t *testing.T) {
 	}
 	chat := cl.GetOpenChat("test-user")
 	if chat == nil {
-		t.Errorf("TestGetOpenChat chat was NIL [%s]", chat.Log())
+		t.Errorf("TestGetOpenChat chat was NIL [%+v]", chat)
 		return
 	}
 	chatID = cl.AddChat("test-user", "test-chat-2")
@@ -104,7 +104,7 @@ func TestGetOpenChat(t *testing.T) {
 	}
 	chat = cl.GetOpenChat("test-user")
 	if chat == nil {
-		t.Errorf("TestGetOpenChat chat was NIL [%s]", chat.Log())
+		t.Errorf("TestGetOpenChat chat was NIL [%+v]", chat)
 	} else if chat.ID != chatID {
 		t.Errorf("TestGetOpenChat expected chatID 1, got [%d]", chat.ID)
 	}
@@ -127,17 +127,24 @@ func TestGetChats(t *testing.T) {
 func TestDeleteChatEmpty(t *testing.T) {
 	t.Logf("TestDeleteChatEmpty started")
 	cl := ChatList{}
-	err := cl.DeleteChat("test-user", -1)
+	err := cl.DeleteChat("test-user", nil)
 	if err == nil {
 		t.Errorf("TestDeleteChatEmpty expected error")
 	}
-	err = cl.DeleteChat("test-user", 0)
+	chat1 := Chat{ID: 1}
+	err = cl.DeleteChat("test-user", &chat1)
 	if err == nil {
-		t.Errorf("TestDeleteChatEmpty expected error")
+		t.Errorf("TestDeleteChatEmpty expected error, 1")
 	}
-	err = cl.DeleteChat("test-user", 1)
+	chat2 := Chat{ID: 0}
+	err = cl.DeleteChat("test-user", &chat2)
 	if err == nil {
-		t.Errorf("TestDeleteChatEmpty expected error")
+		t.Errorf("TestDeleteChatEmpty expected error, 0")
+	}
+	chat3 := Chat{ID: -1}
+	err = cl.DeleteChat("test-user", &chat3)
+	if err == nil {
+		t.Errorf("TestDeleteChatEmpty expected error, -1")
 	}
 }
 
@@ -154,14 +161,19 @@ func TestDeleteChat(t *testing.T) {
 		t.Errorf("TestDeleteChatEmpty openChat was NIL")
 		return
 	}
-	err := cl.DeleteChat("test-user", chatID)
+	chat, err := cl.GetChat("test-user", chatID)
+	if err != nil {
+		t.Errorf("TestDeleteChatEmpty get failed [%s]", err)
+		return
+	}
+	err = cl.DeleteChat("test-user", chat)
 	if err != nil {
 		t.Errorf("TestDeleteChatEmpty delete failed [%s]", err)
 		return
 	}
 	openChat = cl.GetOpenChat("test-user")
 	if openChat != nil {
-		t.Errorf("TestDeleteChatEmpty openChat was expected to be NIL, but was [%s]", openChat.Log())
+		t.Errorf("TestDeleteChatEmpty openChat was expected to be NIL, but was [%+v]", openChat)
 	}
 }
 
@@ -178,7 +190,12 @@ func TestDeleteChatNotOwner(t *testing.T) {
 		t.Errorf("TestDeleteChatEmpty openChat was NIL")
 		return
 	}
-	err := cl.DeleteChat("OTHER-user", chatID)
+	chat, err := cl.GetChat("test-user", chatID)
+	if err != nil {
+		t.Errorf("TestDeleteChatEmpty get failed [%s]", err)
+		return
+	}
+	err = cl.DeleteChat("OTHER-user", chat)
 	if err == nil {
 		t.Errorf("TestDeleteChatEmpty delete should not have been allowed")
 	}

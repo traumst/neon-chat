@@ -18,9 +18,9 @@ func (cl *ChatList) init(user string) {
 		return
 	}
 
+	cl.isInit = true
 	cl.chats = []*Chat{}
 	cl.userAt = make(map[string]*Chat)
-	cl.isInit = true
 }
 
 func (cl *ChatList) AddChat(owner string, chatName string) int {
@@ -76,35 +76,46 @@ func (cl *ChatList) GetChats(user string) []*Chat {
 	return userChats
 }
 
-func (cl *ChatList) GetChat(user string, chatID int) *Chat {
+func (cl *ChatList) GetChat(user string, chatID int) (*Chat, error) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	cl.init(user)
-	for _, chat := range cl.chats {
-		if (chat.isOwner(user) || chat.isUserInChat(user)) && chat.ID == chatID {
-			return chat
+	var chat *Chat
+	for _, chat = range cl.chats {
+		if chat.ID == chatID {
+			break
 		}
 	}
-	return nil
+
+	if chat == nil {
+		return nil, fmt.Errorf("chatID[%d] does not exist", chatID)
+	}
+	if !chat.isOwner(user) && !chat.isUserInChat(user) {
+		return nil, fmt.Errorf("user[%s] is not in chat[%d]", user, chatID)
+	}
+
+	return chat, nil
 }
 
-func (cl *ChatList) DeleteChat(user string, index int) error {
+func (cl *ChatList) DeleteChat(user string, chat *Chat) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	cl.init(user)
-	if index < 0 || index >= len(cl.chats) {
-		return fmt.Errorf("invalid chat index[%d]", index)
+	if chat == nil {
+		return fmt.Errorf("user[%s] cannot remove NIL chat", user)
 	}
-	removed := cl.chats[index]
-	if !removed.isOwner(user) {
-		return fmt.Errorf("user[%s] is not owner of chat %d", user, index)
+	if !chat.isOwner(user) {
+		return fmt.Errorf("user[%s] is not owner of chat %d", user, chat.ID)
 	}
-	if len(cl.chats) == 1 {
-		cl.chats = nil
+	if cl.chats[chat.ID] == nil {
+		return fmt.Errorf("chat[%d] is NIL", chat.ID)
+	}
+
+	cl.chats[chat.ID] = nil
+	if cl.userAt[user].ID == chat.ID {
 		cl.userAt[user] = nil
-	} else {
-		cl.chats = append(cl.chats[:index], cl.chats[index+1:]...)
 	}
+
 	return nil
 }
 
