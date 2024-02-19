@@ -4,7 +4,7 @@ type UpdateType int
 type UserUpdate struct {
 	Type   UpdateType
 	ChatID int
-	User   string
+	Author string
 	Msg    string
 }
 

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 
 	"go.chat/model"
 	"go.chat/utils"
@@ -91,7 +92,6 @@ func (c *ChatController) AddChat(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("--%s-> AddChat TRACE templating chat[%s][%d]\n", utils.GetReqId(r), chatName, chatID)
 	template := openChat.ToTemplate(user)
-
 	sendChatContent(utils.GetReqId(r), w, template)
 	err = sendChatHeader(utils.GetReqId(r), template)
 	if err != nil {
@@ -118,23 +118,29 @@ func sendChatHeader(reqId string, template *model.ChatTemplate) error {
 		return err
 	}
 
+	var wg sync.WaitGroup
 	errors := make([]string, 0)
 	log.Printf("--%s-> sendChatHeader TRACE distributing chat[%s] header to users [%+v]\n",
 		reqId, template.Name, template.Users)
 	for _, user := range template.Users {
-		conn, err := app.State.GetConn(user)
-		if err != nil {
-			errors = append(errors, "user:"+user+",err:"+err.Error())
-			continue
-		}
-		log.Printf("--%s-> sendChatHeader TRACE distributing chat[%s] header to user[%s]\n", reqId, template.Name, user)
-		conn.Channel <- model.UserUpdate{
-			Type:   model.ChatUpdate,
-			ChatID: template.ID,
-			User:   template.ActiveUser,
-			Msg:    shortHtml,
-		}
+		wg.Add(1)
+		go func(user string) {
+			defer wg.Done()
+			conn, err := app.State.GetConn(user)
+			if err != nil {
+				errors = append(errors, "user:"+user+",err:"+err.Error())
+				return
+			}
+			log.Printf("--%s-> sendChatHeader TRACE distributing chat[%s] header to user[%s]\n", reqId, template.Name, user)
+			conn.Channel <- model.UserUpdate{
+				Type:   model.ChatUpdate,
+				ChatID: template.ID,
+				Author: template.ActiveUser,
+				Msg:    shortHtml,
+			}
+		}(user)
 	}
+	wg.Wait()
 	if len(errors) > 0 {
 		return fmt.Errorf("%+v", errors)
 	}

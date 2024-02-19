@@ -24,7 +24,7 @@ func (app *App) PollUpdatesForUser(conn *Conn, user string) {
 		case <-reader.Context().Done():
 			return
 		case update := <-channel:
-			if update.User == "" || update.Msg == "" {
+			if update.Author == "" || update.Msg == "" {
 				log.Printf("<--%s--∞ APP.PollUpdatesForUser INFO user or msg is empty, update[%+v]\n", origin, update)
 				return
 			}

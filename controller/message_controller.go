@@ -65,19 +65,19 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 }
 
 func distributeBetween(chat *model.Chat, author string, html string, r *http.Request) {
-	chatUsers, err := chat.GetUsers(author)
-	if err != nil || chatUsers == nil {
+	users, err := chat.GetUsers(author)
+	if err != nil || users == nil {
 		log.Printf("--%s-> distributeBetween ERROR get users, chat[%+v], %s\n",
 			utils.GetReqId(r), chat, err)
 		return
 	}
-	if len(chatUsers) == 0 {
+	if len(users) == 0 {
 		log.Printf("--%s-> distributeBetween ERROR chatUsers are empty, chat[%+v], %s\n",
 			utils.GetReqId(r), chat, err)
 		return
 	}
 
-	for _, user := range chatUsers {
+	for _, user := range users {
 		if user == author {
 			log.Printf("--%s-> distributeBetween INFO new message is not sent to author[%s]\n",
 				utils.GetReqId(r), user)
@@ -96,7 +96,7 @@ func distributeBetween(chat *model.Chat, author string, html string, r *http.Req
 		conn.Channel <- model.UserUpdate{
 			Type:   model.MessageUpdate,
 			ChatID: chat.ID,
-			User:   author,
+			Author: author,
 			Msg:    html,
 		}
 	}
