@@ -9,6 +9,7 @@
     </p>
 </div>
 
+{{ if eq .Owner .User }}
 <div class="invite-user" style="border: 2px solid green;">
     <form method="POST" hx-target=".open-chat-users" hx-post="/chat/invite" hx-trigger="submit" hx-swap="beforeend">
         <input type="hidden" name="chatId" value="{{ .ID }}">
@@ -16,6 +17,7 @@
         <button type="submit">Invite</button>
     </form>
 </div>
+{{ end }}
 
 <hr />
 

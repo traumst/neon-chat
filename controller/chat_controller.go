@@ -178,7 +178,7 @@ func informUser(reqId string, user string, template *model.ChatTemplate) error {
 			user,
 			template.ID,
 			template.Name,
-			template.UpdateSourceUser,
+			template.User,
 			shortHtml,
 		)
 	}()

@@ -6,11 +6,12 @@ import (
 )
 
 type ChatTemplate struct {
-	ID               int
-	Name             string
-	UpdateSourceUser string
-	Users            []string
-	Messages         []MessageTemplate
+	ID       int
+	Name     string
+	User     string
+	Owner    string
+	Users    []string
+	Messages []MessageTemplate
 }
 
 func (c *ChatTemplate) GetHTML() (string, error) {

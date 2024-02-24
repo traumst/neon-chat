@@ -117,10 +117,11 @@ func (c *Chat) ToTemplate(user string) *ChatTemplate {
 		messages = append(messages, *msg.ToTemplate(user))
 	}
 	return &ChatTemplate{
-		ID:               c.ID,
-		Name:             c.Name,
-		UpdateSourceUser: user,
-		Users:            c.users,
-		Messages:         messages,
+		ID:       c.ID,
+		Name:     c.Name,
+		User:     user,
+		Owner:    c.Owner,
+		Users:    c.users,
+		Messages: messages,
 	}
 }
