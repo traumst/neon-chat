@@ -10,11 +10,13 @@ import (
 )
 
 type Conn struct {
-	User    string
-	Origin  string
-	Writer  http.ResponseWriter
-	Reader  http.Request
-	Channel chan UserUpdate
+	ID     int
+	User   string
+	Origin string
+	Writer http.ResponseWriter
+	Reader http.Request
+	In     chan UserUpdate
+	Out    chan UserUpdate
 }
 
 type UserConn []Conn
@@ -34,12 +36,15 @@ func (uc *UserConn) Add(user string, origin string, w http.ResponseWriter, r htt
 	mu.Lock()
 	defer mu.Unlock()
 	log.Printf("∞---%s---> UserConn.Add TRACE user[%s] added from %s\n", utils.GetReqId(&r), user, origin)
+	id := len(*uc)
 	newConn := Conn{
-		User:    user,
-		Origin:  origin,
-		Writer:  w,
-		Reader:  r,
-		Channel: make(chan UserUpdate, 8),
+		ID:     id,
+		User:   user,
+		Origin: origin,
+		Writer: w,
+		Reader: r,
+		In:     make(chan UserUpdate, 64),
+		Out:    make(chan UserUpdate, 64),
 	}
 	*uc = append(*uc, newConn)
 	return &newConn
@@ -53,9 +58,11 @@ func (uc UserConn) Get(user string) (*Conn, error) {
 		return nil, fmt.Errorf("user[%s] not connected", user)
 	}
 
+	log.Printf("∞--------> UserConn.Get TRACE user[%s] has %d conns[%v]\n", user, len(conns), conns)
+
 	var conn *Conn
 	for _, conn = range conns {
-		if conn != nil {
+		if conn != nil && conn.User == user {
 			break
 		}
 	}
@@ -63,6 +70,7 @@ func (uc UserConn) Get(user string) (*Conn, error) {
 	if conn == nil {
 		return nil, fmt.Errorf("user[%s] has no active conneciton", user)
 	}
+	log.Printf("∞--------> UserConn.Get TRACE user[%s] served on conn[%v]\n", user, conn)
 	return conn, nil
 }
 
@@ -89,13 +97,15 @@ func (uc *UserConn) Drop(c *Conn) error {
 
 func (uc *UserConn) userConns(user string) []*Conn {
 	conns := make([]*Conn, 0)
-	if len(*uc) == 0 {
+	if uc == nil || len(*uc) == 0 {
 		return conns
 	}
 	for _, conn := range *uc {
 		// TODO discard dead conn
+		//userConn := conn // TODO this fixes distribution bug
 		if conn.User == user {
 			conns = append(conns, &conn)
+			//conns = append(conns, &userConn)
 		}
 	}
 	return conns

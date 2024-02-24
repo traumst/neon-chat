@@ -11,8 +11,8 @@ func TestDefaultUserUpdate(t *testing.T) {
 	up := UserUpdate{}
 	if up.Type != UnknownUpdate {
 		t.Errorf("TestDefaultUserUpdate expected UnknownUpdate, got [%s]", up.Type.String())
-	} else if up.Msg != "" {
-		t.Errorf("TestDefaultUserUpdate expected only \"\" values, got msg[%s]", up.Msg)
+	} else if up.RawHtml != "" {
+		t.Errorf("TestDefaultUserUpdate expected only \"\" values, got msg[%s]", up.RawHtml)
 	} else if up.Author != "" {
 		t.Errorf("TestDefaultUserUpdate expected empty user, got [%s]", up.Author)
 	}

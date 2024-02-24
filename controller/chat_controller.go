@@ -11,8 +11,7 @@ import (
 	"go.chat/utils"
 )
 
-type ChatController struct {
-}
+type ChatController struct{}
 
 func (c *ChatController) OpenChat(w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> OpenChat\n", utils.GetReqId(r))
@@ -90,63 +89,18 @@ func (c *ChatController) AddChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("--%s-> AddChat TRACE templating chat[%s][%d]\n", utils.GetReqId(r), chatName, chatID)
+	log.Printf("--%s-> AddChat TRACE templating chat[%s][%d]\n",
+		utils.GetReqId(r), chatName, chatID)
 	template := openChat.ToTemplate(user)
 	sendChatContent(utils.GetReqId(r), w, template)
-	err = sendChatHeader(utils.GetReqId(r), template)
+	err = informUser(utils.GetReqId(r), user, template)
 	if err != nil {
-		log.Printf("<-%s-- AddChat ERROR cannot distribute chat header, %s\n", utils.GetReqId(r), err)
+		log.Printf("<-%s-- AddChat ERROR cannot distribute chat header, %s\n",
+			utils.GetReqId(r), err)
 	}
 }
 
-func sendChatContent(reqId string, w http.ResponseWriter, template *model.ChatTemplate) {
-	html, err := template.GetHTML()
-	if err != nil {
-		log.Printf("<--%s-- sendChatContent ERROR cannot template chat [%+v], %s", reqId, template, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	log.Printf("<-%s-- sendChatContent TRACE writing response\n", reqId)
-	w.WriteHeader(http.StatusFound)
-	w.Write([]byte(html))
-}
-
-func sendChatHeader(reqId string, template *model.ChatTemplate) error {
-	shortHtml, err := template.GetShortHTML()
-	if err != nil {
-		return err
-	}
-
-	var wg sync.WaitGroup
-	errors := make([]string, 0)
-	log.Printf("--%s-> sendChatHeader TRACE distributing chat[%s] header to users [%+v]\n",
-		reqId, template.Name, template.Users)
-	for _, user := range template.Users {
-		wg.Add(1)
-		go func(user string) {
-			defer wg.Done()
-			conn, err := app.State.GetConn(user)
-			if err != nil {
-				errors = append(errors, "user:"+user+",err:"+err.Error())
-				return
-			}
-			log.Printf("--%s-> sendChatHeader TRACE distributing chat[%s] header to user[%s]\n", reqId, template.Name, user)
-			conn.Channel <- model.UserUpdate{
-				Type:   model.ChatUpdate,
-				ChatID: template.ID,
-				Author: template.ActiveUser,
-				Msg:    shortHtml,
-			}
-		}(user)
-	}
-	wg.Wait()
-	if len(errors) > 0 {
-		return fmt.Errorf("%+v", errors)
-	}
-	return nil
-}
-
+// TODO when user is invited, it should pop up in
 func (c *ChatController) InviteUser(w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> InviteUser\n", utils.GetReqId(r))
 	if r.Method != "POST" {
@@ -187,9 +141,76 @@ func (c *ChatController) InviteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	temlate := chat.ToTemplate(user)
-	sendChatHeader(utils.GetReqId(r), temlate)
+	informUser(utils.GetReqId(r), user, temlate)
 
 	log.Printf("<-%s-- InviteUser TRACE user [%s] added to chat [%d]\n", utils.GetReqId(r), invitee, chatID)
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte(fmt.Sprintf(" [%s] ", invitee)))
+}
+
+func sendChatContent(reqId string, w http.ResponseWriter, template *model.ChatTemplate) {
+	html, err := template.GetHTML()
+	if err != nil {
+		log.Printf("<--%s-- sendChatContent ERROR cannot template chat [%+v], %s", reqId, template, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("<-%s-- sendChatContent TRACE writing response\n", reqId)
+	w.WriteHeader(http.StatusFound)
+	w.Write([]byte(html))
+}
+
+func informUser(reqId string, user string, template *model.ChatTemplate) error {
+	log.Printf("--%s-> informOwner TRACE sending update of chat[%s] header to owner [%+v]\n",
+		reqId, template.Name, template.Users)
+	shortHtml, err := template.GetShortHTML()
+	if err != nil {
+		return err
+	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err = sendToUser(
+			reqId,
+			user,
+			template.ID,
+			template.Name,
+			template.UpdateSourceUser,
+			shortHtml,
+		)
+	}()
+	wg.Wait()
+	return err
+}
+
+func sendToUser(
+	reqId string,
+	targetUser string,
+	chatID int,
+	chatName string,
+	chatAuthor string,
+	html string,
+) error {
+	log.Printf("--%s-> sendToUser TRACE IN targetUser:%s, chatID:%d, chatName:%s, chatAuthor:%s\n",
+		reqId, targetUser, chatID, chatName, chatAuthor)
+	conn, err := app.State.GetConn(targetUser)
+	if err != nil {
+		return fmt.Errorf("user[%s] not connected, err:%s", targetUser, err.Error())
+	}
+	if conn.User != targetUser {
+		return fmt.Errorf("user[%s] does not own conn[%v][u:%s]", conn.Origin, conn.User, targetUser)
+	}
+	log.Printf("--%s-> sendToUser TRACE informing user[%s] on reqId[%s] with [%s]\n",
+		reqId, targetUser, conn.Origin, html)
+	conn.In <- model.UserUpdate{
+		Type:    model.ChatUpdate,
+		ChatID:  chatID,
+		Author:  chatAuthor,
+		RawHtml: html,
+	}
+	log.Printf("<-%s-- sendToUser TRACE user[%s] informed on the chat[%d][%s]\n",
+		reqId, targetUser, chatID, chatName)
+	return nil
 }

@@ -1,8 +1,13 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
+	"strings"
+	"time"
 
 	"go.chat/controller"
 	"go.chat/utils"
@@ -57,6 +62,18 @@ func ControllerSetup() {
 }
 
 func main() {
+	now := time.Now()
+	timestamp := now.Format(time.RFC3339)
+	date := strings.Split(timestamp, "T")[0]
+	logPath := fmt.Sprintf("log/from-%s.log", date)
+	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	multi := io.MultiWriter(file, os.Stdout)
+	log.SetOutput(multi)
+
 	log.Println("Setting up log middleware")
 	log.Println("Setting up controllers")
 	ControllerSetup()

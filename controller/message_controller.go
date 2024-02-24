@@ -93,11 +93,11 @@ func distributeBetween(chat *model.Chat, author string, html string, r *http.Req
 
 		log.Printf("--%s-> distributeBetween TRACE distributing html[%s] to user[%s]\n",
 			utils.GetReqId(r), html, author)
-		conn.Channel <- model.UserUpdate{
-			Type:   model.MessageUpdate,
-			ChatID: chat.ID,
-			Author: author,
-			Msg:    html,
+		conn.In <- model.UserUpdate{
+			Type:    model.MessageUpdate,
+			ChatID:  chat.ID,
+			Author:  author,
+			RawHtml: html,
 		}
 	}
 }

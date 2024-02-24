@@ -57,7 +57,7 @@ func TestGetConn(t *testing.T) {
 		t.Errorf("TestGetConn expected a conn2, got nil")
 	} else if conn.User != conn2.User ||
 		conn.Origin != conn2.Origin ||
-		conn.Channel != conn2.Channel ||
+		conn.In != conn2.In ||
 		conn.Writer != conn2.Writer {
 		t.Errorf("TestGetConn expected equality, got [%+v], [%+v]", conn, conn2)
 	}

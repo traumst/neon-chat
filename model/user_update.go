@@ -2,10 +2,10 @@ package model
 
 type UpdateType int
 type UserUpdate struct {
-	Type   UpdateType
-	ChatID int
-	Author string
-	Msg    string
+	Type    UpdateType
+	ChatID  int
+	Author  string
+	RawHtml string
 }
 
 const (
@@ -13,6 +13,7 @@ const (
 	ChatUpdate    UpdateType = iota
 	ChatInvite    UpdateType = iota
 	MessageUpdate UpdateType = iota
+	ACK           UpdateType = iota
 )
 
 func (u UpdateType) String() string {

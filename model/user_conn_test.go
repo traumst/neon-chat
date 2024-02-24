@@ -1,13 +1,49 @@
 package model
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 
 	"go.chat/utils"
 )
+
+func TestChannels(t *testing.T) {
+	t.Logf("TestChannel started")
+	ch1 := make(chan string, 4)
+	defer close(ch1)
+	ch2 := make(chan string, 4)
+	defer close(ch2)
+	var wg sync.WaitGroup
+
+	go func() {
+		for m := range ch1 {
+			t.Logf("TestChannel ch1 received [%s]", m)
+			wg.Done()
+		}
+	}()
+	go func() {
+		for m := range ch2 {
+			t.Logf("TestChannel ch2 received [%s]", m)
+			wg.Done()
+		}
+	}()
+
+	for i := 0; i < 32; i++ {
+		msg := fmt.Sprintf("msg-%d", i)
+		wg.Add(2)
+		t.Logf("TestChannel sent [%s]", msg)
+		go func() { ch1 <- msg }()
+		go func() { ch2 <- msg }()
+	}
+
+	t.Logf("TestChannel all messages sent")
+	wg.Wait()
+	t.Logf("TestChannel all messages received")
+}
 
 func TestIsConnEmpty(t *testing.T) {
 	t.Logf("TestIsConnEmpty started")
@@ -81,7 +117,7 @@ func TestGet(t *testing.T) {
 		t.Errorf("TestGetEmpty unexpected exception [%s]", err)
 	} else if conn.User != conn2.User ||
 		conn.Origin != conn2.Origin ||
-		conn.Channel != conn2.Channel ||
+		conn.In != conn2.In ||
 		conn.Writer != conn2.Writer {
 		t.Errorf("TestGetEmpty expected equality, got [%+v], [%+v]", conn, conn2)
 	}
@@ -148,5 +184,11 @@ func TestUserConns(t *testing.T) {
 	conns := uc.userConns("test_user_2")
 	if len(conns) != 1 {
 		t.Errorf("TestUserConns expected 1 conn, got [%d]", len(conns))
+	} else if conns[0].ID != conn2.ID ||
+		conns[0].Origin != conn2.Origin ||
+		conns[0].User != conn2.User {
+		t.Errorf("TestUserConns expected conn[%d|%s|%s], got conn[%d|%s|%s]",
+			conn2.ID, conn2.Origin, conn2.User,
+			conns[0].ID, conns[0].Origin, conns[0].User)
 	}
 }

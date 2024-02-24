@@ -3,6 +3,7 @@ package controller
 import (
 	"log"
 	"net/http"
+	"sync"
 
 	"go.chat/model"
 	"go.chat/utils"
@@ -31,9 +32,14 @@ func PollUpdates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer app.State.DropConn(conn, user)
-
-	log.Printf("---%s--> PollUpdates TRACE sse initiated for [%s]\n", utils.GetReqId(r), user)
 	utils.SetSseHeaders(&conn.Writer)
-	app.PollUpdatesForUser(conn, user)
+	log.Printf("---%s--> PollUpdates TRACE sse initiated for [%s]\n", utils.GetReqId(r), user)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		app.PollUpdatesForUser(conn, user)
+	}()
+	wg.Wait()
 	log.Printf("<-%s-- PollUpdates TRACE OUT user[%s]\n", utils.GetReqId(r), user)
 }
