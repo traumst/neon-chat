@@ -48,26 +48,17 @@ func (app *App) PollUpdatesForUser(conn *Conn, pollingUser string) {
 
 func (app *App) sendUpdates(conn *Conn, up UserUpdate, pollingUser string) {
 	log.Printf("∞--%s--> APP.sendUpdates TRACE IN [%s], input[%+v]\n", conn.Origin, pollingUser, up)
-	chat, err := app.State.GetChat(pollingUser, up.ChatID)
-	if err != nil {
-		log.Printf("<--%s--∞ APP.sendUpdates WARN %s\n", conn.Origin, err)
-		return
+
+	isSent := trySend(conn.Origin, conn, up, pollingUser)
+	if isSent {
+		up.RawHtml = fmt.Sprintf("SENT TO: %s", pollingUser)
+		conn.Out <- up
+		log.Printf("<--%s--∞ APP.sendUpdates TRACE OUT user[%s]\n", conn.Origin, pollingUser)
+	} else {
+		up.RawHtml = fmt.Sprintf("ERROR SENDING TO: %s", pollingUser)
+		conn.Out <- up
+		log.Printf("<--%s--∞ APP.sendUpdates ERROR failed to send update to user[%s]\n", conn.Origin, pollingUser)
 	}
-	users, err := chat.GetUsers(pollingUser)
-	if err != nil {
-		log.Printf("<--%s--∞ APP.sendUpdates ERROR chat[%s], %s\n",
-			conn.Origin, chat.Name, err)
-		return
-	}
-	for _, u := range users {
-		isSent := trySend(conn.Origin, conn, up, u)
-		if !isSent {
-			log.Printf("<--%s--∞ APP.sendUpdates ERROR failed to send update to user[%s]\n", conn.Origin, u)
-		}
-	}
-	up.RawHtml = fmt.Sprintf("SENT TO: %s", strings.Join(users, ","))
-	conn.Out <- up
-	log.Printf("<--%s--∞ APP.sendUpdates TRACE OUT user[%s]\n", conn.Origin, pollingUser)
 }
 
 func trySend(reqId string, conn *Conn, up UserUpdate, user string) bool {

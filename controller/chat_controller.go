@@ -140,10 +140,11 @@ func (c *ChatController) InviteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	temlate := chat.ToTemplate(user)
-	informUser(utils.GetReqId(r), user, temlate)
+	temlate := chat.ToTemplate(invitee)
+	informUser(utils.GetReqId(r), invitee, temlate)
 
-	log.Printf("<-%s-- InviteUser TRACE user [%s] added to chat [%d]\n", utils.GetReqId(r), invitee, chatID)
+	log.Printf("<-%s-- InviteUser TRACE user [%s] added to chat [%d] by user [%s]\n",
+		utils.GetReqId(r), invitee, chatID, user)
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte(fmt.Sprintf(" [%s] ", invitee)))
 }
@@ -162,8 +163,8 @@ func sendChatContent(reqId string, w http.ResponseWriter, template *model.ChatTe
 }
 
 func informUser(reqId string, user string, template *model.ChatTemplate) error {
-	log.Printf("--%s-> informOwner TRACE sending update of chat[%s] header to owner [%+v]\n",
-		reqId, template.Name, template.Users)
+	log.Printf("--%s-> informOwner TRACE sending update of chat[%s] header to user [%s]\n",
+		reqId, template.Name, user)
 	shortHtml, err := template.GetShortHTML()
 	if err != nil {
 		return err

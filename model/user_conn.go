@@ -70,7 +70,7 @@ func (uc UserConn) Get(user string) (*Conn, error) {
 	if conn == nil {
 		return nil, fmt.Errorf("user[%s] has no active conneciton", user)
 	}
-	log.Printf("∞--------> UserConn.Get TRACE user[%s] served on conn[%v]\n", user, conn)
+	log.Printf("∞--------> UserConn.Get TRACE user[%s] served on conn[%v]\n", user, conn.Origin)
 	return conn, nil
 }
 
