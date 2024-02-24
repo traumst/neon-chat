@@ -101,11 +101,9 @@ func (uc *UserConn) userConns(user string) []*Conn {
 		return conns
 	}
 	for _, conn := range *uc {
-		// TODO discard dead conn
-		//userConn := conn // TODO this fixes distribution bug
+		conn := conn
 		if conn.User == user {
 			conns = append(conns, &conn)
-			//conns = append(conns, &userConn)
 		}
 	}
 	return conns
