@@ -6,6 +6,6 @@ const (
 	Unknown          SSEvent = "unknown"
 	PingEventName    SSEvent = "ping"
 	ChatEventName    SSEvent = "chat"
-	MessageEventName SSEvent = "message"
+	MessageEventName SSEvent = "msg"
 	// TODO invite, msg in other chat
 )

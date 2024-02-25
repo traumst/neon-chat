@@ -77,10 +77,24 @@ func distributeBetween(chat *model.Chat, author string, html string, r *http.Req
 		return
 	}
 
+	log.Printf("--%s-> distributeBetween TRACE distributing message to users[%+v]\n",
+		utils.GetReqId(r), users)
 	for _, user := range users {
 		if user == author {
 			log.Printf("--%s-> distributeBetween INFO new message is not sent to author[%s]\n",
 				utils.GetReqId(r), user)
+			continue
+		}
+
+		openChat := app.State.GetOpenChat(user)
+		if openChat == nil {
+			log.Printf("--%s-> distributeBetween TRACE user[%s] has no open chat\n",
+				utils.GetReqId(r), user)
+			continue
+		}
+		if openChat.ID != chat.ID {
+			log.Printf("--%s-> distributeBetween TRACE user[%s] has open chat[%d] different from message chat[%d]\n",
+				utils.GetReqId(r), user, openChat.ID, chat.ID)
 			continue
 		}
 

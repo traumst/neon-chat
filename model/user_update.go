@@ -19,12 +19,12 @@ const (
 func (u UpdateType) String() string {
 	switch u {
 	case ChatUpdate:
-		return "chat"
+		return string(ChatEventName)
 	case ChatInvite:
-		return "invite"
+		return string(ChatEventName)
 	case MessageUpdate:
-		return "message"
+		return string(MessageEventName)
 	default:
-		return "unknown"
+		return string(Unknown)
 	}
 }
