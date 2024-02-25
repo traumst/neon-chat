@@ -9,10 +9,6 @@
     <!-- Tailwind designed to be installed into your project using npm or Yarn and integrated into your build process. This allows you to customize Tailwind's default configuration and generate a CSS file that includes only the styles you actually use in your project, resulting in smaller CSS file sizes and faster load times. -->
     <!-- <link href="https://cdn.tailwindcss.com" rel="stylesheet"> -->
     <script>
-        // let scriptsWithFallbacks = [
-        //     ["/script/htmx.1.9.10.min.js", "https://unpkg.com/htmx.org@1.9.10/dist/htmx.min.js"],
-        //     ["/script/tailwind.3.4.1.js", "https://cdn.tailwindcss.com/3.4.1"]
-        // ]
     </script>
     <script src="https://unpkg.com/htmx.org@1.9.10/dist/htmx.min.js"></script>
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
@@ -24,31 +20,32 @@
             <div class="grid grid-cols-1 gap-4">
                 <div class="login text-card-foreground bg-gray-800 shadow-2xl rounded-lg border-4 border-gray-700"
                     data-v0-t="card">
-                    {{ template "login" . }}
+                    {{ template "login" }}
                 </div>
                 <div class="register text-card-foreground bg-gray-800 shadow-2xl rounded-lg border-4 border-gray-700"
                     data-v0-t="card">
-                    {{ template "register" . }}
+                    {{ template "register" }}
                 </div>
                 <div class="logout text-card-foreground bg-gray-800 shadow-2xl rounded-lg border-4 border-gray-700"
                     data-v0-t="card">
-                    {{ template "logout" . }}
+                    {{ template "logout" }}
                 </div>
                 <div class="user-chats text-card-foreground bg-gray-800 shadow-2xl rounded-lg border-4 border-gray-700"
                     data-v0-t="card">
-                    {{ template "user-chats" . }}
+                    {{ template "user-chats" }}
                 </div>
             </div>
         </div>
         <div class="right-panel col-span-3 space-y-4 flex flex-col">
-            {{ template "open-chat" . }}
+            {{ template "open-chat" }}
         </div>
     </div>
 </body>
 
 </html>
 
-{{ block "login" }}
+<div style="visibility: hidden">
+{{ block "login" . }}
 <div>
     <div class="flex flex-col space-y-1.5 p-6 bg-gray-700">
         <h3 class="font-semibold whitespace-nowrap tracking-tight text-2xl text-gray-300">
@@ -86,7 +83,7 @@
 </div>
 {{ end }}
 
-{{ block "register" }}
+{{ block "register" . }}
 <div>
     <div class="flex flex-col space-y-1.5 p-6 bg-gray-700">
         <h3 class="font-semibold whitespace-nowrap tracking-tight text-2xl text-gray-300">
@@ -124,7 +121,7 @@
 </div>
 {{ end }}
 
-{{ block "logout" }}
+{{ block "logout" . }}
 <div>
     <div class="flex flex-col space-y-1.5 p-6 bg-gray-700">
         <h3 class="font-semibold whitespace-nowrap tracking-tight text-2xl text-gray-300">
@@ -140,7 +137,7 @@
 </div>
 {{ end }}
 
-{{ block "user-chats" }}
+{{ block "user-chats" . }}
 <div>
     <div class="flex-col space-y-1.5 p-6 bg-gray-700 flex justify-between items-center">
         <h3 class="font-semibold whitespace-nowrap tracking-tight text-2xl text-gray-300">
@@ -179,7 +176,7 @@
 </div>
 {{ end }}
 
-{{ block "open-chat" }}
+{{ block "open-chat" . }}
 <div class="chat text-card-foreground bg-gray-800 shadow-2xl rounded-lg border-4 border-gray-700 flex flex-col flex-grow"
     data-v0-t="card">
     <div class="chat-users flex-col space-y-1.5 p-6 bg-gray-700 flex justify-between items-center">
@@ -229,3 +226,4 @@
     </div>
 </div>
 {{ end }}
+</div>

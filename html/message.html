@@ -1,9 +1,13 @@
 <li class="chat-message" id="msg-{{ .ID }}">
-    <strong>{{ .Author }}:</strong> {{ .Text }}
-    {{ if eq (.Author) (.ActiveUser) }}
-    <form method="POST" hx-post="/message/delete" hx-swap="outerHTML" hx-target="#msg-{{ .ID }}">
-        <input type="hidden" name="id" value="{{ .ID }}">
-        <button type="submit">Delete</button>
-    </form>
-    {{ end }}
+    <div class="chat-message-header">
+        <strong>{{ .Author }}:</strong> {{ .Text }}
+    </div>
+    <div class="chat-message-body">
+        {{ if eq (.Author) (.ActiveUser) }}
+        <form method="POST" hx-post="/message/delete" hx-swap="outerHTML" hx-target="#msg-{{ .ID }}">
+            <input type="hidden" name="id" value="{{ .ID }}">
+            <button type="submit">Delete</button>
+        </form>
+        {{ end }}
+    </div>
 </li>

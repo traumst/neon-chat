@@ -1,4 +1,70 @@
-<div class="open-chat-name" style="border: 2px solid blue;">
+<style>
+    .open-chat-name {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+    }
+    .open-chat-users {
+        margin: 0;
+    }
+    .invite-user {
+        padding: 10px 0;
+    }
+    .invite-user input {
+        padding: 10px;
+        margin-right: 10px;
+    }
+    .invite-user button {
+        padding: 10px 20px;
+    }
+    .open-chat-history {
+        padding: 10px 0;
+    }
+    .message-list {
+        list-style-type: none;
+        padding: 0;
+    }
+    .message-list li {
+        padding: 10px 0;
+        border-bottom: 1px solid #ddd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .message-list li:hover {
+        background-color: #f0f0f0;
+    }
+    .message-list li:last-child {
+        border-bottom: none;
+    }
+    .message-list li p {
+        margin: 0;
+    }
+    .message-list li p:first-child {
+        font-weight: bold;
+    }
+    .open-chat-history {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+    }
+    .open-chat-history form {
+        display: flex;
+        padding: 10px 0;
+    }
+    .open-chat-history input {
+        width: 70%;
+        padding: 10px;
+        margin-right: 10px;
+    }
+    .open-chat-history button {
+        padding: 10px 20px;
+    }
+</style>
+
+<div class="open-chat-name">
     <h2>chat {{ .Name }}</h2>
     <p class="open-chat-users">Users: 
     {{ with $chatUsers := .Users }}
@@ -10,7 +76,7 @@
 </div>
 
 {{ if eq .Owner .User }}
-<div class="invite-user" style="border: 2px solid green;">
+<div class="invite-user">
     <form method="POST" hx-target=".open-chat-users" hx-post="/chat/invite" hx-trigger="submit" hx-swap="beforeend">
         <input type="hidden" name="chatId" value="{{ .ID }}">
         <input type="text" name="invitee" placeholder="...type invitee username here...">
@@ -21,7 +87,7 @@
 
 <hr />
 
-<div class="open-chat-history" style="border: 2px solid gray;">
+<div class="open-chat-history">
     <ul class="message-list" sse-swap="msg" hx-swap="beforeend">
         {{ with $chatMsgs := .Messages }}
             {{ range $index, $msg := $chatMsgs }} 

@@ -51,12 +51,11 @@ func ControllerSetup() {
 	http.Handle("/poll", ChainMiddleware(http.HandlerFunc(controller.PollUpdates), allMiddleware))
 
 	chatController := controller.ChatController{}
-	http.Handle("/chat/invite", ChainMiddleware(
-		http.HandlerFunc(chatController.InviteUser), allMiddleware))
-	http.Handle("/chat/", ChainMiddleware(
-		http.HandlerFunc(chatController.OpenChat), allMiddleware))
-	http.Handle("/chat", ChainMiddleware(
-		http.HandlerFunc(chatController.AddChat), allMiddleware))
+	http.Handle("/chat/invite", ChainMiddleware(http.HandlerFunc(chatController.InviteUser), allMiddleware))
+	http.Handle("/chat/", ChainMiddleware(http.HandlerFunc(chatController.OpenChat), allMiddleware))
+	http.Handle("/chat", ChainMiddleware(http.HandlerFunc(chatController.AddChat), allMiddleware))
+
+	http.Handle("/gen2", ChainMiddleware(http.HandlerFunc(controller.Gen2), allMiddleware))
 
 	http.Handle("/", ChainMiddleware(http.HandlerFunc(controller.Home), allMiddleware))
 }

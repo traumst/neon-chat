@@ -11,22 +11,19 @@ This app is being build as an excercise for me to
 ## TODOs
 
 ### *Right now...*
-...1st user stops getting SSE as soon as the 2nd conntect
 
-...working on adding channels and some concurrency to distribute
-Ok, now I want to have a loop in a go routine, that listens on a channel.
-I need to hold a list of Clients, contaning: 
-* user 
-* open chat
-* connection - r and w
+Message deletion does not work properly
 
-<s>I will then loop over channel messages and distribute them between users in chats.</s>
+Chats cannot be deleted
 
-Working on message distribution. At this point, we can create chats and get live updates.
-Partially. Messages are not distribute properly. Chat headers are OK, but not for invitee.
+User cannot be removed from chat
+
+Oh and maybe it's time to start sanitizing raw user input
+
+And UI looks like shit, have to style it
 
 ### Message Broadcasting: 
-- When the server receives a message from a client over a regular HTTP POST request, it should broadcast that message to all other connected clients via the SSE connection.
+- ~~When the server receives a message from a client over a regular HTTP POST request, it should broadcast that message to all other connected clients via the SSE connection.~~
 
 ### User Authentication
 - Continue using your existing login system to authenticate users. 
@@ -34,9 +31,9 @@ Partially. Messages are not distribute properly. Chat headers are OK, but not fo
 - The client should store this token and use it to authenticate the SSE connection.
 
 ### Establish SSE Connection
-- When a user opens the chat, the client should initiate an SSE connection to the server. 
+- ~~When a user opens the chat, the client should initiate an SSE connection to the server.~~
 - The server should verify the user's token and if it's valid, accept the connection.
-- SSE should include at least: ping, chat invites, incoming messages
+- ~~SSE should include at least: ping, chat invites, incoming messages~~
 
 ### GUI
 - Style the app, pick a futuristic dark theme
@@ -53,7 +50,11 @@ Partially. Messages are not distribute properly. Chat headers are OK, but not fo
     1. content
     2. author
 
-## MAYBEs
+## LATERs
+
+### Moderation
+- Add ability to mute/block users in chat
+- Add ability for users to mute/report other users
 
 ### *Security Considerations*
 - Ensure that the SSE connection is secure (https://) and that we validate 

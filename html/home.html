@@ -3,17 +3,72 @@
 <head>
     <title>Home</title>
     <style>
-        body, html { height: 100%; margin: 0; padding: 0; }
-        .container { display: flex; height: 95%; width: 90%; margin: auto; }
-        .left-panel { width: 30%; }
-        .right-panel { width: 70%; }
+        body, html { 
+            height: 100%; 
+            margin: 0; 
+            padding: 0; 
+            font-family: Arial, sans-serif; 
+            background-color: #f0f0f0; 
+        }
+        .container { 
+            display: flex; 
+            height: 95%; 
+            width: 90%; 
+            margin: auto; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); 
+            background-color: #fff; 
+        }
+        .left-panel, .right-panel { 
+            padding: 20px; 
+            box-sizing: border-box; 
+        }
+        .left-panel { 
+            width: 30%; 
+            border-right: 1px solid #ddd; 
+        }
+        .right-panel { 
+            width: 70%; 
+        }
+        .active-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            justify-content: space-between;
+        }
+        .active-user p { 
+            font-weight: bold; 
+        }
+        .chat-list ul { 
+            list-style-type: none; 
+            padding: 0; 
+        }
+        .chat-list li { 
+            padding: 10px 0; 
+            border-bottom: 1px solid #ddd; 
+        }
+        .chat-list li:hover {
+            background-color: #f0f0f0;
+        }
+        .chat-list li:last-child { 
+            border-bottom: none; 
+        }
+        .add-chat input { 
+            width: 70%; 
+            padding: 10px; 
+            margin-right: 10px; 
+            box-sizing: border-box; 
+        }
+        .add-chat button { 
+            padding: 10px 20px; 
+        }
     </style>
     <script src="/script/htmx.1.9.10.min.js"></script>
     <script src="/script/htmx.1.9.10.sse.js"></script>
 </head>
 <body>
 <div class="container" hx-triggger="load" hx-ext="sse" sse-connect="/poll">
-    <div class="left-panel" style="border: 2px solid green;">
+    <div class="left-panel">
         <div class="active-user">
             <p>Active user: {{ .ActiveUser }}</p>
             <form action="/logout" method="POST">
@@ -32,14 +87,14 @@
             </ul>
         </div>
         <div class="add-chat">
-            <form hx-post="/chat" hx-trigger="submit" hx-target=".open-chat" hx-swap="innerHTML" >
-                <input type="text" name="chatName" placeholder="Enter chat name...">
-                <button type="submit">Open new chat</button>
+            <form hx-post="/chat" hx-trigger="submit" hx-target=".open-chat" hx-swap="innerHTML">
+                <input type="text" id="addChatFormInput" name="chatName" placeholder="...create chat...">
+                <button type="submit" id="addChatFormBtn">Create</button>
             </form>
         </div>
     </div>
 
-    <div class="right-panel" style="border: 2px solid red;">
+    <div class="right-panel">
         <div class="open-chat">
             {{ with .OpenTemplate }}
                 <div class="open-chat-content" 
