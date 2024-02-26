@@ -9,6 +9,12 @@ import (
 	"go.chat/utils"
 )
 
+func RenderLogin(w http.ResponseWriter, r *http.Request) {
+	log.Printf("--%s-> RenderLogin\n", utils.GetReqId(r))
+	loginTmpl, _ := template.ParseFiles("html/login.html")
+	loginTmpl.Execute(w, nil)
+}
+
 func Login(w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Login\n", utils.GetReqId(r))
 	switch r.Method {
@@ -19,6 +25,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Redirect(w, r, "/", http.StatusBadRequest)
 	}
+}
+
+func Logout(w http.ResponseWriter, r *http.Request) {
+	log.Printf("--%s-> Logout\n", utils.GetReqId(r))
+	http.SetCookie(w, &http.Cookie{
+		Name:    "username",
+		Value:   "",
+		Expires: time.Now(),
+	})
+	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
@@ -36,10 +52,4 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		Expires: time.Now().Add(8 * time.Hour),
 	})
 	http.Redirect(w, r, "/", http.StatusFound)
-}
-
-func RenderLogin(w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> RenderLogin\n", utils.GetReqId(r))
-	loginTmpl, _ := template.ParseFiles("html/login.html")
-	loginTmpl.Execute(w, nil)
 }

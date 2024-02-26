@@ -45,6 +45,7 @@ func ControllerSetup() {
 	allMiddleware := []Middleware{LoggerMiddleware}
 	http.Handle("/favicon.ico", ChainMiddleware(http.HandlerFunc(controller.FavIcon), noLog))
 	http.Handle("/login", ChainMiddleware(http.HandlerFunc(controller.Login), allMiddleware))
+	http.Handle("/logout", ChainMiddleware(http.HandlerFunc(controller.Logout), allMiddleware))
 	http.Handle("/script/", ChainMiddleware(http.HandlerFunc(controller.ServeFile), allMiddleware))
 	http.Handle("/message", ChainMiddleware(http.HandlerFunc(controller.AddMessage), allMiddleware))
 	http.Handle("/message/delete", ChainMiddleware(http.HandlerFunc(controller.DeleteMessage), allMiddleware))
