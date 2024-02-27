@@ -147,7 +147,8 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	// TODO inform chat members about message deletion
 	log.Printf("<-%s-- DeleteMessage done\n", utils.GetReqId(r))
-	w.WriteHeader(http.StatusFound)
+	w.WriteHeader(http.StatusAccepted)
 	w.Write(make([]byte, 0))
 }

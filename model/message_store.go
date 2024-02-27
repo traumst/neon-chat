@@ -29,17 +29,22 @@ func (s *MessageStore) Add(m *Message) (*Message, error) {
 func (s *MessageStore) GetAll() []*Message {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.messages
+	return s.nonNil()
 }
 
 func (s *MessageStore) Get(id int) (*Message, error) {
 	if id < 0 || id >= len(s.messages) {
-		return nil, fmt.Errorf("message not found")
+		return nil, fmt.Errorf("invalid msg id")
 	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.messages[id], nil
+	msg := s.messages[id]
+	if msg == nil {
+		return nil, fmt.Errorf("msg not found")
+	}
+
+	return msg, nil
 }
 
 func (s *MessageStore) Delete(m *Message) error {
@@ -52,6 +57,16 @@ func (s *MessageStore) Delete(m *Message) error {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.messages = append(s.messages[m.ID:], s.messages[m.ID+1:]...)
+	s.messages[m.ID] = nil
 	return nil
+}
+
+func (s *MessageStore) nonNil() []*Message {
+	var nonNil []*Message
+	for _, msg := range s.messages {
+		if msg != nil {
+			nonNil = append(nonNil, msg)
+		}
+	}
+	return nonNil
 }
