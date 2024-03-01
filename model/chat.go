@@ -109,7 +109,7 @@ func (c *Chat) DropMessage(user string, ID int) error {
 }
 
 func (c *Chat) ToTemplate(user string) *ChatTemplate {
-	messages := make([]MessageTemplate, 0)
+	var messages []MessageTemplate
 	for _, msg := range c.history.GetAll() {
 		if msg == nil {
 			continue
@@ -121,7 +121,7 @@ func (c *Chat) ToTemplate(user string) *ChatTemplate {
 		Name:     c.Name,
 		User:     user,
 		Owner:    c.Owner,
-		Users:    c.users,
+		Users:    c.users[0:],
 		Messages: messages,
 	}
 }

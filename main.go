@@ -53,6 +53,7 @@ func ControllerSetup() {
 
 	chatController := controller.ChatController{}
 	http.Handle("/chat/invite", ChainMiddleware(http.HandlerFunc(chatController.InviteUser), allMiddleware))
+	http.Handle("/chat/delete", ChainMiddleware(http.HandlerFunc(chatController.DeleteChat), allMiddleware))
 	http.Handle("/chat/", ChainMiddleware(http.HandlerFunc(chatController.OpenChat), allMiddleware))
 	http.Handle("/chat", ChainMiddleware(http.HandlerFunc(chatController.AddChat), allMiddleware))
 

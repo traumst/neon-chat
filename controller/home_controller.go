@@ -17,19 +17,24 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var template *model.ChatTemplate
+	var openChatTemplate *model.ChatTemplate
 	openChat := app.State.GetOpenChat(user)
 	if openChat == nil {
 		log.Printf("--%s-> Home DEBUG, user[%s] has no open chat\n", utils.GetReqId(r), user)
-		template = nil
+		openChatTemplate = nil
 	} else {
 		log.Printf("--%s-> Home DEBUG, user[%s] has chat[%d] open\n", utils.GetReqId(r), user, openChat.ID)
-		template = openChat.ToTemplate(user)
+		openChatTemplate = openChat.ToTemplate(user)
+	}
+
+	var chatTemplates []*model.ChatTemplate
+	for _, chat := range app.State.GetChats(user) {
+		chatTemplates = append(chatTemplates, chat.ToTemplate(user))
 	}
 
 	home := model.HomeTemplate{
-		OpenTemplate: template,
-		Chats:        app.State.GetChats(user),
+		OpenTemplate: openChatTemplate,
+		Chats:        chatTemplates,
 		ActiveUser:   user,
 	}
 	html, err := home.GetHTML()

@@ -65,16 +65,10 @@
     </style>
     <script src="/script/htmx.1.9.10.min.js"></script>
     <script src="/script/htmx.1.9.10.sse.js"></script>
+    <script src="https://unpkg.com/htmx.org/dist/ext/debug.js"></script>
 </head>
 <body>
-<div class="container" hx-triggger="load" hx-ext="sse" sse-connect="/poll">
-    <script>
-        // augments sse events with removal of elements by id
-        document.addEventListener('remove', function (event) {
-            const element = document.getElementById(event.data)
-            if (element) { element.parentNode.removeChild(element) }
-        });
-    </script>
+<div class="container" hx-ext="sse" sse-trigger="load" sse-connect="/poll">
     <div class="left-panel">
         <div class="active-user">
             <p>Active user: {{ .ActiveUser }}</p>
@@ -82,7 +76,7 @@
                 <button type="submit">Logout</button>
             </form>
         </div>
-        <div class="chat-list" sse-swap="chat-invite" hx-target=".chat-headers" hx-swap="beforeend">
+        <div class="chat-list">
             <ul class="chat-headers" sse-swap="chat-add" hx-swap="beforeend"> 
                 {{ with $chats := .Chats }}
                     {{ range $index, $chat := $chats }} 
@@ -100,7 +94,6 @@
             </form>
         </div>
     </div>
-
     <div class="right-panel">
         <div class="open-chat">
             {{ with .OpenTemplate }}

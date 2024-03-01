@@ -74,7 +74,7 @@ func trySend(reqId string, conn *Conn, up LiveUpdate, user string) bool {
 	}
 
 	switch up.Event {
-	case ChatCreated, ChatInvite, MessageAdded:
+	case ChatCreated, ChatInvite, MessageAdded, MessageDeleted:
 		log.Printf("∞--%s--> trySend TRACE sending event[%s] to user[%s] via w[%T]\n", reqId, up.Event.String(), user, w)
 		err := sendEvent(&w, up.Event.String(), up.Data)
 		if err != nil {

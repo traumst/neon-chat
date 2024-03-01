@@ -64,6 +64,14 @@ func (state *AppState) AddChat(user string, chatName string) int {
 	return chatID
 }
 
+func (state *AppState) DeleteChat(user string, chat *Chat) error {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.DeleteChat TRACE get chats for user[%s]\n", user)
+	return state.chats.DeleteChat(user, chat)
+}
+
 func (state *AppState) OpenChat(user string, chatID int) (*Chat, error) {
 	state.mu.Lock()
 	defer state.mu.Unlock()

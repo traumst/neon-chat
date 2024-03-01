@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"go.chat/handler"
 	"go.chat/model"
 	"go.chat/utils"
 )
@@ -58,7 +59,7 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	distributeMsg(chat, author, r, model.MessageAdded, html)
+	handler.DistributeMsg(&app.State, chat, author, r, model.MessageAdded, html)
 
 	log.Printf("<-%s-- AddMessage TRACE serving html\n", utils.GetReqId(r))
 	w.WriteHeader(http.StatusFound)
@@ -72,9 +73,8 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusUnauthorized)
 		return
 	}
-	if r.Method != "POST" {
-		log.Printf("<-%s-- DeleteMessage ERROR request method\n", utils.GetReqId(r))
-		w.WriteHeader(http.StatusBadRequest)
+	if r.Method != "DELETE" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 	id, err := strconv.Atoi(r.FormValue("msgid"))
@@ -93,66 +93,14 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("<-%s-- DeleteMessage ERROR remove message[%d] from [%s], %s\n",
 			utils.GetReqId(r), id, chat.Name, err)
+		// TODO not necessarily StatusInternalServerError
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	// TODO inform chat members about message deletion
-	distributeMsg(chat, author, r, model.MessageDeleted, fmt.Sprintf("msg-%d", id))
+	handler.DistributeMsg(&app.State, chat, author, r, model.MessageDeleted, fmt.Sprintf("msg-%d", id))
 
 	log.Printf("<-%s-- DeleteMessage done\n", utils.GetReqId(r))
 	w.WriteHeader(http.StatusAccepted)
 	w.Write(make([]byte, 0))
-}
-
-func distributeMsg(chat *model.Chat, author string, r *http.Request, event model.UpdateType, data string) {
-	users, err := chat.GetUsers(author)
-	if err != nil || users == nil {
-		log.Printf("--%s-> distributeBetween ERROR get users, chat[%+v], %s\n",
-			utils.GetReqId(r), chat, err)
-		return
-	}
-	if len(users) == 0 {
-		log.Printf("--%s-> distributeBetween ERROR chatUsers are empty, chat[%+v], %s\n",
-			utils.GetReqId(r), chat, err)
-		return
-	}
-
-	log.Printf("--%s-> distributeBetween TRACE distributing message to users[%+v]\n",
-		utils.GetReqId(r), users)
-	for _, user := range users {
-		if user == author {
-			log.Printf("--%s-> distributeBetween INFO new message is not sent to author[%s]\n",
-				utils.GetReqId(r), user)
-			continue
-		}
-
-		openChat := app.State.GetOpenChat(user)
-		if openChat == nil {
-			log.Printf("--%s-> distributeBetween TRACE user[%s] has no open chat\n",
-				utils.GetReqId(r), user)
-			continue
-		}
-		if openChat.ID != chat.ID {
-			log.Printf("--%s-> distributeBetween TRACE user[%s] has open chat[%d] different from message chat[%d]\n",
-				utils.GetReqId(r), user, openChat.ID, chat.ID)
-			continue
-		}
-
-		conn, err := app.State.GetConn(user)
-		if err != nil {
-			log.Printf("--%s-> distributeBetween ERROR cannot distribute html[%s] to user[%s], %s\n",
-				utils.GetReqId(r), data, user, err)
-			continue
-		}
-
-		log.Printf("--%s-> distributeBetween TRACE distributing html[%s] to user[%s]\n",
-			utils.GetReqId(r), data, author)
-		conn.In <- model.LiveUpdate{
-			Event:  event,
-			Data:   data,
-			ChatID: chat.ID,
-			Author: author,
-		}
-	}
 }

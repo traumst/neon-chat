@@ -66,7 +66,6 @@
         padding: 10px 20px;
     }
 </style>
-
 <div class="open-chat-name">
     <h2>chat {{ .Name }}</h2>
     <p class="open-chat-users">Users: 
@@ -76,8 +75,8 @@
         {{ end }}
     {{ end }}
     </p>
+    <p>[Close]</p>
 </div>
-
 {{ if eq .Owner .User }}
 <div class="invite-user">
     <form method="POST" hx-target=".open-chat-users" hx-post="/chat/invite" hx-trigger="submit" hx-swap="beforeend">
@@ -85,15 +84,9 @@
         <input type="text" name="invitee" placeholder="...type invitee username here...">
         <button type="submit">Invite User</button>
     </form>
-    <form method="POST" hx-post="/chat/delete" hx-trigger="submit" hx-swap="outerHTML">
-        <input type="hidden" name="chatId" value="{{ .ID }}">
-        <button type="submit">Delete Chat</button>
-    </form>
 </div>
 {{ end }}
-
 <hr />
-
 <div class="open-chat-history">
     <ul class="message-list" hx-target=".message-list" sse-swap="msg-add" hx-swap="beforeend">
         {{ with $chatMsgs := .Messages }}
@@ -104,7 +97,6 @@
             <li>No previous messages...</li>
         {{ end }}
     </ul>
-
     <form hx-post="/message" hx-trigger="submit" hx-target=".message-list" hx-swap="beforeend">
         <input type="hidden" name="chatId" value="{{ .ID }}">
         <input type="text" name="msg" placeholder="...type message here...">

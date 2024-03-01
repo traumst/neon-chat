@@ -2,12 +2,16 @@
     <div class="chat-message">
         <strong>{{ .Author }}:</strong> {{ .Text }}
     </div>
-    <div class="chat-message-delete">
-        {{ if eq (.Author) (.ActiveUser) }}
-        <form method="POST" hx-post="/message/delete" hx-swap="outerHTML" hx-target="#msg-{{ .ID }}">
+    {{ if eq .Author .ActiveUser }}
+        <form id="delete-message" hx-delete="/message/delete" 
+            hx-trigger="click" 
+            hx-swap="outerHTML" 
+            hx-target="#msg-{{ .ID }}"
+        >
             <input type="hidden" name="msgid" value="{{ .ID }}">
-            <button type="submit">Delete</button>
+            <div class="chat-message-delete" hx-on="click:delete-message.submit()">
+                [delete]
+            </div>
         </form>
-        {{ end }}
-    </div>
+    {{ end }}
 </li>

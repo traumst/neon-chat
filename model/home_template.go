@@ -6,7 +6,7 @@ import (
 )
 
 type HomeTemplate struct {
-	Chats        []*Chat
+	Chats        []*ChatTemplate
 	OpenTemplate *ChatTemplate
 	ActiveUser   string
 }
