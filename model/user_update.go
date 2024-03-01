@@ -1,29 +1,32 @@
 package model
 
 type UpdateType int
-type UserUpdate struct {
-	Type    UpdateType
-	ChatID  int
-	Author  string
-	RawHtml string
+type LiveUpdate struct {
+	Event  UpdateType
+	ChatID int
+	MsgID  int
+	Author string
+	Data   string
 }
 
 const (
-	UnknownUpdate UpdateType = iota
-	ChatUpdate    UpdateType = iota
-	ChatInvite    UpdateType = iota
-	MessageUpdate UpdateType = iota
-	ACK           UpdateType = iota
+	UnknownUpdate  UpdateType = iota
+	ChatCreated    UpdateType = iota
+	ChatInvite     UpdateType = iota
+	MessageAdded   UpdateType = iota
+	MessageDeleted UpdateType = iota
 )
 
-func (u UpdateType) String() string {
-	switch u {
-	case ChatUpdate:
-		return string(ChatEventName)
+func (u *UpdateType) String() string {
+	switch *u {
+	case ChatCreated:
+		return string(ChatAddEventName)
 	case ChatInvite:
-		return string(ChatEventName)
-	case MessageUpdate:
-		return string(MessageEventName)
+		return string(ChatInviteEventName)
+	case MessageAdded:
+		return string(MessageAddEventName)
+	case MessageDeleted:
+		return string(MessageDropEventName)
 	default:
 		return string(Unknown)
 	}

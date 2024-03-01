@@ -36,7 +36,7 @@ func (app *App) PollUpdatesForUser(conn *Conn, pollingUser string) {
 				conn.Out <- update
 				continue
 			}
-			if update.Author == "" || update.RawHtml == "" {
+			if update.Author == "" || update.Data == "" {
 				log.Printf("<--%s--∞ APP.PollUpdatesForUser INFO user or msg is empty, update[%+v]\n", origin, update)
 				conn.Out <- update
 				continue
@@ -46,26 +46,26 @@ func (app *App) PollUpdatesForUser(conn *Conn, pollingUser string) {
 	}
 }
 
-func (app *App) sendUpdates(conn *Conn, up UserUpdate, pollingUser string) {
+func (app *App) sendUpdates(conn *Conn, up LiveUpdate, pollingUser string) {
 	log.Printf("∞--%s--> APP.sendUpdates TRACE IN [%s], input[%+v]\n", conn.Origin, pollingUser, up)
 
 	isSent := trySend(conn.Origin, conn, up, pollingUser)
 	if isSent {
-		up.RawHtml = fmt.Sprintf("SENT TO: %s", pollingUser)
+		up.Data = fmt.Sprintf("SENT TO: %s", pollingUser)
 		conn.Out <- up
 		log.Printf("<--%s--∞ APP.sendUpdates TRACE OUT user[%s]\n", conn.Origin, pollingUser)
 	} else {
-		up.RawHtml = fmt.Sprintf("ERROR SENDING TO: %s", pollingUser)
+		up.Data = fmt.Sprintf("ERROR SENDING TO: %s", pollingUser)
 		conn.Out <- up
 		log.Printf("<--%s--∞ APP.sendUpdates ERROR failed to send update to user[%s]\n", conn.Origin, pollingUser)
 	}
 }
 
-func trySend(reqId string, conn *Conn, up UserUpdate, user string) bool {
+func trySend(reqId string, conn *Conn, up LiveUpdate, user string) bool {
 	w := conn.Writer
 
-	if user == "" || up.RawHtml == "" {
-		log.Printf("<--%s--∞ trySend ERROR user or msg is empty, user[%s], msg[%s]\n", reqId, user, up.RawHtml)
+	if user == "" || up.Data == "" {
+		log.Printf("<--%s--∞ trySend ERROR user or msg is empty, user[%s], msg[%s]\n", reqId, user, up.Data)
 		return false
 	}
 	if w == nil {
@@ -73,20 +73,20 @@ func trySend(reqId string, conn *Conn, up UserUpdate, user string) bool {
 		return false
 	}
 
-	switch up.Type {
-	case ChatUpdate, ChatInvite, MessageUpdate:
-		log.Printf("∞--%s--> trySend TRACE sending event[%s] to user[%s] via w[%T]\n", reqId, up.Type, user, w)
-		err := sendEvent(&w, up.Type.String(), up.RawHtml)
+	switch up.Event {
+	case ChatCreated, ChatInvite, MessageAdded:
+		log.Printf("∞--%s--> trySend TRACE sending event[%s] to user[%s] via w[%T]\n", reqId, up.Event.String(), user, w)
+		err := sendEvent(&w, up.Event.String(), up.Data)
 		if err != nil {
-			log.Printf("<--%s--∞ trySend ERROR failed to send event[%s] to user[%s], %s\n", reqId, up.Type, user, err)
+			log.Printf("<--%s--∞ trySend ERROR failed to send event[%s] to user[%s], %s\n", reqId, up.Event.String(), user, err)
 			return false
 		}
 	default:
-		log.Printf("<--%s--∞ trySend ERROR unknown update event[%s], update[%+v]\n", reqId, up.Type, up)
+		log.Printf("<--%s--∞ trySend ERROR unknown update event[%s], update[%+v]\n", reqId, up.Event.String(), up)
 		return false
 	}
 
-	log.Printf("<--%s--∞ trySend TRACE event[%s] sent to user[%s]\n", reqId, up.Type, user)
+	log.Printf("<--%s--∞ trySend TRACE event[%s] sent to user[%s]\n", reqId, up.Event.String(), user)
 	return true
 }
 

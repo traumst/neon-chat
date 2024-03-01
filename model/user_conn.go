@@ -15,8 +15,8 @@ type Conn struct {
 	Origin string
 	Writer http.ResponseWriter
 	Reader http.Request
-	In     chan UserUpdate
-	Out    chan UserUpdate
+	In     chan LiveUpdate
+	Out    chan LiveUpdate
 }
 
 type UserConn []Conn
@@ -43,8 +43,8 @@ func (uc *UserConn) Add(user string, origin string, w http.ResponseWriter, r htt
 		Origin: origin,
 		Writer: w,
 		Reader: r,
-		In:     make(chan UserUpdate, 64),
-		Out:    make(chan UserUpdate, 64),
+		In:     make(chan LiveUpdate, 64),
+		Out:    make(chan LiveUpdate, 64),
 	}
 	*uc = append(*uc, newConn)
 	return &newConn

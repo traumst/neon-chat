@@ -93,7 +93,7 @@ func (c *ChatController) AddChat(w http.ResponseWriter, r *http.Request) {
 		utils.GetReqId(r), chatName, chatID)
 	template := openChat.ToTemplate(user)
 	sendChatContent(utils.GetReqId(r), w, template)
-	err = informUser(utils.GetReqId(r), user, template)
+	err = informUser(utils.GetReqId(r), user, template, model.ChatCreated)
 	if err != nil {
 		log.Printf("<-%s-- AddChat ERROR cannot distribute chat header, %s\n",
 			utils.GetReqId(r), err)
@@ -141,7 +141,7 @@ func (c *ChatController) InviteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	temlate := chat.ToTemplate(invitee)
-	informUser(utils.GetReqId(r), invitee, temlate)
+	informUser(utils.GetReqId(r), invitee, temlate, model.ChatInvite)
 
 	log.Printf("<-%s-- InviteUser TRACE user [%s] added to chat [%d] by user [%s]\n",
 		utils.GetReqId(r), invitee, chatID, user)
@@ -162,7 +162,7 @@ func sendChatContent(reqId string, w http.ResponseWriter, template *model.ChatTe
 	w.Write([]byte(html))
 }
 
-func informUser(reqId string, user string, template *model.ChatTemplate) error {
+func informUser(reqId string, user string, template *model.ChatTemplate, event model.UpdateType) error {
 	log.Printf("--%s-> informOwner TRACE sending update of chat[%s] header to user [%s]\n",
 		reqId, template.Name, user)
 	shortHtml, err := template.GetShortHTML()
@@ -180,6 +180,7 @@ func informUser(reqId string, user string, template *model.ChatTemplate) error {
 			template.Name,
 			template.User,
 			shortHtml,
+			event,
 		)
 	}()
 	wg.Wait()
@@ -193,6 +194,7 @@ func sendToUser(
 	chatName string,
 	chatAuthor string,
 	html string,
+	event model.UpdateType,
 ) error {
 	log.Printf("--%s-> sendToUser TRACE IN targetUser:%s, chatID:%d, chatName:%s, chatAuthor:%s\n",
 		reqId, targetUser, chatID, chatName, chatAuthor)
@@ -205,11 +207,11 @@ func sendToUser(
 	}
 	log.Printf("--%s-> sendToUser TRACE informing user[%s] on reqId[%s] with [%s]\n",
 		reqId, targetUser, conn.Origin, html)
-	conn.In <- model.UserUpdate{
-		Type:    model.ChatUpdate,
-		ChatID:  chatID,
-		Author:  chatAuthor,
-		RawHtml: html,
+	conn.In <- model.LiveUpdate{
+		Event:  event,
+		ChatID: chatID,
+		Author: chatAuthor,
+		Data:   html,
 	}
 	log.Printf("<-%s-- sendToUser TRACE user[%s] informed on the chat[%d][%s]\n",
 		reqId, targetUser, chatID, chatName)

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -57,14 +58,54 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	distributeBetween(chat, author, html, r)
+	distributeMsg(chat, author, r, model.MessageAdded, html)
 
 	log.Printf("<-%s-- AddMessage TRACE serving html\n", utils.GetReqId(r))
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte(html))
 }
 
-func distributeBetween(chat *model.Chat, author string, html string, r *http.Request) {
+func DeleteMessage(w http.ResponseWriter, r *http.Request) {
+	log.Printf("--%s-> DeleteMessage\n", utils.GetReqId(r))
+	author, err := utils.GetCurrentUser(r)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		return
+	}
+	if r.Method != "POST" {
+		log.Printf("<-%s-- DeleteMessage ERROR request method\n", utils.GetReqId(r))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	id, err := strconv.Atoi(r.FormValue("msgid"))
+	if err != nil {
+		log.Printf("<-%s-- DeleteMessage ERROR parse id, %s\n", utils.GetReqId(r), err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	chat := app.State.GetOpenChat(author)
+	if chat == nil {
+		log.Printf("<-%s-- DeleteMessage ERROR open template for [%s]\n", utils.GetReqId(r), author)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = chat.DropMessage(author, id)
+	if err != nil {
+		log.Printf("<-%s-- DeleteMessage ERROR remove message[%d] from [%s], %s\n",
+			utils.GetReqId(r), id, chat.Name, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// TODO inform chat members about message deletion
+	distributeMsg(chat, author, r, model.MessageDeleted, fmt.Sprintf("msg-%d", id))
+
+	log.Printf("<-%s-- DeleteMessage done\n", utils.GetReqId(r))
+	w.WriteHeader(http.StatusAccepted)
+	w.Write(make([]byte, 0))
+}
+
+func distributeMsg(chat *model.Chat, author string, r *http.Request, event model.UpdateType, data string) {
 	users, err := chat.GetUsers(author)
 	if err != nil || users == nil {
 		log.Printf("--%s-> distributeBetween ERROR get users, chat[%+v], %s\n",
@@ -101,54 +142,17 @@ func distributeBetween(chat *model.Chat, author string, html string, r *http.Req
 		conn, err := app.State.GetConn(user)
 		if err != nil {
 			log.Printf("--%s-> distributeBetween ERROR cannot distribute html[%s] to user[%s], %s\n",
-				utils.GetReqId(r), html, user, err)
+				utils.GetReqId(r), data, user, err)
 			continue
 		}
 
 		log.Printf("--%s-> distributeBetween TRACE distributing html[%s] to user[%s]\n",
-			utils.GetReqId(r), html, author)
-		conn.In <- model.UserUpdate{
-			Type:    model.MessageUpdate,
-			ChatID:  chat.ID,
-			Author:  author,
-			RawHtml: html,
+			utils.GetReqId(r), data, author)
+		conn.In <- model.LiveUpdate{
+			Event:  event,
+			Data:   data,
+			ChatID: chat.ID,
+			Author: author,
 		}
 	}
-}
-
-func DeleteMessage(w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> DeleteMessage\n", utils.GetReqId(r))
-	author, err := utils.GetCurrentUser(r)
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusUnauthorized)
-		return
-	}
-	if r.Method != "POST" {
-		log.Printf("<-%s-- DeleteMessage ERROR request method\n", utils.GetReqId(r))
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	id, err := strconv.Atoi(r.FormValue("id"))
-	if err != nil {
-		log.Printf("<-%s-- DeleteMessage ERROR parse id, %s\n", utils.GetReqId(r), err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	openChat := app.State.GetOpenChat(author)
-	if openChat == nil {
-		log.Printf("<-%s-- DeleteMessage ERROR open template for [%s]\n", utils.GetReqId(r), author)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	err = openChat.DropMessage(author, id)
-	if err != nil {
-		log.Printf("<-%s-- DeleteMessage ERROR remove message[%d] from [%s], %s\n",
-			utils.GetReqId(r), id, openChat.Name, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	// TODO inform chat members about message deletion
-	log.Printf("<-%s-- DeleteMessage done\n", utils.GetReqId(r))
-	w.WriteHeader(http.StatusAccepted)
-	w.Write(make([]byte, 0))
 }

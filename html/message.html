@@ -5,7 +5,7 @@
     <div class="chat-message-delete">
         {{ if eq (.Author) (.ActiveUser) }}
         <form method="POST" hx-post="/message/delete" hx-swap="outerHTML" hx-target="#msg-{{ .ID }}">
-            <input type="hidden" name="id" value="{{ .ID }}">
+            <input type="hidden" name="msgid" value="{{ .ID }}">
             <button type="submit">Delete</button>
         </form>
         {{ end }}

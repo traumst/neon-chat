@@ -56,17 +56,17 @@ func TestApp_PollUpdatesForUser(t *testing.T) {
 	go app.PollUpdatesForUser(conn1, user1)
 	go app.PollUpdatesForUser(conn2, user2)
 
-	conn1.In <- UserUpdate{
-		Type:    ChatUpdate,
-		ChatID:  chatID1,
-		Author:  user1,
-		RawHtml: "user1: chat1: message1",
+	conn1.In <- LiveUpdate{
+		Event:  ChatCreated,
+		ChatID: chatID1,
+		Author: user1,
+		Data:   "user1: chat1: message1",
 	}
-	conn2.In <- UserUpdate{
-		Type:    ChatUpdate,
-		ChatID:  chatID2,
-		Author:  user2,
-		RawHtml: "user2: chat2: message2",
+	conn2.In <- LiveUpdate{
+		Event:  ChatCreated,
+		ChatID: chatID2,
+		Author: user2,
+		Data:   "user2: chat2: message2",
 	}
 
 	tick := time.NewTicker(10 * time.Second)
@@ -74,10 +74,10 @@ outerLoop:
 	for i := 0; i <= 1; i++ {
 		select {
 		case e := <-conn1.Out:
-			log.Printf("conn1.Out <- update, %s", e.RawHtml)
+			log.Printf("conn1.Out <- update, %s", e.Data)
 			cancel1()
 		case e := <-conn2.Out:
-			log.Printf("conn2.Out <- update, %s", e.RawHtml)
+			log.Printf("conn2.Out <- update, %s", e.Data)
 			cancel2()
 		case <-tick.C:
 			t.Errorf("TestApp_PollUpdatesForUser expected 2 updates, got %d", i)

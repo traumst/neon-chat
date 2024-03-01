@@ -83,7 +83,11 @@
     <form method="POST" hx-target=".open-chat-users" hx-post="/chat/invite" hx-trigger="submit" hx-swap="beforeend">
         <input type="hidden" name="chatId" value="{{ .ID }}">
         <input type="text" name="invitee" placeholder="...type invitee username here...">
-        <button type="submit">Invite</button>
+        <button type="submit">Invite User</button>
+    </form>
+    <form method="POST" hx-post="/chat/delete" hx-trigger="submit" hx-swap="outerHTML">
+        <input type="hidden" name="chatId" value="{{ .ID }}">
+        <button type="submit">Delete Chat</button>
     </form>
 </div>
 {{ end }}
@@ -91,7 +95,7 @@
 <hr />
 
 <div class="open-chat-history">
-    <ul class="message-list" hx-target=".message-list" sse-swap="msg" hx-swap="beforeend">
+    <ul class="message-list" hx-target=".message-list" sse-swap="msg-add" hx-swap="beforeend">
         {{ with $chatMsgs := .Messages }}
             {{ range $index, $msg := $chatMsgs }} 
                 {{ template "message.html" $msg }}
