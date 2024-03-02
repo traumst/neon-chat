@@ -9,7 +9,7 @@ func TestInit(t *testing.T) {
 		t.Errorf("TestAddChat expected isInit false, got true")
 		return
 	}
-	cl.init("test-user")
+	cl.init()
 	if !cl.isInit {
 		t.Errorf("TestAddChat expected isInit true, got false")
 	}

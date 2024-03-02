@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -32,37 +31,75 @@ func ReqIdMiddleware(next http.Handler) http.Handler {
 func LoggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		utils.SetReqId(r, nil)
-		//log.Printf("--%s-> _req_ %s %s", utils.GetReqId(r), r.Method, r.RequestURI)
-		//startTime := time.Now()
+		log.Printf("--%s-> BEGIN %s %s", utils.GetReqId(r), r.Method, r.RequestURI)
+		startTime := time.Now()
 		rec := utils.StatefulWriter{ResponseWriter: w}
 		next.ServeHTTP(&rec, r)
-		//log.Printf("<-%s-- _res_ %s %s status_code:[%d] in %v", utils.GetReqId(r), r.Method, r.RequestURI, rec.Status(), time.Since(startTime))
+		log.Printf("<-%s-- END %s %s status_code:[%d] in %v",
+			utils.GetReqId(r),
+			r.Method,
+			r.RequestURI,
+			rec.Status(),
+			time.Since(startTime))
 	})
 }
 
 func ControllerSetup() {
 	noLog := []Middleware{ReqIdMiddleware}
 	allMiddleware := []Middleware{LoggerMiddleware}
-	http.Handle("/favicon.ico", ChainMiddleware(http.HandlerFunc(controller.FavIcon), noLog))
-	http.Handle("/login", ChainMiddleware(http.HandlerFunc(controller.Login), allMiddleware))
-	http.Handle("/logout", ChainMiddleware(http.HandlerFunc(controller.Logout), allMiddleware))
-	http.Handle("/script/", ChainMiddleware(http.HandlerFunc(controller.ServeFile), allMiddleware))
-	http.Handle("/message", ChainMiddleware(http.HandlerFunc(controller.AddMessage), allMiddleware))
-	http.Handle("/message/delete", ChainMiddleware(http.HandlerFunc(controller.DeleteMessage), allMiddleware))
-	http.Handle("/poll", ChainMiddleware(http.HandlerFunc(controller.PollUpdates), allMiddleware))
-
-	chatController := controller.ChatController{}
-	http.Handle("/chat/invite", ChainMiddleware(http.HandlerFunc(chatController.InviteUser), allMiddleware))
-	http.Handle("/chat/delete", ChainMiddleware(http.HandlerFunc(chatController.DeleteChat), allMiddleware))
-	http.Handle("/chat/", ChainMiddleware(http.HandlerFunc(chatController.OpenChat), allMiddleware))
-	http.Handle("/chat", ChainMiddleware(http.HandlerFunc(chatController.AddChat), allMiddleware))
-
-	http.Handle("/gen2", ChainMiddleware(http.HandlerFunc(controller.Gen2), allMiddleware))
-
-	http.Handle("/", ChainMiddleware(http.HandlerFunc(controller.Home), allMiddleware))
+	// static files
+	http.Handle("/favicon.ico", ChainMiddleware(
+		http.HandlerFunc(controller.FavIcon),
+		noLog))
+	http.Handle("/script/", ChainMiddleware(
+		http.HandlerFunc(controller.ServeFile),
+		allMiddleware))
+	// TEMP
+	http.Handle("/gen2", ChainMiddleware(
+		http.HandlerFunc(controller.Gen2),
+		allMiddleware))
+	// sessions
+	http.Handle("/login", ChainMiddleware(
+		http.HandlerFunc(controller.Login),
+		allMiddleware))
+	http.Handle("/logout", ChainMiddleware(
+		http.HandlerFunc(controller.Logout),
+		allMiddleware))
+	// chat
+	http.Handle("/chat/invite", ChainMiddleware(
+		http.HandlerFunc(controller.InviteUser),
+		allMiddleware))
+	http.Handle("/chat/delete", ChainMiddleware(
+		http.HandlerFunc(controller.DeleteChat),
+		allMiddleware))
+	http.Handle("/chat/close", ChainMiddleware(
+		http.HandlerFunc(controller.CloseChat),
+		allMiddleware))
+	http.Handle("/chat/", ChainMiddleware(
+		http.HandlerFunc(controller.OpenChat),
+		allMiddleware))
+	http.Handle("/chat", ChainMiddleware(
+		http.HandlerFunc(controller.AddChat),
+		allMiddleware))
+	// live updates
+	http.Handle("/poll", ChainMiddleware(
+		http.HandlerFunc(controller.PollUpdates),
+		allMiddleware))
+	// message
+	http.Handle("/message/delete", ChainMiddleware(
+		http.HandlerFunc(controller.DeleteMessage),
+		allMiddleware))
+	http.Handle("/message", ChainMiddleware(
+		http.HandlerFunc(controller.AddMessage),
+		allMiddleware))
+	// home, default
+	http.Handle("/", ChainMiddleware(
+		http.HandlerFunc(controller.Home),
+		allMiddleware))
 }
 
 func main() {
+	// log setup
 	now := time.Now()
 	timestamp := now.Format(time.RFC3339)
 	date := strings.Split(timestamp, "T")[0]
@@ -72,12 +109,19 @@ func main() {
 		log.Fatal(err)
 	}
 	defer file.Close()
-	multi := io.MultiWriter(file, os.Stdout)
-	log.SetOutput(multi)
-
+	// parse args
+	args, err := utils.ArgsRead()
+	if err != nil {
+		log.Printf("Error parsing args: %v\n", err)
+		log.Println(utils.ArgsHelp())
+		os.Exit(13)
+	}
+	log.Printf("  args: %v\n", *args)
+	// setup controller
 	log.Println("Setting up log middleware")
 	log.Println("Setting up controllers")
 	ControllerSetup()
-	log.Println("Starting server at port 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Printf("Starting server at port [%d]\n", args.Port)
+	// run server
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", args.Port), nil))
 }

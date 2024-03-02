@@ -64,6 +64,14 @@ func (state *AppState) AddChat(user string, chatName string) int {
 	return chatID
 }
 
+func (state *AppState) CloseChat(user string, chatID int) error {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.CloseChat TRACE close chat[%d] for user[%s]\n", chatID, user)
+	return state.chats.CloseChat(user, chatID)
+}
+
 func (state *AppState) DeleteChat(user string, chat *Chat) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
@@ -86,11 +94,6 @@ func (state *AppState) InviteUser(user string, chatID int, invitee string) error
 
 	log.Printf("∞--------> AppState.InviteUser TRACE invite user[%s] chat[%d] for user[%s]\n", invitee, chatID, user)
 	return state.chats.InviteUser(user, chatID, invitee)
-}
-
-func (state *AppState) CloseChat(reqId string, user string) error {
-	defer recover()
-	panic("implement closing chat")
 }
 
 func (state *AppState) GetChats(user string) []*Chat {

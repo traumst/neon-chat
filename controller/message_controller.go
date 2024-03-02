@@ -73,11 +73,17 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusUnauthorized)
 		return
 	}
-	if r.Method != "DELETE" {
+	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	id, err := strconv.Atoi(r.FormValue("msgid"))
+	chatID := r.PostFormValue("msgid")
+	if chatID == "" {
+		log.Printf("<-%s-- DeleteChat ERROR parse args, %s\n", utils.GetReqId(r), err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	id, err := strconv.Atoi(chatID)
 	if err != nil {
 		log.Printf("<-%s-- DeleteMessage ERROR parse id, %s\n", utils.GetReqId(r), err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -98,6 +104,7 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO verify message delete distribution
 	handler.DistributeMsg(&app.State, chat, author, r, model.MessageDeleted, fmt.Sprintf("msg-%d", id))
 
 	log.Printf("<-%s-- DeleteMessage done\n", utils.GetReqId(r))

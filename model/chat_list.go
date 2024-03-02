@@ -13,7 +13,7 @@ type ChatList struct {
 	isInit bool
 }
 
-func (cl *ChatList) init(user string) {
+func (cl *ChatList) init() {
 	if cl.isInit {
 		return
 	}
@@ -26,7 +26,7 @@ func (cl *ChatList) init(user string) {
 func (cl *ChatList) AddChat(owner string, chatName string) int {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.init(owner)
+	cl.init()
 	chat := Chat{
 		ID:      cl.nextID,
 		Name:    chatName,
@@ -47,7 +47,7 @@ func (cl *ChatList) OpenChat(user string, id int) (*Chat, error) {
 	if id < 0 || id >= len(cl.chats) {
 		return nil, fmt.Errorf("invalid chat id")
 	}
-	cl.init(user)
+	cl.init()
 	openChat := cl.chats[id]
 	if !openChat.isOwner(user) && !openChat.isUserInChat(user) {
 		return nil, fmt.Errorf("user[%s] is not in chat[%d]", user, id)
@@ -56,17 +56,32 @@ func (cl *ChatList) OpenChat(user string, id int) (*Chat, error) {
 	return openChat, nil
 }
 
+func (cl *ChatList) CloseChat(user string, chatID int) error {
+	cl.mu.Lock()
+	defer cl.mu.Unlock()
+	cl.init()
+	userAtChat := cl.userAt[user]
+	if userAtChat == nil {
+		return fmt.Errorf("user[%s] has no open chat", user)
+	}
+	if userAtChat.ID != chatID {
+		return fmt.Errorf("user[%s] is not open on chat[%d]", user, chatID)
+	}
+	cl.userAt[user] = nil
+	return nil
+}
+
 func (cl *ChatList) GetOpenChat(user string) *Chat {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.init(user)
+	cl.init()
 	return cl.userAt[user]
 }
 
 func (cl *ChatList) GetChats(user string) []*Chat {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.init(user)
+	cl.init()
 	var userChats []*Chat
 	for _, chat := range cl.chats {
 		if chat.isOwner(user) || chat.isUserInChat(user) {
@@ -79,9 +94,12 @@ func (cl *ChatList) GetChats(user string) []*Chat {
 func (cl *ChatList) GetChat(user string, chatID int) (*Chat, error) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.init(user)
+	cl.init()
 	var chat *Chat
 	for _, chat = range cl.chats {
+		if chat == nil {
+			continue
+		}
 		if chat.ID == chatID {
 			break
 		}
@@ -100,7 +118,7 @@ func (cl *ChatList) GetChat(user string, chatID int) (*Chat, error) {
 func (cl *ChatList) DeleteChat(user string, chat *Chat) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.init(user)
+	cl.init()
 	if chat == nil {
 		return fmt.Errorf("user[%s] cannot remove NIL chat", user)
 	}
@@ -110,9 +128,11 @@ func (cl *ChatList) DeleteChat(user string, chat *Chat) error {
 	if cl.chats[chat.ID] == nil {
 		return fmt.Errorf("chat[%d] is NIL", chat.ID)
 	}
-
 	cl.chats[chat.ID] = nil
-	if cl.userAt[user].ID == chat.ID {
+
+	if cl.userAt[user] == nil {
+		// noop
+	} else if cl.userAt[user].ID == chat.ID {
 		cl.userAt[user] = nil
 	}
 
@@ -122,8 +142,7 @@ func (cl *ChatList) DeleteChat(user string, chat *Chat) error {
 func (cl *ChatList) InviteUser(user string, chatID int, invitee string) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.init(user)
-	cl.init(invitee)
+	cl.init()
 	if chatID < 0 || chatID >= len(cl.chats) {
 		return fmt.Errorf("invalid chat index[%d]", chatID)
 	}
