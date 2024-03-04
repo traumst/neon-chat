@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -12,7 +11,7 @@ import (
 	"go.chat/utils"
 )
 
-func AddMessage(w http.ResponseWriter, r *http.Request) {
+func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> AddMessage TRACE\n", utils.GetReqId(r))
 	author, err := utils.GetCurrentUser(r)
 	if err != nil || author == "" {
@@ -35,7 +34,7 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("--%s-> AddMessage TRACE opening current chat for [%s]\n", utils.GetReqId(r), author)
-	chat := app.State.GetOpenChat(author)
+	chat := app.GetOpenChat(author)
 	if chat == nil {
 		log.Printf("--%s-> AddMessage WARN no open chat for %s\n", utils.GetReqId(r), author)
 		w.WriteHeader(http.StatusBadRequest)
@@ -59,15 +58,16 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handler.DistributeMsg(&app.State, chat, author, r, model.MessageAdded, html)
+	handler.DistributeMsg(app, chat, author, message, model.MessageAdded)
 
 	log.Printf("<-%s-- AddMessage TRACE serving html\n", utils.GetReqId(r))
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte(html))
 }
 
-func DeleteMessage(w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> DeleteMessage\n", utils.GetReqId(r))
+func DeleteMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+	reqId := utils.GetReqId(r)
+	log.Printf("--%s-> DeleteMessage\n", reqId)
 	author, err := utils.GetCurrentUser(r)
 	if err != nil {
 		http.Redirect(w, r, "/login", http.StatusUnauthorized)
@@ -79,35 +79,33 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	}
 	chatID := r.PostFormValue("msgid")
 	if chatID == "" {
-		log.Printf("<-%s-- DeleteChat ERROR parse args, %s\n", utils.GetReqId(r), err)
+		log.Printf("<-%s-- DeleteChat ERROR parse args, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	id, err := strconv.Atoi(chatID)
 	if err != nil {
-		log.Printf("<-%s-- DeleteMessage ERROR parse id, %s\n", utils.GetReqId(r), err)
+		log.Printf("<-%s-- DeleteMessage ERROR parse id, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	chat := app.State.GetOpenChat(author)
+	chat := app.GetOpenChat(author)
 	if chat == nil {
-		log.Printf("<-%s-- DeleteMessage ERROR open template for [%s]\n", utils.GetReqId(r), author)
+		log.Printf("<-%s-- DeleteMessage ERROR open template for [%s]\n", reqId, author)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = chat.DropMessage(author, id)
+	msg, err := chat.DropMessage(author, id)
 	if err != nil {
-		log.Printf("<-%s-- DeleteMessage ERROR remove message[%d] from [%s], %s\n",
-			utils.GetReqId(r), id, chat.Name, err)
+		log.Printf("<-%s-- DeleteMessage ERROR remove message[%d] from [%s], %s\n", reqId, id, chat.Name, err)
 		// TODO not necessarily StatusInternalServerError
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	// TODO verify message delete distribution
-	handler.DistributeMsg(&app.State, chat, author, r, model.MessageDeleted, fmt.Sprintf("msg-%d", id))
+	handler.DistributeMsg(app, chat, author, msg, model.MessageDeleted)
 
-	log.Printf("<-%s-- DeleteMessage done\n", utils.GetReqId(r))
+	log.Printf("<-%s-- DeleteMessage done\n", reqId)
 	w.WriteHeader(http.StatusAccepted)
 	w.Write(make([]byte, 0))
 }

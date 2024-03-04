@@ -8,6 +8,11 @@ import (
 	"go.chat/utils"
 )
 
+var ApplicationState = AppState{
+	chats:    ChatList{},
+	userConn: make(UserConn, 0),
+}
+
 type AppState struct {
 	mu       sync.Mutex
 	chats    ChatList

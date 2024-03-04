@@ -11,7 +11,7 @@ import (
 	"go.chat/utils"
 )
 
-func OpenChat(w http.ResponseWriter, r *http.Request) {
+func OpenChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> OpenChat\n", reqId)
 	if r.Method != "GET" {
@@ -40,7 +40,7 @@ func OpenChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("--%s-> OpenChat TRACE chat[%d]\n", reqId, chatID)
-	openChat, err := app.State.OpenChat(user, chatID)
+	openChat, err := app.OpenChat(user, chatID)
 	if err != nil {
 		log.Printf("<-%s-- OpenChat ERROR chat, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -59,7 +59,7 @@ func OpenChat(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(html))
 }
 
-func AddChat(w http.ResponseWriter, r *http.Request) {
+func AddChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> AddChat\n", reqId)
 	if r.Method != "POST" {
@@ -78,9 +78,9 @@ func AddChat(w http.ResponseWriter, r *http.Request) {
 
 	chatName := r.FormValue("chatName")
 	log.Printf("--%s-> AddChat TRACE adding user[%s] chat[%s]\n", reqId, user, chatName)
-	chatID := app.State.AddChat(user, chatName)
+	chatID := app.AddChat(user, chatName)
 	log.Printf("--%s-> AddChat TRACE user[%s] opening chat[%s][%d]\n", reqId, user, chatName, chatID)
-	openChat, err := app.State.OpenChat(user, chatID)
+	openChat, err := app.OpenChat(user, chatID)
 	if err != nil {
 		log.Printf("<-%s-- AddChat ERROR chat, %s\n", reqId, err)
 		errMsg := fmt.Sprintf("ERROR: %s", err.Error())
@@ -93,14 +93,14 @@ func AddChat(w http.ResponseWriter, r *http.Request) {
 		reqId, chatName, chatID)
 	template := openChat.ToTemplate(user)
 	sendChatContent(reqId, w, template)
-	err = handler.DistributeChat(reqId, &app.State, user, template, model.ChatCreated)
+	err = handler.DistributeChat(app, user, template, model.ChatCreated)
 	if err != nil {
 		log.Printf("<-%s-- AddChat ERROR cannot distribute chat header, %s\n",
 			reqId, err)
 	}
 }
 
-func InviteUser(w http.ResponseWriter, r *http.Request) {
+func InviteUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> InviteUser\n", reqId)
 	if r.Method != "POST" {
@@ -126,14 +126,14 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 
 	invitee := r.FormValue("invitee")
 	log.Printf("--%s-> InviteUser TRACE inviting[%s] to chat[%d]\n", reqId, invitee, chatID)
-	err = app.State.InviteUser(user, chatID, invitee)
+	err = app.InviteUser(user, chatID, invitee)
 	if err != nil {
 		log.Printf("<-%s-- InviteUser ERROR invite, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	chat, err := app.State.GetChat(user, chatID)
+	chat, err := app.GetChat(user, chatID)
 	if err != nil {
 		log.Printf("<-%s-- InviteUser ERROR cannot find chat[%d], %s\n", reqId, chatID, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -141,7 +141,7 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	temlate := chat.ToTemplate(invitee)
-	handler.DistributeChat(reqId, &app.State, invitee, temlate, model.ChatInvite)
+	handler.DistributeChat(app, invitee, temlate, model.ChatInvite)
 
 	log.Printf("<-%s-- InviteUser TRACE user [%s] added to chat [%d] by user [%s]\n",
 		reqId, invitee, chatID, user)
@@ -149,7 +149,7 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(" [%s] ", invitee)))
 }
 
-func CloseChat(w http.ResponseWriter, r *http.Request) {
+func CloseChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> CloseChat\n", reqId)
 	user, err := utils.GetCurrentUser(r)
@@ -173,7 +173,7 @@ func CloseChat(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	err = app.State.CloseChat(user, id)
+	err = app.CloseChat(user, id)
 	if err != nil {
 		log.Printf("<-%s-- CloseChat ERROR close chat[%d] for [%s], %s\n",
 			reqId, id, user, err)
@@ -194,7 +194,7 @@ func CloseChat(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(html))
 }
 
-func DeleteChat(w http.ResponseWriter, r *http.Request) {
+func DeleteChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> DeleteChat TRACE\n", reqId)
 	user, err := utils.GetCurrentUser(r)
@@ -219,19 +219,14 @@ func DeleteChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// TODO handle deletion of open chat
-	err = app.State.CloseChat(user, id)
-	if err != nil {
-		log.Printf("<-%s-- DeleteChat ERROR close chat[%d] for [%s], %s\n", reqId, id, user, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	chat, err := app.State.GetChat(user, id)
+	_ = app.CloseChat(user, id)
+	chat, err := app.GetChat(user, id)
 	if err != nil || chat == nil {
 		log.Printf("<-%s-- DeleteChat ERROR cannot get chat[%d] for [%s]\n", reqId, id, user)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = app.State.DeleteChat(user, chat)
+	err = app.DeleteChat(user, chat)
 	if err != nil {
 		log.Printf("<-%s-- DeleteChat ERROR remove chat[%d] from [%s], %s\n", reqId, id, chat.Name, err)
 		// TODO not necessarily StatusInternalServerError
@@ -240,11 +235,11 @@ func DeleteChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO verify chat delete distribution
-	handler.DistributeChat(reqId, &app.State, user, chat.ToTemplate(user), model.ChatDeleted)
+	handler.DistributeChat(app, user, chat.ToTemplate(user), model.ChatDeleted)
 
 	log.Printf("<-%s-- DeleteChat TRACE user[%s] deletes chat [%d]\n", reqId, user, id)
 	w.WriteHeader(http.StatusFound)
-	w.Write([]byte("DELETED"))
+	w.Write([]byte("<li>[DELETED]</li>"))
 }
 
 func sendChatContent(reqId string, w http.ResponseWriter, template *model.ChatTemplate) {

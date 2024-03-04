@@ -91,21 +91,21 @@ func (c *Chat) GetMessage(user string, id int) (*Message, error) {
 	return c.history.Get(id)
 }
 
-func (c *Chat) DropMessage(user string, ID int) error {
+func (c *Chat) DropMessage(user string, ID int) (*Message, error) {
 	msg, err := c.GetMessage(user, ID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if !c.isUserInChat(user) {
-		return fmt.Errorf("only invited users can delete messages")
+		return msg, fmt.Errorf("only invited users can delete messages")
 	}
 	if !c.isAuthor(user, ID) && !c.isOwner(user) {
-		return fmt.Errorf("only user that sent the original message or chat owner can delete messages")
+		return msg, fmt.Errorf("only user that sent the original message or chat owner can delete messages")
 	}
-	return c.history.Delete(msg)
+	return msg, c.history.Delete(msg)
 }
 
 func (c *Chat) ToTemplate(user string) *ChatTemplate {

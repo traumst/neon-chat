@@ -28,6 +28,7 @@ type LiveUpdate struct {
 	MsgID  int
 	Author string
 	Data   string
+	Error  error
 }
 
 func (u *UpdateType) String() string {

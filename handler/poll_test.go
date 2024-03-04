@@ -1,4 +1,4 @@
-package model
+package handler
 
 import (
 	"context"
@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"log"
+
+	"go.chat/model"
 )
 
-func TestApp_PollUpdatesForUser(t *testing.T) {
+func Test_PollUpdatesForUser(t *testing.T) {
 	// now := time.Now()
 	// timestamp := now.Format(time.RFC3339)
 	// date := strings.Split(timestamp, "T")[0]
@@ -21,49 +23,40 @@ func TestApp_PollUpdatesForUser(t *testing.T) {
 	// }
 	// log.SetOutput(file)
 
-	app := &App{
-		State: AppState{
-			chats: ChatList{
-				chats:  make([]*Chat, 0),
-				userAt: make(map[string]*Chat),
-			},
-			userConn: make(UserConn, 0),
-		},
-	}
-
 	user1 := "user1"
-	chatID1 := app.State.AddChat(user1, "chat1")
+	app := &model.ApplicationState
+	chatID1 := app.AddChat(user1, "chat1")
 	ctx1, cancel1 := context.WithCancel(context.Background())
 	defer cancel1()
 	req1, _ := http.NewRequestWithContext(ctx1, "GET", "/some-route", nil)
-	conn1 := app.State.ReplaceConn(
+	conn1 := app.ReplaceConn(
 		httptest.NewRecorder(),
 		*req1,
 		user1,
 	)
 
 	user2 := "user2"
-	chatID2 := app.State.AddChat(user2, "chat2")
+	chatID2 := app.AddChat(user2, "chat2")
 	ctx2, cancel2 := context.WithCancel(context.Background())
 	defer cancel2()
 	req2, _ := http.NewRequestWithContext(ctx2, "GET", "/some-route", nil)
-	conn2 := app.State.ReplaceConn(
+	conn2 := app.ReplaceConn(
 		httptest.NewRecorder(),
 		*req2,
 		user2,
 	)
 
-	go app.PollUpdatesForUser(conn1, user1)
-	go app.PollUpdatesForUser(conn2, user2)
+	go PollUpdatesForUser(conn1, user1)
+	go PollUpdatesForUser(conn2, user2)
 
-	conn1.In <- LiveUpdate{
-		Event:  ChatCreated,
+	conn1.In <- model.LiveUpdate{
+		Event:  model.ChatCreated,
 		ChatID: chatID1,
 		Author: user1,
 		Data:   "user1: chat1: message1",
 	}
-	conn2.In <- LiveUpdate{
-		Event:  ChatCreated,
+	conn2.In <- model.LiveUpdate{
+		Event:  model.ChatCreated,
 		ChatID: chatID2,
 		Author: user2,
 		Data:   "user2: chat2: message2",

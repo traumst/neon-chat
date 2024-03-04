@@ -6,11 +6,11 @@ type Message struct {
 	Text   string
 }
 
-func (c *Message) ToTemplate(user string) *MessageTemplate {
+func (m *Message) ToTemplate(user string) *MessageTemplate {
 	return &MessageTemplate{
-		ID:         c.ID,
-		Author:     c.Author,
-		Text:       c.Text,
+		ID:         m.ID,
+		Author:     m.Author,
+		Text:       m.Text,
 		ActiveUser: user,
 	}
 }

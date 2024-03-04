@@ -8,7 +8,7 @@ import (
 	"go.chat/utils"
 )
 
-func Home(w http.ResponseWriter, r *http.Request) {
+func Home(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Home", utils.GetReqId(r))
 	user, err := utils.GetCurrentUser(r)
 	if err != nil {
@@ -18,7 +18,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var openChatTemplate *model.ChatTemplate
-	openChat := app.State.GetOpenChat(user)
+	openChat := app.GetOpenChat(user)
 	if openChat == nil {
 		log.Printf("--%s-> Home DEBUG, user[%s] has no open chat\n", utils.GetReqId(r), user)
 		openChatTemplate = nil
@@ -28,7 +28,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var chatTemplates []*model.ChatTemplate
-	for _, chat := range app.State.GetChats(user) {
+	for _, chat := range app.GetChats(user) {
 		chatTemplates = append(chatTemplates, chat.ToTemplate(user))
 	}
 

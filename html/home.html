@@ -95,7 +95,7 @@
         </div>
     </div>
     <div class="right-panel">
-        <div class="open-chat">
+        <div class="open-chat" sse-target="chat-drop" hx-swap="innerHTML"> <!-- TODO -->
             {{ with .OpenTemplate }}
                 <div class="open-chat-content" 
                     hx-get="/chat/{{ .ID }}" 

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chat/controller"
+	"go.chat/model"
 	"go.chat/utils"
 )
 
@@ -44,7 +45,7 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func ControllerSetup() {
+func ControllerSetup(app *model.AppState) {
 	noLog := []Middleware{ReqIdMiddleware}
 	allMiddleware := []Middleware{LoggerMiddleware}
 	// static files
@@ -53,48 +54,72 @@ func ControllerSetup() {
 		noLog))
 	http.Handle("/script/", ChainMiddleware(
 		http.HandlerFunc(controller.ServeFile),
-		allMiddleware))
+		noLog))
 	// TEMP
 	http.Handle("/gen2", ChainMiddleware(
-		http.HandlerFunc(controller.Gen2),
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			controller.Gen2(w, r)
+		}),
 		allMiddleware))
 	// sessions
 	http.Handle("/login", ChainMiddleware(
-		http.HandlerFunc(controller.Login),
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			controller.Login(w, r)
+		}),
 		allMiddleware))
 	http.Handle("/logout", ChainMiddleware(
-		http.HandlerFunc(controller.Logout),
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			controller.Logout(w, r)
+		}),
 		allMiddleware))
 	// chat
 	http.Handle("/chat/invite", ChainMiddleware(
-		http.HandlerFunc(controller.InviteUser),
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			controller.InviteUser(app, w, r)
+		}),
 		allMiddleware))
 	http.Handle("/chat/delete", ChainMiddleware(
-		http.HandlerFunc(controller.DeleteChat),
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			controller.DeleteChat(app, w, r)
+		}),
 		allMiddleware))
 	http.Handle("/chat/close", ChainMiddleware(
-		http.HandlerFunc(controller.CloseChat),
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			controller.CloseChat(app, w, r)
+		}),
 		allMiddleware))
 	http.Handle("/chat/", ChainMiddleware(
-		http.HandlerFunc(controller.OpenChat),
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			controller.OpenChat(app, w, r)
+		}),
 		allMiddleware))
 	http.Handle("/chat", ChainMiddleware(
-		http.HandlerFunc(controller.AddChat),
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			controller.AddChat(app, w, r)
+		}),
 		allMiddleware))
 	// live updates
 	http.Handle("/poll", ChainMiddleware(
-		http.HandlerFunc(controller.PollUpdates),
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			controller.PollUpdates(app, w, r)
+		}),
 		allMiddleware))
 	// message
 	http.Handle("/message/delete", ChainMiddleware(
-		http.HandlerFunc(controller.DeleteMessage),
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			controller.DeleteMessage(app, w, r)
+		}),
 		allMiddleware))
 	http.Handle("/message", ChainMiddleware(
-		http.HandlerFunc(controller.AddMessage),
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			controller.AddMessage(app, w, r)
+		}),
 		allMiddleware))
 	// home, default
 	http.Handle("/", ChainMiddleware(
-		http.HandlerFunc(controller.Home),
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			controller.Home(app, w, r)
+		}),
 		allMiddleware))
 }
 
@@ -117,10 +142,10 @@ func main() {
 		os.Exit(13)
 	}
 	log.Printf("  args: %v\n", *args)
-	// setup controller
-	log.Println("Setting up log middleware")
+	log.Println("Setting up application")
+	app := &model.ApplicationState
 	log.Println("Setting up controllers")
-	ControllerSetup()
+	ControllerSetup(app)
 	log.Printf("Starting server at port [%d]\n", args.Port)
 	// run server
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", args.Port), nil))

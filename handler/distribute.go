@@ -3,20 +3,17 @@ package handler
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"sync"
 
 	"go.chat/model"
-	"go.chat/utils"
 )
 
 func DistributeMsg(
 	state *model.AppState,
 	chat *model.Chat,
 	author string,
-	r *http.Request,
+	msg *model.Message,
 	event model.UpdateType,
-	data string,
 ) error {
 	users, err := chat.GetUsers(author)
 	if err != nil || users == nil {
@@ -26,22 +23,26 @@ func DistributeMsg(
 		return fmt.Errorf("chatUsers are empty, chat[%+v], %s", chat, err)
 	}
 
-	reqId := utils.GetReqId(r)
 	var wg sync.WaitGroup
 	var errors []string
 	for _, user := range users {
 		if user == author {
-			log.Printf("--%s-> distributeBetween TRACE new message is not sent to author[%s]\n", reqId, user)
+			log.Printf("∞----> distributeBetween TRACE new message is not sent to author[%s]\n", user)
 			continue
 		}
 		wg.Add(1)
-		go func(user string) {
+		go func(user string, msg model.Message) {
 			defer wg.Done()
-			err := distributeMsgToUser(state, chat.ID, user, author, event, data)
+			data, err := msg.ToTemplate(user).GetHTML()
+			if err != nil {
+				errors = append(errors, err.Error())
+				return
+			}
+			err = distributeMsgToUser(state, chat.ID, user, author, event, data)
 			if err != nil {
 				errors = append(errors, err.Error())
 			}
-		}(user)
+		}(user, *msg)
 	}
 
 	wg.Wait()
@@ -53,13 +54,11 @@ func DistributeMsg(
 }
 
 func DistributeChat(
-	reqId string,
 	state *model.AppState,
 	user string,
 	template *model.ChatTemplate,
 	event model.UpdateType,
 ) error {
-	log.Printf("--%s-> informOwner TRACE sending update of chat[%s] header to user [%s]\n", reqId, template.Name, user)
 	shortHtml, err := template.GetShortHTML()
 	if err != nil {
 		return err
@@ -104,26 +103,18 @@ func distributeMsgToUser(
 		return fmt.Errorf("user[%s] not connected, err:%s", user, err.Error())
 	}
 
-	var up model.LiveUpdate
 	switch event {
-	case model.MessageDeleted:
-		up = model.LiveUpdate{
-			Event:  event,
-			ChatID: chatID,
-		}
-	case model.MessageAdded:
-		up = model.LiveUpdate{
+	case model.MessageAdded, model.MessageDeleted:
+		conn.In <- model.LiveUpdate{
 			Event:  event,
 			Data:   data,
 			ChatID: chatID,
 			Author: author,
 		}
+		return nil
 	default:
 		return fmt.Errorf("unknown event type: %s", event.String())
 	}
-
-	conn.In <- up
-	return nil
 }
 
 func distributeChatToUser(
@@ -142,24 +133,16 @@ func distributeChatToUser(
 		return fmt.Errorf("user[%s] does not own conn[%v], user[%s] does", targetUser, conn.Origin, conn.User)
 	}
 
-	var up model.LiveUpdate
 	switch event {
-	case model.ChatDeleted:
-		up = model.LiveUpdate{
-			Event:  event,
-			ChatID: chatID,
-		}
-	case model.ChatCreated, model.ChatInvite:
-		up = model.LiveUpdate{
+	case model.ChatCreated, model.ChatInvite, model.ChatDeleted:
+		conn.In <- model.LiveUpdate{
 			Event:  event,
 			ChatID: chatID,
 			Author: chatAuthor,
 			Data:   html,
 		}
+		return nil
 	default:
-		return fmt.Errorf("unknown event type: %s", event.String())
+		return fmt.Errorf("unknown event type[%s]", event.String())
 	}
-
-	conn.In <- up
-	return nil
 }

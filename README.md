@@ -12,9 +12,7 @@ This app is being build as an excercise for me to
 
 ### *Right now...*
 
-We need a storage.
-
-Chats cannot be deleted
+Deleting open chat does not close it
 
 User cannot be removed from chat
 
@@ -22,14 +20,18 @@ Oh and maybe it's time to start sanitizing raw user input
 
 And UI looks like shit, have to style it
 
-Currently I only store username as string in memory.
-They just login by submitting this username.
-Instead I want users to sign up fist, then login with user+pass.
-Let's make an email-based signup with email message verification.
-Later I'd want to add an SSO, like google or metamask. 
-We should take this into account, but not build this yet.
-We need to properly store encrypted credentials.
-Let's use sqlite via sqlx lib for this.
+DB is close. Need to add user registration and authorization
+
+thinking about 2 tables,
+* user
+    * id
+    * name
+    * salt?
+* auth
+    * id
+    * user id
+    * type
+    * hash
 
 ### Message Broadcasting: 
 - ~~When the server receives a message from a client over a regular HTTP POST request, it should broadcast that message to all other connected clients via the SSE connection.~~
