@@ -1,23 +1,24 @@
-<li class="chat-header" id="chat-head-{{ .ID }}" >
+<li class="chat-header" id="chat-head-{{ .ChatID }}" >
     <div hx-trigger="click" 
-        hx-get="/chat/{{.ID}}" 
+        hx-get="/chat/{{.ChatID}}" 
         hx-target=".open-chat" 
         hx-swap="innerHTML"
     >
         <b>{{.Name}}</b> 
     </div>
     {{ if eq .User .Owner }}
-        <form id="chat-delete-{{ .ID }}"
+        <form id="chat-delete-{{ .ChatID }}"
+            hx-boost="true"
             hx-post="/chat/delete" 
             hx-trigger="click" 
-            hx-target="#chat-head-{{ .ID }}"
+            hx-target="#chat-head-{{ .ChatID }}"
             hx-swap="outerHTML" 
-            hx-include="#chat-delete-{{ .ID }}"
+            hx-include="#chat-delete-{{ .ChatID }}"
         >
-            <input type="hidden" name="chatid" value="{{ .ID }}">
+            <input type="hidden" name="chatid" value="{{ .ChatID }}">
             <div class="chat-header-delete" 
                 hx-trigger="click" 
-                hx-action="chat-delete-{{ .ID }}.submit()"
+                hx-action="chat-delete-{{ .ChatID }}.submit()"
             >
                 [delete]
             </div>

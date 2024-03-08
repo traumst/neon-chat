@@ -6,7 +6,7 @@ import (
 )
 
 type ChatTemplate struct {
-	ID       int
+	ChatID   int
 	Name     string
 	User     string
 	Owner    string

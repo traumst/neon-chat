@@ -177,9 +177,6 @@ func CloseChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("<-%s-- CloseChat ERROR close chat[%d] for [%s], %s\n",
 			reqId, id, user, err)
-		// TODO not necessarily StatusInternalServerError
-		w.WriteHeader(http.StatusInternalServerError)
-		return
 	}
 	welcome := model.WelcomeTemplate{ActiveUser: user}
 	html, err := welcome.GetHTML()
@@ -229,12 +226,8 @@ func DeleteChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	err = app.DeleteChat(user, chat)
 	if err != nil {
 		log.Printf("<-%s-- DeleteChat ERROR remove chat[%d] from [%s], %s\n", reqId, id, chat.Name, err)
-		// TODO not necessarily StatusInternalServerError
-		w.WriteHeader(http.StatusInternalServerError)
-		return
 	}
 
-	// TODO verify chat delete distribution
 	handler.DistributeChat(app, user, chat.ToTemplate(user), model.ChatDeleted)
 
 	log.Printf("<-%s-- DeleteChat TRACE user[%s] deletes chat [%d]\n", reqId, user, id)

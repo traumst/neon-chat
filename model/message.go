@@ -8,7 +8,7 @@ type Message struct {
 
 func (m *Message) ToTemplate(user string) *MessageTemplate {
 	return &MessageTemplate{
-		ID:         m.ID,
+		MsgID:      m.ID,
 		Author:     m.Author,
 		Text:       m.Text,
 		ActiveUser: user,

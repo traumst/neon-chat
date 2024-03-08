@@ -6,28 +6,23 @@ import (
 	"net/http"
 	"time"
 
+	"go.chat/model"
 	"go.chat/utils"
 )
 
-func RenderLogin(w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> RenderLogin\n", utils.GetReqId(r))
-	loginTmpl, _ := template.ParseFiles("html/login.html")
-	loginTmpl.Execute(w, nil)
-}
-
-func Login(w http.ResponseWriter, r *http.Request) {
+func Login(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Login\n", utils.GetReqId(r))
 	switch r.Method {
 	case "GET":
-		RenderLogin(w, r)
+		renderLogin(w, r)
 	case "POST":
-		SignIn(w, r)
+		signIn(w, r)
 	default:
 		http.Redirect(w, r, "/", http.StatusBadRequest)
 	}
 }
 
-func Logout(w http.ResponseWriter, r *http.Request) {
+func Logout(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Logout\n", utils.GetReqId(r))
 	http.SetCookie(w, &http.Cookie{
 		Name:    "username",
@@ -37,7 +32,13 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
-func SignIn(w http.ResponseWriter, r *http.Request) {
+func renderLogin(w http.ResponseWriter, r *http.Request) {
+	log.Printf("--%s-> RenderLogin\n", utils.GetReqId(r))
+	loginTmpl, _ := template.ParseFiles("html/login.html")
+	loginTmpl.Execute(w, nil)
+}
+
+func signIn(w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> SignIn\n", utils.GetReqId(r))
 	username := r.FormValue("username")
 	if username == "" {

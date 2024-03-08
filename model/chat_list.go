@@ -8,7 +8,7 @@ import (
 type ChatList struct {
 	mu     sync.Mutex
 	chats  []*Chat
-	userAt map[string]*Chat
+	open   map[string]*Chat
 	nextID int
 	isInit bool
 }
@@ -20,7 +20,7 @@ func (cl *ChatList) init() {
 
 	cl.isInit = true
 	cl.chats = []*Chat{}
-	cl.userAt = make(map[string]*Chat)
+	cl.open = make(map[string]*Chat)
 }
 
 func (cl *ChatList) AddChat(owner string, chatName string) int {
@@ -37,7 +37,7 @@ func (cl *ChatList) AddChat(owner string, chatName string) int {
 
 	cl.chats = append(cl.chats, &chat)
 	cl.nextID += 1
-	cl.userAt[owner] = cl.chats[chat.ID]
+	cl.open[owner] = cl.chats[chat.ID]
 	return chat.ID
 }
 
@@ -52,7 +52,7 @@ func (cl *ChatList) OpenChat(user string, id int) (*Chat, error) {
 	if !openChat.isOwner(user) && !openChat.isUserInChat(user) {
 		return nil, fmt.Errorf("user[%s] is not in chat[%d]", user, id)
 	}
-	cl.userAt[user] = cl.chats[id]
+	cl.open[user] = cl.chats[id]
 	return openChat, nil
 }
 
@@ -60,14 +60,14 @@ func (cl *ChatList) CloseChat(user string, chatID int) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	cl.init()
-	userAtChat := cl.userAt[user]
+	userAtChat := cl.open[user]
 	if userAtChat == nil {
 		return fmt.Errorf("user[%s] has no open chat", user)
 	}
 	if userAtChat.ID != chatID {
 		return fmt.Errorf("user[%s] is not open on chat[%d]", user, chatID)
 	}
-	cl.userAt[user] = nil
+	cl.open[user] = nil
 	return nil
 }
 
@@ -75,7 +75,7 @@ func (cl *ChatList) GetOpenChat(user string) *Chat {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	cl.init()
-	return cl.userAt[user]
+	return cl.open[user]
 }
 
 func (cl *ChatList) GetChats(user string) []*Chat {
@@ -84,6 +84,9 @@ func (cl *ChatList) GetChats(user string) []*Chat {
 	cl.init()
 	var userChats []*Chat
 	for _, chat := range cl.chats {
+		if chat == nil {
+			continue
+		}
 		if chat.isOwner(user) || chat.isUserInChat(user) {
 			userChats = append(userChats, chat)
 		}
@@ -130,10 +133,10 @@ func (cl *ChatList) DeleteChat(user string, chat *Chat) error {
 	}
 	cl.chats[chat.ID] = nil
 
-	if cl.userAt[user] == nil {
+	if cl.open[user] == nil {
 		// noop
-	} else if cl.userAt[user].ID == chat.ID {
-		cl.userAt[user] = nil
+	} else if cl.open[user].ID == chat.ID {
+		cl.open[user] = nil
 	}
 
 	return nil

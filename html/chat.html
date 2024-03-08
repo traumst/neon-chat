@@ -76,17 +76,18 @@
     {{ end }}
     </p>
     <!-- <p>[close]</p> -->
-    <form id="chat-close-{{ .ID }}"
+    <form id="chat-close-{{ .ChatID }}"
+        hx-boost="true"
         hx-post="/chat/close" 
         hx-trigger="click" 
         hx-target=".open-chat"
         hx-swap="innerHTML" 
-        hx-include="#chat-close-{{ .ID }}"
+        hx-include="#chat-close-{{ .ChatID }}"
     >
-        <input type="hidden" name="chatid" value="{{ .ID }}">
+        <input type="hidden" name="chatid" value="{{ .ChatID }}">
         <div class="chat-header-delete" 
             hx-trigger="click" 
-            hx-action="chat-close-{{ .ID }}.submit()"
+            hx-action="chat-close-{{ .ChatID }}.submit()"
         >
         [close]
         </div>
@@ -94,8 +95,8 @@
 </div>
 {{ if eq .Owner .User }}
 <div class="invite-user">
-    <form method="POST" hx-target=".open-chat-users" hx-post="/chat/invite" hx-trigger="submit" hx-swap="beforeend">
-        <input type="hidden" name="chatId" value="{{ .ID }}">
+    <form hx-boost="true" method="POST" hx-target=".open-chat-users" hx-post="/chat/invite" hx-trigger="submit" hx-swap="beforeend">
+        <input type="hidden" name="chatId" value="{{ .ChatID }}">
         <input type="text" name="invitee" placeholder="...type invitee username here...">
         <button type="submit">Invite User</button>
     </form>
@@ -112,8 +113,8 @@
             <li>No previous messages...</li>
         {{ end }}
     </ul>
-    <form hx-post="/message" hx-trigger="submit" hx-target=".message-list" hx-swap="beforeend">
-        <input type="hidden" name="chatId" value="{{ .ID }}">
+    <form hx-boost="true" hx-post="/message" hx-trigger="submit" hx-target=".message-list" hx-swap="beforeend">
+        <input type="hidden" name="chatId" value="{{ .ChatID }}">
         <input type="text" name="msg" placeholder="...type message here...">
         <button type="submit">Send</button>
     </form>

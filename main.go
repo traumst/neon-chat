@@ -57,19 +57,17 @@ func ControllerSetup(app *model.AppState) {
 		noLog))
 	// TEMP
 	http.Handle("/gen2", ChainMiddleware(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.Gen2(w, r)
-		}),
+		http.HandlerFunc(controller.Gen2),
 		allMiddleware))
 	// sessions
 	http.Handle("/login", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.Login(w, r)
+			controller.Login(app, w, r)
 		}),
 		allMiddleware))
 	http.Handle("/logout", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.Logout(w, r)
+			controller.Logout(app, w, r)
 		}),
 		allMiddleware))
 	// chat

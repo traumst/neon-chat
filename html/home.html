@@ -65,7 +65,19 @@
     </style>
     <script src="/script/htmx.1.9.10.min.js"></script>
     <script src="/script/htmx.1.9.10.sse.js"></script>
-    <script src="https://unpkg.com/htmx.org/dist/ext/debug.js"></script>
+    <script>
+        htmx.defineExtension('debug', {
+            onEvent: function (name, evt) {
+                if (console.debug) {
+                    console.debug(name, evt);
+                } else if (console) {
+                    console.log("DEBUG:", name, evt);
+                } else {
+                    throw "NO CONSOLE SUPPORTED"
+                }
+            }
+        });
+    </script>
 </head>
 <body>
 <div class="container" hx-ext="sse" sse-trigger="load" sse-connect="/poll">
@@ -88,17 +100,17 @@
             </ul>
         </div>
         <div class="add-chat">
-            <form hx-post="/chat" hx-trigger="submit" hx-target=".open-chat" hx-swap="innerHTML">
+            <form hx-boost="true" hx-post="/chat" hx-trigger="submit" hx-target=".open-chat" hx-swap="innerHTML">
                 <input type="text" id="addChatFormInput" name="chatName" placeholder="...create chat...">
                 <button type="submit" id="addChatFormBtn">Create</button>
             </form>
         </div>
     </div>
     <div class="right-panel">
-        <div class="open-chat" sse-target="chat-drop" hx-swap="innerHTML"> <!-- TODO -->
+        <div class="open-chat" sse-target="chat-drop" hx-swap="innerHTML" hx-boost="true"> <!-- TODO -->
             {{ with .OpenTemplate }}
                 <div class="open-chat-content" 
-                    hx-get="/chat/{{ .ID }}" 
+                    hx-get="/chat/{{ .ChatID }}" 
                     hx-trigger="load"
                     hx-target="this"
                     hx-swap="innerHTML">

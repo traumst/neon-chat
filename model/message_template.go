@@ -6,7 +6,7 @@ import (
 )
 
 type MessageTemplate struct {
-	ID         int
+	MsgID      int
 	Author     string
 	Text       string
 	ActiveUser string

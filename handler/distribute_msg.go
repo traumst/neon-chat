@@ -53,35 +53,6 @@ func DistributeMsg(
 	}
 }
 
-func DistributeChat(
-	state *model.AppState,
-	user string,
-	template *model.ChatTemplate,
-	event model.UpdateType,
-) error {
-	shortHtml, err := template.GetShortHTML()
-	if err != nil {
-		return err
-	}
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		err = distributeChatToUser(
-			state,
-			user,
-			template.ID,
-			template.User,
-			shortHtml,
-			event,
-		)
-	}()
-
-	wg.Wait()
-	return err
-}
-
 func distributeMsgToUser(
 	state *model.AppState,
 	chatID int,
@@ -114,35 +85,5 @@ func distributeMsgToUser(
 		return nil
 	default:
 		return fmt.Errorf("unknown event type: %s", event.String())
-	}
-}
-
-func distributeChatToUser(
-	state *model.AppState,
-	targetUser string,
-	chatID int,
-	chatAuthor string,
-	html string,
-	event model.UpdateType,
-) error {
-	conn, err := state.GetConn(targetUser)
-	if err != nil {
-		return fmt.Errorf("user[%s] not connected, err:%s", targetUser, err.Error())
-	}
-	if conn.User != targetUser {
-		return fmt.Errorf("user[%s] does not own conn[%v], user[%s] does", targetUser, conn.Origin, conn.User)
-	}
-
-	switch event {
-	case model.ChatCreated, model.ChatInvite, model.ChatDeleted:
-		conn.In <- model.LiveUpdate{
-			Event:  event,
-			ChatID: chatID,
-			Author: chatAuthor,
-			Data:   html,
-		}
-		return nil
-	default:
-		return fmt.Errorf("unknown event type[%s]", event.String())
 	}
 }

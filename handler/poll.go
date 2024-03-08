@@ -38,14 +38,14 @@ func PollUpdatesForUser(conn *model.Conn, pollingUser string) {
 }
 
 func sendUpdates(conn *model.Conn, up model.LiveUpdate, pollingUser string) {
-	log.Printf("∞--%s--> APP.sendUpdates TRACE IN [%s], input[%+v]\n", conn.Origin, pollingUser, up)
+	log.Printf("∞--%s--> APP.sendUpdates TRACE IN [%s], input[%v]\n", conn.Origin, pollingUser, up)
 	origin := conn.Origin
 	if conn.User != pollingUser {
 		log.Printf("<--%s--∞ APP.sendUpdates WARN user[%v] is does not own conn[%v]\n", origin, pollingUser, conn)
 		return
 	}
 	if up.Author == "" || up.Data == "" {
-		log.Printf("<--%s--∞ APP.sendUpdates INFO user or msg is empty, update[%+v]\n", origin, up)
+		log.Printf("<--%s--∞ APP.sendUpdates INFO user or msg is empty, update[%v]\n", origin, up)
 		return
 	}
 	isSent := trySend(origin, conn, up, pollingUser)
@@ -72,15 +72,17 @@ func trySend(reqId string, conn *model.Conn, up model.LiveUpdate, user string) b
 	}
 	event := up.Event.String()
 	switch up.Event {
-	case model.ChatCreated,
-		model.ChatInvite,
-		model.ChatDeleted,
-		model.MessageAdded,
-		model.MessageDeleted:
+	case model.ChatCreated, model.ChatInvite, model.MessageAdded, model.MessageDeleted:
 		log.Printf("∞--%s--> trySend TRACE sending event[%s] to user[%s] via w[%T]\n", reqId, event, user, w)
 		err := sendEvent(&w, event, up.Data)
 		if err != nil {
 			log.Printf("<--%s--∞ trySend ERROR failed to send event[%s] to user[%s], %s\n", reqId, event, user, err)
+			return false
+		}
+	case model.ChatDeleted:
+		err := deleteChat(reqId, &w, up.Data)
+		if err != nil {
+			log.Printf("<--%s--∞ trySend ERROR failed to delete chat to user[%s], %s\n", reqId, user, err)
 			return false
 		}
 	default:
@@ -89,6 +91,23 @@ func trySend(reqId string, conn *model.Conn, up model.LiveUpdate, user string) b
 	}
 	log.Printf("<--%s--∞ trySend TRACE event[%s] sent to user[%s]\n", reqId, event, user)
 	return true
+}
+
+func deleteChat(reqId string, w *http.ResponseWriter, data string) error {
+	log.Printf("∞--%s--> deleteChat TRACE in\n", reqId)
+	err := sendEvent(w, string(model.ChatCloseEventName), data)
+	if err != nil {
+		log.Fatalf("<--%s--∞ deleteChat ERROR failed to send chat-close event, %s\n", reqId, err)
+		return err
+	}
+
+	err = sendEvent(w, string(model.ChatDropEventName), "")
+	if err != nil {
+		log.Fatalf("<--%s--∞ deleteChat ERROR failed to send chat-drop event, %s\n", reqId, err)
+		return err
+	}
+
+	return nil
 }
 
 func sendEvent(w *http.ResponseWriter, eventName string, html string) error {
@@ -104,6 +123,10 @@ func sendEvent(w *http.ResponseWriter, eventName string, html string) error {
 	}
 	// must escape newlines in SSE
 	html = strings.ReplaceAll(html, "\n", " ")
+	// remove double spaces
+	for strings.Contains(html, "  ") {
+		html = strings.ReplaceAll(html, "  ", " ")
+	}
 	_, err = fmt.Fprintf(writer, "data: %s\n\n", html)
 	if err != nil {
 		return fmt.Errorf("failed to write data[%s]", html)

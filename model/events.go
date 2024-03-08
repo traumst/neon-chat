@@ -7,6 +7,7 @@ const (
 	PingEventName        SSEvent = "ping"
 	ChatAddEventName     SSEvent = "chat-add"
 	ChatDropEventName    SSEvent = "chat-drop"
+	ChatCloseEventName   SSEvent = "chat-close"
 	MessageAddEventName  SSEvent = "msg-add"
 	MessageDropEventName SSEvent = "msg-drop"
 )
@@ -35,8 +36,6 @@ func (u *UpdateType) String() string {
 	switch *u {
 	case ChatCreated, ChatInvite:
 		return string(ChatAddEventName)
-	case ChatDeleted:
-		return string(ChatDropEventName)
 	case MessageAdded:
 		return string(MessageAddEventName)
 	case MessageDeleted:

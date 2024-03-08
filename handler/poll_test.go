@@ -13,16 +13,6 @@ import (
 )
 
 func Test_PollUpdatesForUser(t *testing.T) {
-	// now := time.Now()
-	// timestamp := now.Format(time.RFC3339)
-	// date := strings.Split(timestamp, "T")[0]
-	// logPath := fmt.Sprintf("test/from-%s.log", date)
-	// file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY, 0666)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// log.SetOutput(file)
-
 	user1 := "user1"
 	app := &model.ApplicationState
 	chatID1 := app.AddChat(user1, "chat1")

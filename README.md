@@ -12,7 +12,7 @@ This app is being build as an excercise for me to
 
 ### *Right now...*
 
-Deleting open chat does not close it
+Deleting open chat should close it
 
 User cannot be removed from chat
 
