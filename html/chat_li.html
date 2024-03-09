@@ -1,4 +1,9 @@
-<li class="chat-header" id="chat-head-{{ .ChatID }}" >
+<li class="chat-header" 
+    id="chat-head-{{ .ChatID }}" 
+    sse-swap="chat-drop-{{ .ChatID }}"
+    hx-target="#chat-head-{{ .ChatID }}" 
+    hx-swap="innerHTML"
+>
     <div hx-trigger="click" 
         hx-get="/chat/{{.ChatID}}" 
         hx-target=".open-chat" 
@@ -12,7 +17,7 @@
             hx-post="/chat/delete" 
             hx-trigger="click" 
             hx-target="#chat-head-{{ .ChatID }}"
-            hx-swap="outerHTML" 
+            hx-swap="innerHTML" 
             hx-include="#chat-delete-{{ .ChatID }}"
         >
             <input type="hidden" name="chatid" value="{{ .ChatID }}">

@@ -71,7 +71,7 @@ func trySend(conn *model.Conn, up model.LiveUpdate, user string) error {
 	event := up.Event.String()
 	switch up.Event {
 	case model.ChatCreated, model.ChatInvite, model.MessageAdded:
-		err := sendEvent(&w, event, up.Data)
+		err := SSEvent(&w, event, up.Data)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to send event[%s] to user[%s], %s", event, user, err)
 		}
@@ -81,7 +81,7 @@ func trySend(conn *model.Conn, up model.LiveUpdate, user string) error {
 			return fmt.Errorf("trySend ERROR failed to delete message to user[%s], %s", user, err)
 		}
 	case model.ChatDeleted:
-		err := deleteChat(&w, up.Data)
+		err := deleteChat(&w, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to delete chat to user[%s], %s", user, err)
 		}
@@ -94,29 +94,33 @@ func trySend(conn *model.Conn, up model.LiveUpdate, user string) error {
 func deleteMsg(w *http.ResponseWriter, up model.LiveUpdate) error {
 	dropEvent := fmt.Sprintf("%s-chat-%d-msg-%d", model.MessageDropEventName, up.ChatID, up.MsgID)
 	log.Printf("deleteMsg TRACE in, sse[%s]\n", dropEvent)
-	err := sendEvent(w, dropEvent, "[deleted]")
+	err := SSEvent(w, dropEvent, "[deleted]")
 	if err != nil {
 		return fmt.Errorf("deleteMsg ERROR failed to send message-drop event, %s", err)
 	}
 	return nil
 }
 
-func deleteChat(w *http.ResponseWriter, data string) error {
-	log.Printf("deleteChat TRACE in\n")
-	err := sendEvent(w, string(model.ChatCloseEventName), data)
-	if err != nil {
-		return fmt.Errorf("deleteChat ERROR failed to send chat-close event, %s", err)
-	}
-	err = sendEvent(w, string(model.ChatDropEventName), "")
+func deleteChat(w *http.ResponseWriter, up model.LiveUpdate) error {
+	// TODO if chat is open
+	// closeEvent := fmt.Sprintf("%s-%d", model.ChatCloseEventName, up.ChatID)
+	// log.Printf("deleteChat TRACE in\n")
+	// err := SSEvent(w, closeEvent, up.Data)
+	// if err != nil {
+	// 	return fmt.Errorf("deleteChat ERROR failed to send chat-close event, %s", err)
+	// }
+	dropEvent := fmt.Sprintf("%s-%d", model.ChatDropEventName, up.ChatID)
+	err := SSEvent(w, dropEvent, "[deleted]")
 	if err != nil {
 		return fmt.Errorf("deleteChat ERROR failed to send chat-drop event, %s", err)
 	}
 	return nil
 }
 
-func sendEvent(w *http.ResponseWriter, eventName string, html string) error {
+func SSEvent(w *http.ResponseWriter, eventName string, data string) error {
 	writer := *w
 	eventID := utils.RandStringBytes(5)
+	data = trim(data)
 	_, err := fmt.Fprintf(writer, "id: %s\n", eventID)
 	if err != nil {
 		return fmt.Errorf("failed to write id[%s]", eventID)
@@ -125,15 +129,9 @@ func sendEvent(w *http.ResponseWriter, eventName string, html string) error {
 	if err != nil {
 		return fmt.Errorf("failed to write event[%s]", eventName)
 	}
-	// must escape newlines in SSE
-	html = strings.ReplaceAll(html, "\n", " ")
-	// remove double spaces
-	for strings.Contains(html, "  ") {
-		html = strings.ReplaceAll(html, "  ", " ")
-	}
-	_, err = fmt.Fprintf(writer, "data: %s\n\n", html)
+	_, err = fmt.Fprintf(writer, "data: %s\n\n", data)
 	if err != nil {
-		return fmt.Errorf("failed to write data[%s]", html)
+		return fmt.Errorf("failed to write data[%s]", data)
 	}
 	flusher, ok := (*w).(http.Flusher)
 	if !ok {
@@ -141,4 +139,14 @@ func sendEvent(w *http.ResponseWriter, eventName string, html string) error {
 	}
 	flusher.Flush()
 	return nil
+}
+
+func trim(s string) string {
+	// must escape newlines in SSE
+	res := strings.ReplaceAll(s, "\n", " ")
+	// remove double spaces
+	for strings.Contains(res, "  ") {
+		res = strings.ReplaceAll(res, "  ", " ")
+	}
+	return res
 }

@@ -16,7 +16,7 @@ type ChatTemplate struct {
 
 func (c *ChatTemplate) GetHTML() (string, error) {
 	var buf bytes.Buffer
-	chatTmpl := template.Must(template.ParseFiles("html/chat.html", "html/message.html"))
+	chatTmpl := template.Must(template.ParseFiles("html/chat_div.html", "html/message.html"))
 	err := chatTmpl.Execute(&buf, c)
 	if err != nil {
 		return "", err

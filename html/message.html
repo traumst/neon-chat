@@ -2,8 +2,8 @@
     id="chat-{{ .ChatID }}-msg-{{ .MsgID }}"
     sse-swap="msg-drop-chat-{{ .ChatID }}-msg-{{ .MsgID }}"
     hx-target="#chat-{{ .ChatID }}-msg-{{ .MsgID }}"
-    hx-swap="innerHTML"> 
-    >
+    hx-swap="innerHTML" 
+>
     <div class="chat-message">
         <strong>{{ .Author }}:</strong> {{ .Text }}
     </div>

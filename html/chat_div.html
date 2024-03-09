@@ -77,7 +77,6 @@
     </p>
     <!-- <p>[close]</p> -->
     <form id="chat-close-{{ .ChatID }}"
-        hx-boost="true"
         hx-post="/chat/close" 
         hx-trigger="click" 
         hx-target=".open-chat"
@@ -95,7 +94,7 @@
 </div>
 {{ if eq .Owner .User }}
 <div class="invite-user">
-    <form hx-boost="true" method="POST" hx-target=".open-chat-users" hx-post="/chat/invite" hx-trigger="submit" hx-swap="beforeend">
+    <form method="POST" hx-target=".open-chat-users" hx-post="/chat/invite" hx-trigger="submit" hx-swap="beforeend">
         <input type="hidden" name="chatId" value="{{ .ChatID }}">
         <input type="text" name="invitee" placeholder="...type invitee username here...">
         <button type="submit">Invite User</button>

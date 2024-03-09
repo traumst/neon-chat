@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"log"
 	"sync"
 
 	"go.chat/model"
@@ -9,31 +10,53 @@ import (
 
 func DistributeChat(
 	state *model.AppState,
-	user string,
-	template *model.ChatTemplate,
+	chat *model.Chat,
+	author string,
 	event model.UpdateType,
 ) error {
-	var err error
+	users, err := chat.GetUsers(author)
+	if err != nil || users == nil {
+		return fmt.Errorf("DistributeChat: get users, chat[%+v], %s", chat, err)
+	}
+	if len(users) == 0 {
+		return fmt.Errorf("DistributeChat: chatUsers are empty, chat[%+v], %s", chat, err)
+	}
+
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		err = distributeChatToUser(
-			state,
-			user,
-			template,
-			event,
-		)
-	}()
+	var errors []string
+	for _, user := range users {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			log.Printf("∞----> DistributeChat TRACE event[%s] will be sent to user[%s] in chat[%d]\n",
+				event.String(), user, chat.ID)
+			err = distributeChatToUser(
+				state,
+				author,
+				user,
+				chat,
+				event,
+			)
+			if err != nil {
+				errors = append(errors, err.Error())
+				return
+			}
+		}()
+	}
 
 	wg.Wait()
-	return err
+	if len(errors) > 0 {
+		return error(fmt.Errorf("DistributeChat errors: [%v]", errors))
+	} else {
+		return nil
+	}
 }
 
 func distributeChatToUser(
 	state *model.AppState,
+	author string,
 	targetUser string,
-	targetChat *model.ChatTemplate,
+	targetChat *model.Chat,
 	event model.UpdateType,
 ) error {
 	conn, err := state.GetConn(targetUser)
@@ -46,38 +69,50 @@ func distributeChatToUser(
 
 	var data string
 	switch event {
-	case model.ChatCreated, model.ChatInvite:
-		data, err = targetChat.GetShortHTML()
+	case model.ChatCreated:
+		template := targetChat.ToTemplate(targetUser)
+		data, err = template.GetShortHTML()
 		if err != nil {
 			return err
 		}
-		sendToChannel(&conn.In, event, targetChat.ChatID, targetChat.Owner, data)
-		return nil
+		conn.In <- model.LiveUpdate{
+			Event:  event,
+			ChatID: targetChat.ID,
+			MsgID:  -1,
+			Author: author,
+			Data:   data,
+		}
+	case model.ChatInvite:
+		if targetUser == author {
+			break
+		}
+		template := targetChat.ToTemplate(targetUser)
+		data, err = template.GetShortHTML()
+		if err != nil {
+			return err
+		}
+		conn.In <- model.LiveUpdate{
+			Event:  event,
+			ChatID: targetChat.ID,
+			MsgID:  -1,
+			Author: author,
+			Data:   data,
+		}
 	case model.ChatDeleted:
 		welcome := model.WelcomeTemplate{ActiveUser: targetUser}
 		data, err = welcome.GetHTML()
 		if err != nil {
 			return err
 		}
-		sendToChannel(&conn.In, event, targetChat.ChatID, targetChat.Owner, data)
-		return nil
+		conn.In <- model.LiveUpdate{
+			Event:  event,
+			ChatID: targetChat.ID,
+			MsgID:  -1,
+			Author: author,
+			Data:   data,
+		}
 	default:
 		return fmt.Errorf("unknown event type[%s]", event.String())
 	}
-}
-
-func sendToChannel(
-	ch *chan model.LiveUpdate,
-	event model.UpdateType,
-	chatID int,
-	targetUser string,
-	data string,
-) {
-	*ch <- model.LiveUpdate{
-		Event:  event,
-		ChatID: chatID,
-		MsgID:  -1,
-		Author: targetUser,
-		Data:   data,
-	}
+	return nil
 }
