@@ -11,8 +11,8 @@ import (
 func DistributeChat(
 	state *model.AppState,
 	chat *model.Chat,
-	author string,
-	targetUser string,
+	author string, // who made the change
+	targetUser string, // who to inform
 	event model.UpdateType,
 ) error {
 	var users []string
@@ -20,7 +20,7 @@ func DistributeChat(
 	// AL TODO bad logic
 	// 	if targetUser IS NOT author - take only targetUser
 	// 	if targetUser IS author 	- take all users
-	if targetUser != author {
+	if targetUser != "" && targetUser != author {
 		users = []string{targetUser}
 	} else {
 		users, err = chat.GetUsers(author)

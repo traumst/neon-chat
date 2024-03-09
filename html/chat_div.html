@@ -66,6 +66,13 @@
         padding: 10px 20px;
     }
 </style>
+<div 
+    id="open-chat-{{ .ChatID }}"
+    sse-swap="chat-close-{{ .ChatID }}"
+    hx-target="#open-chat-{{ .ChatID }}"
+    hx-swap="innerHTML" 
+>
+</div>
 <div class="open-chat-name">
     <h2>chat {{ .Name }}</h2>
     <p class="open-chat-users">Users: 
