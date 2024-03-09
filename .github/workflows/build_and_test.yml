@@ -4,8 +4,8 @@
 name: Go
 
 on:
-  push: [main]
-  pull_request:
+  push:
+  pull_request: [main]
 
 jobs:
 
