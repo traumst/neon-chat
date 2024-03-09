@@ -88,14 +88,14 @@
             </ul>
         </div>
         <div class="add-chat">
-            <form hx-boost="true" hx-post="/chat" hx-trigger="submit" hx-target=".open-chat" hx-swap="innerHTML">
+            <form hx-post="/chat" hx-trigger="submit" hx-target=".open-chat" hx-swap="innerHTML">
                 <input type="text" id="addChatFormInput" name="chatName" placeholder="...create chat...">
                 <button type="submit" id="addChatFormBtn">Create</button>
             </form>
         </div>
     </div>
     <div class="right-panel">
-        <div class="open-chat" sse-target="chat-drop" hx-swap="innerHTML" hx-boost="true"> <!-- TODO -->
+        <div class="open-chat">
             {{ with .OpenTemplate }}
                 <div class="open-chat-content" 
                     hx-get="/chat/{{ .ChatID }}" 

@@ -20,6 +20,7 @@ const (
 	UnknownUpdate  UpdateType = iota
 	ChatCreated    UpdateType = iota
 	ChatDeleted    UpdateType = iota
+	ChatClose      UpdateType = iota
 	ChatInvite     UpdateType = iota
 	MessageAdded   UpdateType = iota
 	MessageDeleted UpdateType = iota
@@ -33,8 +34,12 @@ func (u *UpdateType) String() string {
 		return string(MessageAddEventName)
 	case MessageDeleted:
 		return string(MessageDropEventName)
+	case ChatDeleted:
+		return string(ChatDropEventName)
+	case ChatClose:
+		return string(ChatCloseEventName)
 	default:
-		return string(Unknown)
+		panic(fmt.Sprintf("unknown update type[%d]", *u))
 	}
 }
 
@@ -48,6 +53,6 @@ type LiveUpdate struct {
 }
 
 func (u *LiveUpdate) String() string {
-	return fmt.Sprintf("LiveUpdate{event:%s,chat:%d,msg:%d,author:%s,data:%s,error:%v}",
-		u.Event.String(), u.ChatID, u.MsgID, u.Author, u.Data, u.Error)
+	return fmt.Sprintf("LiveUpdate{event:%s,chat:%d,msg:%d,author:%s,error:%v}",
+		u.Event.String(), u.ChatID, u.MsgID, u.Author, u.Error)
 }

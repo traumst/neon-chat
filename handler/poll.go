@@ -85,6 +85,11 @@ func trySend(conn *model.Conn, up model.LiveUpdate, user string) error {
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to delete chat to user[%s], %s", user, err)
 		}
+	case model.ChatClose:
+		err := closeChat(&w, up)
+		if err != nil {
+			return fmt.Errorf("trySend ERROR failed to delete chat to user[%s], %s", user, err)
+		}
 	default:
 		return fmt.Errorf("trySend ERROR unknown update event[%s], update[%+v]", event, up)
 	}
@@ -94,7 +99,7 @@ func trySend(conn *model.Conn, up model.LiveUpdate, user string) error {
 func deleteMsg(w *http.ResponseWriter, up model.LiveUpdate) error {
 	dropEvent := fmt.Sprintf("%s-chat-%d-msg-%d", model.MessageDropEventName, up.ChatID, up.MsgID)
 	log.Printf("deleteMsg TRACE in, sse[%s]\n", dropEvent)
-	err := SSEvent(w, dropEvent, "[deleted]")
+	err := SSEvent(w, dropEvent, "[deletedM]")
 	if err != nil {
 		return fmt.Errorf("deleteMsg ERROR failed to send message-drop event, %s", err)
 	}
@@ -102,17 +107,21 @@ func deleteMsg(w *http.ResponseWriter, up model.LiveUpdate) error {
 }
 
 func deleteChat(w *http.ResponseWriter, up model.LiveUpdate) error {
-	// TODO if chat is open
-	// closeEvent := fmt.Sprintf("%s-%d", model.ChatCloseEventName, up.ChatID)
-	// log.Printf("deleteChat TRACE in\n")
-	// err := SSEvent(w, closeEvent, up.Data)
-	// if err != nil {
-	// 	return fmt.Errorf("deleteChat ERROR failed to send chat-close event, %s", err)
-	// }
 	dropEvent := fmt.Sprintf("%s-%d", model.ChatDropEventName, up.ChatID)
-	err := SSEvent(w, dropEvent, "[deleted]")
+	log.Printf("deleteChat TRACE in, sse[%s]\n", dropEvent)
+	err := SSEvent(w, dropEvent, "[deletedC]")
 	if err != nil {
 		return fmt.Errorf("deleteChat ERROR failed to send chat-drop event, %s", err)
+	}
+	return nil
+}
+
+func closeChat(w *http.ResponseWriter, up model.LiveUpdate) error {
+	closeEvent := fmt.Sprintf("%s-%d", model.ChatCloseEventName, up.ChatID)
+	log.Printf("closeChat TRACE in, sse[%s]\n", closeEvent)
+	err := SSEvent(w, closeEvent, up.Data)
+	if err != nil {
+		return fmt.Errorf("closeChat ERROR failed to send chat-close event, %s", err)
 	}
 	return nil
 }

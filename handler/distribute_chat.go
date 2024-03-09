@@ -12,14 +12,24 @@ func DistributeChat(
 	state *model.AppState,
 	chat *model.Chat,
 	author string,
+	targetUser string,
 	event model.UpdateType,
 ) error {
-	users, err := chat.GetUsers(author)
-	if err != nil || users == nil {
-		return fmt.Errorf("DistributeChat: get users, chat[%+v], %s", chat, err)
-	}
-	if len(users) == 0 {
-		return fmt.Errorf("DistributeChat: chatUsers are empty, chat[%+v], %s", chat, err)
+	var users []string
+	var err error
+	// AL TODO bad logic
+	// 	if targetUser IS NOT author - take only targetUser
+	// 	if targetUser IS author 	- take all users
+	if targetUser != author {
+		users = []string{targetUser}
+	} else {
+		users, err = chat.GetUsers(author)
+		if err != nil || users == nil {
+			return fmt.Errorf("DistributeChat: get users, chat[%+v], %s", chat, err)
+		}
+		if len(users) == 0 {
+			return fmt.Errorf("DistributeChat: chatUsers are empty, chat[%+v], %s", chat, err)
+		}
 	}
 
 	var wg sync.WaitGroup
@@ -83,9 +93,6 @@ func distributeChatToUser(
 			Data:   data,
 		}
 	case model.ChatInvite:
-		if targetUser == author {
-			break
-		}
 		template := targetChat.ToTemplate(targetUser)
 		data, err = template.GetShortHTML()
 		if err != nil {
@@ -99,6 +106,14 @@ func distributeChatToUser(
 			Data:   data,
 		}
 	case model.ChatDeleted:
+		conn.In <- model.LiveUpdate{
+			Event:  event,
+			ChatID: targetChat.ID,
+			MsgID:  -1,
+			Author: targetUser,
+			Data:   "CHAT_DELETED_MESSAGE",
+		}
+	case model.ChatClose:
 		welcome := model.WelcomeTemplate{ActiveUser: targetUser}
 		data, err = welcome.GetHTML()
 		if err != nil {

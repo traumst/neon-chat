@@ -13,7 +13,6 @@
     </div>
     {{ if eq .User .Owner }}
         <form id="chat-delete-{{ .ChatID }}"
-            hx-boost="true"
             hx-post="/chat/delete" 
             hx-trigger="click" 
             hx-target="#chat-head-{{ .ChatID }}"

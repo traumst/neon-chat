@@ -49,6 +49,9 @@ func (cl *ChatList) OpenChat(user string, id int) (*Chat, error) {
 	}
 	cl.init()
 	openChat := cl.chats[id]
+	if openChat == nil {
+		return nil, fmt.Errorf("chat[%d] does not exist", id)
+	}
 	if !openChat.isOwner(user) && !openChat.isUserInChat(user) {
 		return nil, fmt.Errorf("user[%s] is not in chat[%d]", user, id)
 	}
