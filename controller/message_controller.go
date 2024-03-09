@@ -32,8 +32,8 @@ func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusBadRequest)
 		return
 	}
-
 	log.Printf("--%s-> AddMessage TRACE opening current chat for [%s]\n", utils.GetReqId(r), author)
+	// TODO verify open chat is modified chat
 	chat := app.GetOpenChat(author)
 	if chat == nil {
 		log.Printf("--%s-> AddMessage WARN no open chat for %s\n", utils.GetReqId(r), author)
@@ -43,7 +43,7 @@ func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("--%s-> AddMessage TRACE storing message for [%s] in [%s]\n", utils.GetReqId(r), author, chat.Name)
-	message, err := chat.AddMessage(author, model.Message{ID: 0, Author: author, Text: msg})
+	message, err := chat.AddMessage(author, model.Message{ID: 0, ChatID: chat.ID, Author: author, Text: msg})
 	if err != nil {
 		log.Printf("--%s-> AddMessage ERROR add message, %s\n", utils.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -77,15 +77,15 @@ func DeleteMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	chatID := r.PostFormValue("msgid")
-	if chatID == "" {
+	inChatID := r.PostFormValue("chatid")
+	if inChatID == "" {
 		log.Printf("<-%s-- DeleteChat ERROR parse args, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	id, err := strconv.Atoi(chatID)
+	chatID, err := strconv.Atoi(inChatID)
 	if err != nil {
-		log.Printf("<-%s-- DeleteMessage ERROR parse id, %s\n", reqId, err)
+		log.Printf("<-%s-- DeleteMessage ERROR parse chatid, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -95,9 +95,26 @@ func DeleteMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	msg, err := chat.DropMessage(author, id)
+	if chatID != chat.ID {
+		log.Printf("<-%s-- DeleteMessage ERROR chat id mismatch, %d != %d\n", reqId, chatID, chat.ID)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	inMsgID := r.PostFormValue("msgid")
+	if inMsgID == "" {
+		log.Printf("<-%s-- DeleteChat ERROR parse args, %s\n", reqId, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	msgID, err := strconv.Atoi(inMsgID)
 	if err != nil {
-		log.Printf("<-%s-- DeleteMessage ERROR remove message[%d] from [%s], %s\n", reqId, id, chat.Name, err)
+		log.Printf("<-%s-- DeleteMessage ERROR parse msgid, %s\n", reqId, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	msg, err := chat.DropMessage(author, msgID)
+	if err != nil {
+		log.Printf("<-%s-- DeleteMessage ERROR remove message[%d] from [%s], %s\n", reqId, msgID, chat.Name, err)
 		// TODO not necessarily StatusInternalServerError
 		w.WriteHeader(http.StatusInternalServerError)
 		return

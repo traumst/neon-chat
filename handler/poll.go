@@ -38,7 +38,7 @@ func PollUpdatesForUser(conn *model.Conn, pollingUser string) {
 }
 
 func sendUpdates(conn *model.Conn, up model.LiveUpdate, pollingUser string) {
-	log.Printf("∞--%s--> APP.sendUpdates TRACE IN [%s], input[%v]\n", conn.Origin, pollingUser, up)
+	log.Printf("∞--%s--> APP.sendUpdates TRACE IN [%s], input[%s]\n", conn.Origin, pollingUser, up.String())
 	origin := conn.Origin
 	if conn.User != pollingUser {
 		log.Printf("<--%s--∞ APP.sendUpdates WARN user[%v] is does not own conn[%v]\n", origin, pollingUser, conn)
@@ -48,72 +48,76 @@ func sendUpdates(conn *model.Conn, up model.LiveUpdate, pollingUser string) {
 		log.Printf("<--%s--∞ APP.sendUpdates INFO user or msg is empty, update[%v]\n", origin, up)
 		return
 	}
-	isSent := trySend(origin, conn, up, pollingUser)
-	if isSent {
-		up.Error = fmt.Errorf("SENT TO: %s", pollingUser)
-		conn.Out <- up
-		log.Printf("<--%s--∞ APP.sendUpdates TRACE OUT user[%s]\n", origin, pollingUser)
-	} else {
+	err := trySend(conn, up, pollingUser)
+	if err != nil {
 		up.Error = fmt.Errorf("ERROR SENDING TO: %s", pollingUser)
 		conn.Out <- up
 		log.Printf("<--%s--∞ APP.sendUpdates ERROR failed to send update to user[%s]\n", origin, pollingUser)
+		return
 	}
+	up.Error = fmt.Errorf("SENT TO: %s", pollingUser)
+	conn.Out <- up
+	log.Printf("<--%s--∞ APP.sendUpdates TRACE OUT user[%s]\n", origin, pollingUser)
 }
 
-func trySend(reqId string, conn *model.Conn, up model.LiveUpdate, user string) bool {
+func trySend(conn *model.Conn, up model.LiveUpdate, user string) error {
 	w := conn.Writer
 	if user == "" || up.Data == "" {
-		log.Printf("<--%s--∞ trySend ERROR user or msg is empty, user[%s], msg[%s]\n", reqId, user, up.Data)
-		return false
+		return fmt.Errorf("trySend ERROR user or msg is empty, user[%s], msg[%s]", user, up.Data)
 	}
 	if w == nil {
-		log.Printf("<--%s--∞ trySend ERROR writer is nil\n", reqId)
-		return false
+		return fmt.Errorf("trySend ERROR writer is nil")
 	}
 	event := up.Event.String()
 	switch up.Event {
-	case model.ChatCreated, model.ChatInvite, model.MessageAdded, model.MessageDeleted:
-		log.Printf("∞--%s--> trySend TRACE sending event[%s] to user[%s] via w[%T]\n", reqId, event, user, w)
+	case model.ChatCreated, model.ChatInvite, model.MessageAdded:
 		err := sendEvent(&w, event, up.Data)
 		if err != nil {
-			log.Printf("<--%s--∞ trySend ERROR failed to send event[%s] to user[%s], %s\n", reqId, event, user, err)
-			return false
+			return fmt.Errorf("trySend ERROR failed to send event[%s] to user[%s], %s", event, user, err)
+		}
+	case model.MessageDeleted:
+		err := deleteMsg(&w, up)
+		if err != nil {
+			return fmt.Errorf("trySend ERROR failed to delete message to user[%s], %s", user, err)
 		}
 	case model.ChatDeleted:
-		err := deleteChat(reqId, &w, up.Data)
+		err := deleteChat(&w, up.Data)
 		if err != nil {
-			log.Printf("<--%s--∞ trySend ERROR failed to delete chat to user[%s], %s\n", reqId, user, err)
-			return false
+			return fmt.Errorf("trySend ERROR failed to delete chat to user[%s], %s", user, err)
 		}
 	default:
-		log.Printf("<--%s--∞ trySend ERROR unknown update event[%s], update[%+v]\n", reqId, event, up)
-		return false
+		return fmt.Errorf("trySend ERROR unknown update event[%s], update[%+v]", event, up)
 	}
-	log.Printf("<--%s--∞ trySend TRACE event[%s] sent to user[%s]\n", reqId, event, user)
-	return true
+	return nil
 }
 
-func deleteChat(reqId string, w *http.ResponseWriter, data string) error {
-	log.Printf("∞--%s--> deleteChat TRACE in\n", reqId)
+func deleteMsg(w *http.ResponseWriter, up model.LiveUpdate) error {
+	dropEvent := fmt.Sprintf("%s-chat-%d-msg-%d", model.MessageDropEventName, up.ChatID, up.MsgID)
+	log.Printf("deleteMsg TRACE in, sse[%s]\n", dropEvent)
+	err := sendEvent(w, dropEvent, "[deleted]")
+	if err != nil {
+		return fmt.Errorf("deleteMsg ERROR failed to send message-drop event, %s", err)
+	}
+	return nil
+}
+
+func deleteChat(w *http.ResponseWriter, data string) error {
+	log.Printf("deleteChat TRACE in\n")
 	err := sendEvent(w, string(model.ChatCloseEventName), data)
 	if err != nil {
-		log.Fatalf("<--%s--∞ deleteChat ERROR failed to send chat-close event, %s\n", reqId, err)
-		return err
+		return fmt.Errorf("deleteChat ERROR failed to send chat-close event, %s", err)
 	}
-
 	err = sendEvent(w, string(model.ChatDropEventName), "")
 	if err != nil {
-		log.Fatalf("<--%s--∞ deleteChat ERROR failed to send chat-drop event, %s\n", reqId, err)
-		return err
+		return fmt.Errorf("deleteChat ERROR failed to send chat-drop event, %s", err)
 	}
-
 	return nil
 }
 
 func sendEvent(w *http.ResponseWriter, eventName string, html string) error {
 	writer := *w
 	eventID := utils.RandStringBytes(5)
-	_, err := fmt.Fprintf(writer, "id: %s\n\n", eventID)
+	_, err := fmt.Fprintf(writer, "id: %s\n", eventID)
 	if err != nil {
 		return fmt.Errorf("failed to write id[%s]", eventID)
 	}

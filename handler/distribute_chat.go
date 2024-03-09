@@ -76,6 +76,7 @@ func sendToChannel(
 	*ch <- model.LiveUpdate{
 		Event:  event,
 		ChatID: chatID,
+		MsgID:  -1,
 		Author: targetUser,
 		Data:   data,
 	}

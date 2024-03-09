@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -132,6 +133,9 @@ func main() {
 		log.Fatal(err)
 	}
 	defer file.Close()
+	// write log to both file and stderr
+	multi := io.MultiWriter(file, os.Stderr)
+	log.SetOutput(multi)
 	// parse args
 	args, err := utils.ArgsRead()
 	if err != nil {
@@ -140,6 +144,7 @@ func main() {
 		os.Exit(13)
 	}
 	log.Printf("  args: %v\n", *args)
+	// setup application
 	log.Println("Setting up application")
 	app := &model.ApplicationState
 	log.Println("Setting up controllers")

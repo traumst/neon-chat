@@ -1,23 +1,25 @@
 <li class="chat-message" 
     id="chat-{{ .ChatID }}-msg-{{ .MsgID }}"
-    
+    sse-swap="msg-drop-chat-{{ .ChatID }}-msg-{{ .MsgID }}"
+    hx-target="#chat-{{ .ChatID }}-msg-{{ .MsgID }}"
+    hx-swap="innerHTML"> 
     >
     <div class="chat-message">
         <strong>{{ .Author }}:</strong> {{ .Text }}
     </div>
     {{ if eq .Author .ActiveUser }}
         <form id="delete-message" 
-            hx-boost="true"
             hx-post="/message/delete" 
             hx-trigger="click" 
             hx-swap="outerHTML" 
-            hx-target="chat-{{ .ChatID }}-msg-{{ .MsgID }}"
-            hx-include="#chat-delete-{{ .MsgID }}"
+            hx-target="#chat-{{ .ChatID }}-msg-{{ .MsgID }}"
+            hx-include=".chat-message-delete"
         >
             <input type="hidden" name="msgid" value="{{ .MsgID }}">
+            <input type="hidden" name="chatid" value="{{ .ChatID }}">
             <div class="chat-message-delete" 
                 hx-trigger="click" 
-                hx-action="chat-delete-{{ .MsgID }}.submit()"
+                hx-action="chat-message-delete-{{ .MsgID }}.submit()"
             >
                 [delete]
             </div>

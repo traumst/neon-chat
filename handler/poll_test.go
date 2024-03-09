@@ -42,12 +42,14 @@ func Test_PollUpdatesForUser(t *testing.T) {
 	conn1.In <- model.LiveUpdate{
 		Event:  model.ChatCreated,
 		ChatID: chatID1,
+		MsgID:  -2,
 		Author: user1,
 		Data:   "user1: chat1: message1",
 	}
 	conn2.In <- model.LiveUpdate{
 		Event:  model.ChatCreated,
 		ChatID: chatID2,
+		MsgID:  -2,
 		Author: user2,
 		Data:   "user2: chat2: message2",
 	}

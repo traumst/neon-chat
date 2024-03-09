@@ -1,5 +1,7 @@
 package model
 
+import "fmt"
+
 type SSEvent string
 
 const (
@@ -23,15 +25,6 @@ const (
 	MessageDeleted UpdateType = iota
 )
 
-type LiveUpdate struct {
-	Event  UpdateType
-	ChatID int
-	MsgID  int
-	Author string
-	Data   string
-	Error  error
-}
-
 func (u *UpdateType) String() string {
 	switch *u {
 	case ChatCreated, ChatInvite:
@@ -43,4 +36,18 @@ func (u *UpdateType) String() string {
 	default:
 		return string(Unknown)
 	}
+}
+
+type LiveUpdate struct {
+	Event  UpdateType
+	ChatID int
+	MsgID  int
+	Author string
+	Data   string
+	Error  error
+}
+
+func (u *LiveUpdate) String() string {
+	return fmt.Sprintf("LiveUpdate{event:%s,chat:%d,msg:%d,author:%s,data:%s,error:%v}",
+		u.Event.String(), u.ChatID, u.MsgID, u.Author, u.Data, u.Error)
 }
