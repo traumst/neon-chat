@@ -70,7 +70,7 @@
     id="open-chat-{{ .ChatID }}"
     sse-swap="chat-close-{{ .ChatID }}"
     hx-target="#open-chat-{{ .ChatID }}"
-    hx-swap="innerHTML" 
+    hx-swap="outerHTML" 
 >
 </div>
 <div class="open-chat-name">
@@ -110,7 +110,11 @@
 {{ end }}
 <hr />
 <div class="open-chat-history">
-    <ul class="message-list" hx-target=".message-list" sse-swap="msg-add" hx-swap="beforeend">
+    <ul class="message-list" 
+        hx-target=".message-list" 
+        sse-swap="msg-add-chat-{{ .ChatID }}" 
+        hx-swap="beforeend"
+    >
         {{ with $chatMsgs := .Messages }}
             {{ range $index, $msg := $chatMsgs }} 
                 {{ template "message.html" $msg }}

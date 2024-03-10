@@ -11,7 +11,7 @@
         <form id="delete-message" 
             hx-post="/message/delete" 
             hx-trigger="click" 
-            hx-swap="outerHTML" 
+            hx-swap="innerHTML" 
             hx-target="#chat-{{ .ChatID }}-msg-{{ .MsgID }}"
             hx-include=".chat-message-delete"
         >

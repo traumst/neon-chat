@@ -14,6 +14,23 @@ const (
 	MessageDropEventName SSEvent = "msg-drop"
 )
 
+func (e SSEvent) Format(chatID int, msgID int) string {
+	switch e {
+	case ChatAddEventName:
+		return string(ChatAddEventName)
+	case ChatDropEventName:
+		return fmt.Sprintf("%s-%d", ChatDropEventName, chatID)
+	case ChatCloseEventName:
+		return fmt.Sprintf("%s-%d", ChatCloseEventName, chatID)
+	case MessageAddEventName:
+		return fmt.Sprintf("%s-chat-%d", MessageAddEventName, chatID)
+	case MessageDropEventName:
+		return fmt.Sprintf("%s-chat-%d-msg-%d", MessageDropEventName, chatID, msgID)
+	default:
+		panic(fmt.Sprintf("unknown event type[%v]", e))
+	}
+}
+
 type UpdateType int
 
 const (
@@ -26,18 +43,18 @@ const (
 	MessageDeleted UpdateType = iota
 )
 
-func (u *UpdateType) String() string {
+func (u *UpdateType) String() SSEvent {
 	switch *u {
 	case ChatCreated, ChatInvite:
-		return string(ChatAddEventName)
+		return ChatAddEventName
 	case MessageAdded:
-		return string(MessageAddEventName)
+		return MessageAddEventName
 	case MessageDeleted:
-		return string(MessageDropEventName)
+		return MessageDropEventName
 	case ChatDeleted:
-		return string(ChatDropEventName)
+		return ChatDropEventName
 	case ChatClose:
-		return string(ChatCloseEventName)
+		return ChatCloseEventName
 	default:
 		panic(fmt.Sprintf("unknown update type[%d]", *u))
 	}

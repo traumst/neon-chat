@@ -88,6 +88,6 @@ func distributeMsgToUser(
 		}
 		return nil
 	default:
-		return fmt.Errorf("unknown event type: %s", event.String())
+		return fmt.Errorf("unknown event type: %v", event)
 	}
 }

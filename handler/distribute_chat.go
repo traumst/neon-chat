@@ -38,8 +38,8 @@ func DistributeChat(
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			log.Printf("∞----> DistributeChat TRACE event[%s] will be sent to user[%s] in chat[%d]\n",
-				event.String(), user, chat.ID)
+			log.Printf("∞----> DistributeChat TRACE event[%v] will be sent to user[%s] in chat[%d]\n",
+				event, user, chat.ID)
 			err = distributeChatToUser(
 				state,
 				author,
@@ -127,7 +127,7 @@ func distributeChatToUser(
 			Data:   data,
 		}
 	default:
-		return fmt.Errorf("unknown event type[%s]", event.String())
+		return fmt.Errorf("unknown event type[%v]", event)
 	}
 	return nil
 }
