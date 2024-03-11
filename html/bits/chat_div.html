@@ -117,7 +117,7 @@
     >
         {{ with $chatMsgs := .Messages }}
             {{ range $index, $msg := $chatMsgs }} 
-                {{ template "message.html" $msg }}
+                {{ template "message_li.html" $msg }}
             {{ end }}
         {{ else }}
             <li>No previous messages...</li>

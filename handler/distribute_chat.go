@@ -111,7 +111,7 @@ func distributeChatToUser(
 			ChatID: targetChat.ID,
 			MsgID:  -1,
 			Author: targetUser,
-			Data:   "CHAT_DELETED_MESSAGE",
+			Data:   "[deletedC]",
 		}
 	case model.ChatClose:
 		welcome := model.WelcomeTemplate{ActiveUser: targetUser}

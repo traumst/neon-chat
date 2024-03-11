@@ -34,7 +34,7 @@ func Logout(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 
 func renderLogin(w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> RenderLogin\n", utils.GetReqId(r))
-	loginTmpl, _ := template.ParseFiles("html/login.html")
+	loginTmpl, _ := template.ParseFiles("html/login_page.html")
 	loginTmpl.Execute(w, nil)
 }
 

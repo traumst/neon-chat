@@ -15,7 +15,7 @@ type MessageTemplate struct {
 
 func (m *MessageTemplate) GetHTML() (string, error) {
 	var buf bytes.Buffer
-	msgTmpl := template.Must(template.ParseFiles("html/message.html"))
+	msgTmpl := template.Must(template.ParseFiles("html/bits/message_li.html"))
 	err := msgTmpl.Execute(&buf, m)
 	if err != nil {
 		return "", err
