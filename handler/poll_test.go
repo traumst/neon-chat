@@ -13,16 +13,6 @@ import (
 )
 
 func Test_PollUpdatesForUser(t *testing.T) {
-	// now := time.Now()
-	// timestamp := now.Format(time.RFC3339)
-	// date := strings.Split(timestamp, "T")[0]
-	// logPath := fmt.Sprintf("test/from-%s.log", date)
-	// file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY, 0666)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// log.SetOutput(file)
-
 	user1 := "user1"
 	app := &model.ApplicationState
 	chatID1 := app.AddChat(user1, "chat1")
@@ -52,12 +42,14 @@ func Test_PollUpdatesForUser(t *testing.T) {
 	conn1.In <- model.LiveUpdate{
 		Event:  model.ChatCreated,
 		ChatID: chatID1,
+		MsgID:  -2,
 		Author: user1,
 		Data:   "user1: chat1: message1",
 	}
 	conn2.In <- model.LiveUpdate{
 		Event:  model.ChatCreated,
 		ChatID: chatID2,
+		MsgID:  -2,
 		Author: user2,
 		Data:   "user2: chat2: message2",
 	}

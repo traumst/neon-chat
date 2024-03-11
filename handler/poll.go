@@ -38,63 +38,74 @@ func PollUpdatesForUser(conn *model.Conn, pollingUser string) {
 }
 
 func sendUpdates(conn *model.Conn, up model.LiveUpdate, pollingUser string) {
-	log.Printf("∞--%s--> APP.sendUpdates TRACE IN [%s], input[%+v]\n", conn.Origin, pollingUser, up)
+	log.Printf("∞--%s--> APP.sendUpdates TRACE IN [%s], input[%s]\n", conn.Origin, pollingUser, up.String())
 	origin := conn.Origin
 	if conn.User != pollingUser {
 		log.Printf("<--%s--∞ APP.sendUpdates WARN user[%v] is does not own conn[%v]\n", origin, pollingUser, conn)
 		return
 	}
 	if up.Author == "" || up.Data == "" {
-		log.Printf("<--%s--∞ APP.sendUpdates INFO user or msg is empty, update[%+v]\n", origin, up)
+		log.Printf("<--%s--∞ APP.sendUpdates INFO user or msg is empty, update[%v]\n", origin, up)
 		return
 	}
-	isSent := trySend(origin, conn, up, pollingUser)
-	if isSent {
-		up.Error = fmt.Errorf("SENT TO: %s", pollingUser)
-		conn.Out <- up
-		log.Printf("<--%s--∞ APP.sendUpdates TRACE OUT user[%s]\n", origin, pollingUser)
-	} else {
+	err := trySend(conn, up, pollingUser)
+	if err != nil {
 		up.Error = fmt.Errorf("ERROR SENDING TO: %s", pollingUser)
 		conn.Out <- up
 		log.Printf("<--%s--∞ APP.sendUpdates ERROR failed to send update to user[%s]\n", origin, pollingUser)
+		return
 	}
+	up.Error = fmt.Errorf("SENT TO: %s", pollingUser)
+	conn.Out <- up
+	log.Printf("<--%s--∞ APP.sendUpdates TRACE OUT user[%s]\n", origin, pollingUser)
 }
 
-func trySend(reqId string, conn *model.Conn, up model.LiveUpdate, user string) bool {
+func trySend(conn *model.Conn, up model.LiveUpdate, user string) error {
 	w := conn.Writer
 	if user == "" || up.Data == "" {
-		log.Printf("<--%s--∞ trySend ERROR user or msg is empty, user[%s], msg[%s]\n", reqId, user, up.Data)
-		return false
+		return fmt.Errorf("trySend ERROR user or msg is empty, user[%s], msg[%s]", user, up.Data)
 	}
 	if w == nil {
-		log.Printf("<--%s--∞ trySend ERROR writer is nil\n", reqId)
-		return false
+		return fmt.Errorf("trySend ERROR writer is nil")
 	}
-	event := up.Event.String()
 	switch up.Event {
-	case model.ChatCreated,
-		model.ChatInvite,
-		model.ChatDeleted,
-		model.MessageAdded,
-		model.MessageDeleted:
-		log.Printf("∞--%s--> trySend TRACE sending event[%s] to user[%s] via w[%T]\n", reqId, event, user, w)
-		err := sendEvent(&w, event, up.Data)
+	case model.ChatCreated, model.ChatInvite:
+		err := SSEvent(&w, model.ChatAddEventName, up)
 		if err != nil {
-			log.Printf("<--%s--∞ trySend ERROR failed to send event[%s] to user[%s], %s\n", reqId, event, user, err)
-			return false
+			return fmt.Errorf("trySend ERROR failed to send to user[%s], %s", user, err)
+		}
+	case model.MessageAdded:
+		err := SSEvent(&w, model.MessageAddEventName, up)
+		if err != nil {
+			return fmt.Errorf("trySend ERROR failed to add message to user[%s], %s", user, err)
+		}
+	case model.MessageDeleted:
+		err := SSEvent(&w, model.MessageDropEventName, up)
+		if err != nil {
+			return fmt.Errorf("trySend ERROR failed to delete message to user[%s], %s", user, err)
+		}
+	case model.ChatDeleted:
+		err := SSEvent(&w, model.ChatDropEventName, up)
+		if err != nil {
+			return fmt.Errorf("trySend ERROR failed to delete chat to user[%s], %s", user, err)
+		}
+	case model.ChatClose:
+		err := SSEvent(&w, model.ChatCloseEventName, up)
+		if err != nil {
+			return fmt.Errorf("trySend ERROR failed to close chat to user[%s], %s", user, err)
 		}
 	default:
-		log.Printf("<--%s--∞ trySend ERROR unknown update event[%s], update[%+v]\n", reqId, event, up)
-		return false
+		return fmt.Errorf("trySend ERROR unknown update event[%v], update[%s]", up.Event, up.String())
 	}
-	log.Printf("<--%s--∞ trySend TRACE event[%s] sent to user[%s]\n", reqId, event, user)
-	return true
+	return nil
 }
 
-func sendEvent(w *http.ResponseWriter, eventName string, html string) error {
-	writer := *w
+func SSEvent(w *http.ResponseWriter, event model.SSEvent, up model.LiveUpdate) error {
+	eventName := event.Format(up.ChatID, up.MsgID)
 	eventID := utils.RandStringBytes(5)
-	_, err := fmt.Fprintf(writer, "id: %s\n\n", eventID)
+	data := trim(up.Data)
+	writer := *w
+	_, err := fmt.Fprintf(writer, "id: %s\n", eventID)
 	if err != nil {
 		return fmt.Errorf("failed to write id[%s]", eventID)
 	}
@@ -102,11 +113,9 @@ func sendEvent(w *http.ResponseWriter, eventName string, html string) error {
 	if err != nil {
 		return fmt.Errorf("failed to write event[%s]", eventName)
 	}
-	// must escape newlines in SSE
-	html = strings.ReplaceAll(html, "\n", " ")
-	_, err = fmt.Fprintf(writer, "data: %s\n\n", html)
+	_, err = fmt.Fprintf(writer, "data: %s\n\n", data)
 	if err != nil {
-		return fmt.Errorf("failed to write data[%s]", html)
+		return fmt.Errorf("failed to write data[%s]", data)
 	}
 	flusher, ok := (*w).(http.Flusher)
 	if !ok {
@@ -114,4 +123,14 @@ func sendEvent(w *http.ResponseWriter, eventName string, html string) error {
 	}
 	flusher.Flush()
 	return nil
+}
+
+func trim(s string) string {
+	// must escape newlines in SSE
+	res := strings.ReplaceAll(s, "\n", " ")
+	// remove double spaces
+	for strings.Contains(res, "  ") {
+		res = strings.ReplaceAll(res, "  ", " ")
+	}
+	return res
 }

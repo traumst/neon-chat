@@ -65,7 +65,7 @@
     </style>
     <script src="/script/htmx.1.9.10.min.js"></script>
     <script src="/script/htmx.1.9.10.sse.js"></script>
-    <script src="https://unpkg.com/htmx.org/dist/ext/debug.js"></script>
+    <script src="/script/htmx.1.9.10.debug.js"></script>
 </head>
 <body>
 <div class="container" hx-ext="sse" sse-trigger="load" sse-connect="/poll">
@@ -95,16 +95,16 @@
         </div>
     </div>
     <div class="right-panel">
-        <div class="open-chat" sse-target="chat-drop" hx-swap="innerHTML"> <!-- TODO -->
+        <div class="open-chat">
             {{ with .OpenTemplate }}
                 <div class="open-chat-content" 
-                    hx-get="/chat/{{ .ID }}" 
+                    hx-get="/chat/{{ .ChatID }}" 
                     hx-trigger="load"
                     hx-target="this"
                     hx-swap="innerHTML">
                 </div>
             {{ else }}
-                {{ template "welcome.html" . }}
+                {{ template "welcome_div.html" . }}
             {{ end }}
         </div>
     </div>

@@ -5,9 +5,7 @@ name: Go
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  pull_request: [main]
 
 jobs:
 
@@ -20,6 +18,12 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.22'
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Generate go.sum
+      run: go mod tidy
 
     - name: Build
       run: go build -v ./...
