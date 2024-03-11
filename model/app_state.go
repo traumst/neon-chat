@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -82,6 +83,10 @@ func (state *AppState) DeleteChat(user string, chat *Chat) error {
 	defer state.mu.Unlock()
 
 	log.Printf("∞--------> AppState.DeleteChat TRACE get chats for user[%s]\n", user)
+	err := state.chats.CloseChat(user, chat.ID)
+	if err != nil {
+		return fmt.Errorf("AppState.DeleteChat failed to close chat, %s", err)
+	}
 	return state.chats.DeleteChat(user, chat)
 }
 

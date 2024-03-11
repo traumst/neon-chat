@@ -66,6 +66,13 @@
         padding: 10px 20px;
     }
 </style>
+<div 
+    id="open-chat-{{ .ChatID }}"
+    sse-swap="chat-close-{{ .ChatID }}"
+    hx-target="#open-chat-{{ .ChatID }}"
+    hx-swap="outerHTML" 
+>
+</div>
 <div class="open-chat-name">
     <h2>chat {{ .Name }}</h2>
     <p class="open-chat-users">Users: 
@@ -76,17 +83,17 @@
     {{ end }}
     </p>
     <!-- <p>[close]</p> -->
-    <form id="chat-close-{{ .ID }}"
+    <form id="chat-close-{{ .ChatID }}"
         hx-post="/chat/close" 
         hx-trigger="click" 
         hx-target=".open-chat"
         hx-swap="innerHTML" 
-        hx-include="#chat-close-{{ .ID }}"
+        hx-include="#chat-close-{{ .ChatID }}"
     >
-        <input type="hidden" name="chatid" value="{{ .ID }}">
+        <input type="hidden" name="chatid" value="{{ .ChatID }}">
         <div class="chat-header-delete" 
             hx-trigger="click" 
-            hx-action="chat-close-{{ .ID }}.submit()"
+            hx-action="chat-close-{{ .ChatID }}.submit()"
         >
         [close]
         </div>
@@ -95,7 +102,7 @@
 {{ if eq .Owner .User }}
 <div class="invite-user">
     <form method="POST" hx-target=".open-chat-users" hx-post="/chat/invite" hx-trigger="submit" hx-swap="beforeend">
-        <input type="hidden" name="chatId" value="{{ .ID }}">
+        <input type="hidden" name="chatId" value="{{ .ChatID }}">
         <input type="text" name="invitee" placeholder="...type invitee username here...">
         <button type="submit">Invite User</button>
     </form>
@@ -103,17 +110,26 @@
 {{ end }}
 <hr />
 <div class="open-chat-history">
-    <ul class="message-list" hx-target=".message-list" sse-swap="msg-add" hx-swap="beforeend">
+    <ul class="message-list" 
+        hx-target=".message-list" 
+        sse-swap="msg-add-chat-{{ .ChatID }}" 
+        hx-swap="beforeend"
+    >
         {{ with $chatMsgs := .Messages }}
             {{ range $index, $msg := $chatMsgs }} 
-                {{ template "message.html" $msg }}
+                {{ template "message_li.html" $msg }}
             {{ end }}
         {{ else }}
             <li>No previous messages...</li>
         {{ end }}
     </ul>
-    <form hx-post="/message" hx-trigger="submit" hx-target=".message-list" hx-swap="beforeend">
-        <input type="hidden" name="chatId" value="{{ .ID }}">
+    <form 
+        hx-post="/message" 
+        hx-trigger="submit" 
+        hx-target=".message-list" 
+        hx-swap="beforeend"
+    >
+        <input type="hidden" name="chatId" value="{{ .ChatID }}">
         <input type="text" name="msg" placeholder="...type message here...">
         <button type="submit">Send</button>
     </form>

@@ -11,7 +11,7 @@ type WelcomeTemplate struct {
 
 func (w *WelcomeTemplate) GetHTML() (string, error) {
 	var buf bytes.Buffer
-	welcomeTmpl := template.Must(template.ParseFiles("html/welcome.html"))
+	welcomeTmpl := template.Must(template.ParseFiles("html/bits/welcome_div.html"))
 	err := welcomeTmpl.Execute(&buf, w)
 	if err != nil {
 		return "", err

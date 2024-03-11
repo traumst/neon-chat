@@ -12,7 +12,8 @@ This app is being build as an excercise for me to
 
 ### *Right now...*
 
-Deleting open chat does not close it
+*BUGZZZ*
+* open N chats, invite user, he sends message - you get the same message N times
 
 User cannot be removed from chat
 
