@@ -12,18 +12,15 @@ This app is being build as an excercise for me to
 
 ### *Right now...*
 
-*BUGZZZ*
-* open N chats, invite user, he sends message - you get the same message N times
-
-User cannot be removed from chat
+* User registraction sucks
+* User cannot be removed from chat
+* User cannot leave chat - admin can delete, user can leave
 
 Oh and maybe it's time to start sanitizing raw user input
 
 And UI looks like shit, have to style it
 
-DB is close. Need to add user registration and authorization
-
-thinking about 2 tables,
+DB is close. Need to add user registration and authorization, thinking about 2 tables,
 * user
     * id
     * name

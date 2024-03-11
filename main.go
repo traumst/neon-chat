@@ -10,116 +10,79 @@ import (
 	"time"
 
 	"go.chat/controller"
+	"go.chat/db"
 	"go.chat/model"
 	"go.chat/utils"
 )
 
-type Middleware func(http.Handler) http.Handler
-
-func ChainMiddleware(h http.Handler, middleware []Middleware) http.Handler {
-	for _, m := range middleware {
-		h = m(h)
-	}
-	return h
-}
-
-func ReqIdMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		utils.SetReqId(r, nil)
-		next.ServeHTTP(w, r)
-	})
-}
-
-func LoggerMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		utils.SetReqId(r, nil)
-		log.Printf("--%s-> BEGIN %s %s", utils.GetReqId(r), r.Method, r.RequestURI)
-		startTime := time.Now()
-		rec := utils.StatefulWriter{ResponseWriter: w}
-		next.ServeHTTP(&rec, r)
-		log.Printf("<-%s-- END %s %s status_code:[%d] in %v",
-			utils.GetReqId(r),
-			r.Method,
-			r.RequestURI,
-			rec.Status(),
-			time.Since(startTime))
-	})
-}
-
-func ControllerSetup(app *model.AppState) {
-	noLog := []Middleware{ReqIdMiddleware}
-	allMiddleware := []Middleware{LoggerMiddleware}
+func ControllerSetup(app *model.AppState, conn *db.DBConn) {
 	// static files
-	http.Handle("/favicon.ico", ChainMiddleware(
-		http.HandlerFunc(controller.FavIcon),
-		noLog))
-	http.Handle("/script/", ChainMiddleware(
-		http.HandlerFunc(controller.ServeFile),
-		noLog))
+	http.Handle("/favicon.ico", http.HandlerFunc(controller.FavIcon))
+	http.Handle("/script/", http.HandlerFunc(controller.ServeFile))
 	// TEMP
 	http.Handle("/gen2", ChainMiddleware(
 		http.HandlerFunc(controller.Gen2),
-		allMiddleware))
+		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	// sessions
 	http.Handle("/login", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.Login(app, w, r)
+			controller.Login(app, conn, w, r)
 		}),
-		allMiddleware))
+		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	http.Handle("/logout", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.Logout(app, w, r)
+			controller.Logout(app, conn, w, r)
 		}),
-		allMiddleware))
+		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	// chat
 	http.Handle("/chat/invite", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.InviteUser(app, w, r)
 		}),
-		allMiddleware))
+		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	http.Handle("/chat/delete", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.DeleteChat(app, w, r)
 		}),
-		allMiddleware))
+		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	http.Handle("/chat/close", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.CloseChat(app, w, r)
 		}),
-		allMiddleware))
+		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	http.Handle("/chat/", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.OpenChat(app, w, r)
 		}),
-		allMiddleware))
+		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	http.Handle("/chat", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.AddChat(app, w, r)
 		}),
-		allMiddleware))
+		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	// live updates
 	http.Handle("/poll", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.PollUpdates(app, w, r)
 		}),
-		allMiddleware))
+		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	// message
 	http.Handle("/message/delete", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.DeleteMessage(app, w, r)
 		}),
-		allMiddleware))
+		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	http.Handle("/message", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.AddMessage(app, w, r)
 		}),
-		allMiddleware))
+		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	// home, default
 	http.Handle("/", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.Home(app, w, r)
 		}),
-		allMiddleware))
+		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 }
 
 func main() {
@@ -144,12 +107,16 @@ func main() {
 		os.Exit(13)
 	}
 	log.Printf("  args: %v\n", *args)
-	// setup application
+	// TODO args.DBPath
+	db, err := db.ConnectDB("db/chat.db")
+	if err != nil {
+		log.Fatalf("Error opening db: %s", err)
+	}
 	log.Println("Setting up application")
 	app := &model.ApplicationState
 	log.Println("Setting up controllers")
-	ControllerSetup(app)
+	ControllerSetup(app, db)
 	log.Printf("Starting server at port [%d]\n", args.Port)
-	// run server
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", args.Port), nil))
+	runtineErr := http.ListenAndServe(fmt.Sprintf(":%d", args.Port), nil)
+	log.Fatal(runtineErr)
 }

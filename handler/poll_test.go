@@ -10,6 +10,7 @@ import (
 	"log"
 
 	"go.chat/model"
+	"go.chat/model/event"
 )
 
 func Test_PollUpdatesForUser(t *testing.T) {
@@ -39,15 +40,15 @@ func Test_PollUpdatesForUser(t *testing.T) {
 	go PollUpdatesForUser(conn1, user1)
 	go PollUpdatesForUser(conn2, user2)
 
-	conn1.In <- model.LiveUpdate{
-		Event:  model.ChatCreated,
+	conn1.In <- event.LiveUpdate{
+		Event:  event.ChatCreated,
 		ChatID: chatID1,
 		MsgID:  -2,
 		Author: user1,
 		Data:   "user1: chat1: message1",
 	}
-	conn2.In <- model.LiveUpdate{
-		Event:  model.ChatCreated,
+	conn2.In <- event.LiveUpdate{
+		Event:  event.ChatCreated,
 		ChatID: chatID2,
 		MsgID:  -2,
 		Author: user2,

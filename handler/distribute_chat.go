@@ -6,14 +6,17 @@ import (
 	"sync"
 
 	"go.chat/model"
+	"go.chat/model/app"
+	e "go.chat/model/event"
+	"go.chat/model/template"
 )
 
 func DistributeChat(
 	state *model.AppState,
-	chat *model.Chat,
+	chat *app.Chat,
 	author string, // who made the change
 	targetUser string, // who to inform
-	event model.UpdateType,
+	event e.UpdateType,
 ) error {
 	var users []string
 	var err error
@@ -66,8 +69,8 @@ func distributeChatToUser(
 	state *model.AppState,
 	author string,
 	targetUser string,
-	targetChat *model.Chat,
-	event model.UpdateType,
+	targetChat *app.Chat,
+	event e.UpdateType,
 ) error {
 	conn, err := state.GetConn(targetUser)
 	if err != nil {
@@ -79,47 +82,47 @@ func distributeChatToUser(
 
 	var data string
 	switch event {
-	case model.ChatCreated:
+	case e.ChatCreated:
 		template := targetChat.ToTemplate(targetUser)
 		data, err = template.GetShortHTML()
 		if err != nil {
 			return err
 		}
-		conn.In <- model.LiveUpdate{
+		conn.In <- e.LiveUpdate{
 			Event:  event,
 			ChatID: targetChat.ID,
 			MsgID:  -1,
 			Author: author,
 			Data:   data,
 		}
-	case model.ChatInvite:
+	case e.ChatInvite:
 		template := targetChat.ToTemplate(targetUser)
 		data, err = template.GetShortHTML()
 		if err != nil {
 			return err
 		}
-		conn.In <- model.LiveUpdate{
+		conn.In <- e.LiveUpdate{
 			Event:  event,
 			ChatID: targetChat.ID,
 			MsgID:  -1,
 			Author: author,
 			Data:   data,
 		}
-	case model.ChatDeleted:
-		conn.In <- model.LiveUpdate{
+	case e.ChatDeleted:
+		conn.In <- e.LiveUpdate{
 			Event:  event,
 			ChatID: targetChat.ID,
 			MsgID:  -1,
 			Author: targetUser,
 			Data:   "[deletedC]",
 		}
-	case model.ChatClose:
-		welcome := model.WelcomeTemplate{ActiveUser: targetUser}
+	case e.ChatClose:
+		welcome := template.WelcomeTemplate{ActiveUser: targetUser}
 		data, err = welcome.GetHTML()
 		if err != nil {
 			return err
 		}
-		conn.In <- model.LiveUpdate{
+		conn.In <- e.LiveUpdate{
 			Event:  event,
 			ChatID: targetChat.ID,
 			MsgID:  -1,

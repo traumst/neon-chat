@@ -1,4 +1,4 @@
-package model
+package app
 
 type User struct {
 	Id   uint

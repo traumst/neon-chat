@@ -6,17 +6,18 @@ import (
 	"net/http"
 	"sync"
 
+	"go.chat/model/app"
 	"go.chat/utils"
 )
 
 var ApplicationState = AppState{
-	chats:    ChatList{},
+	chats:    app.ChatList{},
 	userConn: make(UserConn, 0),
 }
 
 type AppState struct {
 	mu       sync.Mutex
-	chats    ChatList
+	chats    app.ChatList
 	userConn UserConn
 }
 
@@ -78,7 +79,7 @@ func (state *AppState) CloseChat(user string, chatID int) error {
 	return state.chats.CloseChat(user, chatID)
 }
 
-func (state *AppState) DeleteChat(user string, chat *Chat) error {
+func (state *AppState) DeleteChat(user string, chat *app.Chat) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
@@ -90,7 +91,7 @@ func (state *AppState) DeleteChat(user string, chat *Chat) error {
 	return state.chats.DeleteChat(user, chat)
 }
 
-func (state *AppState) OpenChat(user string, chatID int) (*Chat, error) {
+func (state *AppState) OpenChat(user string, chatID int) (*app.Chat, error) {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
@@ -106,7 +107,7 @@ func (state *AppState) InviteUser(user string, chatID int, invitee string) error
 	return state.chats.InviteUser(user, chatID, invitee)
 }
 
-func (state *AppState) GetChats(user string) []*Chat {
+func (state *AppState) GetChats(user string) []*app.Chat {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
@@ -114,7 +115,7 @@ func (state *AppState) GetChats(user string) []*Chat {
 	return state.chats.GetChats(user)
 }
 
-func (state *AppState) GetChat(user string, chatID int) (*Chat, error) {
+func (state *AppState) GetChat(user string, chatID int) (*app.Chat, error) {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
@@ -122,7 +123,7 @@ func (state *AppState) GetChat(user string, chatID int) (*Chat, error) {
 	return state.chats.GetChat(user, chatID)
 }
 
-func (state *AppState) GetOpenChat(user string) *Chat {
+func (state *AppState) GetOpenChat(user string) *app.Chat {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
