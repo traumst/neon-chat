@@ -7,7 +7,7 @@ import (
 	"go.chat/utils"
 )
 
-var app = &ApplicationState
+var app1 = &ApplicationState
 
 func TestAddConn(t *testing.T) {
 	t.Logf("TestAddConn started")
@@ -15,12 +15,12 @@ func TestAddConn(t *testing.T) {
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	user := "John"
 
-	conn1 := app.ReplaceConn(w, *r, user)
+	conn1 := app1.ReplaceConn(w, *r, user)
 	if conn1 == nil {
 		t.Errorf("Expected a conn1, got nil")
 	}
 
-	conn2 := app.ReplaceConn(w, *r, user)
+	conn2 := app1.ReplaceConn(w, *r, user)
 	if conn2 == nil {
 		t.Errorf("Expected a conn2, got nil")
 	}
@@ -38,12 +38,12 @@ func TestGetConn(t *testing.T) {
 	utils.SetReqId(r, &reqId)
 	user := "John"
 
-	conn := app.ReplaceConn(w, *r, user)
+	conn := app1.ReplaceConn(w, *r, user)
 	if conn == nil {
 		t.Errorf("TestGetConn expected a conn, got nil")
 	}
 
-	conn2, err := app.GetConn(user)
+	conn2, err := app1.GetConn(user)
 	if err != nil {
 		t.Errorf("TestGetConn expected no error, got [%s]", err)
 	} else if conn2 == nil {

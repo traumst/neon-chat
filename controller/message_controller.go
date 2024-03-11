@@ -8,6 +8,8 @@ import (
 
 	"go.chat/handler"
 	"go.chat/model"
+	a "go.chat/model/app"
+	e "go.chat/model/event"
 	"go.chat/utils"
 )
 
@@ -43,7 +45,7 @@ func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("--%s-> AddMessage TRACE storing message for [%s] in [%s]\n", utils.GetReqId(r), author, chat.Name)
-	message, err := chat.AddMessage(author, model.Message{ID: 0, ChatID: chat.ID, Author: author, Text: msg})
+	message, err := chat.AddMessage(author, a.Message{ID: 0, ChatID: chat.ID, Author: author, Text: msg})
 	if err != nil {
 		log.Printf("--%s-> AddMessage ERROR add message, %s\n", utils.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -58,7 +60,7 @@ func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handler.DistributeMsg(app, chat, author, message, model.MessageAdded)
+	handler.DistributeMsg(app, chat, author, message, e.MessageAdded)
 
 	log.Printf("<-%s-- AddMessage TRACE serving html\n", utils.GetReqId(r))
 	w.WriteHeader(http.StatusFound)
@@ -120,7 +122,7 @@ func DeleteMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	// TODO verify message delete distribution
-	handler.DistributeMsg(app, chat, author, msg, model.MessageDeleted)
+	handler.DistributeMsg(app, chat, author, msg, e.MessageDeleted)
 
 	log.Printf("<-%s-- DeleteMessage done\n", reqId)
 	w.WriteHeader(http.StatusAccepted)

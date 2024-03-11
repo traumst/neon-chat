@@ -1,4 +1,6 @@
-package model
+package app
+
+import "go.chat/model/template"
 
 type Message struct {
 	ID     int
@@ -7,8 +9,8 @@ type Message struct {
 	Text   string
 }
 
-func (m *Message) ToTemplate(user string) *MessageTemplate {
-	return &MessageTemplate{
+func (m *Message) ToTemplate(user string) *template.MessageTemplate {
+	return &template.MessageTemplate{
 		MsgID:      m.ID,
 		ChatID:     m.ChatID,
 		Author:     m.Author,

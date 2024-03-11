@@ -8,6 +8,9 @@ import (
 
 	"go.chat/handler"
 	"go.chat/model"
+	a "go.chat/model/app"
+	e "go.chat/model/event"
+	"go.chat/model/template"
 	"go.chat/utils"
 )
 
@@ -92,7 +95,7 @@ func AddChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		reqId, chatName, chatID)
 
 	sendChatContent(reqId, w, openChat, user)
-	err = handler.DistributeChat(app, openChat, user, user, model.ChatCreated)
+	err = handler.DistributeChat(app, openChat, user, user, e.ChatCreated)
 	if err != nil {
 		log.Printf("<-%s-- AddChat ERROR cannot distribute chat header, %s\n",
 			reqId, err)
@@ -139,7 +142,7 @@ func InviteUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handler.DistributeChat(app, chat, user, invitee, model.ChatInvite)
+	handler.DistributeChat(app, chat, user, invitee, e.ChatInvite)
 
 	log.Printf("<-%s-- InviteUser TRACE user [%s] added to chat [%d] by user [%s]\n",
 		reqId, invitee, chatID, user)
@@ -176,7 +179,7 @@ func CloseChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		log.Printf("<-%s-- CloseChat ERROR close chat[%d] for [%s], %s\n",
 			reqId, id, user, err)
 	}
-	welcome := model.WelcomeTemplate{ActiveUser: user}
+	welcome := template.WelcomeTemplate{ActiveUser: user}
 	html, err := welcome.GetHTML()
 	if err != nil {
 		log.Printf("<-%s-- CloseChat ERROR cannot template welcome page, %s\n", reqId, err)
@@ -224,15 +227,15 @@ func DeleteChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		log.Printf("<-%s-- DeleteChat ERROR remove chat[%d] from [%s], %s\n", reqId, id, chat.Name, err)
 	}
 
-	handler.DistributeChat(app, chat, user, user, model.ChatClose)
-	handler.DistributeChat(app, chat, user, user, model.ChatDeleted)
+	handler.DistributeChat(app, chat, user, user, e.ChatClose)
+	handler.DistributeChat(app, chat, user, user, e.ChatDeleted)
 
 	log.Printf("<-%s-- DeleteChat TRACE user[%s] deletes chat [%d]\n", reqId, user, id)
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte("[DELETED]"))
 }
 
-func sendChatContent(reqId string, w http.ResponseWriter, chat *model.Chat, user string) {
+func sendChatContent(reqId string, w http.ResponseWriter, chat *a.Chat, user string) {
 	template := chat.ToTemplate(user)
 	html, err := template.GetHTML()
 	if err != nil {

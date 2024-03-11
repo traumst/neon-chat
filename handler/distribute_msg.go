@@ -6,14 +6,16 @@ import (
 	"sync"
 
 	"go.chat/model"
+	"go.chat/model/app"
+	e "go.chat/model/event"
 )
 
 func DistributeMsg(
 	state *model.AppState,
-	chat *model.Chat,
+	chat *app.Chat,
 	author string,
-	msg *model.Message,
-	event model.UpdateType,
+	msg *app.Message,
+	event e.UpdateType,
 ) error {
 	users, err := chat.GetUsers(author)
 	if err != nil || users == nil {
@@ -31,7 +33,7 @@ func DistributeMsg(
 			continue
 		}
 		wg.Add(1)
-		go func(user string, msg model.Message) {
+		go func(user string, msg app.Message) {
 			defer wg.Done()
 			log.Printf("∞----> DistributeMsg TRACE new message will be sent to user[%s]\n", user)
 			data, err := msg.ToTemplate(user).GetHTML()
@@ -60,7 +62,7 @@ func distributeMsgToUser(
 	msgID int,
 	user string,
 	author string,
-	event model.UpdateType,
+	event e.UpdateType,
 	data string,
 ) error {
 	log.Printf("∞----> distributeMsgToUser TRACE user[%s] chat[%d] event[%v]\n", user, chatID, event)
@@ -78,8 +80,8 @@ func distributeMsgToUser(
 	}
 
 	switch event {
-	case model.MessageAdded, model.MessageDeleted:
-		conn.In <- model.LiveUpdate{
+	case e.MessageAdded, e.MessageDeleted:
+		conn.In <- e.LiveUpdate{
 			Event:  event,
 			Data:   data,
 			ChatID: chatID,

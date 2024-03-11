@@ -1,8 +1,10 @@
-package model
+package app
 
 import (
 	"fmt"
 	"sync"
+
+	"go.chat/model/template"
 )
 
 type Chat struct {
@@ -108,15 +110,15 @@ func (c *Chat) DropMessage(user string, ID int) (*Message, error) {
 	return msg, c.history.Delete(msg)
 }
 
-func (c *Chat) ToTemplate(user string) *ChatTemplate {
-	var messages []MessageTemplate
+func (c *Chat) ToTemplate(user string) *template.ChatTemplate {
+	var messages []template.MessageTemplate
 	for _, msg := range c.history.GetAll() {
 		if msg == nil {
 			continue
 		}
 		messages = append(messages, *msg.ToTemplate(user))
 	}
-	return &ChatTemplate{
+	return &template.ChatTemplate{
 		ChatID:   c.ID,
 		Name:     c.Name,
 		User:     user,
