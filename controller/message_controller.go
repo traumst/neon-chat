@@ -53,7 +53,7 @@ func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("--%s-> AddMessage TRACE templating message\n", utils.GetReqId(r))
-	html, err := message.ToTemplate(author).GetHTML()
+	html, err := message.Template(author).HTML()
 	if err != nil {
 		log.Printf("<-%s-- AddMessage ERROR html [%+v], %s\n", utils.GetReqId(r), message, err)
 		w.WriteHeader(http.StatusInternalServerError)

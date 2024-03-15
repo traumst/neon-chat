@@ -103,8 +103,16 @@ func (state *AppState) InviteUser(user string, chatID int, invitee string) error
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
-	log.Printf("∞--------> AppState.InviteUser TRACE invite user[%s] chat[%d] for user[%s]\n", invitee, chatID, user)
+	log.Printf("∞--------> AppState.InviteUser TRACE invite user[%s] chat[%d] by user[%s]\n", invitee, chatID, user)
 	return state.chats.InviteUser(user, chatID, invitee)
+}
+
+func (state *AppState) DropUser(user string, chatID int, remove string) error {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.DropUser TRACE removing user[%s] chat[%d] by user[%s]\n", remove, chatID, user)
+	return state.chats.DropUser(user, chatID, remove)
 }
 
 func (state *AppState) GetChats(user string) []*app.Chat {

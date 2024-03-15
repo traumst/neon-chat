@@ -36,7 +36,7 @@ func DistributeMsg(
 		go func(user string, msg app.Message) {
 			defer wg.Done()
 			log.Printf("∞----> DistributeMsg TRACE new message will be sent to user[%s]\n", user)
-			data, err := msg.ToTemplate(user).GetHTML()
+			data, err := msg.Template(user).HTML()
 			if err != nil {
 				errors = append(errors, err.Error())
 				return

@@ -25,12 +25,12 @@ func Home(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		openChatTemplate = nil
 	} else {
 		log.Printf("--%s-> Home DEBUG, user[%s] has chat[%d] open\n", utils.GetReqId(r), user, openChat.ID)
-		openChatTemplate = openChat.ToTemplate(user)
+		openChatTemplate = openChat.Template(user)
 	}
 
 	var chatTemplates []*template.ChatTemplate
 	for _, chat := range app.GetChats(user) {
-		chatTemplates = append(chatTemplates, chat.ToTemplate(user))
+		chatTemplates = append(chatTemplates, chat.Template(user))
 	}
 
 	home := template.HomeTemplate{
@@ -38,7 +38,7 @@ func Home(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		Chats:        chatTemplates,
 		ActiveUser:   user,
 	}
-	html, err := home.GetHTML()
+	html, err := home.HTML()
 	if err != nil {
 		log.Printf("--%s-> Home ERROR, %s\n", utils.GetReqId(r), err)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)

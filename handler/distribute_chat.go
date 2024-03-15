@@ -83,51 +83,65 @@ func distributeChatToUser(
 	var data string
 	switch event {
 	case e.ChatCreated:
-		template := targetChat.ToTemplate(targetUser)
-		data, err = template.GetShortHTML()
+		template := targetChat.Template(targetUser)
+		data, err = template.ShortHTML()
 		if err != nil {
 			return err
 		}
 		conn.In <- e.LiveUpdate{
 			Event:  event,
 			ChatID: targetChat.ID,
+			UserID: targetUser,
 			MsgID:  -1,
 			Author: author,
 			Data:   data,
 		}
 	case e.ChatInvite:
-		template := targetChat.ToTemplate(targetUser)
-		data, err = template.GetShortHTML()
+		template := targetChat.Template(targetUser)
+		data, err = template.ShortHTML()
 		if err != nil {
 			return err
 		}
 		conn.In <- e.LiveUpdate{
 			Event:  event,
 			ChatID: targetChat.ID,
+			UserID: targetUser,
 			MsgID:  -1,
 			Author: author,
 			Data:   data,
 		}
 	case e.ChatDeleted:
+		log.Printf("∞----> distributeChatToUser TRACE dropped user[%s] from chat[%s]\n", targetChat.String(), targetUser)
 		conn.In <- e.LiveUpdate{
 			Event:  event,
 			ChatID: targetChat.ID,
+			UserID: targetUser,
 			MsgID:  -1,
-			Author: targetUser,
+			Author: author,
 			Data:   "[deletedC]",
 		}
 	case e.ChatClose:
 		welcome := template.WelcomeTemplate{ActiveUser: targetUser}
-		data, err = welcome.GetHTML()
+		data, err = welcome.HTML()
 		if err != nil {
 			return err
 		}
 		conn.In <- e.LiveUpdate{
 			Event:  event,
 			ChatID: targetChat.ID,
+			UserID: targetUser,
 			MsgID:  -1,
 			Author: author,
 			Data:   data,
+		}
+	case e.ChatUserDrop:
+		conn.In <- e.LiveUpdate{
+			Event:  event,
+			ChatID: targetChat.ID,
+			UserID: targetUser,
+			MsgID:  -1,
+			Author: author,
+			Data:   "[deletedU]",
 		}
 	default:
 		return fmt.Errorf("unknown event type[%v]", event)

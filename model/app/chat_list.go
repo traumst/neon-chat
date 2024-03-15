@@ -162,3 +162,21 @@ func (cl *ChatList) InviteUser(user string, chatID int, invitee string) error {
 	}
 	return nil
 }
+
+func (cl *ChatList) DropUser(user string, chatID int, remove string) error {
+	cl.mu.Lock()
+	defer cl.mu.Unlock()
+	cl.init()
+	if chatID < 0 || chatID >= len(cl.chats) {
+		return fmt.Errorf("invalid chat index[%d]", chatID)
+	}
+	chat := cl.chats[chatID]
+	if !chat.isOwner(user) {
+		return fmt.Errorf("user[%s] is not owner of chat %d", user, chatID)
+	}
+	err := chat.RemoveUser(user, remove)
+	if err != nil {
+		return err
+	}
+	return nil
+}

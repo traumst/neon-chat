@@ -12,8 +12,54 @@ import (
 	"go.chat/controller"
 	"go.chat/db"
 	"go.chat/model"
+	"go.chat/model/net"
 	"go.chat/utils"
 )
+
+type Middleware func(http.Handler) http.Handler
+
+func ChainMiddleware(h http.Handler, middleware []Middleware) http.Handler {
+	for _, m := range middleware {
+		h = m(h)
+	}
+	return h
+}
+
+func ReqIdMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		utils.SetReqId(r, nil)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func StatefulWriterMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		writer := net.StatefulWriter{ResponseWriter: w}
+		next.ServeHTTP(&writer, r)
+	})
+}
+
+func DBMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// TODO
+		next.ServeHTTP(w, r)
+	})
+}
+
+func LoggerMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("--%s-> BEGIN %s %s", utils.GetReqId(r), r.Method, r.RequestURI)
+		startTime := time.Now()
+		rec := net.StatefulWriter{ResponseWriter: w}
+		next.ServeHTTP(&rec, r)
+		log.Printf("<-%s-- END %s %s status_code:[%d] in %v",
+			utils.GetReqId(r),
+			r.Method,
+			r.RequestURI,
+			rec.Status(),
+			time.Since(startTime))
+	})
+}
 
 func ControllerSetup(app *model.AppState, conn *db.DBConn) {
 	// static files
@@ -38,6 +84,11 @@ func ControllerSetup(app *model.AppState, conn *db.DBConn) {
 	http.Handle("/chat/invite", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.InviteUser(app, w, r)
+		}),
+		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
+	http.Handle("/chat/user", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			controller.DropUser(app, w, r)
 		}),
 		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	http.Handle("/chat/delete", ChainMiddleware(
@@ -91,13 +142,13 @@ func main() {
 	timestamp := now.Format(time.RFC3339)
 	date := strings.Split(timestamp, "T")[0]
 	logPath := fmt.Sprintf("log/from-%s.log", date)
-	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer file.Close()
+	defer logFile.Close()
 	// write log to both file and stderr
-	multi := io.MultiWriter(file, os.Stderr)
+	multi := io.MultiWriter(logFile, os.Stderr)
 	log.SetOutput(multi)
 	// parse args
 	args, err := utils.ArgsRead()
@@ -108,7 +159,8 @@ func main() {
 	}
 	log.Printf("  args: %v\n", *args)
 	// TODO args.DBPath
-	db, err := db.ConnectDB("db/chat.db")
+	dbPath := "db/chat.db"
+	db, err := db.ConnectDB(dbPath)
 	if err != nil {
 		log.Fatalf("Error opening db: %s", err)
 	}

@@ -10,6 +10,7 @@ const (
 	ChatDeleted    UpdateType = iota
 	ChatClose      UpdateType = iota
 	ChatInvite     UpdateType = iota
+	ChatUserDrop   UpdateType = iota
 	MessageAdded   UpdateType = iota
 	MessageDeleted UpdateType = iota
 )
@@ -18,6 +19,8 @@ func (u *UpdateType) String() SSEvent {
 	switch *u {
 	case ChatCreated, ChatInvite:
 		return ChatAddEventName
+	case ChatUserDrop:
+		return ChatUserDropEventName // TODO in progress
 	case MessageAdded:
 		return MessageAddEventName
 	case MessageDeleted:

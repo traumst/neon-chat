@@ -28,6 +28,7 @@ func PollUpdatesForUser(conn *model.Conn, pollingUser string) {
 			go func() {
 				defer wg.Done()
 				sendUpdates(conn, up, pollingUser)
+				conn.Out <- up
 			}()
 		}
 
@@ -56,8 +57,6 @@ func sendUpdates(conn *model.Conn, up event.LiveUpdate, pollingUser string) {
 		log.Printf("<--%s--∞ APP.sendUpdates ERROR failed to send update to user[%s]\n", origin, pollingUser)
 		return
 	}
-	up.Error = fmt.Errorf("SENT TO: %s", pollingUser)
-	conn.Out <- up
 	log.Printf("<--%s--∞ APP.sendUpdates TRACE OUT user[%s]\n", origin, pollingUser)
 }
 
@@ -70,10 +69,26 @@ func trySend(conn *model.Conn, up event.LiveUpdate, user string) error {
 		return fmt.Errorf("trySend ERROR writer is nil")
 	}
 	switch up.Event {
-	case event.ChatCreated, event.ChatInvite:
+	case event.ChatCreated:
 		err := SSEvent(&w, event.ChatAddEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to send to user[%s], %s", user, err)
+		}
+	case event.ChatInvite:
+		if up.Author == up.UserID {
+			return nil
+		}
+		err := SSEvent(&w, event.ChatAddEventName, up)
+		if err != nil {
+			return fmt.Errorf("trySend ERROR failed to send to user[%s], %s", user, err)
+		}
+	case event.ChatUserDrop:
+		if up.Author == up.UserID {
+			return fmt.Errorf("trySend ERROR user[%s] is trying to drop itself from chat[%d]", user, up.ChatID)
+		}
+		err := SSEvent(&w, event.ChatUserDropEventName, up)
+		if err != nil {
+			return fmt.Errorf("trySend ERROR failed to drop user from chat to user[%s], %s", user, err)
 		}
 	case event.MessageAdded:
 		err := SSEvent(&w, event.MessageAddEventName, up)
@@ -102,7 +117,13 @@ func trySend(conn *model.Conn, up event.LiveUpdate, user string) error {
 }
 
 func SSEvent(w *http.ResponseWriter, event event.SSEvent, up event.LiveUpdate) error {
-	eventName := event.Format(up.ChatID, up.MsgID)
+	if up.ChatID < 0 {
+		panic("ChatID should not be empty")
+	}
+	if up.UserID == "" {
+		panic("UserID should not be empty")
+	}
+	eventName := Format(event, up.ChatID, up.UserID, up.MsgID)
 	eventID := utils.RandStringBytes(5)
 	data := trim(up.Data)
 	writer := *w
@@ -124,6 +145,25 @@ func SSEvent(w *http.ResponseWriter, event event.SSEvent, up event.LiveUpdate) e
 	}
 	flusher.Flush()
 	return nil
+}
+
+func Format(e event.SSEvent, chatID int, userID string, msgID int) string {
+	switch e {
+	case event.ChatAddEventName:
+		return string(event.ChatAddEventName)
+	case event.ChatDropEventName:
+		return fmt.Sprintf("%s-%d", event.ChatDropEventName, chatID)
+	case event.ChatCloseEventName:
+		return fmt.Sprintf("%s-%d", event.ChatCloseEventName, chatID)
+	case event.ChatUserDropEventName:
+		return fmt.Sprintf("%s-%d-user-%s", event.ChatUserDropEventName, chatID, userID)
+	case event.MessageAddEventName:
+		return fmt.Sprintf("%s-chat-%d", event.MessageAddEventName, chatID)
+	case event.MessageDropEventName:
+		return fmt.Sprintf("%s-chat-%d-msg-%d", event.MessageDropEventName, chatID, msgID)
+	default:
+		panic(fmt.Sprintf("unknown event type[%v]", e))
+	}
 }
 
 func trim(s string) string {
