@@ -112,6 +112,10 @@ func (state *AppState) DropUser(user string, chatID int, remove string) error {
 	defer state.mu.Unlock()
 
 	log.Printf("∞--------> AppState.DropUser TRACE removing user[%s] chat[%d] by user[%s]\n", remove, chatID, user)
+	err := state.chats.CloseChat(remove, chatID)
+	if err != nil {
+		log.Printf("cannot close chat[%d] for user[%s], %s\n", chatID, user, err)
+	}
 	return state.chats.DropUser(user, chatID, remove)
 }
 

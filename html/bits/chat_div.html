@@ -69,8 +69,8 @@
 <div 
     id="open-chat-{{ .ChatID }}"
     sse-swap="chat-close-{{ .ChatID }}"
-    hx-target="#open-chat-{{ .ChatID }}"
-    hx-swap="outerHTML" 
+    hx-target=".open-chat"
+    hx-swap="innerHTML" 
 >
 </div>
 <div class="open-chat-name">

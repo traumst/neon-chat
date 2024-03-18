@@ -11,6 +11,7 @@ import (
 	"go.chat/model/template"
 )
 
+// empty targetUser means all users in chat
 func DistributeChat(
 	state *model.AppState,
 	chat *app.Chat,
@@ -18,26 +19,22 @@ func DistributeChat(
 	targetUser string, // who to inform
 	event e.UpdateType,
 ) error {
-	var users []string
 	var err error
-	// AL TODO bad logic
-	// 	if targetUser IS NOT author - take only targetUser
-	// 	if targetUser IS author 	- take all users
-	if targetUser != "" && targetUser != author {
-		users = []string{targetUser}
-	} else {
-		users, err = chat.GetUsers(author)
-		if err != nil || users == nil {
+
+	targetUsers := []string{targetUser}
+	if targetUser == "" {
+		targetUsers, err = chat.GetUsers(author)
+		if err != nil || targetUsers == nil {
 			return fmt.Errorf("DistributeChat: get users, chat[%+v], %s", chat, err)
 		}
-		if len(users) == 0 {
+		if len(targetUsers) == 0 {
 			return fmt.Errorf("DistributeChat: chatUsers are empty, chat[%+v], %s", chat, err)
 		}
 	}
 
 	var wg sync.WaitGroup
 	var errors []string
-	for _, user := range users {
+	for _, user := range targetUsers {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -74,7 +71,7 @@ func distributeChatToUser(
 ) error {
 	conn, err := state.GetConn(targetUser)
 	if err != nil {
-		return fmt.Errorf("user[%s] not connected, err:%s", targetUser, err.Error())
+		return err
 	}
 	if conn.User != targetUser {
 		return fmt.Errorf("user[%s] does not own conn[%v], user[%s] does", targetUser, conn.Origin, conn.User)
@@ -111,7 +108,8 @@ func distributeChatToUser(
 			Data:   data,
 		}
 	case e.ChatDeleted:
-		log.Printf("∞----> distributeChatToUser TRACE dropped user[%s] from chat[%s]\n", targetChat.String(), targetUser)
+		log.Printf("∞----> distributeChatToUser TRACE user[%s] deleted chat[%d]\n",
+			author, targetChat.ID)
 		conn.In <- e.LiveUpdate{
 			Event:  event,
 			ChatID: targetChat.ID,

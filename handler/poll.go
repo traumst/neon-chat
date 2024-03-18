@@ -54,7 +54,8 @@ func sendUpdates(conn *model.Conn, up event.LiveUpdate, pollingUser string) {
 	if err != nil {
 		up.Error = fmt.Errorf("ERROR SENDING TO: %s", pollingUser)
 		conn.Out <- up
-		log.Printf("<--%s--∞ APP.sendUpdates ERROR failed to send update to user[%s]\n", origin, pollingUser)
+		log.Printf("<--%s--∞ APP.sendUpdates ERROR failed to send update to user[%s], err[%s]\n",
+			origin, pollingUser, err)
 		return
 	}
 	log.Printf("<--%s--∞ APP.sendUpdates TRACE OUT user[%s]\n", origin, pollingUser)
@@ -69,27 +70,6 @@ func trySend(conn *model.Conn, up event.LiveUpdate, user string) error {
 		return fmt.Errorf("trySend ERROR writer is nil")
 	}
 	switch up.Event {
-	case event.ChatCreated:
-		err := SSEvent(&w, event.ChatAddEventName, up)
-		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to send to user[%s], %s", user, err)
-		}
-	case event.ChatInvite:
-		if up.Author == up.UserID {
-			return nil
-		}
-		err := SSEvent(&w, event.ChatAddEventName, up)
-		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to send to user[%s], %s", user, err)
-		}
-	case event.ChatUserDrop:
-		if up.Author == up.UserID {
-			return fmt.Errorf("trySend ERROR user[%s] is trying to drop itself from chat[%d]", user, up.ChatID)
-		}
-		err := SSEvent(&w, event.ChatUserDropEventName, up)
-		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to drop user from chat to user[%s], %s", user, err)
-		}
 	case event.MessageAdded:
 		err := SSEvent(&w, event.MessageAddEventName, up)
 		if err != nil {
@@ -99,6 +79,21 @@ func trySend(conn *model.Conn, up event.LiveUpdate, user string) error {
 		err := SSEvent(&w, event.MessageDropEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to delete message to user[%s], %s", user, err)
+		}
+	case event.ChatCreated:
+		err := SSEvent(&w, event.ChatAddEventName, up)
+		if err != nil {
+			return fmt.Errorf("trySend ERROR failed to send to user[%s], %s", user, err)
+		}
+	case event.ChatInvite:
+		err := SSEvent(&w, event.ChatAddEventName, up)
+		if err != nil {
+			return fmt.Errorf("trySend ERROR failed to send to user[%s], %s", user, err)
+		}
+	case event.ChatUserDrop:
+		err := SSEvent(&w, event.ChatUserDropEventName, up)
+		if err != nil {
+			return fmt.Errorf("trySend ERROR failed to drop user from chat to user[%s], %s", user, err)
 		}
 	case event.ChatDeleted:
 		err := SSEvent(&w, event.ChatDropEventName, up)
