@@ -45,7 +45,13 @@ func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("--%s-> AddMessage TRACE storing message for [%s] in [%s]\n", utils.GetReqId(r), author, chat.Name)
-	message, err := chat.AddMessage(author, a.Message{ID: 0, ChatID: chat.ID, Author: author, Text: msg})
+	message, err := chat.AddMessage(author, a.Message{
+		ID:     0,
+		ChatID: chat.ID,
+		Owner:  chat.Owner,
+		Author: author,
+		Text:   msg,
+	})
 	if err != nil {
 		log.Printf("--%s-> AddMessage ERROR add message, %s\n", utils.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -60,7 +66,10 @@ func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handler.DistributeMsg(app, chat, author, message, e.MessageAdded)
+	err = handler.DistributeMsg(app, chat, author, message, e.MessageAdded)
+	if err != nil {
+		log.Printf("<-%s-- AddMessage ERROR distribute message, %s\n", utils.GetReqId(r), err)
+	}
 
 	log.Printf("<-%s-- AddMessage TRACE serving html\n", utils.GetReqId(r))
 	w.WriteHeader(http.StatusFound)
