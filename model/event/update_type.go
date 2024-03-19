@@ -1,32 +1,14 @@
 package event
 
-import "fmt"
-
-type UpdateType int
+type UpdateType string
 
 const (
-	UnknownUpdate  UpdateType = iota
-	ChatCreated    UpdateType = iota
-	ChatDeleted    UpdateType = iota
-	ChatClose      UpdateType = iota
-	ChatInvite     UpdateType = iota
-	MessageAdded   UpdateType = iota
-	MessageDeleted UpdateType = iota
+	UnknownUpdate  UpdateType = "unknown"
+	ChatCreated    UpdateType = "chat_created"
+	ChatDeleted    UpdateType = "chat_deleted"
+	ChatClose      UpdateType = "chat_close"
+	ChatInvite     UpdateType = "chat_invite"
+	ChatUserDrop   UpdateType = "chat_user_drop"
+	MessageAdded   UpdateType = "message_added"
+	MessageDeleted UpdateType = "message_deleted"
 )
-
-func (u *UpdateType) String() SSEvent {
-	switch *u {
-	case ChatCreated, ChatInvite:
-		return ChatAddEventName
-	case MessageAdded:
-		return MessageAddEventName
-	case MessageDeleted:
-		return MessageDropEventName
-	case ChatDeleted:
-		return ChatDropEventName
-	case ChatClose:
-		return ChatCloseEventName
-	default:
-		panic(fmt.Sprintf("unknown update type[%d]", *u))
-	}
-}

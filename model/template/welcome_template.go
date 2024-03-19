@@ -9,7 +9,7 @@ type WelcomeTemplate struct {
 	ActiveUser string
 }
 
-func (w *WelcomeTemplate) GetHTML() (string, error) {
+func (w *WelcomeTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
 	welcomeTmpl := template.Must(template.ParseFiles("html/bits/welcome_div.html"))
 	err := welcomeTmpl.Execute(&buf, w)

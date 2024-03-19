@@ -5,10 +5,10 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 
 	"go.chat/handler"
 	"go.chat/model"
-	a "go.chat/model/app"
 	e "go.chat/model/event"
 	"go.chat/model/template"
 	"go.chat/utils"
@@ -50,7 +50,7 @@ func OpenChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("--%s-> OpenChat TRACE html template\n", reqId)
-	html, err := openChat.ToTemplate(user).GetHTML()
+	html, err := openChat.Template(user).HTML()
 	if err != nil {
 		log.Printf("<-%s-- OpenChat ERROR html template, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -69,7 +69,6 @@ func AddChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-
 	log.Printf("--%s-> AddChat TRACE check login\n", reqId)
 	user, err := utils.GetCurrentUser(r)
 	if err != nil {
@@ -77,7 +76,6 @@ func AddChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusUnauthorized)
 		return
 	}
-
 	chatName := r.FormValue("chatName")
 	log.Printf("--%s-> AddChat TRACE adding user[%s] chat[%s]\n", reqId, user, chatName)
 	chatID := app.AddChat(user, chatName)
@@ -90,16 +88,31 @@ func AddChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(errMsg))
 		return
 	}
+	log.Printf("--%s-> AddChat TRACE templating chat[%s][%d]\n", reqId, chatName, chatID)
 
-	log.Printf("--%s-> AddChat TRACE templating chat[%s][%d]\n",
-		reqId, chatName, chatID)
-
-	sendChatContent(reqId, w, openChat, user)
-	err = handler.DistributeChat(app, openChat, user, user, e.ChatCreated)
-	if err != nil {
-		log.Printf("<-%s-- AddChat ERROR cannot distribute chat header, %s\n",
-			reqId, err)
-	}
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		err = handler.DistributeChat(app, openChat, user, user, e.ChatCreated)
+		if err != nil {
+			log.Printf("<-%s-- AddChat ERROR cannot distribute chat header, %s\n", reqId, err)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		template := openChat.Template(user)
+		html, err := template.HTML()
+		if err != nil {
+			log.Printf("<--%s-- sendChatContent ERROR cannot template chat [%+v], %s", reqId, template, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		log.Printf("<-%s-- sendChatContent TRACE writing response\n", reqId)
+		w.WriteHeader(http.StatusFound)
+		w.Write([]byte(html))
+	}()
+	wg.Wait()
 }
 
 func InviteUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {
@@ -110,22 +123,18 @@ func InviteUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-
-	log.Printf("--%s-> InviteUser TRACE check login\n", reqId)
 	user, err := utils.GetCurrentUser(r)
 	if err != nil {
 		log.Printf("<-%s-- InviteUser ERROR auth, %s\n", reqId, err)
 		http.Redirect(w, r, "/login", http.StatusUnauthorized)
 		return
 	}
-
 	chatID, err := strconv.Atoi(r.FormValue("chatId"))
 	if err != nil {
 		log.Printf("<-%s-- InviteUser ERROR chat id, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
 	invitee := r.FormValue("invitee")
 	log.Printf("--%s-> InviteUser TRACE inviting[%s] to chat[%d]\n", reqId, invitee, chatID)
 	err = app.InviteUser(user, chatID, invitee)
@@ -134,7 +143,6 @@ func InviteUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	chat, err := app.GetChat(user, chatID)
 	if err != nil {
 		log.Printf("<-%s-- InviteUser ERROR cannot find chat[%d], %s\n", reqId, chatID, err)
@@ -142,12 +150,105 @@ func InviteUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handler.DistributeChat(app, chat, user, invitee, e.ChatInvite)
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		err := handler.DistributeChat(app, chat, user, invitee, e.ChatInvite)
+		if err != nil {
+			log.Printf("<-%s-- InviteUser ERROR cannot distribute chat invite, %s\n", reqId, err)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		template := template.MemberTemplate{
+			ChatID: chatID,
+			Name:   chat.Name,
+			User:   invitee,
+			Viewer: chat.Owner,
+			Owner:  chat.Owner,
+		}
+		html, err := template.ShortHTML()
+		if err != nil {
+			log.Printf("<-%s-- InviteUser ERROR cannot template chat[%d], %s\n", reqId, chatID, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusFound)
+		w.Write([]byte(html))
+	}()
+	wg.Wait()
 
 	log.Printf("<-%s-- InviteUser TRACE user [%s] added to chat [%d] by user [%s]\n",
 		reqId, invitee, chatID, user)
-	w.WriteHeader(http.StatusFound)
-	w.Write([]byte(fmt.Sprintf(" [%s] ", invitee)))
+}
+
+func DropUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+	reqId := utils.GetReqId(r)
+	log.Printf("--%s-> DeleteUser\n", reqId)
+	if r.Method != "POST" {
+		log.Printf("<-%s-- DeleteUser TRACE auth does not allow %s\n", reqId, r.Method)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	log.Printf("--%s-> DeleteUser TRACE check login\n", reqId)
+	user, err := utils.GetCurrentUser(r)
+	if err != nil {
+		log.Printf("<-%s-- DeleteUser ERROR auth, %s\n", reqId, err)
+		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		return
+	}
+	chatID, err := strconv.Atoi(r.FormValue("chatid"))
+	if err != nil {
+		log.Printf("<-%s-- DeleteUser ERROR chat id, %s\n", reqId, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	removeUser := r.FormValue("userid")
+	log.Printf("--%s-> DeleteUser TRACE removing[%s] to chat[%d]\n", reqId, removeUser, chatID)
+	err = app.DropUser(user, chatID, removeUser)
+	if err != nil {
+		log.Printf("<-%s-- DeleteUser ERROR invite, %s\n", reqId, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	chat, err := app.GetChat(user, chatID)
+	if err != nil {
+		log.Printf("<-%s-- DeleteUser ERROR cannot find chat[%d], %s\n", reqId, chatID, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	log.Printf("--%s-> DeleteUser TRACE chat[%d] owner[%s] removed[%s]\n", reqId, chatID, user, removeUser)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		log.Printf("--%s-∞ DeleteUser TRACE distributing user[%s] removed[%s] from chat[%d]\n",
+			reqId, user, removeUser, chat.ID)
+		err := handler.DistributeChat(app, chat, user, removeUser, e.ChatClose)
+		if err != nil {
+			log.Printf("<-%s-- DeleteUser ERROR cannot distribute chat close, %s\n", reqId, err)
+			return
+		}
+		err = handler.DistributeChat(app, chat, user, removeUser, e.ChatDeleted)
+		if err != nil {
+			log.Printf("<-%s-- DeleteUser ERROR cannot distribute chat deleted, %s\n", reqId, err)
+			return
+		}
+		err = handler.DistributeChat(app, chat, user, "", e.ChatUserDrop)
+		if err != nil {
+			log.Printf("<-%s-- DeleteUser ERROR cannot distribute chat user drop, %s\n", reqId, err)
+			return
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		log.Printf("<-%s-- DeleteUser TRACE user[%s] removed[%s] from chat[%d]\n", reqId, user, removeUser, chat.ID)
+		w.WriteHeader(http.StatusAccepted)
+		w.Write([]byte("[DELETED_U]"))
+	}()
+	wg.Wait()
 }
 
 func CloseChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
@@ -180,14 +281,13 @@ func CloseChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 			reqId, id, user, err)
 	}
 	welcome := template.WelcomeTemplate{ActiveUser: user}
-	html, err := welcome.GetHTML()
+	html, err := welcome.HTML()
 	if err != nil {
 		log.Printf("<-%s-- CloseChat ERROR cannot template welcome page, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	log.Printf("<-%s-- CloseChat TRACE user[%s] closed chat [%d]\n",
-		reqId, user, id)
+	log.Printf("<-%s-- CloseChat TRACE user[%s] closed chat [%d]\n", reqId, user, id)
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte(html))
 }
@@ -222,29 +322,36 @@ func DeleteChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		log.Printf("<-%s-- DeleteChat TRACE user[%s] deletes chat [%d]\n", reqId, user, id)
+		err = handler.DistributeChat(app, chat, user, "", e.ChatClose)
+		if err != nil {
+			log.Printf("<-%s-- DeleteChat ERROR cannot distribute chat close, %s\n", reqId, err)
+			return
+		}
+		err = handler.DistributeChat(app, chat, user, "", e.ChatDeleted)
+		if err != nil {
+			log.Printf("<-%s-- DeleteChat ERROR cannot distribute chat deleted, %s\n", reqId, err)
+			return
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		log.Printf("<-%s-- DeleteUser TRACE user[%s] deletes chat[%d]\n", reqId, user, chat.ID)
+		w.WriteHeader(http.StatusAccepted)
+		w.Write([]byte("[DELETED_C]"))
+	}()
+	wg.Wait()
+
+	// TODO this needs to move and add recovery
 	err = app.DeleteChat(user, chat)
 	if err != nil {
 		log.Printf("<-%s-- DeleteChat ERROR remove chat[%d] from [%s], %s\n", reqId, id, chat.Name, err)
+	} else {
+		log.Printf("<-%s-- DeleteChat TRACE user[%s] deleted chat [%d]\n", reqId, user, id)
 	}
-
-	handler.DistributeChat(app, chat, user, user, e.ChatClose)
-	handler.DistributeChat(app, chat, user, user, e.ChatDeleted)
-
-	log.Printf("<-%s-- DeleteChat TRACE user[%s] deletes chat [%d]\n", reqId, user, id)
-	w.WriteHeader(http.StatusFound)
-	w.Write([]byte("[DELETED]"))
-}
-
-func sendChatContent(reqId string, w http.ResponseWriter, chat *a.Chat, user string) {
-	template := chat.ToTemplate(user)
-	html, err := template.GetHTML()
-	if err != nil {
-		log.Printf("<--%s-- sendChatContent ERROR cannot template chat [%+v], %s", reqId, template, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	log.Printf("<-%s-- sendChatContent TRACE writing response\n", reqId)
-	w.WriteHeader(http.StatusFound)
-	w.Write([]byte(html))
 }

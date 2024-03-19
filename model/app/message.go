@@ -9,7 +9,7 @@ type Message struct {
 	Text   string
 }
 
-func (m *Message) ToTemplate(user string) *template.MessageTemplate {
+func (m *Message) Template(user string) *template.MessageTemplate {
 	return &template.MessageTemplate{
 		MsgID:      m.ID,
 		ChatID:     m.ChatID,
