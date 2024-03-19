@@ -7,7 +7,7 @@
     <div class="chat-message">
         <strong>{{ .Author }}:</strong> {{ .Text }}
     </div>
-    {{ if eq .Author .ActiveUser }}
+    {{ if or (eq .Author .ActiveUser) (eq .Owner .ActiveUser) }}
         <form id="delete-message" 
             hx-post="/message/delete" 
             hx-trigger="click" 
