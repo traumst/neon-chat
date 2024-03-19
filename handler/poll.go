@@ -28,7 +28,7 @@ func PollUpdatesForUser(conn *model.Conn, pollingUser string) {
 			go func() {
 				defer wg.Done()
 				sendUpdates(conn, up, pollingUser)
-				conn.Out <- up
+				//conn.Out <- up
 			}()
 		}
 
@@ -46,14 +46,14 @@ func sendUpdates(conn *model.Conn, up event.LiveUpdate, pollingUser string) {
 		log.Printf("<--%s--∞ APP.sendUpdates WARN user[%v] is does not own conn[%v]\n", origin, pollingUser, conn)
 		return
 	}
-	if up.Author == "" || up.Data == "" {
+	if up.Author == "" {
 		log.Printf("<--%s--∞ APP.sendUpdates INFO user or msg is empty, update[%v]\n", origin, up)
 		return
 	}
 	err := trySend(conn, up, pollingUser)
 	if err != nil {
 		up.Error = fmt.Errorf("ERROR SENDING TO: %s", pollingUser)
-		conn.Out <- up
+		//conn.Out <- up
 		log.Printf("<--%s--∞ APP.sendUpdates ERROR failed to send update to user[%s], err[%s]\n",
 			origin, pollingUser, err)
 		return
@@ -63,8 +63,8 @@ func sendUpdates(conn *model.Conn, up event.LiveUpdate, pollingUser string) {
 
 func trySend(conn *model.Conn, up event.LiveUpdate, user string) error {
 	w := conn.Writer
-	if user == "" || up.Data == "" {
-		return fmt.Errorf("trySend ERROR user or msg is empty, user[%s], msg[%s]", user, up.Data)
+	if user == "" {
+		return fmt.Errorf("trySend ERROR user is empty, user[%s], msg[%s]", user, up.Data)
 	}
 	if w == nil {
 		return fmt.Errorf("trySend ERROR writer is nil")
@@ -80,12 +80,7 @@ func trySend(conn *model.Conn, up event.LiveUpdate, user string) error {
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to delete message to user[%s], %s", user, err)
 		}
-	case event.ChatCreated:
-		err := SSEvent(&w, event.ChatAddEventName, up)
-		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to send to user[%s], %s", user, err)
-		}
-	case event.ChatInvite:
+	case event.ChatCreated, event.ChatInvite:
 		err := SSEvent(&w, event.ChatAddEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to send to user[%s], %s", user, err)
@@ -95,15 +90,15 @@ func trySend(conn *model.Conn, up event.LiveUpdate, user string) error {
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to drop user from chat to user[%s], %s", user, err)
 		}
-	case event.ChatDeleted:
-		err := SSEvent(&w, event.ChatDropEventName, up)
-		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to delete chat to user[%s], %s", user, err)
-		}
 	case event.ChatClose:
 		err := SSEvent(&w, event.ChatCloseEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to close chat to user[%s], %s", user, err)
+		}
+	case event.ChatDeleted:
+		err := SSEvent(&w, event.ChatDropEventName, up)
+		if err != nil {
+			return fmt.Errorf("trySend ERROR failed to delete chat to user[%s], %s", user, err)
 		}
 	default:
 		return fmt.Errorf("trySend ERROR unknown update event[%v], update[%s]", up.Event, up.String())
@@ -144,18 +139,18 @@ func SSEvent(w *http.ResponseWriter, event event.SSEvent, up event.LiveUpdate) e
 
 func Format(e event.SSEvent, chatID int, userID string, msgID int) string {
 	switch e {
-	case event.ChatAddEventName:
-		return string(event.ChatAddEventName)
-	case event.ChatDropEventName:
-		return fmt.Sprintf("%s-%d", event.ChatDropEventName, chatID)
-	case event.ChatCloseEventName:
-		return fmt.Sprintf("%s-%d", event.ChatCloseEventName, chatID)
-	case event.ChatUserDropEventName:
-		return fmt.Sprintf("%s-%d-user-%s", event.ChatUserDropEventName, chatID, userID)
 	case event.MessageAddEventName:
 		return fmt.Sprintf("%s-chat-%d", event.MessageAddEventName, chatID)
 	case event.MessageDropEventName:
 		return fmt.Sprintf("%s-chat-%d-msg-%d", event.MessageDropEventName, chatID, msgID)
+	case event.ChatAddEventName:
+		return string(event.ChatAddEventName)
+	case event.ChatUserDropEventName:
+		return fmt.Sprintf("%s-%d-user-%s", event.ChatUserDropEventName, chatID, userID)
+	case event.ChatDropEventName:
+		return fmt.Sprintf("%s-%d", event.ChatDropEventName, chatID)
+	case event.ChatCloseEventName:
+		return fmt.Sprintf("%s-%d", event.ChatCloseEventName, chatID)
 	default:
 		panic(fmt.Sprintf("unknown event type[%v]", e))
 	}

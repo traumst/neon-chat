@@ -8,7 +8,7 @@ const (
 	ChatAddEventName      SSEvent = "chat-add"
 	ChatDropEventName     SSEvent = "chat-drop"
 	ChatCloseEventName    SSEvent = "chat-close"
-	ChatUserDropEventName SSEvent = "chat-user-drop" // TODO in progress
+	ChatUserDropEventName SSEvent = "chat-user-drop"
 	MessageAddEventName   SSEvent = "msg-add"
 	MessageDropEventName  SSEvent = "msg-drop"
 )

@@ -19,28 +19,33 @@ func DistributeChat(
 	targetUser string, // who to inform
 	event e.UpdateType,
 ) error {
+	var targetUsers []string
 	var err error
-
-	targetUsers := []string{targetUser}
-	if targetUser == "" {
+	if targetUser != "" {
+		targetUsers = []string{targetUser}
+	} else {
 		targetUsers, err = chat.GetUsers(author)
-		if err != nil || targetUsers == nil {
-			return fmt.Errorf("DistributeChat: get users, chat[%+v], %s", chat, err)
+		if err != nil {
+			err = fmt.Errorf("DistributeChat: get users, chat[%d], %s", chat.ID, err)
+		} else if len(targetUsers) == 0 {
+			err = fmt.Errorf("DistributeChat: chatUsers are empty, chat[%+v], %s", chat, err)
 		}
-		if len(targetUsers) == 0 {
-			return fmt.Errorf("DistributeChat: chatUsers are empty, chat[%+v], %s", chat, err)
-		}
+	}
+
+	if err != nil {
+		log.Printf("∞----> DistributeChat ERROR: %s\n", err)
+		return err
 	}
 
 	var wg sync.WaitGroup
 	var errors []string
+	wg.Add(len(targetUsers))
 	for _, user := range targetUsers {
-		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			log.Printf("∞----> DistributeChat TRACE event[%v] will be sent to user[%s] in chat[%d]\n",
 				event, user, chat.ID)
-			err = distributeChatToUser(
+			err := distributeChatToUser(
 				state,
 				author,
 				user,
@@ -56,6 +61,7 @@ func DistributeChat(
 
 	wg.Wait()
 	if len(errors) > 0 {
+		log.Printf("∞----> DistributeChat ERROR occurred during distribution: %v\n", errors)
 		return error(fmt.Errorf("DistributeChat errors: [%v]", errors))
 	} else {
 		return nil
@@ -77,11 +83,10 @@ func distributeChatToUser(
 		return fmt.Errorf("user[%s] does not own conn[%v], user[%s] does", targetUser, conn.Origin, conn.User)
 	}
 
-	var data string
 	switch event {
 	case e.ChatCreated:
 		template := targetChat.Template(targetUser)
-		data, err = template.ShortHTML()
+		data, err := template.ShortHTML()
 		if err != nil {
 			return err
 		}
@@ -95,7 +100,7 @@ func distributeChatToUser(
 		}
 	case e.ChatInvite:
 		template := targetChat.Template(targetUser)
-		data, err = template.ShortHTML()
+		data, err := template.ShortHTML()
 		if err != nil {
 			return err
 		}
@@ -108,8 +113,8 @@ func distributeChatToUser(
 			Data:   data,
 		}
 	case e.ChatDeleted:
-		log.Printf("∞----> distributeChatToUser TRACE user[%s] deleted chat[%d]\n",
-			author, targetChat.ID)
+		log.Printf("∞----> distributeChatToUser TRACE user[%s] deleted chat[%d] for user[%s]\n",
+			author, targetChat.ID, targetUser)
 		conn.In <- e.LiveUpdate{
 			Event:  event,
 			ChatID: targetChat.ID,
@@ -119,8 +124,10 @@ func distributeChatToUser(
 			Data:   "[deletedC]",
 		}
 	case e.ChatClose:
+		log.Printf("∞----> distributeChatToUser TRACE user[%s] closed chat[%d] for user[%s]\n",
+			author, targetChat.ID, targetUser)
 		welcome := template.WelcomeTemplate{ActiveUser: targetUser}
-		data, err = welcome.HTML()
+		data, err := welcome.HTML()
 		if err != nil {
 			return err
 		}
@@ -133,6 +140,11 @@ func distributeChatToUser(
 			Data:   data,
 		}
 	case e.ChatUserDrop:
+		log.Printf("∞----> distributeChatToUser TRACE user[%s] dropped user[%s] from chat[%d]\n",
+			author, targetUser, targetChat.ID)
+		if targetUser == author {
+			return nil
+		}
 		conn.In <- e.LiveUpdate{
 			Event:  event,
 			ChatID: targetChat.ID,

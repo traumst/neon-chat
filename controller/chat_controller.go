@@ -224,15 +224,28 @@ func DropUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		// TODO BUG - does not mark chat as KICKED
-		handler.DistributeChat(app, chat, user, removeUser, e.ChatClose)
-		// TODO BUG - marks owner as deleted ?!
-		handler.DistributeChat(app, chat, user, "", e.ChatUserDrop)
+		log.Printf("--%s-∞ DeleteUser TRACE distributing user[%s] removed[%s] from chat[%d]\n",
+			reqId, user, removeUser, chat.ID)
+		err := handler.DistributeChat(app, chat, user, removeUser, e.ChatClose)
+		if err != nil {
+			log.Printf("<-%s-- DeleteUser ERROR cannot distribute chat close, %s\n", reqId, err)
+			return
+		}
+		err = handler.DistributeChat(app, chat, user, removeUser, e.ChatDeleted)
+		if err != nil {
+			log.Printf("<-%s-- DeleteUser ERROR cannot distribute chat deleted, %s\n", reqId, err)
+			return
+		}
+		err = handler.DistributeChat(app, chat, user, "", e.ChatUserDrop)
+		if err != nil {
+			log.Printf("<-%s-- DeleteUser ERROR cannot distribute chat user drop, %s\n", reqId, err)
+			return
+		}
 	}()
 	go func() {
 		defer wg.Done()
 		log.Printf("<-%s-- DeleteUser TRACE user[%s] removed[%s] from chat[%d]\n", reqId, user, removeUser, chat.ID)
-		w.WriteHeader(http.StatusFound)
+		w.WriteHeader(http.StatusAccepted)
 		w.Write([]byte("[DELETED_U]"))
 	}()
 	wg.Wait()
@@ -309,15 +322,36 @@ func DeleteChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		log.Printf("<-%s-- DeleteChat TRACE user[%s] deletes chat [%d]\n", reqId, user, id)
+		err = handler.DistributeChat(app, chat, user, "", e.ChatClose)
+		if err != nil {
+			log.Printf("<-%s-- DeleteChat ERROR cannot distribute chat close, %s\n", reqId, err)
+			return
+		}
+		err = handler.DistributeChat(app, chat, user, "", e.ChatDeleted)
+		if err != nil {
+			log.Printf("<-%s-- DeleteChat ERROR cannot distribute chat deleted, %s\n", reqId, err)
+			return
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		log.Printf("<-%s-- DeleteUser TRACE user[%s] deletes chat[%d]\n", reqId, user, chat.ID)
+		w.WriteHeader(http.StatusAccepted)
+		w.Write([]byte("[DELETED_C]"))
+	}()
+	wg.Wait()
+
+	// TODO this needs to move and add recovery
 	err = app.DeleteChat(user, chat)
 	if err != nil {
 		log.Printf("<-%s-- DeleteChat ERROR remove chat[%d] from [%s], %s\n", reqId, id, chat.Name, err)
+	} else {
+		log.Printf("<-%s-- DeleteChat TRACE user[%s] deleted chat [%d]\n", reqId, user, id)
 	}
-
-	handler.DistributeChat(app, chat, user, "", e.ChatClose)
-	handler.DistributeChat(app, chat, user, "", e.ChatDeleted)
-
-	log.Printf("<-%s-- DeleteChat TRACE user[%s] deletes chat [%d]\n", reqId, user, id)
-	w.WriteHeader(http.StatusFound)
-	w.Write([]byte("[DELETED_C]"))
 }

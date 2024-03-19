@@ -171,6 +171,9 @@ func (cl *ChatList) DropUser(user string, chatID int, remove string) error {
 		return fmt.Errorf("invalid chat index[%d]", chatID)
 	}
 	chat := cl.chats[chatID]
+	if chat == nil {
+		return fmt.Errorf("chat[%d] not found", chatID)
+	}
 	if !chat.isOwner(user) {
 		return fmt.Errorf("user[%s] is not owner of chat %d", user, chatID)
 	}
