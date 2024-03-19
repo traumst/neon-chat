@@ -110,20 +110,25 @@ func (c *Chat) DropMessage(user string, ID int) (*Message, error) {
 	return msg, c.history.Delete(msg)
 }
 
-func (c *Chat) ToTemplate(user string) *template.ChatTemplate {
+func (c *Chat) Template(user string) *template.ChatTemplate {
 	var messages []template.MessageTemplate
 	for _, msg := range c.history.GetAll() {
 		if msg == nil {
 			continue
 		}
-		messages = append(messages, *msg.ToTemplate(user))
+		messages = append(messages, *msg.Template(user))
 	}
 	return &template.ChatTemplate{
 		ChatID:   c.ID,
 		Name:     c.Name,
 		User:     user,
+		Viewer:   user,
 		Owner:    c.Owner,
 		Users:    c.users[0:],
 		Messages: messages,
 	}
+}
+
+func (c *Chat) String() string {
+	return fmt.Sprintf("Chat{ID:%d,Name:%s,Owner:%s", c.ID, c.Name, c.Owner)
 }

@@ -36,7 +36,7 @@ func DistributeMsg(
 		go func(user string, msg app.Message) {
 			defer wg.Done()
 			log.Printf("∞----> DistributeMsg TRACE new message will be sent to user[%s]\n", user)
-			data, err := msg.ToTemplate(user).GetHTML()
+			data, err := msg.Template(user).HTML()
 			if err != nil {
 				errors = append(errors, err.Error())
 				return
@@ -79,15 +79,22 @@ func distributeMsgToUser(
 		return fmt.Errorf("user[%s] not connected, err:%s", user, err.Error())
 	}
 
+	msg := e.LiveUpdate{
+		Event:  event,
+		ChatID: chatID,
+		MsgID:  msgID,
+		Author: author,
+		UserID: user,
+	}
+
 	switch event {
-	case e.MessageAdded, e.MessageDeleted:
-		conn.In <- e.LiveUpdate{
-			Event:  event,
-			Data:   data,
-			ChatID: chatID,
-			MsgID:  msgID,
-			Author: author,
-		}
+	case e.MessageAdded:
+		msg.Data = data
+		conn.In <- msg
+		return nil
+	case e.MessageDeleted:
+		msg.Data = "[deletedM]"
+		conn.In <- msg
 		return nil
 	default:
 		return fmt.Errorf("unknown event type: %v", event)

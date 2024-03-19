@@ -69,20 +69,15 @@
 <div 
     id="open-chat-{{ .ChatID }}"
     sse-swap="chat-close-{{ .ChatID }}"
-    hx-target="#open-chat-{{ .ChatID }}"
-    hx-swap="outerHTML" 
+    hx-target=".open-chat"
+    hx-swap="innerHTML" 
 >
 </div>
 <div class="open-chat-name">
     <h2>chat {{ .Name }}</h2>
     <p class="open-chat-users">Users: 
-    {{ with $chatUsers := .Users }}
-        {{ range $index, $user := $chatUsers }} 
-            [{{$user}}]
-        {{ end }}
-    {{ end }}
+        {{ template "members_div.html" . }}
     </p>
-    <!-- <p>[close]</p> -->
     <form id="chat-close-{{ .ChatID }}"
         hx-post="/chat/close" 
         hx-trigger="click" 
@@ -91,7 +86,7 @@
         hx-include="#chat-close-{{ .ChatID }}"
     >
         <input type="hidden" name="chatid" value="{{ .ChatID }}">
-        <div class="chat-header-delete" 
+        <div class="chat-header-close" 
             hx-trigger="click" 
             hx-action="chat-close-{{ .ChatID }}.submit()"
         >
@@ -101,7 +96,7 @@
 </div>
 {{ if eq .Owner .User }}
 <div class="invite-user">
-    <form method="POST" hx-target=".open-chat-users" hx-post="/chat/invite" hx-trigger="submit" hx-swap="beforeend">
+    <form method="POST" hx-target=".member-list" hx-post="/chat/invite" hx-trigger="submit" hx-swap="beforeend">
         <input type="hidden" name="chatId" value="{{ .ChatID }}">
         <input type="text" name="invitee" placeholder="...type invitee username here...">
         <button type="submit">Invite User</button>

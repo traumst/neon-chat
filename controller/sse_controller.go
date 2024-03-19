@@ -16,14 +16,12 @@ func PollUpdates(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-
 	user, err := utils.GetCurrentUser(r)
 	if err != nil {
 		log.Printf("<-%s-- PollUpdates ERROR auth user[%s], %s\n", utils.GetReqId(r), user, err)
 		http.Redirect(w, r, "/login", http.StatusUnauthorized)
 		return
 	}
-
 	log.Printf("---%s--> PollUpdates TRACE IN polling updates for [%s]\n", utils.GetReqId(r), user)
 	conn := app.ReplaceConn(w, *r, user)
 	if conn == nil {

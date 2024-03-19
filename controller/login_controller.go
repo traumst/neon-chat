@@ -42,7 +42,7 @@ func renderLogin(w http.ResponseWriter, r *http.Request) {
 
 func signIn(w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> SignIn\n", utils.GetReqId(r))
-	user := r.FormValue("user")
+	user := r.FormValue("username")
 	if user == "" {
 		log.Printf("--%s-> SignIn ERROR username\n", utils.GetReqId(r))
 		http.Redirect(w, r, "/login", http.StatusBadRequest)

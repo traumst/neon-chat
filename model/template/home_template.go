@@ -11,7 +11,7 @@ type HomeTemplate struct {
 	ActiveUser   string
 }
 
-func (h *HomeTemplate) GetHTML() (string, error) {
+func (h *HomeTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
 	homeTmpl := template.Must(template.ParseFiles(
 		"html/home_page.html",

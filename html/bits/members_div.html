@@ -1,0 +1,41 @@
+<style>
+    .member-list {
+        display: flex;
+        flex-wrap: wrap;
+        transition: height 0.3s ease;
+    }
+</style>
+<div class="member-list" >
+    {{ $top := . }}
+    {{ range $index, $user := .Users }}
+        <div class="member" 
+            id="chat-{{ $top.ChatID }}-user-{{ $user }}" 
+            sse-swap="chat-user-drop-{{ $top.ChatID }}-user-{{ $user }}"
+            hx-target="#chat-{{ $top.ChatID }}-user-{{ $user }}"
+            hx-swap="innerHTML"
+        >
+            {{ if eq $user $top.Owner }}
+                [<b><i>{{$user}}</i></b>]
+            {{ else if eq $top.Viewer $top.Owner }}
+                <form id="member-delete-{{ $top.ChatID }}-user-{{ $user }}"
+                    hx-post="/chat/user" 
+                    hx-trigger="click" 
+                    hx-target="#chat-{{ $top.ChatID }}-user-{{ $user }}"
+                    hx-swap="innerHTML" 
+                    hx-include="#member-delete-{{ $top.ChatID }}-user-{{ $user }}"
+                >
+                    <input type="hidden" name="chatid" value="{{ $top.ChatID }}">
+                    <input type="hidden" name="userid" value="{{ $user }}">
+                    <div class="member-delete-button" 
+                        hx-trigger="click" 
+                        hx-action="member-delete-{{ $top.ChatID }}-user-{{ $user }}.submit()"
+                    >
+                        [{{$user}}]
+                    </div>
+                </form>
+            {{ else }}
+                [{{$user}}]
+            {{ end }}
+        </div>
+    {{ end }}
+</div>
