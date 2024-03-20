@@ -15,9 +15,9 @@ import (
 func PollUpdatesForUser(conn *model.Conn, pollingUser string) {
 	log.Printf("∞--%s--> APP.PollUpdatesForUser TRACE IN, triggered by [%s]\n", conn.Origin, conn.User)
 	var wg sync.WaitGroup
-	for {
+	done := false
+	for !done {
 		log.Printf("∞--%s--> APP.PollUpdatesForUser TRACE user[%s] is waiting for updates\n", conn.Origin, conn.User)
-		done := false
 		select {
 		case <-conn.Reader.Context().Done():
 			log.Printf("<--%s--∞ APP.PollUpdatesForUser WARN user[%s] conn[%v] disonnected\n",
@@ -30,10 +30,6 @@ func PollUpdatesForUser(conn *model.Conn, pollingUser string) {
 				sendUpdates(conn, up, pollingUser)
 				//conn.Out <- up
 			}()
-		}
-
-		if done {
-			break
 		}
 	}
 	wg.Wait()
