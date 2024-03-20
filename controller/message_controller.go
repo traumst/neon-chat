@@ -126,12 +126,13 @@ func DeleteMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) 
 	msg, err := chat.DropMessage(author, msgID)
 	if err != nil {
 		log.Printf("<-%s-- DeleteMessage ERROR remove message[%d] from [%s], %s\n", reqId, msgID, chat.Name, err)
-		// TODO not necessarily StatusInternalServerError
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	// TODO verify message delete distribution
-	handler.DistributeMsg(app, chat, author, msg, e.MessageDeleted)
+	err = handler.DistributeMsg(app, chat, author, msg, e.MessageDeleted)
+	if err != nil {
+		log.Printf("<-%s-- DeleteMessage ERROR distribute message, %s\n", reqId, err)
+	}
 
 	log.Printf("<-%s-- DeleteMessage done\n", reqId)
 	w.WriteHeader(http.StatusAccepted)
