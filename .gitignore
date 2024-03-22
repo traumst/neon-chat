@@ -8,3 +8,4 @@ script/htmx.1.9.10.min.js
 log/*
 .DS_Store
 *.db
+.env

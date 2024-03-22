@@ -116,7 +116,7 @@ func (state *AppState) DropUser(user string, chatID int, remove string) error {
 	if err != nil {
 		log.Printf("cannot close chat[%d] for user[%s], %s\n", chatID, user, err)
 	}
-	return state.chats.DropUser(user, chatID, remove)
+	return state.chats.ExpelUser(user, chatID, remove)
 }
 
 func (state *AppState) GetChats(user string) []*app.Chat {

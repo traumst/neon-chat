@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"html/template"
 	"log"
 	"net/http"
 	"strconv"
@@ -27,7 +26,7 @@ func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("--%s-> AddMessage TRACE parsing input\n", utils.GetReqId(r))
-	msg := template.HTMLEscapeString(r.FormValue("msg"))
+	msg := r.FormValue("msg")
 	if msg == "" {
 		log.Printf("--%s-> AddMessage WARN \n", utils.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)

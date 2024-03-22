@@ -11,6 +11,10 @@ type Args struct {
 	Port int
 }
 
+func (a *Args) String() string {
+	return fmt.Sprintf("{Port:%d}", a.Port)
+}
+
 func ArgsHelp() string {
 	return `Usage: go.chat [options]
 Options:

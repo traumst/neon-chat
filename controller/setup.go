@@ -81,9 +81,14 @@ func Setup(app *model.AppState, conn *db.DBConn) {
 			InviteUser(app, w, r)
 		}),
 		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
-	http.Handle("/chat/user", ChainMiddleware(
+	http.Handle("/chat/expel", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			DropUser(app, w, r)
+			ExpelUser(app, w, r)
+		}),
+		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
+	http.Handle("/chat/leave", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			LeaveChat(app, w, r)
 		}),
 		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	http.Handle("/chat/delete", ChainMiddleware(

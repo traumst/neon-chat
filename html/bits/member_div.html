@@ -1,11 +1,11 @@
 <div class="member" 
     id="chat-drop-{{ .ChatID }}-user-{{ .User }}"
-    sse-swap="chat-user-drop-{{ .ChatID }}-user-{{ .User }}"
+    sse-swap="chat-expel-{{ .ChatID }}-user-{{ .User }}"
     hx-target="#chat-drop-{{ .ChatID }}-user-{{ .User }}"
     hx-swap="innerHTML"
 >
     <form id="member-delete-{{ .ChatID }}-user-{{ .User }}"
-        hx-post="/chat/user" 
+        hx-post="/chat/expel" 
         hx-trigger="click" 
         hx-target="#chat-drop-{{ .ChatID }}-user-{{ .User }}"
         hx-swap="innerHTML" 

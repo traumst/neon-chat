@@ -12,11 +12,16 @@ This app is being build as an excercise for me to
 
 ### *Right now...*
 
-* User registraction sucks
-* User cannot be removed from chat
-* User cannot leave chat - admin can delete, user can leave
+It's time to start sanitizing raw user input.
+Def break the chat: ' "
 
-Oh and maybe it's time to start sanitizing raw user input
+
+* HTML hx- stuff should sit next to target
+* HTML button onclick should
+    * clear related textbox
+    * new chat -> remove chat-list placeholder
+    * new msg -> remove chat-history placeholder
+* User registraction sucks
 
 And UI looks like shit, have to style it
 

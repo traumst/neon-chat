@@ -51,7 +51,7 @@ func (c *Chat) GetUsers(user string) ([]string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if !c.isUserInChat(user) {
-		return nil, fmt.Errorf("only invited users can see users in chat, %s", user)
+		return nil, fmt.Errorf("user[%s] is not in chat[%d]", user, c.ID)
 	}
 	return c.users, nil
 }
@@ -59,7 +59,7 @@ func (c *Chat) GetUsers(user string) ([]string, error) {
 func (c *Chat) RemoveUser(owner string, user string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if !c.isOwner(owner) {
+	if !c.isOwner(owner) && owner != user {
 		return fmt.Errorf("only the owner can remove users from chat")
 	}
 	if !c.isUserInChat(user) {

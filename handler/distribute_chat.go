@@ -16,7 +16,8 @@ func DistributeChat(
 	state *model.AppState,
 	chat *app.Chat,
 	author string, // who made the change
-	targetUser string, // who to inform
+	targetUser string, // who to inform, empty for all users in chat
+	subjectUser string, // which user changed
 	event e.UpdateType,
 ) error {
 	var targetUsers []string
@@ -33,23 +34,29 @@ func DistributeChat(
 	}
 
 	if err != nil {
-		log.Printf("∞----> DistributeChat ERROR: %s\n", err)
+		log.Printf("∞----> DistributeChat ERROR, %s\n", err)
 		return err
+	}
+	targetUsersCount := len(targetUsers)
+	if targetUsersCount < 1 {
+		log.Printf("∞----> DistributeChat WARN targetUsersCount[%d] < 1\n", targetUsersCount)
+		return nil
 	}
 
 	var wg sync.WaitGroup
 	var errors []string
-	wg.Add(len(targetUsers))
+	wg.Add(targetUsersCount)
 	for _, user := range targetUsers {
 		go func() {
 			defer wg.Done()
-			log.Printf("∞----> DistributeChat TRACE event[%v] will be sent to user[%s] in chat[%d]\n",
-				event, user, chat.ID)
+			log.Printf("∞----> DistributeChat TRACE event[%v] about subject[%s] will be sent to user[%s] in chat[%d]\n",
+				event, subjectUser, user, chat.ID)
 			err := distributeChatToUser(
 				state,
 				author,
 				user,
 				chat,
+				subjectUser,
 				event,
 			)
 			if err != nil {
@@ -73,6 +80,7 @@ func distributeChatToUser(
 	author string,
 	targetUser string,
 	targetChat *app.Chat,
+	subjectUser string,
 	event e.UpdateType,
 ) error {
 	conn, err := state.GetConn(targetUser)
@@ -85,76 +93,116 @@ func distributeChatToUser(
 
 	switch event {
 	case e.ChatCreated:
-		template := targetChat.Template(targetUser)
-		data, err := template.ShortHTML()
-		if err != nil {
-			return err
-		}
-		conn.In <- e.LiveUpdate{
-			Event:  event,
-			ChatID: targetChat.ID,
-			UserID: targetUser,
-			MsgID:  -1,
-			Author: author,
-			Data:   data,
-		}
+		return chatCreate(conn, event, author, targetChat, subjectUser)
 	case e.ChatInvite:
-		template := targetChat.Template(targetUser)
-		data, err := template.ShortHTML()
-		if err != nil {
-			return err
-		}
-		conn.In <- e.LiveUpdate{
-			Event:  event,
-			ChatID: targetChat.ID,
-			UserID: targetUser,
-			MsgID:  -1,
-			Author: author,
-			Data:   data,
-		}
+		return chatInvite(conn, event, author, targetChat, subjectUser)
+	case e.ChatExpel:
+		return chatExpel(conn, event, author, targetChat.ID, subjectUser)
 	case e.ChatDeleted:
-		log.Printf("∞----> distributeChatToUser TRACE user[%s] deleted chat[%d] for user[%s]\n",
-			author, targetChat.ID, targetUser)
-		conn.In <- e.LiveUpdate{
-			Event:  event,
-			ChatID: targetChat.ID,
-			UserID: targetUser,
-			MsgID:  -1,
-			Author: author,
-			Data:   "[deletedC]",
-		}
+		return chatDelete(conn, event, author, targetChat.ID, subjectUser)
 	case e.ChatClose:
-		log.Printf("∞----> distributeChatToUser TRACE user[%s] closed chat[%d] for user[%s]\n",
-			author, targetChat.ID, targetUser)
-		welcome := template.WelcomeTemplate{ActiveUser: targetUser}
-		data, err := welcome.HTML()
-		if err != nil {
-			return err
-		}
-		conn.In <- e.LiveUpdate{
-			Event:  event,
-			ChatID: targetChat.ID,
-			UserID: targetUser,
-			MsgID:  -1,
-			Author: author,
-			Data:   data,
-		}
-	case e.ChatUserDrop:
-		log.Printf("∞----> distributeChatToUser TRACE user[%s] dropped user[%s] from chat[%d]\n",
-			author, targetUser, targetChat.ID)
-		if targetUser == author {
-			return nil
-		}
-		conn.In <- e.LiveUpdate{
-			Event:  event,
-			ChatID: targetChat.ID,
-			UserID: targetUser,
-			MsgID:  -1,
-			Author: author,
-			Data:   "[deletedU]",
-		}
+		return chatClose(conn, event, author, targetChat.ID, subjectUser)
 	default:
 		return fmt.Errorf("unknown event type[%v]", event)
+	}
+}
+
+func chatCreate(conn *model.Conn, event e.UpdateType, author string, targetChat *app.Chat, subject string) error {
+	log.Printf("∞----> distributeChatToUser TRACE author[%s] created chat[%d], target[%s], subject[%s]\n",
+		author, targetChat.ID, conn.User, subject)
+	if author != conn.User || conn.User != subject {
+		return fmt.Errorf("chat_create expects author, target and subject to be the same")
+	}
+	template := targetChat.Template(author)
+	data, err := template.ShortHTML()
+	if err != nil {
+		return err
+	}
+	conn.In <- e.LiveUpdate{
+		Event:  event,
+		ChatID: targetChat.ID,
+		UserID: author,
+		MsgID:  -1,
+		Author: author,
+		Data:   data,
+	}
+	return nil
+}
+
+func chatInvite(conn *model.Conn, event e.UpdateType, author string, targetChat *app.Chat, subject string) error {
+	log.Printf("∞----> distributeChatToUser TRACE author[%s] invited subject[%s] to chat[%d], target[%s]\n",
+		author, subject, targetChat.ID, conn.User)
+	if author == conn.User || conn.User != subject {
+		return fmt.Errorf("chat_invite expects author to be diff from target, target same as subject")
+	}
+	template := targetChat.Template(subject)
+	data, err := template.ShortHTML()
+	if err != nil {
+		return err
+	}
+	conn.In <- e.LiveUpdate{
+		Event:  event,
+		ChatID: targetChat.ID,
+		UserID: subject,
+		MsgID:  -1,
+		Author: author,
+		Data:   data,
+	}
+	return nil
+}
+
+func chatExpel(conn *model.Conn, event e.UpdateType, author string, chatID int, subject string) error {
+	log.Printf("∞----> chatExpel TRACE to user[%s] about author[%s] dropped subject[%s] from chat[%d]\n",
+		conn.User, author, subject, chatID)
+	if conn.User == author {
+		return nil
+	}
+	conn.In <- e.LiveUpdate{
+		Event:  event,
+		ChatID: chatID,
+		UserID: subject,
+		MsgID:  -1,
+		Author: author,
+		Data:   "[expelU]",
+	}
+	return nil
+}
+
+func chatDelete(conn *model.Conn, event e.UpdateType, author string, chatID int, subject string) error {
+	log.Printf("∞----> chatDelete TRACE author[%s] deleted chat[%d] for subject[%s], target[%s]\n",
+		author, chatID, subject, conn.User)
+	if subject != "" && conn.User != subject {
+		return fmt.Errorf("chat_delete expect target and subject to be the same")
+	}
+	conn.In <- e.LiveUpdate{
+		Event:  event,
+		ChatID: chatID,
+		UserID: conn.User,
+		MsgID:  -1,
+		Author: author,
+		Data:   "[deletedC]",
+	}
+	return nil
+}
+
+func chatClose(conn *model.Conn, event e.UpdateType, author string, chatID int, subject string) error {
+	log.Printf("∞----> chatClose TRACE user[%s] closed chat[%d] for target[%s], subject[%s]\n",
+		author, chatID, conn.User, subject)
+	if subject != "" && conn.User != subject {
+		return fmt.Errorf("chat_close expect target and subject to be the same")
+	}
+	welcome := template.WelcomeTemplate{ActiveUser: conn.User}
+	data, err := welcome.HTML()
+	if err != nil {
+		return err
+	}
+	conn.In <- e.LiveUpdate{
+		Event:  event,
+		ChatID: chatID,
+		UserID: conn.User,
+		MsgID:  -1,
+		Author: author,
+		Data:   data,
 	}
 	return nil
 }

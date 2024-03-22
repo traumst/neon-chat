@@ -163,7 +163,7 @@ func (cl *ChatList) InviteUser(user string, chatID int, invitee string) error {
 	return nil
 }
 
-func (cl *ChatList) DropUser(user string, chatID int, remove string) error {
+func (cl *ChatList) ExpelUser(user string, chatID int, remove string) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	cl.init()
@@ -174,7 +174,7 @@ func (cl *ChatList) DropUser(user string, chatID int, remove string) error {
 	if chat == nil {
 		return fmt.Errorf("chat[%d] not found", chatID)
 	}
-	if !chat.isOwner(user) {
+	if !chat.isOwner(user) && user != remove {
 		return fmt.Errorf("user[%s] is not owner of chat %d", user, chatID)
 	}
 	err := chat.RemoveUser(user, remove)
