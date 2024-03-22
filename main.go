@@ -32,14 +32,15 @@ func main() {
 	log.SetOutput(multi)
 
 	// parse args
-	log.Println("	parsing args...")
-	args, err := utils.ArgsRead()
+	log.Println("	parsing config...")
+	//args, err := utils.ArgsRead()
+	args, err := utils.EnvRead()
 	if err != nil {
-		log.Printf("Error parsing args: %v\n", err)
+		log.Printf("Error parsing config: %v\n", err)
 		log.Println(utils.ArgsHelp())
 		os.Exit(13)
 	}
-	log.Printf("	  parsed args: %s\n", args)
+	log.Printf("	  parsed config: %s\n", args)
 
 	// TODO args.DBPath
 	log.Println("	connecting db...")

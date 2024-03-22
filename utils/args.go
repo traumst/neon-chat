@@ -1,17 +1,19 @@
 package utils
 
 import (
+	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
 )
 
-type Args struct {
+type Config struct {
 	Port int
 }
 
-func (a *Args) String() string {
+func (a *Config) String() string {
 	return fmt.Sprintf("{Port:%d}", a.Port)
 }
 
@@ -24,13 +26,13 @@ Options:
   `
 }
 
-func ArgsRead() (*Args, error) {
+func ArgsRead() (*Config, error) {
 	if len(os.Args) < 2 {
 		return nil, fmt.Errorf("no arguments provided")
 	}
 
 	argName := ""
-	args := &Args{}
+	args := &Config{}
 	err := error(nil)
 	for _, arg := range os.Args[1:] {
 		if err != nil {
@@ -59,4 +61,56 @@ func ArgsRead() (*Args, error) {
 	}
 
 	return args, nil
+}
+
+func EnvRead() (*Config, error) {
+	envFileRootPath := ".env"
+	envFile, err := os.OpenFile(envFileRootPath, os.O_RDONLY, 0)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open .env file from [%s]: %v", envFileRootPath, err)
+	}
+
+	buffer := make([]byte, 1024)
+	n, err := envFile.Read(buffer)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read .env file from [%s]: %v", envFileRootPath, err)
+	}
+	if n == 0 {
+		return nil, fmt.Errorf("empty .env file")
+	}
+
+	env := string(buffer[:n])
+	if env == "" {
+		return nil, fmt.Errorf("empty .env file content")
+	}
+	scanner := bufio.NewScanner(strings.NewReader(env))
+	if scanner == nil {
+		return nil, fmt.Errorf("failed to create scanner")
+	}
+
+	envConf := Config{}
+	for scanner.Scan() {
+		line := scanner.Text()
+		kv := strings.Split(line, "=")
+		if len(kv) != 2 {
+			continue
+		}
+
+		switch kv[0] {
+		case "PORT":
+			port, err := strconv.Atoi(kv[1])
+			if err != nil {
+				return nil, fmt.Errorf("invalid PORT value [%s], %v", kv[1], err)
+			}
+			envConf.Port = port
+		default:
+			log.Printf("	unknown env [%s]=[%s]\n", kv[0], kv[1])
+		}
+	}
+
+	if envConf.Port == 0 {
+		return nil, fmt.Errorf("PORT is required")
+	}
+
+	return &envConf, nil
 }
