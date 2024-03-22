@@ -9,6 +9,7 @@ type HomeTemplate struct {
 	Chats        []*ChatTemplate
 	OpenTemplate *ChatTemplate
 	ActiveUser   string
+	LoadLocal    bool
 }
 
 func (h *HomeTemplate) HTML() (string, error) {

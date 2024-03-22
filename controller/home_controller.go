@@ -9,7 +9,7 @@ import (
 	"go.chat/utils"
 )
 
-func Home(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+func Home(app *model.AppState, w http.ResponseWriter, r *http.Request, loadLocal bool) {
 	log.Printf("--%s-> Home", utils.GetReqId(r))
 	user, err := utils.GetCurrentUser(r)
 	if err != nil {
@@ -37,6 +37,7 @@ func Home(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		OpenTemplate: openChatTemplate,
 		Chats:        chatTemplates,
 		ActiveUser:   user,
+		LoadLocal:    loadLocal,
 	}
 	html, err := home.HTML()
 	if err != nil {

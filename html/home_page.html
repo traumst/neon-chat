@@ -63,9 +63,14 @@
             padding: 10px 20px; 
         }
     </style>
+    {{ if .LoadLocal }}
     <script src="/script/htmx.1.9.10.min.js"></script>
     <script src="/script/htmx.1.9.10.sse.js"></script>
     <script src="/script/htmx.1.9.10.debug.js"></script>
+    {{ else }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.11/htmx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.11/ext/sse.min.js"></script>
+    {{ end }}
 </head>
 <body>
 <div class="container" hx-ext="sse" sse-trigger="load" sse-connect="/poll">
