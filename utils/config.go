@@ -10,7 +10,8 @@ import (
 )
 
 type Config struct {
-	Port int
+	Port      int
+	LoadLocal bool
 }
 
 func (a *Config) String() string {
@@ -18,12 +19,11 @@ func (a *Config) String() string {
 }
 
 func ArgsHelp() string {
-	return `Usage: go.chat [options]
-Options:
-  -h / --help	- Show this help message
-
-  -p / --port	- Port to listen on
-  `
+	return `By default, the application will read the config from the .env file in the root directory. 
+	To set them:
+		* find .env.template
+		* copy it to .env
+		* set desired values`
 }
 
 func ArgsRead() (*Config, error) {
@@ -103,6 +103,8 @@ func EnvRead() (*Config, error) {
 				return nil, fmt.Errorf("invalid PORT value [%s], %v", kv[1], err)
 			}
 			envConf.Port = port
+		case "LOCAL":
+			envConf.LoadLocal = strings.ToLower(kv[1]) == "true"
 		default:
 			log.Printf("	unknown env [%s]=[%s]\n", kv[0], kv[1])
 		}

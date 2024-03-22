@@ -56,7 +56,7 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func Setup(app *model.AppState, conn *db.DBConn) {
+func Setup(app *model.AppState, conn *db.DBConn, loadLocal bool) {
 	// static files
 	http.Handle("/favicon.ico", http.HandlerFunc(FavIcon))
 	http.Handle("/script/", http.HandlerFunc(ServeFile))
@@ -131,7 +131,7 @@ func Setup(app *model.AppState, conn *db.DBConn) {
 	// home, default
 	http.Handle("/", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			Home(app, w, r)
+			Home(app, w, r, loadLocal)
 		}),
 		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 }
