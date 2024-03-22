@@ -81,8 +81,8 @@ func trySend(conn *model.Conn, up event.LiveUpdate, user string) error {
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to send to user[%s], %s", user, err)
 		}
-	case event.ChatUserDrop:
-		err := SSEvent(&w, event.ChatUserDropEventName, up)
+	case event.ChatExpel:
+		err := SSEvent(&w, event.ChatExpelEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to drop user from chat to user[%s], %s", user, err)
 		}
@@ -141,8 +141,8 @@ func Format(e event.SSEvent, chatID int, userID string, msgID int) string {
 		return fmt.Sprintf("%s-chat-%d-msg-%d", event.MessageDropEventName, chatID, msgID)
 	case event.ChatAddEventName:
 		return string(event.ChatAddEventName)
-	case event.ChatUserDropEventName:
-		return fmt.Sprintf("%s-%d-user-%s", event.ChatUserDropEventName, chatID, userID)
+	case event.ChatExpelEventName:
+		return fmt.Sprintf("%s-%d-user-%s", event.ChatExpelEventName, chatID, userID)
 	case event.ChatDropEventName:
 		return fmt.Sprintf("%s-%d", event.ChatDropEventName, chatID)
 	case event.ChatCloseEventName:

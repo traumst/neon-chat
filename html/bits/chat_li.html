@@ -27,5 +27,21 @@
                 [delete]
             </div>
         </form>
+    {{ else if eq .User .Viewer }}
+        <form id="chat-leave-{{ .ChatID }}"
+            hx-post="/chat/leave" 
+            hx-trigger="click" 
+            hx-target="#chat-head-{{ .ChatID }}"
+            hx-swap="innerHTML" 
+            hx-include="#chat-leave-{{ .ChatID }}"
+        >
+            <input type="hidden" name="chatid" value="{{ .ChatID }}">
+            <div class="chat-header-leave" 
+                hx-trigger="click" 
+                hx-action="chat-leave-{{ .ChatID }}.submit()"
+            >
+                [leave]
+            </div>
+        </form>
     {{ end }}
 </li>

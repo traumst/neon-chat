@@ -78,6 +78,11 @@ func AddChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	chatName := r.FormValue("chatName")
+	if chatName == "" {
+		log.Printf("<-%s-- AddChat ERROR chat name [%s]\n", reqId, chatName)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	log.Printf("--%s-> AddChat TRACE adding user[%s] chat[%s]\n", reqId, user, chatName)
 	chatID := app.AddChat(user, chatName)
 	log.Printf("--%s-> AddChat TRACE user[%s] opening chat[%s][%d]\n", reqId, user, chatName, chatID)
@@ -95,7 +100,7 @@ func AddChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		err = handler.DistributeChat(app, openChat, user, user, e.ChatCreated)
+		err = handler.DistributeChat(app, openChat, user, user, user, e.ChatCreated)
 		if err != nil {
 			log.Printf("<-%s-- AddChat ERROR cannot distribute chat header, %s\n", reqId, err)
 		}
@@ -155,7 +160,7 @@ func InviteUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		err := handler.DistributeChat(app, chat, user, invitee, e.ChatInvite)
+		err := handler.DistributeChat(app, chat, user, invitee, invitee, e.ChatInvite)
 		if err != nil {
 			log.Printf("<-%s-- InviteUser ERROR cannot distribute chat invite, %s\n", reqId, err)
 		}
@@ -184,7 +189,7 @@ func InviteUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		reqId, invitee, chatID, user)
 }
 
-func DropUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+func ExpelUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> DeleteUser\n", reqId)
 	if r.Method != "POST" {
@@ -205,51 +210,52 @@ func DropUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	removeUser := r.FormValue("userid")
-	log.Printf("--%s-> DeleteUser TRACE removing[%s] to chat[%d]\n", reqId, removeUser, chatID)
-	err = app.DropUser(user, chatID, removeUser)
-	if err != nil {
-		log.Printf("<-%s-- DeleteUser ERROR invite, %s\n", reqId, err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	expelled := r.FormValue("userid")
 	chat, err := app.GetChat(user, chatID)
 	if err != nil {
 		log.Printf("<-%s-- DeleteUser ERROR cannot find chat[%d], %s\n", reqId, chatID, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	log.Printf("--%s-> DeleteUser TRACE chat[%d] owner[%s] removed[%s]\n", reqId, chatID, user, removeUser)
+	log.Printf("--%s-> DeleteUser TRACE removing[%s] from chat[%d]\n", reqId, expelled, chatID)
 
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
 		log.Printf("--%s-∞ DeleteUser TRACE distributing user[%s] removed[%s] from chat[%d]\n",
-			reqId, user, removeUser, chat.ID)
-		err := handler.DistributeChat(app, chat, user, removeUser, e.ChatClose)
+			reqId, user, expelled, chat.ID)
+		err := handler.DistributeChat(app, chat, user, expelled, expelled, e.ChatClose)
 		if err != nil {
 			log.Printf("<-%s-- DeleteUser ERROR cannot distribute chat close, %s\n", reqId, err)
 			return
 		}
-		err = handler.DistributeChat(app, chat, user, removeUser, e.ChatDeleted)
+		err = handler.DistributeChat(app, chat, user, expelled, expelled, e.ChatDeleted)
 		if err != nil {
 			log.Printf("<-%s-- DeleteUser ERROR cannot distribute chat deleted, %s\n", reqId, err)
 			return
 		}
-		err = handler.DistributeChat(app, chat, user, "", e.ChatUserDrop)
+		err = handler.DistributeChat(app, chat, user, "", expelled, e.ChatExpel)
 		if err != nil {
-			log.Printf("<-%s-- DeleteUser ERROR cannot distribute chat user drop, %s\n", reqId, err)
+			log.Printf("<-%s-- DeleteUser ERROR cannot distribute chat user expel, %s\n", reqId, err)
 			return
 		}
 	}()
 	go func() {
 		defer wg.Done()
-		log.Printf("<-%s-- DeleteUser TRACE user[%s] removed[%s] from chat[%d]\n", reqId, user, removeUser, chat.ID)
+		log.Printf("<-%s-- DeleteUser TRACE user[%s] removed[%s] from chat[%d]\n", reqId, user, expelled, chat.ID)
 		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte("[DELETED_U]"))
+		w.Write([]byte(fmt.Sprintf("expelled <s>%s</s>", expelled)))
 	}()
 	wg.Wait()
+
+	err = app.DropUser(user, chatID, expelled)
+	if err != nil {
+		log.Printf("<-%s-- DeleteUser ERROR invite, %s\n", reqId, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	log.Printf("--%s-> DeleteUser TRACE chat[%d] owner[%s] removed[%s]\n", reqId, chatID, user, expelled)
 }
 
 func CloseChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
@@ -293,6 +299,73 @@ func CloseChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(html))
 }
 
+func LeaveChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+	reqId := utils.GetReqId(r)
+	log.Printf("--%s-> LeaveChat\n", reqId)
+	if r.Method != "POST" {
+		log.Printf("<-%s-- LeaveChat TRACE auth does not allow %s\n", reqId, r.Method)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	log.Printf("--%s-> LeaveChat TRACE check login\n", reqId)
+	user, err := utils.GetCurrentUser(r)
+	if err != nil {
+		log.Printf("<-%s-- LeaveChat ERROR auth, %s\n", reqId, err)
+		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		return
+	}
+	chatID, err := strconv.Atoi(r.FormValue("chatid"))
+	if err != nil {
+		log.Printf("<-%s-- LeaveChat ERROR chat id, %s\n", reqId, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	chat, err := app.GetChat(user, chatID)
+	if err != nil {
+		log.Printf("<-%s-- LeaveChat ERROR cannot find chat[%d], %s\n", reqId, chatID, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	log.Printf("--%s-> LeaveChat TRACE removing[%s] to chat[%d]\n", reqId, user, chat.ID)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		log.Printf("--%s-∞ LeaveChat TRACE distributing user[%s] left chat[%d]\n", reqId, user, chat.ID)
+		err := handler.DistributeChat(app, chat, user, user, user, e.ChatClose)
+		if err != nil {
+			log.Printf("<-%s-- LeaveChat ERROR cannot distribute chat close, %s\n", reqId, err)
+			return
+		}
+		err = handler.DistributeChat(app, chat, user, user, user, e.ChatDeleted)
+		if err != nil {
+			log.Printf("<-%s-- LeaveChat ERROR cannot distribute chat deleted, %s\n", reqId, err)
+			return
+		}
+		err = handler.DistributeChat(app, chat, user, "", user, e.ChatExpel)
+		if err != nil {
+			log.Printf("<-%s-- LeaveChat ERROR cannot distribute chat user drop, %s\n", reqId, err)
+			return
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		log.Printf("<-%s-- LeaveChat TRACE user[%s] left chat[%d]\n", reqId, user, chat.ID)
+		w.WriteHeader(http.StatusAccepted)
+		w.Write([]byte("[LEFT_U]"))
+	}()
+	wg.Wait()
+
+	err = app.DropUser(user, chat.ID, user)
+	if err != nil {
+		log.Printf("<-%s-- LeaveChat ERROR invite, %s\n", reqId, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	log.Printf("--%s-> LeaveChat TRACE chat[%d] removed[%s]\n", reqId, chatID, user)
+}
+
 func DeleteChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> DeleteChat TRACE\n", reqId)
@@ -329,12 +402,12 @@ func DeleteChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	go func() {
 		defer wg.Done()
 		log.Printf("<-%s-- DeleteChat TRACE user[%s] deletes chat [%d]\n", reqId, user, id)
-		err = handler.DistributeChat(app, chat, user, "", e.ChatClose)
+		err = handler.DistributeChat(app, chat, user, "", "", e.ChatClose)
 		if err != nil {
 			log.Printf("<-%s-- DeleteChat ERROR cannot distribute chat close, %s\n", reqId, err)
 			return
 		}
-		err = handler.DistributeChat(app, chat, user, "", e.ChatDeleted)
+		err = handler.DistributeChat(app, chat, user, "", "", e.ChatDeleted)
 		if err != nil {
 			log.Printf("<-%s-- DeleteChat ERROR cannot distribute chat deleted, %s\n", reqId, err)
 			return

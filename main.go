@@ -16,7 +16,9 @@ import (
 )
 
 func main() {
-	// log setup
+	log.Println("Application is starting...")
+	// init log
+	log.Println("	setting up logger...")
 	now := time.Now()
 	timestamp := now.Format(time.RFC3339)
 	date := strings.Split(timestamp, "T")[0]
@@ -26,27 +28,33 @@ func main() {
 		log.Fatal(err)
 	}
 	defer logFile.Close()
-	// write log to both file and stderr
 	multi := io.MultiWriter(logFile, os.Stderr)
 	log.SetOutput(multi)
+
 	// parse args
+	log.Println("	parsing args...")
 	args, err := utils.ArgsRead()
 	if err != nil {
 		log.Printf("Error parsing args: %v\n", err)
 		log.Println(utils.ArgsHelp())
 		os.Exit(13)
 	}
-	log.Printf("  args: %v\n", *args)
+	log.Printf("	  parsed args: %s\n", args)
+
 	// TODO args.DBPath
+	log.Println("	connecting db...")
 	dbPath := "db/chat.db"
 	db, err := db.ConnectDB(dbPath)
 	if err != nil {
-		log.Fatalf("Error opening db: %s", err)
+		log.Fatalf("Error opening db at [%s]: %s", dbPath, err)
 	}
-	log.Println("Setting up application")
+
+	log.Println("	init app state...")
 	app := &model.ApplicationState
-	log.Println("Setting up controllers")
+
+	log.Println("	init controllers...")
 	controller.Setup(app, db)
+
 	log.Printf("Starting server at port [%d]\n", args.Port)
 	runtineErr := http.ListenAndServe(fmt.Sprintf(":%d", args.Port), nil)
 	log.Fatal(runtineErr)
