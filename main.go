@@ -33,30 +33,29 @@ func main() {
 
 	// parse args
 	log.Println("	parsing config...")
-	//args, err := utils.ArgsRead()
-	args, err := utils.EnvRead()
+	//config, err := utils.ArgsRead()
+	config, err := utils.EnvRead()
 	if err != nil {
 		log.Printf("Error parsing config: %v\n", err)
-		log.Println(utils.ArgsHelp())
+		log.Println(utils.Help())
 		os.Exit(13)
 	}
-	log.Printf("	  parsed config: %s\n", args)
+	log.Printf("	  parsed config: %s\n", config)
 
 	// TODO args.DBPath
 	log.Println("	connecting db...")
-	dbPath := "db/chat.db"
-	db, err := db.ConnectDB(dbPath)
+	db, err := db.ConnectDB(config.Sqlite)
 	if err != nil {
-		log.Fatalf("Error opening db at [%s]: %s", dbPath, err)
+		log.Fatalf("Error opening db at [%s]: %s", config.Sqlite, err)
 	}
 
 	log.Println("	init app state...")
 	app := &model.ApplicationState
 
 	log.Println("	init controllers...")
-	controller.Setup(app, db, args.LoadLocal)
+	controller.Setup(app, db, config.LoadLocal)
 
-	log.Printf("Starting server at port [%d]\n", args.Port)
-	runtineErr := http.ListenAndServe(fmt.Sprintf(":%d", args.Port), nil)
+	log.Printf("Starting server at port [%d]\n", config.Port)
+	runtineErr := http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil)
 	log.Fatal(runtineErr)
 }

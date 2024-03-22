@@ -12,13 +12,14 @@ import (
 type Config struct {
 	Port      int
 	LoadLocal bool
+	Sqlite    string
 }
 
 func (a *Config) String() string {
 	return fmt.Sprintf("{Port:%d}", a.Port)
 }
 
-func ArgsHelp() string {
+func Help() string {
 	return `By default, the application will read the config from the .env file in the root directory. 
 	To set them:
 		* find .env.template
@@ -105,6 +106,8 @@ func EnvRead() (*Config, error) {
 			envConf.Port = port
 		case "LOCAL":
 			envConf.LoadLocal = strings.ToLower(kv[1]) == "true"
+		case "SQLITE":
+			envConf.Sqlite = kv[1]
 		default:
 			log.Printf("	unknown env [%s]=[%s]\n", kv[0], kv[1])
 		}
