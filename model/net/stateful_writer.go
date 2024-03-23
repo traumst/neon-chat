@@ -7,6 +7,13 @@ type StatefulWriter struct {
 	status int
 }
 
+func StatefulWriterMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		writer := StatefulWriter{ResponseWriter: w}
+		next.ServeHTTP(&writer, r)
+	})
+}
+
 func (rec *StatefulWriter) WriteHeader(code int) {
 	rec.status = code
 	rec.ResponseWriter.WriteHeader(code)

@@ -12,22 +12,22 @@ import (
 	"go.chat/utils"
 )
 
-func PollUpdatesForUser(conn *model.Conn, pollingUser string) {
-	log.Printf("∞--%s--> APP.PollUpdatesForUser TRACE IN, triggered by [%s]\n", conn.Origin, conn.User)
+func PollUpdatesForUser(conn *model.Conn, pollingUserId uint) {
+	log.Printf("∞--%s--> APP.PollUpdatesForUser TRACE IN, triggered by [%d]\n", conn.Origin, conn.User.Id)
 	var wg sync.WaitGroup
 	done := false
 	for !done {
-		log.Printf("∞--%s--> APP.PollUpdatesForUser TRACE user[%s] is waiting for updates\n", conn.Origin, conn.User)
+		log.Printf("∞--%s--> APP.PollUpdatesForUser TRACE user[%d] is waiting for updates\n", conn.Origin, conn.User.Id)
 		select {
 		case <-conn.Reader.Context().Done():
-			log.Printf("<--%s--∞ APP.PollUpdatesForUser WARN user[%s] conn[%v] disonnected\n",
-				conn.Origin, pollingUser, conn.Origin)
+			log.Printf("<--%s--∞ APP.PollUpdatesForUser WARN user[%d] conn[%v] disonnected\n",
+				conn.Origin, pollingUserId, conn.Origin)
 			done = true
 		case up := <-conn.In:
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				sendUpdates(conn, up, pollingUser)
+				sendUpdates(conn, up, pollingUserId)
 				//conn.Out <- up
 			}()
 		}
@@ -35,32 +35,28 @@ func PollUpdatesForUser(conn *model.Conn, pollingUser string) {
 	wg.Wait()
 }
 
-func sendUpdates(conn *model.Conn, up event.LiveUpdate, pollingUser string) {
-	log.Printf("∞--%s--> APP.sendUpdates TRACE IN [%s], input[%s]\n", conn.Origin, pollingUser, up.String())
+func sendUpdates(conn *model.Conn, up event.LiveUpdate, pollingUserId uint) {
+	log.Printf("∞--%s--> APP.sendUpdates TRACE IN user[%d], input[%s]\n", conn.Origin, pollingUserId, up.String())
 	origin := conn.Origin
-	if conn.User != pollingUser {
-		log.Printf("<--%s--∞ APP.sendUpdates WARN user[%v] is does not own conn[%v]\n", origin, pollingUser, conn)
+	if conn.User.Id != pollingUserId {
+		log.Printf("<--%s--∞ APP.sendUpdates WARN user[%v] is does not own conn[%v]\n", origin, pollingUserId, conn)
 		return
 	}
-	if up.Author == "" {
-		log.Printf("<--%s--∞ APP.sendUpdates INFO user or msg is empty, update[%v]\n", origin, up)
-		return
-	}
-	err := trySend(conn, up, pollingUser)
+	err := trySend(conn, up)
 	if err != nil {
-		up.Error = fmt.Errorf("ERROR SENDING TO: %s", pollingUser)
+		up.Error = fmt.Errorf("ERROR SENDING TO: %d", pollingUserId)
 		//conn.Out <- up
-		log.Printf("<--%s--∞ APP.sendUpdates ERROR failed to send update to user[%s], err[%s]\n",
-			origin, pollingUser, err)
+		log.Printf("<--%s--∞ APP.sendUpdates ERROR failed to send update to user[%d], err[%s]\n",
+			origin, pollingUserId, err)
 		return
 	}
-	log.Printf("<--%s--∞ APP.sendUpdates TRACE OUT user[%s]\n", origin, pollingUser)
+	log.Printf("<--%s--∞ APP.sendUpdates TRACE OUT user[%d]\n", origin, pollingUserId)
 }
 
-func trySend(conn *model.Conn, up event.LiveUpdate, user string) error {
+func trySend(conn *model.Conn, up event.LiveUpdate) error {
 	w := conn.Writer
-	if user == "" {
-		return fmt.Errorf("trySend ERROR user is empty, user[%s], msg[%s]", user, up.Data)
+	if up.UserId == 0 {
+		return fmt.Errorf("trySend ERROR user is empty, user[%d], msg[%s]", up.UserId, up.Data)
 	}
 	if w == nil {
 		return fmt.Errorf("trySend ERROR writer is nil")
@@ -69,32 +65,32 @@ func trySend(conn *model.Conn, up event.LiveUpdate, user string) error {
 	case event.MessageAdded:
 		err := SSEvent(&w, event.MessageAddEventName, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to add message to user[%s], %s", user, err)
+			return fmt.Errorf("trySend ERROR failed to add message to user[%d], %s", up.UserId, err)
 		}
 	case event.MessageDeleted:
 		err := SSEvent(&w, event.MessageDropEventName, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to delete message to user[%s], %s", user, err)
+			return fmt.Errorf("trySend ERROR failed to delete message to user[%d], %s", up.UserId, err)
 		}
 	case event.ChatCreated, event.ChatInvite:
 		err := SSEvent(&w, event.ChatAddEventName, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to send to user[%s], %s", user, err)
+			return fmt.Errorf("trySend ERROR failed to send to user[%d], %s", up.UserId, err)
 		}
 	case event.ChatExpel:
 		err := SSEvent(&w, event.ChatExpelEventName, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to drop user from chat to user[%s], %s", user, err)
+			return fmt.Errorf("trySend ERROR failed to drop user from chat to user[%d], %s", up.UserId, err)
 		}
 	case event.ChatClose:
 		err := SSEvent(&w, event.ChatCloseEventName, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to close chat to user[%s], %s", user, err)
+			return fmt.Errorf("trySend ERROR failed to close chat to user[%d], %s", up.UserId, err)
 		}
 	case event.ChatDeleted:
 		err := SSEvent(&w, event.ChatDropEventName, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to delete chat to user[%s], %s", user, err)
+			return fmt.Errorf("trySend ERROR failed to delete chat to user[%d], %s", up.UserId, err)
 		}
 	default:
 		return fmt.Errorf("trySend ERROR unknown update event[%v], update[%s]", up.Event, up.String())
@@ -103,13 +99,13 @@ func trySend(conn *model.Conn, up event.LiveUpdate, user string) error {
 }
 
 func SSEvent(w *http.ResponseWriter, event event.SSEvent, up event.LiveUpdate) error {
-	if up.ChatID < 0 {
+	if up.ChatId < 0 {
 		panic("ChatID should not be empty")
 	}
-	if up.UserID == "" {
+	if up.UserId == 0 {
 		panic("UserID should not be empty")
 	}
-	eventName := Format(event, up.ChatID, up.UserID, up.MsgID)
+	eventName := Format(event, up.ChatId, up.UserId, up.MsgId)
 	eventID := utils.RandStringBytes(5)
 	data := trim(up.Data)
 	writer := *w
@@ -133,20 +129,20 @@ func SSEvent(w *http.ResponseWriter, event event.SSEvent, up event.LiveUpdate) e
 	return nil
 }
 
-func Format(e event.SSEvent, chatID int, userID string, msgID int) string {
+func Format(e event.SSEvent, chatId int, userId uint, msgId int) string {
 	switch e {
 	case event.MessageAddEventName:
-		return fmt.Sprintf("%s-chat-%d", event.MessageAddEventName, chatID)
+		return fmt.Sprintf("%s-chat-%d", event.MessageAddEventName, chatId)
 	case event.MessageDropEventName:
-		return fmt.Sprintf("%s-chat-%d-msg-%d", event.MessageDropEventName, chatID, msgID)
+		return fmt.Sprintf("%s-chat-%d-msg-%d", event.MessageDropEventName, chatId, msgId)
 	case event.ChatAddEventName:
 		return string(event.ChatAddEventName)
 	case event.ChatExpelEventName:
-		return fmt.Sprintf("%s-%d-user-%s", event.ChatExpelEventName, chatID, userID)
+		return fmt.Sprintf("%s-%d-user-%d", event.ChatExpelEventName, chatId, userId)
 	case event.ChatDropEventName:
-		return fmt.Sprintf("%s-%d", event.ChatDropEventName, chatID)
+		return fmt.Sprintf("%s-%d", event.ChatDropEventName, chatId)
 	case event.ChatCloseEventName:
-		return fmt.Sprintf("%s-%d", event.ChatCloseEventName, chatID)
+		return fmt.Sprintf("%s-%d", event.ChatCloseEventName, chatId)
 	default:
 		panic(fmt.Sprintf("unknown event type[%v]", e))
 	}

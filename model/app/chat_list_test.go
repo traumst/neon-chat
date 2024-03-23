@@ -54,8 +54,8 @@ func TestOpenChat(t *testing.T) {
 		t.Errorf("TestOpenChat openChat was NIL")
 		return
 	}
-	if openChat1.ID == openChat2.ID || openChat1.ID != chatID1 {
-		t.Errorf("TestOpenChat expected chatID %d, got %d", chatID1, openChat1.ID)
+	if openChat1.Id == openChat2.Id || openChat1.Id != chatID1 {
+		t.Errorf("TestOpenChat expected chatID %d, got %d", chatID1, openChat1.Id)
 	}
 }
 
@@ -105,8 +105,8 @@ func TestGetOpenChat(t *testing.T) {
 	chat = cl.GetOpenChat("test-user")
 	if chat == nil {
 		t.Errorf("TestGetOpenChat chat was NIL [%+v]", chat)
-	} else if chat.ID != chatID {
-		t.Errorf("TestGetOpenChat expected chatID 1, got [%d]", chat.ID)
+	} else if chat.Id != chatID {
+		t.Errorf("TestGetOpenChat expected chatID 1, got [%d]", chat.Id)
 	}
 }
 
@@ -131,17 +131,17 @@ func TestDeleteChatEmpty(t *testing.T) {
 	if err == nil {
 		t.Errorf("TestDeleteChatEmpty expected error")
 	}
-	chat1 := Chat{ID: 1}
+	chat1 := Chat{Id: 1}
 	err = cl.DeleteChat("test-user", &chat1)
 	if err == nil {
 		t.Errorf("TestDeleteChatEmpty expected error, 1")
 	}
-	chat2 := Chat{ID: 0}
+	chat2 := Chat{Id: 0}
 	err = cl.DeleteChat("test-user", &chat2)
 	if err == nil {
 		t.Errorf("TestDeleteChatEmpty expected error, 0")
 	}
-	chat3 := Chat{ID: -1}
+	chat3 := Chat{Id: -1}
 	err = cl.DeleteChat("test-user", &chat3)
 	if err == nil {
 		t.Errorf("TestDeleteChatEmpty expected error, -1")
@@ -221,8 +221,8 @@ func TestInviteUser(t *testing.T) {
 		t.Errorf("TestInviteUserEmpty inviteeChats were nil")
 	} else if len(inviteeChats) != 1 {
 		t.Errorf("TestInviteUserEmpty expected 1 chat, got %d", len(inviteeChats))
-	} else if inviteeChats[0].ID != chatID {
-		t.Errorf("TestInviteUserEmpty expected chatID %d, got %d", chatID, inviteeChats[0].ID)
+	} else if inviteeChats[0].Id != chatID {
+		t.Errorf("TestInviteUserEmpty expected chatID %d, got %d", chatID, inviteeChats[0].Id)
 	} else if !inviteeChats[0].isUserInChat(invitee) {
 		t.Errorf("TestInviteUserEmpty user [%s] is not in chat", invitee)
 	} else if !inviteeChats[0].isUserInChat(owner) {

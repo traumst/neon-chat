@@ -5,8 +5,8 @@ import "testing"
 func TestDefaultChat(t *testing.T) {
 	t.Logf("TestDefaultChat started")
 	c := Chat{}
-	if c.ID != 0 {
-		t.Errorf("TestDefaultChat expected UnknownUpdate, got [%d]", c.ID)
+	if c.Id != 0 {
+		t.Errorf("TestDefaultChat expected UnknownUpdate, got [%d]", c.Id)
 	} else if c.Name != "" {
 		t.Errorf("TestDefaultChat expected empty user, got [%s]", c.Name)
 	} else if c.Owner != "" {

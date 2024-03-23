@@ -14,8 +14,13 @@ import (
 
 func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> AddMessage TRACE\n", utils.GetReqId(r))
-	author, err := utils.GetCurrentUser(r)
-	if err != nil || author == "" {
+	cookie, err := utils.GetSessionCookie(r)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		return
+	}
+	author, err := app.GetUser(cookie.UserId)
+	if err != nil || author == nil {
 		http.Redirect(w, r, "/login", http.StatusUnauthorized)
 		return
 	}
@@ -33,20 +38,20 @@ func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusBadRequest)
 		return
 	}
-	log.Printf("--%s-> AddMessage TRACE opening current chat for [%s]\n", utils.GetReqId(r), author)
+	log.Printf("--%s-> AddMessage TRACE opening current chat for user[%d]\n", utils.GetReqId(r), author.Id)
 	// TODO verify open chat is modified chat
-	chat := app.GetOpenChat(author)
+	chat := app.GetOpenChat(author.Id)
 	if chat == nil {
-		log.Printf("--%s-> AddMessage WARN no open chat for %s\n", utils.GetReqId(r), author)
+		log.Printf("--%s-> AddMessage WARN no open chat for user[%d]\n", utils.GetReqId(r), author.Id)
 		w.WriteHeader(http.StatusBadRequest)
 		http.Redirect(w, r, "/", http.StatusBadRequest)
 		return
 	}
-
-	log.Printf("--%s-> AddMessage TRACE storing message for [%s] in [%s]\n", utils.GetReqId(r), author, chat.Name)
-	message, err := chat.AddMessage(author, a.Message{
+	log.Printf("--%s-> AddMessage TRACE storing message for user[%d] in chat[%s]\n",
+		utils.GetReqId(r), author.Id, chat.Name)
+	message, err := chat.AddMessage(author.Id, a.Message{
 		ID:     0,
-		ChatID: chat.ID,
+		ChatID: chat.Id,
 		Owner:  chat.Owner,
 		Author: author,
 		Text:   msg,
@@ -65,7 +70,7 @@ func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = handler.DistributeMsg(app, chat, author, message, e.MessageAdded)
+	err = handler.DistributeMsg(app, chat, author.Id, message, e.MessageAdded)
 	if err != nil {
 		log.Printf("<-%s-- AddMessage ERROR distribute message, %s\n", utils.GetReqId(r), err)
 	}
@@ -78,8 +83,13 @@ func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 func DeleteMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> DeleteMessage\n", reqId)
-	author, err := utils.GetCurrentUser(r)
+	cookie, err := utils.GetSessionCookie(r)
 	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		return
+	}
+	author, err := app.GetUser(cookie.UserId)
+	if err != nil || author == nil {
 		http.Redirect(w, r, "/login", http.StatusUnauthorized)
 		return
 	}
@@ -99,14 +109,14 @@ func DeleteMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	chat := app.GetOpenChat(author)
+	chat := app.GetOpenChat(author.Id)
 	if chat == nil {
-		log.Printf("<-%s-- DeleteMessage ERROR open template for [%s]\n", reqId, author)
+		log.Printf("<-%s-- DeleteMessage ERROR open template for user[%d]\n", reqId, author.Id)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if chatID != chat.ID {
-		log.Printf("<-%s-- DeleteMessage ERROR chat id mismatch, %d != %d\n", reqId, chatID, chat.ID)
+	if chatID != chat.Id {
+		log.Printf("<-%s-- DeleteMessage ERROR chat id mismatch, %d != %d\n", reqId, chatID, chat.Id)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -122,13 +132,13 @@ func DeleteMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	msg, err := chat.DropMessage(author, msgID)
+	msg, err := chat.DropMessage(author.Id, msgID)
 	if err != nil {
 		log.Printf("<-%s-- DeleteMessage ERROR remove message[%d] from [%s], %s\n", reqId, msgID, chat.Name, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = handler.DistributeMsg(app, chat, author, msg, e.MessageDeleted)
+	err = handler.DistributeMsg(app, chat, author.Id, msg, e.MessageDeleted)
 	if err != nil {
 		log.Printf("<-%s-- DeleteMessage ERROR distribute message, %s\n", reqId, err)
 	}

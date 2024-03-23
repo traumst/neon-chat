@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -29,13 +28,13 @@ func Login(app *model.AppState, conn *db.DBConn, w http.ResponseWriter, r *http.
 
 func Logout(app *model.AppState, conn *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Logout\n", utils.GetReqId(r))
-	clearSessionCookie(w)
+	utils.ClearSessionCookie(w)
 	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
 func renderLogin(w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> renderLogin\n", utils.GetReqId(r))
-	cookie, err := getSessionCookie(r)
+	cookie, err := utils.GetSessionCookie(r)
 	if err == nil && cookie != nil {
 		log.Printf("--%s-> renderLogin TRACE user already has cookie, redirecting to HOME\n", utils.GetReqId(r))
 		http.Redirect(w, r, "/", http.StatusFound)
@@ -47,7 +46,7 @@ func renderLogin(w http.ResponseWriter, r *http.Request) {
 
 func signIn(w http.ResponseWriter, r *http.Request, conn *db.DBConn) {
 	log.Printf("--%s-> signIn\n", utils.GetReqId(r))
-	cookie, err := getSessionCookie(r)
+	cookie, err := utils.GetSessionCookie(r)
 	if err == nil && cookie != nil {
 		log.Printf("--%s-> signIn TRACE user already has cookie, redirecting to HOME\n", utils.GetReqId(r))
 		http.Redirect(w, r, "/", http.StatusFound)
@@ -85,13 +84,13 @@ func signIn(w http.ResponseWriter, r *http.Request, conn *db.DBConn) {
 		return
 	}
 
-	setSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
+	utils.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func signUp(w http.ResponseWriter, r *http.Request, conn *db.DBConn) {
 	log.Printf("--%s-> signUp\n", utils.GetReqId(r))
-	cookie, err := getSessionCookie(r)
+	cookie, err := utils.GetSessionCookie(r)
 	if err == nil && cookie != nil {
 		log.Printf("--%s-> signUp TRACE user already has cookie, redirecting to HOME\n", utils.GetReqId(r))
 		http.Redirect(w, r, "/", http.StatusFound)
@@ -175,31 +174,6 @@ func signUp(w http.ResponseWriter, r *http.Request, conn *db.DBConn) {
 	}
 
 	log.Printf("--%s-> signUp 8\n", utils.GetReqId(r))
-	setSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
+	utils.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
 	http.Redirect(w, r, "/", http.StatusFound)
-}
-
-func getSessionCookie(r *http.Request) (*string, error) {
-	cookie, err := r.Cookie(utils.SessionCookie)
-	if err != nil {
-		return nil, err
-	}
-	return &cookie.Value, nil
-}
-
-func setSessionCookie(w http.ResponseWriter, user *app.User, auth *app.UserAuth, expiration time.Time) {
-	val := fmt.Sprintf("%s:%s:%s:%s", user.Name, user.Type, utils.RandStringBytes(9), auth.Type)
-	http.SetCookie(w, &http.Cookie{
-		Name:    utils.SessionCookie,
-		Value:   val,
-		Expires: expiration,
-	})
-}
-
-func clearSessionCookie(w http.ResponseWriter) {
-	http.SetCookie(w, &http.Cookie{
-		Name:    utils.SessionCookie,
-		Value:   "",
-		Expires: time.Now(),
-	})
 }

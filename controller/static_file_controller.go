@@ -14,10 +14,10 @@ func FavIcon(w http.ResponseWriter, r *http.Request) {
 
 func ServeFile(w http.ResponseWriter, r *http.Request) {
 	//log.Printf("--%s-> ServeFile", utils.GetReqId(r))
-	_, err := utils.GetCurrentUser(r)
+	_, err := utils.GetSessionCookie(r)
 	if err != nil {
-		log.Printf("<-%s-- ServeFile WARN user, %s\n", utils.GetReqId(r), err)
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+		log.Printf("--%s-> DeleteUser WARN cookie\n", utils.GetReqId(r))
+		http.Redirect(w, r, "/login", http.StatusUnauthorized)
 		return
 	}
 	path := utils.ParseUrlPath(r)

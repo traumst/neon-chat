@@ -16,27 +16,33 @@ func PollUpdates(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	user, err := utils.GetCurrentUser(r)
+	cookie, err := utils.GetSessionCookie(r)
 	if err != nil {
-		log.Printf("<-%s-- PollUpdates ERROR auth user[%s], %s\n", utils.GetReqId(r), user, err)
+		log.Printf("--%s-> DeleteUser WARN cookie\n", utils.GetReqId(r))
 		http.Redirect(w, r, "/login", http.StatusUnauthorized)
 		return
 	}
-	log.Printf("---%s--> PollUpdates TRACE IN polling updates for [%s]\n", utils.GetReqId(r), user)
-	conn := app.ReplaceConn(w, *r, user)
-	if conn == nil {
-		log.Printf("<--%s--- PollUpdates ERROR conn not be established for [%s]\n", utils.GetReqId(r), user)
+	user, err := app.GetUser(cookie.UserId)
+	if err != nil || user == nil {
+		log.Printf("--%s-> DeleteUser WARN user, %s\n", utils.GetReqId(r), err)
+		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
-	defer app.DropConn(conn, user)
+	log.Printf("---%s--> PollUpdates TRACE IN polling updates for user[%d]\n", utils.GetReqId(r), user.Id)
+	conn := app.ReplaceConn(w, *r, user)
+	if conn == nil {
+		log.Printf("<--%s--- PollUpdates ERROR conn not be established for user[%d]\n", utils.GetReqId(r), user.Id)
+		return
+	}
+	defer app.DropConn(conn)
 	utils.SetSseHeaders(&conn.Writer)
-	log.Printf("---%s--> PollUpdates TRACE sse initiated for [%s]\n", utils.GetReqId(r), user)
+	log.Printf("---%s--> PollUpdates TRACE sse initiated for user[%d]\n", utils.GetReqId(r), user.Id)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		handler.PollUpdatesForUser(conn, user)
+		handler.PollUpdatesForUser(conn, user.Id)
 	}()
 	wg.Wait()
-	log.Printf("<-%s-- PollUpdates TRACE OUT user[%s]\n", utils.GetReqId(r), user)
+	log.Printf("<-%s-- PollUpdates TRACE OUT user[%d]\n", utils.GetReqId(r), user.Id)
 }

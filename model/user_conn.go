@@ -6,13 +6,14 @@ import (
 	"net/http"
 	"sync"
 
+	"go.chat/model/app"
 	e "go.chat/model/event"
 	"go.chat/utils"
 )
 
 type Conn struct {
 	ID     int
-	User   string
+	User   *app.User
 	Origin string
 	Writer http.ResponseWriter
 	Reader http.Request
@@ -24,16 +25,16 @@ type UserConn []Conn
 
 var mu sync.Mutex
 
-func (uc *UserConn) IsConn(user string) (bool, *Conn) {
+func (uc *UserConn) IsConn(userId uint) (bool, *Conn) {
 	for _, conn := range *uc {
-		if conn.User == user {
+		if conn.User.Id == userId {
 			return true, &conn
 		}
 	}
 	return false, nil
 }
 
-func (uc *UserConn) Add(user string, origin string, w http.ResponseWriter, r http.Request) *Conn {
+func (uc *UserConn) Add(user *app.User, origin string, w http.ResponseWriter, r http.Request) *Conn {
 	mu.Lock()
 	defer mu.Unlock()
 	log.Printf("∞---%s---> UserConn.Add TRACE user[%s] added from %s\n", utils.GetReqId(&r), user, origin)
@@ -51,27 +52,27 @@ func (uc *UserConn) Add(user string, origin string, w http.ResponseWriter, r htt
 	return &newConn
 }
 
-func (uc UserConn) Get(user string) (*Conn, error) {
+func (uc UserConn) Get(userId uint) (*Conn, error) {
 	mu.Lock()
 	defer mu.Unlock()
-	conns := uc.userConns(user)
+	conns := uc.userConns(userId)
 	if len(conns) == 0 {
-		return nil, fmt.Errorf("user[%s] not connected", user)
+		return nil, fmt.Errorf("user[%d] not connected", userId)
 	}
 
-	log.Printf("∞--------> UserConn.Get TRACE user[%s] has %d conns[%v]\n", user, len(conns), conns)
+	log.Printf("∞--------> UserConn.Get TRACE user[%s] has %d conns[%v]\n", userId, len(conns), conns)
 
 	var conn *Conn
 	for _, conn = range conns {
-		if conn != nil && conn.User == user {
+		if conn != nil && conn.User.Id == userId {
 			break
 		}
 	}
 
 	if conn == nil {
-		return nil, fmt.Errorf("user[%s] has no active conneciton", user)
+		return nil, fmt.Errorf("user[%d] has no active conneciton", userId)
 	}
-	log.Printf("∞--------> UserConn.Get TRACE user[%s] served on conn[%v]\n", user, conn.Origin)
+	log.Printf("∞--------> UserConn.Get TRACE user[%d] served on conn[%v]\n", userId, conn.Origin)
 	return conn, nil
 }
 
@@ -96,14 +97,14 @@ func (uc *UserConn) Drop(c *Conn) error {
 	return fmt.Errorf("connection not found")
 }
 
-func (uc *UserConn) userConns(user string) []*Conn {
+func (uc *UserConn) userConns(userId uint) []*Conn {
 	conns := make([]*Conn, 0)
 	if uc == nil || len(*uc) == 0 {
 		return conns
 	}
 	for _, conn := range *uc {
 		conn := conn
-		if conn.User == user {
+		if conn.User.Id == userId {
 			conns = append(conns, &conn)
 		}
 	}

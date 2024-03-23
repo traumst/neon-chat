@@ -13,7 +13,7 @@ type MessageStore struct {
 }
 
 func (s *MessageStore) Add(m *Message) (*Message, error) {
-	author := strings.TrimSpace(m.Author)
+	author := strings.TrimSpace(m.Author.Name)
 	msg := strings.TrimSpace(m.Text)
 	if author == "" || msg == "" {
 		return nil, fmt.Errorf("bad arguments")

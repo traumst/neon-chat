@@ -27,13 +27,6 @@ func ReqIdMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func StatefulWriterMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		writer := net.StatefulWriter{ResponseWriter: w}
-		next.ServeHTTP(&writer, r)
-	})
-}
-
 func DBMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// TODO
@@ -64,7 +57,9 @@ func Setup(app *model.AppState, conn *db.DBConn, loadLocal bool) {
 	}
 	// TEMP
 	http.Handle("/gen2", ChainMiddleware(
-		http.HandlerFunc(Gen2),
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			Gen2(app, w, r)
+		}),
 		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	// sessions
 	http.Handle("/login", ChainMiddleware(
@@ -80,7 +75,7 @@ func Setup(app *model.AppState, conn *db.DBConn, loadLocal bool) {
 	// chat
 	http.Handle("/chat/invite", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			InviteUser(app, w, r)
+			InviteUser(app, conn, w, r)
 		}),
 		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	http.Handle("/chat/expel", ChainMiddleware(
@@ -133,7 +128,7 @@ func Setup(app *model.AppState, conn *db.DBConn, loadLocal bool) {
 	// home, default
 	http.Handle("/", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			Home(app, w, r, loadLocal)
+			Home(app, w, r)
 		}),
 		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 }
