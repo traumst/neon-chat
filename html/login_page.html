@@ -1,13 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login - Chat App</title>
+    <title>Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@latest/dist/htmx.js"></script>
 </head>
 <body>
-    <form action="/login" method="POST">
-        <label for="username">Username:</label>
-        <input type="text" name="username" required>
-        <button type="submit">Login</button>
-    </form>
+    <section id="login">
+        <h1>Login</h1>
+        <form hx-post="/login" hx-trigger="submit" hx-target="#response" hx-swap="innerHTML">
+            <input type="text" name="user" placeholder="username">
+            <input type="password" name="pass" placeholder="password">
+            <button type="submit">Login</button>
+        </form>
+    </div>
+    <section id="signup">
+        <h1>Signup</h1>
+        <form hx-put="/login" hx-trigger="submit"> <!-- hx-target="#response" hx-swap="innerHTML"> -->
+            <input type="text" name="user" placeholder="username">
+            <input type="password" name="pass" placeholder="password">
+            <button type="submit">Signup</button>
+        </form>
+    </section>
 </body>
 </html>

@@ -16,20 +16,24 @@ const SchemaUser string = `
 	CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name ON users(name);`
 
 func (db *DBConn) AddUser(user app.User) (*app.User, error) {
-	db.mu.Lock()
-	defer db.mu.Unlock()
 	if !db.IsActive() {
 		return nil, fmt.Errorf("db is not connected")
 	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
 	if user.Id != 0 {
 		return nil, fmt.Errorf("user already has an id[%d]", user.Id)
 	} else if user.Name == "" {
 		return nil, fmt.Errorf("user has no name")
+	} else if user.Type == "" {
+		return nil, fmt.Errorf("user has no type")
 	} else if user.Salt == nil || len(user.Salt) == 0 {
 		return nil, fmt.Errorf("user has no salt")
 	}
 
-	result, err := db.conn.Exec(`INSERT INTO users (name, salt) VALUES (?, ?)`, user.Name, user.Salt)
+	result, err := db.conn.Exec(`INSERT INTO users (name, type, salt) VALUES (?, ?, ?)`,
+		user.Name, user.Type, user.Salt)
 	if err != nil {
 		return nil, fmt.Errorf("error adding user: %s", err)
 	}

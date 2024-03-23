@@ -19,6 +19,7 @@ type AppState struct {
 	mu       sync.Mutex
 	chats    app.ChatList
 	userConn UserConn
+	// TODO serve-local should be held here
 }
 
 func (state *AppState) ReplaceConn(w http.ResponseWriter, r http.Request, user string) *Conn {

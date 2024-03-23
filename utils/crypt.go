@@ -2,6 +2,7 @@ package utils
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -12,7 +13,17 @@ func GeneratePasswordSalt() ([]byte, error) {
 	return salt, err
 }
 
-func HashPassword(password string, salt []byte) ([]byte, error) {
+func HashPassword(password string, salt []byte) (*uint, error) {
 	salted := password + string(salt)
-	return bcrypt.GenerateFromPassword([]byte(salted), bcrypt.DefaultCost)
+	bytes, err := bcrypt.GenerateFromPassword([]byte(salted), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+	hashed := sha256.Sum256(bytes)
+	var result uint = 0
+	for i, b := range hashed {
+		shift := uint(i) % 8
+		result = result + uint(b)<<shift
+	}
+	return &result, nil
 }

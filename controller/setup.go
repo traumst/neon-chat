@@ -59,7 +59,9 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 func Setup(app *model.AppState, conn *db.DBConn, loadLocal bool) {
 	// static files
 	http.Handle("/favicon.ico", http.HandlerFunc(FavIcon))
-	http.Handle("/script/", http.HandlerFunc(ServeFile))
+	if loadLocal {
+		http.Handle("/script/", http.HandlerFunc(ServeFile))
+	}
 	// TEMP
 	http.Handle("/gen2", ChainMiddleware(
 		http.HandlerFunc(Gen2),

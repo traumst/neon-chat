@@ -15,12 +15,13 @@ const SchemaAuth string = `
 	);
 	CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_user_id_type ON auth(user_id, type, hash);`
 
-func (db *DBConn) AddAuth(auth app.Auth) (*app.Auth, error) {
-	db.mu.Lock()
-	defer db.mu.Unlock()
+func (db *DBConn) AddAuth(auth app.UserAuth) (*app.UserAuth, error) {
 	if !db.IsActive() {
 		return nil, fmt.Errorf("db is not connected")
 	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
 	if auth.Id != 0 {
 		return nil, fmt.Errorf("auth already has an id[%d]", auth.Id)
 	} else if auth.UserId == 0 {
@@ -46,7 +47,7 @@ func (db *DBConn) AddAuth(auth app.Auth) (*app.Auth, error) {
 	return &auth, nil
 }
 
-func (db *DBConn) GetAuth(userid int, auth app.AuthType, hash int) (*app.Auth, error) {
+func (db *DBConn) GetAuth(userid uint, auth app.AuthType, hash uint) (*app.UserAuth, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	if !db.isConn {
@@ -56,7 +57,7 @@ func (db *DBConn) GetAuth(userid int, auth app.AuthType, hash int) (*app.Auth, e
 		return nil, fmt.Errorf("auth type is unknown")
 	}
 
-	var dbAuth app.Auth
+	var dbAuth app.UserAuth
 	err := db.conn.Get(&dbAuth, `SELECT * FROM auth WHERE user_id = ? AND type = ? and hash = ?`, userid, auth, hash)
 	if err != nil {
 		return nil, fmt.Errorf("error getting auth: %s", err)

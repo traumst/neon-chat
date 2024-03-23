@@ -1,4 +1,4 @@
 package utils
 
 const LetterBytes = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-const UsernameCookie = "username"
+const SessionCookie = "session"
