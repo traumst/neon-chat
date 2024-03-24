@@ -131,6 +131,9 @@ func (cl *ChatList) DeleteChat(userId uint, chat *Chat) error {
 	if !chat.isOwner(userId) {
 		return fmt.Errorf("user[%d] is not owner of chat %d", userId, chat.Id)
 	}
+	if chat.Id >= len(cl.chats) || chat.Id < 0 {
+		return fmt.Errorf("chat[%d] is out of range", chat.Id)
+	}
 	if cl.chats[chat.Id] == nil {
 		return fmt.Errorf("chat[%d] is NIL", chat.Id)
 	}

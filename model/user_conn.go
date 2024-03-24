@@ -37,7 +37,7 @@ func (uc *UserConn) IsConn(userId uint) (bool, *Conn) {
 func (uc *UserConn) Add(user *app.User, origin string, w http.ResponseWriter, r http.Request) *Conn {
 	mu.Lock()
 	defer mu.Unlock()
-	log.Printf("∞---%s---> UserConn.Add TRACE user[%s] added from %s\n", utils.GetReqId(&r), user, origin)
+	log.Printf("∞---%s---> UserConn.Add TRACE user[%d] added from conn[%s]\n", utils.GetReqId(&r), user.Id, origin)
 	id := len(*uc)
 	newConn := Conn{
 		ID:     id,
@@ -60,7 +60,7 @@ func (uc UserConn) Get(userId uint) (*Conn, error) {
 		return nil, fmt.Errorf("user[%d] not connected", userId)
 	}
 
-	log.Printf("∞--------> UserConn.Get TRACE user[%s] has %d conns[%v]\n", userId, len(conns), conns)
+	log.Printf("∞--------> UserConn.Get TRACE user[%d] has %d conns[%v]\n", userId, len(conns), conns)
 
 	var conn *Conn
 	for _, conn = range conns {

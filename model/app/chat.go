@@ -51,7 +51,7 @@ func (c *Chat) GetUsers(userId uint) ([]*User, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if !c.isUserInChat(userId) {
-		return nil, fmt.Errorf("user[%s] is not in chat[%d]", userId, c.Id)
+		return nil, fmt.Errorf("user[%d] is not in chat[%d]", userId, c.Id)
 	}
 	return c.users, nil
 }

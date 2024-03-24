@@ -43,7 +43,7 @@ func (state *AppState) LoadLocal() bool {
 func (state *AppState) ReplaceConn(w http.ResponseWriter, r http.Request, user *app.User) *Conn {
 	conn, err := state.GetConn(user.Id)
 	for err == nil && conn != nil {
-		log.Printf("∞---%s---> AppState.ReplaceConn WARN drop old conn to user[%s]\n", utils.GetReqId(&r), user)
+		log.Printf("∞---%s---> AppState.ReplaceConn WARN drop old conn to user[%d]\n", utils.GetReqId(&r), user.Id)
 		state.DropConn(conn)
 		conn, err = state.GetConn(user.Id)
 	}
@@ -60,7 +60,7 @@ func (state *AppState) addConn(w http.ResponseWriter, r http.Request, user *app.
 		state.userConn = make(UserConn, 0)
 	}
 
-	log.Printf("----%s---> AppState.AddConn TRACE add conn for user[%s]\n", utils.GetReqId(&r), user)
+	log.Printf("----%s---> AppState.AddConn TRACE add conn for user[%d]\n", utils.GetReqId(&r), user.Id)
 	return state.userConn.Add(user, utils.GetReqId(&r), w, r)
 }
 
@@ -76,8 +76,8 @@ func (state *AppState) DropConn(conn *Conn) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
-	log.Printf("----%s---> AppState.DropConn TRACE drop conn[%s][%s]\n",
-		conn.Origin, conn.Origin, conn.User)
+	log.Printf("----%s---> AppState.DropConn TRACE drop conn[%s] user[%d]\n",
+		conn.Origin, conn.Origin, conn.User.Id)
 	return state.userConn.Drop(conn)
 }
 
@@ -85,7 +85,7 @@ func (state *AppState) AddChat(user *app.User, chatName string) int {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
-	log.Printf("∞--------> AppState.AddChat TRACE add chat[%s] for user[%s]\n", user, chatName)
+	log.Printf("∞--------> AppState.AddChat TRACE add chat[%s] for user[%d]\n", chatName, user.Id)
 	chatID := state.chats.AddChat(user, chatName)
 	return chatID
 }
@@ -122,7 +122,8 @@ func (state *AppState) InviteUser(userId uint, chatId int, invitee *app.User) er
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
-	log.Printf("∞--------> AppState.InviteUser TRACE invite user[%s] chat[%d] by user[%d]\n", invitee, chatId, userId)
+	log.Printf("∞--------> AppState.InviteUser TRACE invite user[%d] chat[%d] by user[%d]\n",
+		invitee.Id, chatId, userId)
 	return state.chats.InviteUser(userId, chatId, invitee)
 }
 
