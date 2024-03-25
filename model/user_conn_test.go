@@ -50,7 +50,7 @@ func TestChannels(t *testing.T) {
 func TestIsConnEmpty(t *testing.T) {
 	t.Logf("TestIsConnEmpty started")
 	uc := make(UserConn, 0)
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.Free)}
+	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeFree)}
 	isConn, conn := uc.IsConn(user.Id)
 	if isConn {
 		t.Errorf("TestIsConnEmpty user was not supposed to be conn [%+v]", conn)
@@ -64,7 +64,7 @@ func TestIsConn(t *testing.T) {
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	w := httptest.NewRecorder()
 	uc := UserConn{}
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.Free)}
+	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeFree)}
 	uc.Add(&user, "test_origin", w, *r)
 	isConn, conn := uc.IsConn(user.Id)
 	if !isConn {
@@ -79,7 +79,7 @@ func TestAdd(t *testing.T) {
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	w := httptest.NewRecorder()
 	uc := UserConn{}
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.Free)}
+	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeFree)}
 	conn := uc.Add(&user, "test_origin", w, *r)
 	if conn == nil {
 		t.Errorf("TestAdd expected conn, got NIL")
@@ -91,7 +91,7 @@ func TestAdd(t *testing.T) {
 func TestGetEmpty(t *testing.T) {
 	t.Logf("TestGetEmpty started")
 	uc := UserConn{}
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.Free)}
+	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeFree)}
 	conn, err := uc.Get(user.Id)
 	if conn != nil {
 		t.Errorf("TestGetEmpty expected empty, got [%+v]", conn)
@@ -110,7 +110,7 @@ func TestGet(t *testing.T) {
 	utils.SetReqId(r, &reqId)
 	w := httptest.NewRecorder()
 	uc := UserConn{}
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.Free)}
+	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeFree)}
 	conn := uc.Add(&user, "test_origin", w, *r)
 	if conn == nil {
 		t.Errorf("TestGet expected conn, got NIL")
@@ -145,7 +145,7 @@ func TestDrop(t *testing.T) {
 	}
 	w := httptest.NewRecorder()
 	uc := make(UserConn, 0)
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.Free)}
+	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeFree)}
 	addedConn := uc.Add(&user, "test_origin", w, *r)
 	if addedConn == nil {
 		t.Errorf("failed to add conn")
@@ -171,17 +171,17 @@ func TestUserConns(t *testing.T) {
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	w := httptest.NewRecorder()
 	uc := UserConn{}
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.Free)}
+	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeFree)}
 	conn1 := uc.Add(&user, "test_origin_1", w, *r)
 	if conn1 == nil {
 		t.Errorf("TestUserConns expected conn1, got NIL")
 	}
-	user2 := app.User{Id: 2, Name: "Jill", Type: app.UserType(app.Free)}
+	user2 := app.User{Id: 2, Name: "Jill", Type: app.UserType(app.UserTypeFree)}
 	conn2 := uc.Add(&user2, "test_origin_2", w, *r)
 	if conn2 == nil {
 		t.Errorf("TestUserConns expected conn2, got NIL")
 	}
-	user3 := app.User{Id: 3, Name: "Bill", Type: app.UserType(app.Free)}
+	user3 := app.User{Id: 3, Name: "Bill", Type: app.UserType(app.UserTypeFree)}
 	conn3 := uc.Add(&user3, "test_origin_3", w, *r)
 	if conn3 == nil {
 		t.Errorf("TestUserConns expected conn3, got NIL")

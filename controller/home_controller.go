@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"go.chat/handler"
 	"go.chat/model"
 	"go.chat/model/template"
 	"go.chat/utils"
@@ -11,14 +12,9 @@ import (
 
 func Home(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Home", utils.GetReqId(r))
-	cookie, err := utils.GetSessionCookie(r)
+	user, err := handler.ReadSession(app, w, r)
 	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusUnauthorized)
-		return
-	}
-	user, err := app.GetUser(cookie.UserId)
-	if err != nil || user == nil {
-		log.Printf("--%s-> Home WARN user, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> Home INFO user is not authorized, %s\n", utils.GetReqId(r), err)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
@@ -31,12 +27,10 @@ func Home(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		log.Printf("--%s-> Home DEBUG, user[%d] has chat[%d] open\n", utils.GetReqId(r), user.Id, openChat.Id)
 		openChatTemplate = openChat.Template(user)
 	}
-
 	var chatTemplates []*template.ChatTemplate
 	for _, chat := range app.GetChats(user.Id) {
 		chatTemplates = append(chatTemplates, chat.Template(user))
 	}
-
 	home := template.HomeTemplate{
 		OpenTemplate: openChatTemplate,
 		Chats:        chatTemplates,
@@ -49,7 +43,6 @@ func Home(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
-
 	log.Printf("--%s-> Home TRACE, user[%d] gets content\n", utils.GetReqId(r), user.Id)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))

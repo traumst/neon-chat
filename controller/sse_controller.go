@@ -19,7 +19,7 @@ func PollUpdates(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	cookie, err := utils.GetSessionCookie(r)
 	if err != nil {
 		log.Printf("--%s-> DeleteUser WARN cookie\n", utils.GetReqId(r))
-		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
 	user, err := app.GetUser(cookie.UserId)

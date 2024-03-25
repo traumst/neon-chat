@@ -13,11 +13,10 @@ import (
 var ApplicationState AppState
 
 type AppState struct {
-	mu       sync.Mutex
-	isInit   bool
-	chats    app.ChatList
-	userConn UserConn
-	// TODO support
+	mu        sync.Mutex
+	isInit    bool
+	chats     app.ChatList
+	userConn  UserConn
 	users     []app.User
 	loadLocal bool
 }
@@ -161,6 +160,20 @@ func (state *AppState) GetOpenChat(userId uint) *app.Chat {
 
 	log.Printf("∞--------> AppState.GetOpenChat TRACE get open chat for user[%d]\n", userId)
 	return state.chats.GetOpenChat(userId)
+}
+
+func (state *AppState) TrackUser(user *app.User) error {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.TrackUser TRACE track user[%d]\n", user.Id)
+	for _, u := range state.users {
+		if u.Id == user.Id {
+			return fmt.Errorf("user[%d] already tracked", user.Id)
+		}
+	}
+	state.users = append(state.users, *user)
+	return nil
 }
 
 func (state *AppState) GetUser(userId uint) (*app.User, error) {

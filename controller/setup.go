@@ -69,7 +69,7 @@ func Setup(app *model.AppState, conn *db.DBConn, loadLocal bool) {
 		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	http.Handle("/logout", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			Logout(app, conn, w, r)
+			Logout(w, r)
 		}),
 		[]Middleware{LoggerMiddleware, ReqIdMiddleware}))
 	// chat

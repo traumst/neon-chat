@@ -7,173 +7,105 @@ import (
 	"time"
 
 	"go.chat/db"
+	"go.chat/handler"
 	"go.chat/model"
-	"go.chat/model/app"
+	a "go.chat/model/app"
 	"go.chat/utils"
 )
 
 func Login(app *model.AppState, conn *db.DBConn, w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> Login\n", utils.GetReqId(r))
+	log.Printf("--%s-> Login TRACE IN\n", utils.GetReqId(r))
+	cookie, _ := utils.GetSessionCookie(r)
+	if cookie != nil {
+		user, _ := app.GetUser(cookie.UserId)
+		if user != nil {
+			log.Printf("--%s-> Login WARN user[%d] is already logged in, redirected\n", utils.GetReqId(r), cookie.UserId)
+			http.Redirect(w, r, "/", http.StatusPermanentRedirect)
+			return
+		}
+		utils.ClearSessionCookie(w)
+	}
 	switch r.Method {
 	case "GET":
 		renderLogin(w, r)
 	case "POST":
-		signIn(w, r, conn)
+		signIn(app, conn, w, r)
 	case "PUT":
-		signUp(w, r, conn)
+		signUp(app, conn, w, r)
 	default:
 		http.Redirect(w, r, "/", http.StatusBadRequest)
 	}
 }
 
-func Logout(app *model.AppState, conn *db.DBConn, w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> Logout\n", utils.GetReqId(r))
+func Logout(w http.ResponseWriter, r *http.Request) {
+	log.Printf("--%s-> Logout TRACE \n", utils.GetReqId(r))
 	utils.ClearSessionCookie(w)
-	http.Redirect(w, r, "/login", http.StatusFound)
+	http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 }
 
 func renderLogin(w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> renderLogin\n", utils.GetReqId(r))
-	cookie, err := utils.GetSessionCookie(r)
-	if err == nil && cookie != nil {
-		log.Printf("--%s-> renderLogin TRACE user already has cookie, redirecting to HOME\n", utils.GetReqId(r))
-		http.Redirect(w, r, "/", http.StatusFound)
-		return
-	}
 	loginTmpl, _ := template.ParseFiles("html/login_page.html")
+	w.WriteHeader(http.StatusOK)
 	loginTmpl.Execute(w, nil)
 }
 
-func signIn(w http.ResponseWriter, r *http.Request, conn *db.DBConn) {
-	log.Printf("--%s-> signIn\n", utils.GetReqId(r))
-	cookie, err := utils.GetSessionCookie(r)
-	if err == nil && cookie != nil {
-		log.Printf("--%s-> signIn TRACE user already has cookie, redirecting to HOME\n", utils.GetReqId(r))
-		http.Redirect(w, r, "/", http.StatusFound)
-		return
-	}
-	username := r.FormValue("user")
-	if username == "" {
+func signIn(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
+	log.Printf("--%s-> signIn TRACE IN\n", utils.GetReqId(r))
+	u := r.FormValue("user")
+	if u == "" {
 		log.Printf("--%s-> signIn ERROR user\n", utils.GetReqId(r))
 		http.Error(w, "Invalid username", http.StatusBadRequest)
 		return
 	}
-	pass := r.FormValue("pass")
-	if pass == "" {
+	p := r.FormValue("pass")
+	if p == "" {
 		log.Printf("--%s-> signIn ERROR pass\n", utils.GetReqId(r))
 		http.Error(w, "Invalid password", http.StatusBadRequest)
 		return
 	}
-	user, err := conn.GetUser(username)
+	// TODO consider other auth types
+	user, auth, err := handler.Authenticate(db, u, p, a.AuthTypeLocal)
 	if err != nil {
-		log.Printf("--%s-> signIn ERROR on user[%s], %s\n", utils.GetReqId(r), username, err.Error())
-		// TODO do not redirect
-		http.Error(w, "Invalid username", http.StatusNotFound)
-		return
-	}
-	hash, err := utils.HashPassword(pass, user.Salt)
-	if err != nil {
-		log.Printf("--%s-> signIn ERROR on hashing[%s], %s\n", utils.GetReqId(r), username, err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	auth, err := conn.GetAuth(user.Id, app.AuthTypeLocal, *hash)
-	if err != nil {
-		log.Printf("--%s-> signIn ERROR name is already taken [%s]\n", utils.GetReqId(r), username)
+		log.Printf("--%s-> signIn ERROR on authenticate[%s], %s\n", utils.GetReqId(r), u, err)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-
+	_ = app.TrackUser(user)
 	utils.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
 	http.Redirect(w, r, "/", http.StatusFound)
+	log.Printf("<-%s-- signIn TRACE OUT\n", utils.GetReqId(r))
 }
 
-func signUp(w http.ResponseWriter, r *http.Request, conn *db.DBConn) {
-	log.Printf("--%s-> signUp\n", utils.GetReqId(r))
-	cookie, err := utils.GetSessionCookie(r)
-	if err == nil && cookie != nil {
-		log.Printf("--%s-> signUp TRACE user already has cookie, redirecting to HOME\n", utils.GetReqId(r))
-		http.Redirect(w, r, "/", http.StatusFound)
-		return
-	}
-	username := r.FormValue("user")
-	if username == "" {
+func signUp(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
+	log.Printf("--%s-> signUp TRACE IN\n", utils.GetReqId(r))
+	u := r.FormValue("user")
+	if u == "" {
 		log.Printf("--%s-> signUp ERROR user\n", utils.GetReqId(r))
-		http.Redirect(w, r, "/login", http.StatusBadRequest)
+		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
-	log.Printf("--%s-> signUp 2\n", utils.GetReqId(r))
-	pass := r.FormValue("pass")
-	if pass == "" {
+	p := r.FormValue("pass")
+	if p == "" {
 		log.Printf("--%s-> signUp ERROR pass\n", utils.GetReqId(r))
-		http.Redirect(w, r, "/login", http.StatusBadRequest)
+		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
-	log.Printf("--%s-> signUp 3\n", utils.GetReqId(r))
-	user, _ := conn.GetUser(username)
-	if user != nil {
-		// check if user completed signup
-		log.Printf("--%s-> signUp 4\n", utils.GetReqId(r))
-		hash, err := utils.HashPassword(pass, user.Salt)
-		if err != nil {
-			log.Printf("--%s-> signUp ERROR on hashing[%s], %s\n", utils.GetReqId(r), username, err.Error())
-			http.Redirect(w, r, "/login", http.StatusInternalServerError)
-			return
-		}
-		log.Printf("--%s-> signUp 5\n", utils.GetReqId(r))
-		auth, _ := conn.GetAuth(user.Id, app.AuthTypeLocal, *hash)
-		if auth != nil {
-			log.Printf("--%s-> signUp ERROR name is already taken [%s]\n", utils.GetReqId(r), username)
-			http.Redirect(w, r, "/login", http.StatusBadRequest)
-			return
-		}
+	// TODO consider other auth types
+	user, auth, _ := handler.Authenticate(db, u, p, a.AuthTypeLocal)
+	if user != nil && auth != nil {
+		log.Printf("--%s-> signUp WARN user[%s] already has auth[%s]\n", utils.GetReqId(r), u, a.AuthTypeLocal)
+		http.Redirect(w, r, "/", http.StatusOK)
+		return
 	}
-	log.Printf("--%s-> signUp 6\n", utils.GetReqId(r))
-	// TODO better salt
-	salt := []byte(utils.RandStringBytes(16))
-	hash, err := utils.HashPassword(pass, salt)
+	user, auth, err := handler.Register(db, u, p, a.AuthTypeLocal)
 	if err != nil {
-		log.Printf("--%s-> signUp ERROR on hash[%s], %s\n", utils.GetReqId(r), username, err.Error())
-		http.Redirect(w, r, "/login", http.StatusInternalServerError)
+		log.Printf("--%s-> signUp ERROR on register user[%s], %s\n", utils.GetReqId(r), u, err)
+		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
-
-	log.Printf("--%s-> signUp 7\n", utils.GetReqId(r))
-	user, err = conn.AddUser(app.User{
-		Id:   0,
-		Name: username,
-		Type: app.Free,
-		Salt: salt,
-	})
-	if err != nil || user == nil {
-		log.Printf("--%s-> signUp ERROR on user[%s], %s\n", utils.GetReqId(r), username, err.Error())
-		http.Redirect(w, r, "/login", http.StatusInternalServerError)
-		return
-	}
-	if user.Id == 0 {
-		log.Printf("--%s-> signUp ERROR user.Id is 0\n", utils.GetReqId(r))
-		http.Redirect(w, r, "/login", http.StatusInternalServerError)
-		return
-	}
-	log.Printf("--%s-> signUp 8\n", utils.GetReqId(r))
-	auth, err := conn.AddAuth(app.UserAuth{
-		Id:     0,
-		UserId: user.Id,
-		Type:   app.AuthTypeLocal,
-		Hash:   *hash,
-	})
-	if err != nil || auth == nil {
-		log.Printf("--%s-> signUp ERROR on auth[%s], %s\n", utils.GetReqId(r), username, err.Error())
-		http.Redirect(w, r, "/login", http.StatusInternalServerError)
-		return
-	}
-	if auth.Id == 0 {
-		log.Printf("--%s-> signUp ERROR auth.Id is 0\n", utils.GetReqId(r))
-		http.Redirect(w, r, "/login", http.StatusInternalServerError)
-		return
-	}
-
-	log.Printf("--%s-> signUp 8\n", utils.GetReqId(r))
+	_ = app.TrackUser(user)
 	utils.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
 	http.Redirect(w, r, "/", http.StatusFound)
+	log.Printf("--%s-> signUp TRACE OUT\n", utils.GetReqId(r))
 }

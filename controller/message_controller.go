@@ -16,12 +16,12 @@ func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> AddMessage TRACE\n", utils.GetReqId(r))
 	cookie, err := utils.GetSessionCookie(r)
 	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
 	author, err := app.GetUser(cookie.UserId)
 	if err != nil || author == nil {
-		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
 	if r.Method != "POST" {
@@ -85,12 +85,12 @@ func DeleteMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) 
 	log.Printf("--%s-> DeleteMessage\n", reqId)
 	cookie, err := utils.GetSessionCookie(r)
 	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
 	author, err := app.GetUser(cookie.UserId)
 	if err != nil || author == nil {
-		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
 	if r.Method != "POST" {

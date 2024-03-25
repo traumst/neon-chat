@@ -17,7 +17,7 @@ func ServeFile(w http.ResponseWriter, r *http.Request) {
 	_, err := utils.GetSessionCookie(r)
 	if err != nil {
 		log.Printf("--%s-> DeleteUser WARN cookie\n", utils.GetReqId(r))
-		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
 	path := utils.ParseUrlPath(r)

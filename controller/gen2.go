@@ -14,7 +14,7 @@ func Gen2(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Gen2", utils.GetReqId(r))
 	cookie, err := utils.GetSessionCookie(r)
 	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
 	user, err := app.GetUser(cookie.UserId)
