@@ -13,6 +13,11 @@ import (
 	"go.chat/utils"
 )
 
+const (
+	// TODO provide authType as form input
+	authType = a.AuthTypeLocal
+)
+
 func Login(app *model.AppState, conn *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Login TRACE IN\n", utils.GetReqId(r))
 	cookie, _ := utils.GetSessionCookie(r)
@@ -53,19 +58,12 @@ func renderLogin(w http.ResponseWriter, r *http.Request) {
 func signIn(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> signIn TRACE IN\n", utils.GetReqId(r))
 	u := r.FormValue("user")
-	if u == "" {
-		log.Printf("--%s-> signIn ERROR user\n", utils.GetReqId(r))
-		http.Error(w, "Invalid username", http.StatusBadRequest)
-		return
-	}
 	p := r.FormValue("pass")
-	if p == "" {
-		log.Printf("--%s-> signIn ERROR pass\n", utils.GetReqId(r))
-		http.Error(w, "Invalid password", http.StatusBadRequest)
+	if u == "" || p == "" {
+		renderLogin(w, r)
 		return
 	}
-	// TODO consider other auth types
-	user, auth, err := handler.Authenticate(db, u, p, a.AuthTypeLocal)
+	user, auth, err := handler.Authenticate(db, u, p, authType)
 	if err != nil {
 		log.Printf("--%s-> signIn ERROR on authenticate[%s], %s\n", utils.GetReqId(r), u, err)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -79,28 +77,31 @@ func signIn(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.R
 
 func signUp(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> signUp TRACE IN\n", utils.GetReqId(r))
-	username := r.FormValue("user")
-	if username == "" {
-		log.Printf("--%s-> signUp ERROR user\n", utils.GetReqId(r))
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+	u := r.FormValue("user")
+	p := r.FormValue("pass")
+	if u == "" || p == "" {
+		renderLogin(w, r)
 		return
 	}
-	pass := r.FormValue("pass")
-	if pass == "" {
-		log.Printf("--%s-> signUp ERROR pass\n", utils.GetReqId(r))
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
-		return
-	}
-	// TODO consider other auth types
-	user, auth, _ := handler.Authenticate(db, username, pass, a.AuthTypeLocal)
+	log.Printf("--%s-> signUp TRACE authentication check...\n", utils.GetReqId(r))
+	user, auth, _ := handler.Authenticate(db, u, p, authType)
 	if user != nil && auth != nil {
-		log.Printf("--%s-> signUp WARN user[%s] already has auth[%s]\n", utils.GetReqId(r), username, a.AuthTypeLocal)
-		http.Redirect(w, r, "/", http.StatusOK)
+		log.Printf("--%s-> signUp INFO authenticated user[%s] on auth[%s]\n",
+			utils.GetReqId(r), user.Name, auth.Type)
+		utils.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
+		http.Redirect(w, r, "/", http.StatusPermanentRedirect)
 		return
+	} else if user != nil {
+		log.Printf("--%s-> signUp INFO user[%v] is still partial\n", utils.GetReqId(r), user)
+		user = &a.User{Name: u, Type: a.UserTypeFree}
+	} else {
+		log.Printf("--%s-> signUp INFO user[%s] has no auth\n", utils.GetReqId(r), u)
+		user = &a.User{Name: u, Type: a.UserTypeFree}
 	}
-	user, auth, err := handler.Register(db, user, pass)
+	log.Printf("--%s-> signUp TRACE registrastion for user[%v]\n", utils.GetReqId(r), user)
+	user, auth, err := handler.Register(db, user, u, authType)
 	if err != nil {
-		log.Printf("--%s-> signUp ERROR on register user[%s], %s\n", utils.GetReqId(r), username, err)
+		log.Printf("--%s-> signUp ERROR on register user[%v], %s\n", utils.GetReqId(r), user, err)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}

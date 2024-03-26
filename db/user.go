@@ -15,7 +15,7 @@ const SchemaUser string = `
 	);
 	CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name ON users(name);`
 
-func (db *DBConn) AddUser(user app.User) (*app.User, error) {
+func (db *DBConn) AddUser(user *app.User) (*app.User, error) {
 	if !db.IsActive() {
 		return nil, fmt.Errorf("db is not connected")
 	}
@@ -44,7 +44,7 @@ func (db *DBConn) AddUser(user app.User) (*app.User, error) {
 	}
 
 	user.Id = uint(lastID)
-	return &user, nil
+	return user, nil
 }
 
 func (db *DBConn) GetUser(name string) (*app.User, error) {

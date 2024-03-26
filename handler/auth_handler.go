@@ -63,18 +63,30 @@ func Authenticate(
 	return user, auth, nil
 }
 
+// Register creates a new user and its auth
+// if user exists without auth - will only create the auth
 func Register(
 	db *db.DBConn,
-	user *a.User,
+	u *a.User,
 	pass string,
+	authType a.AuthType,
 ) (*a.User, *a.UserAuth, error) {
+	log.Printf("-----> Register TRACE user[%v]\n", u)
+	if db == nil || u == nil {
+		return nil, nil, fmt.Errorf("missing mandatory args user[%v] db[%v]", u, db)
+	}
 	// TODO think: forces to change salt when switching user.type
-	salt := fmt.Sprintf("%s-%s_%s", user.Name, utils.RandStringBytes(16), user.Type)
+	seed := fmt.Sprintf("%s-%s", u.Name, u.Type)
+	compl64 := utils.RandStringBytes(63 - len(seed))
+	salt := fmt.Sprintf("%s;%s", seed, compl64)
 	saltBytes := []byte(salt)
-	if user.Id == 0 {
-		user, err := db.AddUser(a.User{
+	var user *a.User
+	var err error
+	if u.Id == 0 {
+		log.Printf("-----> Register TRACE creating user[%v]\n", u)
+		user, err = db.AddUser(&a.User{
 			Id:   0,
-			Name: user.Name,
+			Name: u.Name,
 			Type: a.UserTypeFree,
 			Salt: saltBytes,
 		})
@@ -93,14 +105,14 @@ func Register(
 	auth, err := db.AddAuth(a.UserAuth{
 		Id:     0,
 		UserId: user.Id,
-		Type:   a.AuthTypeLocal,
+		Type:   authType,
 		Hash:   *hash,
 	})
 	if err != nil || auth == nil {
-		return nil, nil, fmt.Errorf("fail to add auth to user[%d][%s], %s", user.Id, user.Name, err)
+		return nil, nil, fmt.Errorf("fail to add auth to user[%d][%s], %s", u.Id, u.Name, err)
 	}
 	if auth.Id == 0 {
-		return nil, nil, fmt.Errorf("user[%d][%s] auth was not created", user.Id, user.Name)
+		return nil, nil, fmt.Errorf("user[%d][%s] auth was not created", u.Id, u.Name)
 	}
 	return user, auth, nil
 }
