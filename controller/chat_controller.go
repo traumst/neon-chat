@@ -300,13 +300,13 @@ func CloseChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 	cookie, err := utils.GetSessionCookie(r)
 	if err != nil {
-		log.Printf("--%s-> DeleteUser WARN cookie\n", reqId)
+		log.Printf("--%s-> CloseChat WARN cookie\n", reqId)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
 	user, err := app.GetUser(cookie.UserId)
 	if err != nil || user == nil {
-		log.Printf("--%s-> DeleteUser WARN user, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> CloseChat WARN user, %s\n", utils.GetReqId(r), err)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
@@ -350,13 +350,13 @@ func LeaveChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> LeaveChat TRACE check login\n", reqId)
 	cookie, err := utils.GetSessionCookie(r)
 	if err != nil {
-		log.Printf("--%s-> DeleteUser WARN cookie\n", reqId)
+		log.Printf("--%s-> LeaveChat WARN cookie\n", reqId)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
 	user, err := app.GetUser(cookie.UserId)
 	if err != nil || user == nil {
-		log.Printf("--%s-> DeleteUser WARN user, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> LeaveChat WARN user, %s\n", utils.GetReqId(r), err)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
@@ -421,13 +421,13 @@ func DeleteChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 	cookie, err := utils.GetSessionCookie(r)
 	if err != nil {
-		log.Printf("--%s-> DeleteUser WARN cookie\n", reqId)
+		log.Printf("--%s-> DeleteChat WARN cookie\n", reqId)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
 	user, err := app.GetUser(cookie.UserId)
 	if err != nil || user == nil {
-		log.Printf("--%s-> DeleteUser WARN user, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> DeleteChat WARN user, %s\n", utils.GetReqId(r), err)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
@@ -454,7 +454,7 @@ func DeleteChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		log.Printf("<-%s-- DeleteChat TRACE user[%d] deletes chat[%d]\n", reqId, user.Id, chat.Id)
+		log.Printf("<-%s-- DeleteChat TRACE distributes user[%d] deletes chat[%d]\n", reqId, user.Id, chat.Id)
 		err = handler.DistributeChat(app, chat, user, nil, nil, e.ChatClose)
 		if err != nil {
 			log.Printf("<-%s-- DeleteChat ERROR cannot distribute chat close, %s\n", reqId, err)
@@ -466,12 +466,12 @@ func DeleteChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}()
-	go func() {
+	go func(chatId int, userId uint) {
 		defer wg.Done()
-		log.Printf("<-%s-- DeleteUser TRACE user[%d] deletes chat[%d]\n", reqId, user.Id, chat.Id)
+		log.Printf("<-%s-- DeleteChat TRACE user[%d] deletes chat[%d]\n", reqId, userId, chatId)
 		w.WriteHeader(http.StatusAccepted)
 		w.Write([]byte("[DELETED_C]"))
-	}()
+	}(chat.Id, user.Id)
 	wg.Wait()
 
 	// TODO this needs to move and add recovery

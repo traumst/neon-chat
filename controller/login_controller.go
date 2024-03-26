@@ -40,7 +40,7 @@ func Login(app *model.AppState, conn *db.DBConn, w http.ResponseWriter, r *http.
 func Logout(w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Logout TRACE \n", utils.GetReqId(r))
 	utils.ClearSessionCookie(w)
-	http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+	http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 }
 
 func renderLogin(w http.ResponseWriter, r *http.Request) {
@@ -79,28 +79,28 @@ func signIn(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.R
 
 func signUp(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> signUp TRACE IN\n", utils.GetReqId(r))
-	u := r.FormValue("user")
-	if u == "" {
+	username := r.FormValue("user")
+	if username == "" {
 		log.Printf("--%s-> signUp ERROR user\n", utils.GetReqId(r))
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
-	p := r.FormValue("pass")
-	if p == "" {
+	pass := r.FormValue("pass")
+	if pass == "" {
 		log.Printf("--%s-> signUp ERROR pass\n", utils.GetReqId(r))
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
 	// TODO consider other auth types
-	user, auth, _ := handler.Authenticate(db, u, p, a.AuthTypeLocal)
+	user, auth, _ := handler.Authenticate(db, username, pass, a.AuthTypeLocal)
 	if user != nil && auth != nil {
-		log.Printf("--%s-> signUp WARN user[%s] already has auth[%s]\n", utils.GetReqId(r), u, a.AuthTypeLocal)
+		log.Printf("--%s-> signUp WARN user[%s] already has auth[%s]\n", utils.GetReqId(r), username, a.AuthTypeLocal)
 		http.Redirect(w, r, "/", http.StatusOK)
 		return
 	}
-	user, auth, err := handler.Register(db, u, p, a.AuthTypeLocal)
+	user, auth, err := handler.Register(db, user, pass)
 	if err != nil {
-		log.Printf("--%s-> signUp ERROR on register user[%s], %s\n", utils.GetReqId(r), u, err)
+		log.Printf("--%s-> signUp ERROR on register user[%s], %s\n", utils.GetReqId(r), username, err)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}

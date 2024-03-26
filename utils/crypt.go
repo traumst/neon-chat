@@ -2,7 +2,9 @@ package utils
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
+	"encoding/binary"
+	"fmt"
+	"strconv"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -19,11 +21,24 @@ func HashPassword(password string, salt []byte) (*uint, error) {
 	if err != nil {
 		return nil, err
 	}
-	hashed := sha256.Sum256(bytes)
-	var result uint = 0
-	for i, b := range hashed {
-		shift := uint(i) % 8
-		result = result + uint(b)<<shift
+	var hash uint
+	if strconv.IntSize == 64 {
+		fold := Fold(bytes)
+		hash = uint(binary.BigEndian.Uint64(fold[:]))
+	} else {
+		return nil, fmt.Errorf("strconv.IntSize expected to be 64, but is [%d]", strconv.IntSize)
 	}
-	return &result, nil
+	return &hash, nil
+}
+
+func Fold(bytes []byte) [8]byte {
+	var fold [8]byte
+	for i := 0; i < len(bytes); i += 8 {
+		for j := 0; j < 8; j++ {
+			if i+j < len(bytes) {
+				fold[j] ^= bytes[i+j]
+			}
+		}
+	}
+	return fold
 }

@@ -49,54 +49,58 @@ func Authenticate(
 ) (*a.User, *a.UserAuth, error) {
 	user, err := db.GetUser(username)
 	if err != nil {
-		return nil, nil, fmt.Errorf("username is already taken user[%s], %s", username, err)
+		return nil, nil, fmt.Errorf("user[%s] not found, %s", username, err)
 	}
 	hash, err := utils.HashPassword(pass, user.Salt)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed on hashing pass for user[%s], %s", username, err)
+		return user, nil, fmt.Errorf("failed on hashing pass for user[%s], %s", username, err)
 	}
+	log.Printf("-----> Authenticate TRACE user[%d] auth[%s] hash[%d]\n", user.Id, authType, *hash)
 	auth, err := db.GetAuth(user.Id, authType, *hash)
 	if err != nil {
-		return nil, nil, fmt.Errorf("no auth for user[%s], %s", username, err)
+		return user, nil, fmt.Errorf("no auth for user[%s] hash[%d], %s", username, hash, err)
 	}
 	return user, auth, nil
 }
 
 func Register(
 	db *db.DBConn,
-	username string,
+	user *a.User,
 	pass string,
-	authType a.AuthType,
 ) (*a.User, *a.UserAuth, error) {
-	// TODO better salt
-	salt := []byte(utils.RandStringBytes(16))
-	user, err := db.AddUser(a.User{
-		Id:   0,
-		Name: username,
-		Type: a.UserTypeFree,
-		Salt: salt,
-	})
-	if err != nil || user == nil {
-		return nil, nil, fmt.Errorf("failed to add user, %s", err)
-	}
+	// TODO think: forces to change salt when switching user.type
+	salt := fmt.Sprintf("%s-%s_%s", user.Name, utils.RandStringBytes(16), user.Type)
+	saltBytes := []byte(salt)
 	if user.Id == 0 {
-		return nil, nil, fmt.Errorf("user[%s] was not created", username)
+		user, err := db.AddUser(a.User{
+			Id:   0,
+			Name: user.Name,
+			Type: a.UserTypeFree,
+			Salt: saltBytes,
+		})
+		if err != nil || user == nil {
+			return nil, nil, fmt.Errorf("failed to add user, %s", err)
+		}
+		if user.Id == 0 {
+			return nil, nil, fmt.Errorf("user[%s] was not created", user.Name)
+		}
 	}
-	hash, err := utils.HashPassword(pass, salt)
+	// TODO we may be in a partial state if we added user, but failed on auth
+	hash, err := utils.HashPassword(pass, saltBytes)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error hashing pass, %s", err)
 	}
 	auth, err := db.AddAuth(a.UserAuth{
 		Id:     0,
 		UserId: user.Id,
-		Type:   authType,
+		Type:   a.AuthTypeLocal,
 		Hash:   *hash,
 	})
 	if err != nil || auth == nil {
-		return nil, nil, fmt.Errorf("faild to add auth, %s", err)
+		return nil, nil, fmt.Errorf("fail to add auth to user[%d][%s], %s", user.Id, user.Name, err)
 	}
 	if auth.Id == 0 {
-		return nil, nil, fmt.Errorf("user[%s] auth was not created", username)
+		return nil, nil, fmt.Errorf("user[%d][%s] auth was not created", user.Id, user.Name)
 	}
 	return user, auth, nil
 }
