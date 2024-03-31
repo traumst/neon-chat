@@ -170,12 +170,13 @@ func (state *AppState) TrackUser(user *app.User) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
-	log.Printf("∞--------> AppState.TrackUser TRACE track user[%d]\n", user.Id)
 	for _, u := range state.users {
 		if u.Id == user.Id {
-			return fmt.Errorf("user[%d] already tracked", user.Id)
+			log.Printf("∞--------> AppState.TrackUser TRACE user[%d] already tracked", user.Id)
+			return nil
 		}
 	}
+	log.Printf("∞--------> AppState.TrackUser TRACE will track user[%d]\n", user.Id)
 	state.users = append(state.users, *user)
 	return nil
 }

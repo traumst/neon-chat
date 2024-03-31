@@ -12,6 +12,8 @@ This app is being build as an excercise for me to
 
 ### *Right now...*
 
+Leaving chat should update users in chat
+
 It's time to start sanitizing raw user input.
 Def break the chat: ' "
 

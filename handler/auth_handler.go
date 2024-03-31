@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"net/http"
@@ -42,7 +40,9 @@ func ReadSession(
 		}
 	}()
 	wg.Wait()
-	log.Printf("--%s-> ReadSession TRACE session user[%v], err[%s]\n", utils.GetReqId(r), user, err)
+	if err != nil {
+		return nil, err
+	}
 	return user, err
 }
 
@@ -57,7 +57,7 @@ func Authenticate(
 	}
 	user, err := db.GetUser(username)
 	if err != nil || user == nil || user.Id == 0 || len(user.Salt) == 0 {
-		log.Printf("-----> Authenticate TRACE user[%v][%s] not found, %s\n", user, username, err)
+		log.Printf("-----> Authenticate TRACE user[%s] not found, %s\n", username, err)
 		return nil, nil, fmt.Errorf("user[%s] not found, %s", username, err)
 	}
 	hash, err := utils.HashPassword(pass, user.Salt)
@@ -87,31 +87,26 @@ func Register(
 	}
 	// TODO sterilize user input
 	if u.Name == "" || pass == "" || u.Salt == "" {
-		return nil, nil, fmt.Errorf("invalid args user[%s] pass[%s] salt[%s]", u.Name, pass, u.Salt)
+		return nil, nil, fmt.Errorf("invalid args user[%s] salt[%s]", u.Name, u.Salt)
 	}
 	var user *a.User
-	if u.Id == 0 {
-		user, err := createUser(db, u)
+	var err error
+	if u.Id != 0 {
+		user = u
+	} else {
+		user, err = createUser(db, u)
 		if err != nil || user == nil {
 			return nil, nil, fmt.Errorf("failed to create user[%v], %s", u, err)
+		} else {
+			log.Printf("-----> Register TRACE user[%s] created\n", user.Name)
 		}
-	} else {
-		user = u
 	}
 	auth, err := createAuth(db, user, pass, authType)
 	if err != nil || auth == nil {
 		return nil, nil, fmt.Errorf("failed to create auth[%s] for user[%v], %s", authType, user, err)
 	}
+	log.Printf("-----> Register TRACE user[%v] auth[%v] created\n", user, auth)
 	return user, auth, nil
-}
-
-func GenerateSalt(userName string, userType a.UserType) string {
-	// TODO think: type forces salt change when switching user.type
-	seed := fmt.Sprintf("%s-%s", userType, userName)
-	saltPlain := fmt.Sprintf("%s;%s", utils.RandStringBytes(7), seed)
-	salt := sha256.Sum256([]byte(saltPlain))
-	saltHex := hex.EncodeToString(salt[:])
-	return saltHex
 }
 
 func createUser(db *db.DBConn, user *a.User) (*a.User, error) {
@@ -120,24 +115,18 @@ func createUser(db *db.DBConn, user *a.User) (*a.User, error) {
 		return user, nil
 	}
 	log.Printf("-----> createUser TRACE creating user[%s]\n", user.Name)
-	var err error
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		user, err = db.AddUser(user)
-	}()
-	wg.Wait()
-	if err != nil || user == nil {
-		return nil, fmt.Errorf("failed to add user[%v], %s", user, err)
+	created, err := db.AddUser(user)
+	if err != nil || created == nil {
+		return nil, fmt.Errorf("failed to add user[%v], %s", created, err)
 	}
-	if user.Id == 0 {
-		return nil, fmt.Errorf("user[%s] was not created", user.Name)
+	if created.Id == 0 {
+		return nil, fmt.Errorf("user[%s] was not created", created.Name)
 	}
-	return user, err
+	return created, err
 }
 
 func createAuth(db *db.DBConn, user *a.User, pass string, authType a.AuthType) (*a.UserAuth, error) {
+	log.Printf("-----> createAuth TRACE IN user[%v] auth[%s]\n", user, authType)
 	hash, err := utils.HashPassword(pass, user.Salt)
 	if err != nil {
 		return nil, fmt.Errorf("error hashing pass, %s", err)

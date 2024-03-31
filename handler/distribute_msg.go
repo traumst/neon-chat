@@ -68,7 +68,7 @@ func distributeMsgToUser(
 	log.Printf("∞----> distributeMsgToUser TRACE user[%d] chat[%d] event[%v]\n", userId, chatId, event)
 	openChat := state.GetOpenChat(userId)
 	if openChat == nil {
-		return fmt.Errorf("user[%d] has no open chat", userId)
+		return fmt.Errorf("user[%d] has no open chat to distribute", userId)
 	}
 	if openChat.Id != chatId {
 		return fmt.Errorf("user[%d] has open chat[%d] different from message chat[%d]", userId, openChat.Id, chatId)

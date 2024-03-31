@@ -95,6 +95,7 @@ func signUp(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.R
 		utils.GetReqId(r), u, authType)
 	user, auth, err := handler.Authenticate(db, u, p, authType)
 	if user != nil && auth != nil {
+		log.Printf("--%s-> signUp TRACE signedIn instead of signUp user[%s], %s\n", utils.GetReqId(r), u, err)
 		err := app.TrackUser(user)
 		if err != nil {
 			log.Printf("--%s-> signUp ERROR on track user[%d][%s], %s\n", utils.GetReqId(r), user.Id, user.Name, err)
@@ -102,22 +103,26 @@ func signUp(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.R
 		utils.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
-	} else if user != nil {
-		log.Printf("--%s-> signUp TRACE completing user[%s], %s\n", utils.GetReqId(r), u, err)
-	} else {
-		log.Printf("--%s-> signUp TRACE register new user[%s], %s\n", utils.GetReqId(r), u, err)
-		user = &a.User{
-			Name: u,
-			Type: a.UserTypeFree,
-			Salt: handler.GenerateSalt(u, a.UserTypeFree),
-		}
 	}
-	if user.Salt == "" {
-		panic("user salt is empty")
+	if user != nil {
+		log.Printf("--%s-> signUp ERROR user[%s] already taken by user[%d], %s\n",
+			utils.GetReqId(r), user.Name, user.Id, err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Operation failed"))
+		return
+	}
+
+	log.Printf("--%s-> signUp TRACE register new user[%s], %s\n", utils.GetReqId(r), u, err)
+	salt := utils.GenerateSalt(u, string(a.UserTypeFree))
+	user = &a.User{
+		Name: u,
+		Type: a.UserTypeFree,
+		Salt: salt,
 	}
 	user, auth, err = handler.Register(db, user, p, authType)
-	if err != nil {
+	if err != nil || user == nil || auth == nil {
 		log.Printf("--%s-> signUp ERROR on register user[%v], %s\n", utils.GetReqId(r), user, err)
+		// TODO handler.Delete(db, user)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Operation failed"))
 		return
