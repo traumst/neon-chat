@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -17,11 +18,16 @@ type Session struct {
 }
 
 func (s Session) String() string {
-	return fmt.Sprintf("%d:%s:%s:%s", s.UserId, s.UserType, RandStringBytes(9), s.AuthType)
+	cookie := fmt.Sprintf("%d:%s:%s:%s", s.UserId, s.UserType, RandStringBytes(9), s.AuthType)
+	return base64.StdEncoding.EncodeToString([]byte(cookie))
 }
 
 func fromString(s string) (*Session, error) {
-	ss := strings.Split(s, ":")
+	decoded, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		return nil, fmt.Errorf("invalid session, %s", err)
+	}
+	ss := strings.Split(string(decoded), ":")
 	if len(ss) != 4 {
 		return nil, fmt.Errorf("invalid session")
 	}

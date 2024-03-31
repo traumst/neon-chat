@@ -16,13 +16,7 @@ func PollUpdates(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	cookie, err := utils.GetSessionCookie(r)
-	if err != nil {
-		log.Printf("--%s-> DeleteUser WARN cookie\n", utils.GetReqId(r))
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
-		return
-	}
-	user, err := app.GetUser(cookie.UserId)
+	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("--%s-> DeleteUser WARN user, %s\n", utils.GetReqId(r), err)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)

@@ -16,7 +16,8 @@ func ServeFile(w http.ResponseWriter, r *http.Request) {
 	//log.Printf("--%s-> ServeFile", utils.GetReqId(r))
 	_, err := utils.GetSessionCookie(r)
 	if err != nil {
-		log.Printf("--%s-> DeleteUser WARN cookie\n", utils.GetReqId(r))
+		utils.ClearSessionCookie(w)
+		log.Printf("--%s-> ServeFile WARN cookie\n", utils.GetReqId(r))
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}

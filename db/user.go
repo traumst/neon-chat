@@ -28,12 +28,12 @@ func (db *DBConn) AddUser(user *app.User) (*app.User, error) {
 		return nil, fmt.Errorf("user has no name")
 	} else if user.Type == "" {
 		return nil, fmt.Errorf("user has no type")
-	} else if user.Salt == nil || len(user.Salt) == 0 {
+	} else if len(user.Salt) == 0 {
 		return nil, fmt.Errorf("user has no salt")
 	}
 
 	result, err := db.conn.Exec(`INSERT INTO users (name, type, salt) VALUES (?, ?, ?)`,
-		user.Name, user.Type, user.Salt)
+		user.Name, user.Type, user.Salt[:])
 	if err != nil {
 		return nil, fmt.Errorf("error adding user: %s", err)
 	}
@@ -48,20 +48,21 @@ func (db *DBConn) AddUser(user *app.User) (*app.User, error) {
 }
 
 func (db *DBConn) GetUser(name string) (*app.User, error) {
-	db.mu.Lock()
-	defer db.mu.Unlock()
+	if db == nil {
+		return nil, fmt.Errorf("db is nil")
+	}
 	if !db.isConn || !db.isInit {
 		return nil, fmt.Errorf("db is not connected")
 	}
 	if name == "" {
-		return nil, fmt.Errorf("no id or name provided")
+		return nil, fmt.Errorf("name was not provided")
 	}
-
+	db.mu.Lock()
+	defer db.mu.Unlock()
 	var user app.User
 	err := db.conn.Get(&user, `SELECT * FROM users WHERE name = ?`, name)
 	if err != nil {
-		return nil, fmt.Errorf("error getting user by name[%s]: %s", name, err)
+		return nil, fmt.Errorf("user[%s] not found: %s", name, err)
 	}
-
 	return &user, err
 }

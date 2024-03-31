@@ -36,7 +36,7 @@ func main() {
 	//config, err := utils.ArgsRead()
 	config, err := utils.EnvRead()
 	if err != nil {
-		log.Printf("Error parsing config: %v\n", err)
+		log.Printf("Error parsing config: %s\n", err)
 		log.Println(utils.Help())
 		os.Exit(13)
 	}

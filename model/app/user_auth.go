@@ -13,5 +13,5 @@ type UserAuth struct {
 	Id     uint     `db:"id"`
 	UserId uint     `db:"user_id"`
 	Type   AuthType `db:"type"`
-	Hash   uint     `db:"hash"`
+	Hash   string   `db:"hash"`
 }

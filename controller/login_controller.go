@@ -20,16 +20,6 @@ const (
 
 func Login(app *model.AppState, conn *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Login TRACE IN\n", utils.GetReqId(r))
-	cookie, _ := utils.GetSessionCookie(r)
-	if cookie != nil {
-		user, _ := app.GetUser(cookie.UserId)
-		if user != nil {
-			log.Printf("--%s-> Login WARN user[%d] is already logged in, redirected\n", utils.GetReqId(r), cookie.UserId)
-			http.Redirect(w, r, "/", http.StatusPermanentRedirect)
-			return
-		}
-		utils.ClearSessionCookie(w)
-	}
 	switch r.Method {
 	case "GET":
 		renderLogin(w, r)
@@ -63,16 +53,34 @@ func signIn(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.R
 		renderLogin(w, r)
 		return
 	}
+	log.Printf("--%s-> signIn TRACE authentication check for user[%s] auth[%s]\n",
+		utils.GetReqId(r), u, authType)
 	user, auth, err := handler.Authenticate(db, u, p, authType)
-	if err != nil {
-		log.Printf("--%s-> signIn ERROR on authenticate[%s], %s\n", utils.GetReqId(r), u, err)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	if user == nil {
+		log.Printf("--%s-> signIn INFO user[%s] not found\n", utils.GetReqId(r), u)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Not found"))
 		return
 	}
-	_ = app.TrackUser(user)
+	if auth == nil {
+		log.Printf("--%s-> signIn INFO user[%s] has no auth\n", utils.GetReqId(r), u)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Not Found"))
+		return
+	}
+	if err != nil {
+		log.Printf("--%s-> signIn ERROR on authenticate[%s], %s\n", utils.GetReqId(r), u, err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Not Found"))
+		return
+	}
+
+	err = app.TrackUser(user)
+	if err != nil {
+		log.Printf("--%s-> signIn ERROR on track user[%d][%s], %s\n", utils.GetReqId(r), user.Id, user.Name, err)
+	}
 	utils.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
-	http.Redirect(w, r, "/", http.StatusFound)
-	log.Printf("<-%s-- signIn TRACE OUT\n", utils.GetReqId(r))
+	renderLogin(w, r)
 }
 
 func signUp(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
@@ -83,29 +91,41 @@ func signUp(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.R
 		renderLogin(w, r)
 		return
 	}
-	log.Printf("--%s-> signUp TRACE authentication check...\n", utils.GetReqId(r))
-	user, auth, _ := handler.Authenticate(db, u, p, authType)
+	log.Printf("--%s-> signUp TRACE authentication check for user[%s] auth[%s]\n",
+		utils.GetReqId(r), u, authType)
+	user, auth, err := handler.Authenticate(db, u, p, authType)
 	if user != nil && auth != nil {
-		log.Printf("--%s-> signUp INFO authenticated user[%s] on auth[%s]\n",
-			utils.GetReqId(r), user.Name, auth.Type)
+		err := app.TrackUser(user)
+		if err != nil {
+			log.Printf("--%s-> signUp ERROR on track user[%d][%s], %s\n", utils.GetReqId(r), user.Id, user.Name, err)
+		}
 		utils.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
-		http.Redirect(w, r, "/", http.StatusPermanentRedirect)
+		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	} else if user != nil {
-		log.Printf("--%s-> signUp INFO user[%v] is still partial\n", utils.GetReqId(r), user)
-		user = &a.User{Name: u, Type: a.UserTypeFree}
+		log.Printf("--%s-> signUp TRACE completing user[%s], %s\n", utils.GetReqId(r), u, err)
 	} else {
-		log.Printf("--%s-> signUp INFO user[%s] has no auth\n", utils.GetReqId(r), u)
-		user = &a.User{Name: u, Type: a.UserTypeFree}
+		log.Printf("--%s-> signUp TRACE register new user[%s], %s\n", utils.GetReqId(r), u, err)
+		user = &a.User{
+			Name: u,
+			Type: a.UserTypeFree,
+			Salt: handler.GenerateSalt(u, a.UserTypeFree),
+		}
 	}
-	log.Printf("--%s-> signUp TRACE registrastion for user[%v]\n", utils.GetReqId(r), user)
-	user, auth, err := handler.Register(db, user, u, authType)
+	if user.Salt == "" {
+		panic("user salt is empty")
+	}
+	user, auth, err = handler.Register(db, user, p, authType)
 	if err != nil {
 		log.Printf("--%s-> signUp ERROR on register user[%v], %s\n", utils.GetReqId(r), user, err)
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Operation failed"))
 		return
 	}
-	_ = app.TrackUser(user)
+	err = app.TrackUser(user)
+	if err != nil {
+		log.Printf("--%s-> signUp ERROR on track user[%d][%s], %s\n", utils.GetReqId(r), user.Id, user.Name, err)
+	}
 	utils.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
 	http.Redirect(w, r, "/", http.StatusFound)
 	log.Printf("--%s-> signUp TRACE OUT\n", utils.GetReqId(r))

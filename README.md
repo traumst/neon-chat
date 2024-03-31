@@ -15,7 +15,6 @@ This app is being build as an excercise for me to
 It's time to start sanitizing raw user input.
 Def break the chat: ' "
 
-
 * HTML hx- stuff should sit next to target
 * HTML button onclick should
     * clear related textbox
@@ -25,17 +24,6 @@ Def break the chat: ' "
 
 And UI looks like shit, have to style it
 
-DB is close. Need to add user registration and authorization, thinking about 2 tables,
-* user
-    * id
-    * name
-    * salt?
-* auth
-    * id
-    * user id
-    * type
-    * hash
-
 ### Message Broadcasting: 
 - ~~When the server receives a message from a client over a regular HTTP POST request, it should broadcast that message to all other connected clients via the SSE connection.~~
 
@@ -44,13 +32,13 @@ DB is close. Need to add user registration and authorization, thinking about 2 t
 - DB, at least for users
 
 ### User Authentication
-- Continue using your existing login system to authenticate users. 
-- When a user logs in, generate a unique token for them and send it back. 
-- The client should store this token and use it to authenticate the SSE connection.
+- ~~Continue using your existing login system to authenticate users.~~ 
+- ~~When a user logs in, generate a unique token for them and send it back.~~
+- The client should store this token and use it to authenticate the all connections.
 
 ### Establish SSE Connection
 - ~~When a user opens the chat, the client should initiate an SSE connection to the server.~~
-- The server should verify the user's token and if it's valid, accept the connection.
+- ~~The server should verify the user's token and if it's valid, accept the connection.~~
 - ~~SSE should include at least: ping, chat invites, incoming messages~~
 
 ### GUI

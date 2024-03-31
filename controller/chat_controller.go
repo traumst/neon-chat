@@ -133,13 +133,7 @@ func InviteUser(app *model.AppState, conn *db.DBConn, w http.ResponseWriter, r *
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	cookie, err := utils.GetSessionCookie(r)
-	if err != nil {
-		log.Printf("--%s-> InviteUser WARN cookie, %s\n", utils.GetReqId(r), err)
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
-		return
-	}
-	user, err := app.GetUser(cookie.UserId)
+	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("--%s-> InviteUser WARN user, %s\n", utils.GetReqId(r), err)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
@@ -213,13 +207,7 @@ func ExpelUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	cookie, err := utils.GetSessionCookie(r)
-	if err != nil {
-		log.Printf("--%s-> DeleteUser WARN cookie\n", reqId)
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
-		return
-	}
-	user, err := app.GetUser(cookie.UserId)
+	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("--%s-> DeleteUser WARN user, %s\n", utils.GetReqId(r), err)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
@@ -298,13 +286,7 @@ func CloseChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	cookie, err := utils.GetSessionCookie(r)
-	if err != nil {
-		log.Printf("--%s-> CloseChat WARN cookie\n", reqId)
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
-		return
-	}
-	user, err := app.GetUser(cookie.UserId)
+	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("--%s-> CloseChat WARN user, %s\n", utils.GetReqId(r), err)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
@@ -348,13 +330,7 @@ func LeaveChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("--%s-> LeaveChat TRACE check login\n", reqId)
-	cookie, err := utils.GetSessionCookie(r)
-	if err != nil {
-		log.Printf("--%s-> LeaveChat WARN cookie\n", reqId)
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
-		return
-	}
-	user, err := app.GetUser(cookie.UserId)
+	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("--%s-> LeaveChat WARN user, %s\n", utils.GetReqId(r), err)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
@@ -419,13 +395,7 @@ func DeleteChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	cookie, err := utils.GetSessionCookie(r)
-	if err != nil {
-		log.Printf("--%s-> DeleteChat WARN cookie\n", reqId)
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
-		return
-	}
-	user, err := app.GetUser(cookie.UserId)
+	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("--%s-> DeleteChat WARN user, %s\n", utils.GetReqId(r), err)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)

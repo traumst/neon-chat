@@ -14,22 +14,16 @@ import (
 
 func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> AddMessage TRACE\n", utils.GetReqId(r))
-	cookie, err := utils.GetSessionCookie(r)
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
-		return
-	}
-	author, err := app.GetUser(cookie.UserId)
-	if err != nil || author == nil {
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
-		return
-	}
 	if r.Method != "POST" {
 		log.Printf("--%s-> AddMessage ERROR request method\n", utils.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
+	author, err := handler.ReadSession(app, w, r)
+	if err != nil || author == nil {
+		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+		return
+	}
 	log.Printf("--%s-> AddMessage TRACE parsing input\n", utils.GetReqId(r))
 	msg := r.FormValue("msg")
 	if msg == "" {
@@ -83,12 +77,7 @@ func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 func DeleteMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> DeleteMessage\n", reqId)
-	cookie, err := utils.GetSessionCookie(r)
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
-		return
-	}
-	author, err := app.GetUser(cookie.UserId)
+	author, err := handler.ReadSession(app, w, r)
 	if err != nil || author == nil {
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return

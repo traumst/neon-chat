@@ -6,18 +6,14 @@ import (
 	"log"
 	"net/http"
 
+	"go.chat/handler"
 	"go.chat/model"
 	"go.chat/utils"
 )
 
 func Gen2(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Gen2", utils.GetReqId(r))
-	cookie, err := utils.GetSessionCookie(r)
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
-		return
-	}
-	user, err := app.GetUser(cookie.UserId)
+	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("--%s-> Gen2 WARN user, %s\n", utils.GetReqId(r), err)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)

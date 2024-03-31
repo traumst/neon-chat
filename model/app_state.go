@@ -163,6 +163,10 @@ func (state *AppState) GetOpenChat(userId uint) *app.Chat {
 }
 
 func (state *AppState) TrackUser(user *app.User) error {
+	if user == nil {
+		return fmt.Errorf("user was nil")
+	}
+
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
