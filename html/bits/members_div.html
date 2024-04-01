@@ -18,7 +18,7 @@
                 [<b><i>{{$user}}</i></b>]
             {{ else if eq $top.Viewer $top.Owner }}
                 <form id="member-delete-{{ $top.ChatID }}-user-{{ $user }}"
-                    hx-post="/chat/expel" 
+                    hx-post="/user/expel" 
                     hx-trigger="click" 
                     hx-target="#chat-{{ $top.ChatID }}-user-{{ $user }}"
                     hx-swap="innerHTML" 
