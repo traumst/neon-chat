@@ -5,7 +5,7 @@
     hx-swap="innerHTML"
 >
     <form id="member-delete-{{ .ChatID }}-user-{{ .User }}"
-        hx-post="/chat/expel" 
+        hx-post="/user/expel" 
         hx-trigger="click" 
         hx-target="#chat-drop-{{ .ChatID }}-user-{{ .User }}"
         hx-swap="innerHTML" 
