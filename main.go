@@ -36,7 +36,7 @@ func main() {
 	//config, err := utils.ArgsRead()
 	config, err := utils.EnvRead()
 	if err != nil {
-		log.Printf("Error parsing config: %v\n", err)
+		log.Printf("Error parsing config: %s\n", err)
 		log.Println(utils.Help())
 		os.Exit(13)
 	}
@@ -51,6 +51,7 @@ func main() {
 
 	log.Println("	init app state...")
 	app := &model.ApplicationState
+	app.Init(model.AppConfig{LoadLocal: config.LoadLocal})
 
 	log.Println("	init controllers...")
 	controller.Setup(app, db, config.LoadLocal)
