@@ -73,16 +73,15 @@ func handleChat(app *model.AppState, allMiddleware []Middleware) {
 }
 
 func handleUser(app *model.AppState, conn *db.DBConn, allMiddleware []Middleware) {
-	// TODO segregate controller
 	http.Handle("/user/invite", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			InviteUser(app, conn, w, r)
 		}), allMiddleware))
-	http.Handle("//user/invite", ChainMiddleware(
+	http.Handle("/user/expel", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ExpelUser(app, w, r)
 		}), allMiddleware))
-	http.Handle("//user/invite", ChainMiddleware(
+	http.Handle("/user/invite", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			LeaveChat(app, w, r)
 		}), allMiddleware))
