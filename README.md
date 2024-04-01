@@ -31,12 +31,12 @@ And UI looks like shit, have to style it
 
 ### Persistence
 - Cache instead of map
-- DB, at least for users
+- ~~DB for users and auth~~
 
 ### User Authentication
 - ~~Continue using your existing login system to authenticate users.~~ 
 - ~~When a user logs in, generate a unique token for them and send it back.~~
-- The client should store this token and use it to authenticate the all connections.
+- The client should store this token and use it to authenticate __all__ connections.
 
 ### Establish SSE Connection
 - ~~When a user opens the chat, the client should initiate an SSE connection to the server.~~
@@ -47,7 +47,7 @@ And UI looks like shit, have to style it
 - Style the app, pick a futuristic dark theme
 - Should be simple and intuitive
 - Should remain snappy
-- Custom font
+- Custom font - jetbrains.com/lp/mono/
 
 ### GUI Interactivity
 - Search chats by: 
@@ -65,9 +65,9 @@ And UI looks like shit, have to style it
 - Add ability for users to mute/report other users
 
 ### *Security Considerations*
-- Ensure that the SSE connection is secure (https://) and that we validate 
-    and sanitize all incoming messages to prevent cross-site scripting (XSS) attacks.
+- ~~Ensure that the SSE connection is secure (https://)~~
+- Validate nd sanitize all incoming messages to prevent cross-site scripting (XSS) attacks.
 
-### *GPT*:
+### *GPTs*:
 - Consider for content moderation assistance
-- Consider for virtual member
+- Consider for chat participant - query, image, auto-response
