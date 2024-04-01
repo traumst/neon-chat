@@ -4,40 +4,38 @@ import (
 	"log"
 	"net/http"
 
+	"go.chat/handler"
 	"go.chat/model"
 	"go.chat/model/template"
 	"go.chat/utils"
 )
 
-func Home(app *model.AppState, w http.ResponseWriter, r *http.Request, loadLocal bool) {
+func Home(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Home", utils.GetReqId(r))
-	user, err := utils.GetCurrentUser(r)
+	user, err := handler.ReadSession(app, w, r)
 	if err != nil {
-		log.Printf("--%s-> Home WARN user, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> Home INFO user is not authorized, %s\n", utils.GetReqId(r), err)
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
-
 	var openChatTemplate *template.ChatTemplate
-	openChat := app.GetOpenChat(user)
+	openChat := app.GetOpenChat(user.Id)
 	if openChat == nil {
-		log.Printf("--%s-> Home DEBUG, user[%s] has no open chat\n", utils.GetReqId(r), user)
+		log.Printf("--%s-> Home DEBUG, user[%d] has no open chat\n", utils.GetReqId(r), user.Id)
 		openChatTemplate = nil
 	} else {
-		log.Printf("--%s-> Home DEBUG, user[%s] has chat[%d] open\n", utils.GetReqId(r), user, openChat.ID)
+		log.Printf("--%s-> Home DEBUG, user[%d] has chat[%d] open\n", utils.GetReqId(r), user.Id, openChat.Id)
 		openChatTemplate = openChat.Template(user)
 	}
-
 	var chatTemplates []*template.ChatTemplate
-	for _, chat := range app.GetChats(user) {
+	for _, chat := range app.GetChats(user.Id) {
 		chatTemplates = append(chatTemplates, chat.Template(user))
 	}
-
 	home := template.HomeTemplate{
 		OpenTemplate: openChatTemplate,
 		Chats:        chatTemplates,
-		ActiveUser:   user,
-		LoadLocal:    loadLocal,
+		ActiveUser:   user.Name,
+		LoadLocal:    app.LoadLocal(),
 	}
 	html, err := home.HTML()
 	if err != nil {
@@ -45,8 +43,7 @@ func Home(app *model.AppState, w http.ResponseWriter, r *http.Request, loadLocal
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
-
-	log.Printf("--%s-> Home TRACE, user[%s] gets content\n", utils.GetReqId(r), user)
+	log.Printf("--%s-> Home TRACE, user[%d] gets content\n", utils.GetReqId(r), user.Id)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }

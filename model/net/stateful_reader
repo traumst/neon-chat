@@ -1,0 +1,12 @@
+type CustomRequest struct {
+	*http.Request
+	// Add any additional fields here.
+}
+
+func CustomRequestMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		customRequest := &CustomRequest{Request: r}
+		// Set any additional fields of customRequest here.
+		next.ServeHTTP(w, customRequest)
+	})
+}

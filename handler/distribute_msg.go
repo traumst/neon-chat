@@ -13,11 +13,11 @@ import (
 func DistributeMsg(
 	state *model.AppState,
 	chat *app.Chat,
-	author string,
+	authorId uint,
 	msg *app.Message,
 	event e.UpdateType,
 ) error {
-	users, err := chat.GetUsers(author)
+	users, err := chat.GetUsers(authorId)
 	if err != nil || users == nil {
 		return fmt.Errorf("DistributeMsg: get users, chat[%+v], %s", chat, err)
 	}
@@ -28,24 +28,24 @@ func DistributeMsg(
 	var wg sync.WaitGroup
 	var errors []string
 	for _, user := range users {
-		if user == author {
-			log.Printf("∞----> DistributeMsg TRACE new message is not sent to author[%s]\n", user)
+		if user.Id == authorId {
+			log.Printf("∞----> DistributeMsg TRACE new message is not sent to author[%d]\n", user.Id)
 			continue
 		}
 		wg.Add(1)
-		go func(user string, msg app.Message) {
+		go func(user app.User, msg app.Message) {
 			defer wg.Done()
-			log.Printf("∞----> DistributeMsg TRACE new message will be sent to user[%s]\n", user)
-			data, err := msg.Template(user).HTML()
+			log.Printf("∞----> DistributeMsg TRACE new message will be sent to user[%d]\n", user.Id)
+			data, err := msg.Template(&user).HTML()
 			if err != nil {
 				errors = append(errors, err.Error())
 				return
 			}
-			err = distributeMsgToUser(state, chat.ID, msg.ID, user, author, event, data)
+			err = distributeMsgToUser(state, chat.Id, msg.ID, user.Id, authorId, event, data)
 			if err != nil {
 				errors = append(errors, err.Error())
 			}
-		}(user, *msg)
+		}(*user, *msg)
 	}
 
 	wg.Wait()
@@ -58,33 +58,33 @@ func DistributeMsg(
 
 func distributeMsgToUser(
 	state *model.AppState,
-	chatID int,
-	msgID int,
-	user string,
-	author string,
+	chatId int,
+	msgId int,
+	userId uint,
+	authorId uint,
 	event e.UpdateType,
 	data string,
 ) error {
-	log.Printf("∞----> distributeMsgToUser TRACE user[%s] chat[%d] event[%v]\n", user, chatID, event)
-	openChat := state.GetOpenChat(user)
+	log.Printf("∞----> distributeMsgToUser TRACE user[%d] chat[%d] event[%v]\n", userId, chatId, event)
+	openChat := state.GetOpenChat(userId)
 	if openChat == nil {
-		return fmt.Errorf("user[%s] has no open chat", user)
+		return fmt.Errorf("user[%d] has no open chat to distribute", userId)
 	}
-	if openChat.ID != chatID {
-		return fmt.Errorf("user[%s] has open chat[%d] different from message chat[%d]", user, openChat.ID, chatID)
+	if openChat.Id != chatId {
+		return fmt.Errorf("user[%d] has open chat[%d] different from message chat[%d]", userId, openChat.Id, chatId)
 	}
 
-	conn, err := state.GetConn(user)
+	conn, err := state.GetConn(userId)
 	if err != nil {
-		return fmt.Errorf("user[%s] not connected, err:%s", user, err.Error())
+		return fmt.Errorf("user[%d] not connected, err:%s", userId, err.Error())
 	}
 
 	msg := e.LiveUpdate{
-		Event:  event,
-		ChatID: chatID,
-		MsgID:  msgID,
-		Author: author,
-		UserID: user,
+		Event:    event,
+		ChatId:   chatId,
+		MsgId:    msgId,
+		AuthorId: authorId,
+		UserId:   userId,
 	}
 
 	switch event {
