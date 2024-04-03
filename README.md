@@ -27,29 +27,25 @@ Def break the chat: ' "
 And UI looks like shit, have to style it
 
 ### Message Broadcasting: 
-- ~~When the server receives a message from a client over a regular HTTP POST request, it should broadcast that message to all other connected clients via the SSE connection.~~
+- track user deltas: chats, messages
+- only serve deltas
+- test overload of a conn channel
 
 ### Persistence
-- Cache instead of map
-- ~~DB for users and auth~~
+- message store
+- cache instead of map
 
 ### User Authentication
-- ~~Continue using your existing login system to authenticate users.~~ 
-- ~~When a user logs in, generate a unique token for them and send it back.~~
-- The client should store this token and use it to authenticate __all__ connections.
-
-### Establish SSE Connection
-- ~~When a user opens the chat, the client should initiate an SSE connection to the server.~~
-- ~~The server should verify the user's token and if it's valid, accept the connection.~~
-- ~~SSE should include at least: ping, chat invites, incoming messages~~
+- client should send session token to authenticate __all__ connections
+- email verification
+- 2FA
 
 ### GUI
-- Style the app, pick a futuristic dark theme
-- Should be simple and intuitive
-- Should remain snappy
-- Custom font - jetbrains.com/lp/mono/
+- style the app, pick a futuristic dark theme
+- should remain minimal and snappy
+- apply custom font jetbrains.com/lp/mono/
 
-### GUI Interactivity
+### Chat features
 - Search chats by: 
     1. chat name
     2. invited user name
@@ -58,15 +54,19 @@ And UI looks like shit, have to style it
     1. content
     2. author
 
-## LATERs
+### Client storage
+- local / innodb
+- store chats with history on client
+- load only chat deltas
 
 ### Moderation
 - Add ability to mute/block users in chat
 - Add ability for users to mute/report other users
 
 ### *Security Considerations*
-- ~~Ensure that the SSE connection is secure (https://)~~
 - Validate nd sanitize all incoming messages to prevent cross-site scripting (XSS) attacks.
+
+## Later
 
 ### *GPTs*:
 - Consider for content moderation assistance
