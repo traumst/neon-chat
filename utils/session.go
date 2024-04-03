@@ -22,30 +22,6 @@ func (s Session) String() string {
 	return base64.StdEncoding.EncodeToString([]byte(cookie))
 }
 
-func fromString(s string) (*Session, error) {
-	decoded, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		return nil, fmt.Errorf("invalid session, %s", err)
-	}
-	ss := strings.Split(string(decoded), ":")
-	if len(ss) != 4 {
-		return nil, fmt.Errorf("invalid session")
-	}
-	if ss[0] == "" || ss[1] == "" || ss[2] == "" || ss[3] == "" {
-		return nil, fmt.Errorf("invalid session content")
-	}
-	userId, err := strconv.Atoi(ss[0])
-	if err != nil {
-		return nil, fmt.Errorf("invaild session userId, %s", err)
-	}
-
-	return &Session{
-		UserId:   uint(userId),
-		UserType: app.UserType(ss[1]),
-		AuthType: app.AuthType(ss[3]),
-	}, nil
-}
-
 func GetSessionCookie(r *http.Request) (*Session, error) {
 	cookie, err := r.Cookie(SessionCookie)
 	if err != nil {
@@ -74,4 +50,28 @@ func ClearSessionCookie(w http.ResponseWriter) {
 		Value:   "",
 		Expires: time.Now(),
 	})
+}
+
+func fromString(s string) (*Session, error) {
+	decoded, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		return nil, fmt.Errorf("invalid session, %s", err)
+	}
+	ss := strings.Split(string(decoded), ":")
+	if len(ss) != 4 {
+		return nil, fmt.Errorf("invalid session")
+	}
+	if ss[0] == "" || ss[1] == "" || ss[2] == "" || ss[3] == "" {
+		return nil, fmt.Errorf("invalid session content")
+	}
+	userId, err := strconv.Atoi(ss[0])
+	if err != nil {
+		return nil, fmt.Errorf("invaild session userId, %s", err)
+	}
+
+	return &Session{
+		UserId:   uint(userId),
+		UserType: app.UserType(ss[1]),
+		AuthType: app.AuthType(ss[3]),
+	}, nil
 }

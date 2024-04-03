@@ -81,7 +81,7 @@ func handleUser(app *model.AppState, conn *db.DBConn, allMiddleware []Middleware
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ExpelUser(app, w, r)
 		}), allMiddleware))
-	http.Handle("/user/invite", ChainMiddleware(
+	http.Handle("/user/leave", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			LeaveChat(app, w, r)
 		}), allMiddleware))

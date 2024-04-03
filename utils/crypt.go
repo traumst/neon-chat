@@ -5,16 +5,21 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"math/rand"
 	"strings"
 )
 
-// TODO think: type forces salt change when switching user.type
 func GenerateSalt(userName string, userType string) string {
-	seed := fmt.Sprintf("%s-%s", userType, userName)
-	saltPlain := fmt.Sprintf("%s;%s", RandStringBytes(7), seed)
+	rr := int(rand.Int31n(8)) + 3
+	saltPlain := fmt.Sprintf("%s%s%s%s%s",
+		RandStringBytes(rr),
+		userName,
+		RandStringBytes(rr),
+		userType,
+		RandStringBytes(rr))
 	salt := ToHexSha256(saltPlain)
 	if salt == "" || strings.Contains(salt, "\n") || strings.Contains(salt, " ") {
-		log.Fatalf("failed to generate salt for user[%s] generated[%s] from [%s]", userName, salt, seed)
+		log.Fatalf("failed to generate salt for user[%s] generated salt[%s]", userName, salt)
 	}
 	return salt
 }

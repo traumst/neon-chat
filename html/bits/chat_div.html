@@ -96,7 +96,7 @@
 </div>
 {{ if eq .Owner .User }}
 <div class="invite-user">
-    <form method="POST" hx-target=".member-list" hx-post="/chat/invite" hx-trigger="submit" hx-swap="beforeend">
+    <form method="POST" hx-target=".member-list" hx-post="/user/invite" hx-trigger="submit" hx-swap="beforeend">
         <input type="hidden" name="chatId" value="{{ .ChatID }}">
         <input type="text" name="invitee" placeholder="...type invitee username here...">
         <button type="submit">Invite User</button>

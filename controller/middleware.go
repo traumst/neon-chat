@@ -9,7 +9,6 @@ import (
 	"github.com/tdewolff/minify/css"
 	"github.com/tdewolff/minify/html"
 	"github.com/tdewolff/minify/js"
-	"go.chat/model/network"
 	"go.chat/utils"
 )
 
@@ -42,7 +41,7 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("--%s-> LoggerMiddleware BEGIN %s %s", utils.GetReqId(r), r.Method, r.RequestURI)
 		startTime := time.Now()
-		rec := network.StatefulWriter{ResponseWriter: w}
+		rec := utils.StatefulWriter{ResponseWriter: w}
 
 		next.ServeHTTP(&rec, r)
 		log.Printf("<-%s-- LoggerMiddleware END %s %s status_code:[%d] in %v",

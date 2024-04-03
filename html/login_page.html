@@ -1,7 +1,69 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
     <title>Login</title>
+    <style>
+        body {
+            background-color: #333;
+            color: white;
+            display: flex;
+        }
+        #auth {
+            max-width: 100vw;
+            max-height: 100dvh;
+            align-items: center;
+            max-width: fit-content;
+            margin-inline: auto;
+            margin-top: 15vw;
+            gap: 5vw;
+        }
+        @media (orientation: landscape) {
+            #auth {
+                flex-direction: row;
+            }
+        }
+        @media (orientation: portrait) {
+            #auth {
+                flex-direction: column;
+            }
+        }
+        #login, #signup {
+            max-width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            flex-direction: column;
+            background-color: purple;
+            border-radius: 10px;
+            padding: 1em;
+            opacity: 0.8;
+        }
+        #login input[type="text"],
+        #login input[type="password"],
+        #signup input[type="text"],
+        #signup input[type="password"] {
+            display: flex;
+            flex-direction: column;
+            background-color: transparent;
+            border: none;
+            border-bottom: 1px solid white;
+            color: white;
+            padding: 0.5em;
+            margin-bottom: 1em;
+        }
+        #login button,
+        #signup button {
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            color: purple;
+            border: none;
+            padding: 0.5em 1em;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
     <script>
         function handleAuthResponse(response) {
             if (response.ok) {
@@ -28,23 +90,28 @@
                 }).then(handleAuthResponse);
             });
         };
-    </script></head>
+    </script>
+</head>
 <body>
-    <section id="login">
-        <h1>Login</h1>
-        <form method="POST" action="/login">
-            <input type="text" name="user" placeholder="username">
-            <input type="password" name="pass" placeholder="password">
-            <button type="submit">Login</button>
-        </form>
-    </div>
-    <section id="signup">
-        <h1>Signup</h1>
-        <form method="PUT" action="/login">
-            <input type="text" name="user" placeholder="username">
-            <input type="password" name="pass" placeholder="password">
-            <button type="submit">Signup</button>
-        </form>
+    <section id="auth">
+        <div id="login">
+            <form method="PUT" action="/login">
+                <input type="text" name="user" placeholder="username">
+                <input type="password" name="pass" placeholder="password">
+                <button type="submit">
+                    Login
+                </button>
+            </form>
+        </div>
+        <div id="signup">
+            <form method="PUT" action="/login">
+                <input type="text" name="user" placeholder="username">
+                <input type="password" name="pass" placeholder="password">
+                <button type="submit">
+                    Signup
+                </button>
+            </form>
+        </div>
     </section>
 </body>
 </html>

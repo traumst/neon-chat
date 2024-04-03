@@ -29,7 +29,7 @@
         </form>
     {{ else if eq .User .Viewer }}
         <form id="chat-leave-{{ .ChatID }}"
-            hx-post="/chat/leave" 
+            hx-post="/user/leave" 
             hx-trigger="click" 
             hx-target="#chat-head-{{ .ChatID }}"
             hx-swap="innerHTML" 
