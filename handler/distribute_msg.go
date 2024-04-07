@@ -41,7 +41,7 @@ func DistributeMsg(
 				errors = append(errors, err.Error())
 				return
 			}
-			err = distributeMsgToUser(state, chat.Id, msg.ID, user.Id, authorId, event, data)
+			err = distributeMsgToUser(state, chat.Id, msg.Id, user.Id, authorId, event, data)
 			if err != nil {
 				errors = append(errors, err.Error())
 			}

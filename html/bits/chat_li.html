@@ -1,44 +1,49 @@
-<li class="chat-header" 
-    id="chat-head-{{ .ChatID }}" 
-    sse-swap="chat-drop-{{ .ChatID }}"
-    hx-target="#chat-head-{{ .ChatID }}" 
+<li class="chat-header flex flex-row justify-between 
+    hover:bg-gray-600 hover:text-white p-2 gap-2" 
+    id="chat-head-{{ .ChatId }}" 
+    sse-swap="chat-drop-{{ .ChatId }}"
+    hx-target="#chat-head-{{ .ChatId }}" 
     hx-swap="innerHTML"
 >
-    <div hx-trigger="click" 
-        hx-get="/chat/{{.ChatID}}" 
+    <div
+        hx-trigger="click" 
+        hx-get="/chat/{{.ChatId}}" 
         hx-target=".open-chat" 
         hx-swap="innerHTML"
     >
         <b>{{.Name}}</b> 
     </div>
-    {{ if eq .User .Owner }}
-        <form id="chat-delete-{{ .ChatID }}"
+    <div >
+
+    </div>
+    {{ if eq .Owner.Id .User.Id }}
+        <form id="chat-delete-{{ .ChatId }}"
             hx-post="/chat/delete" 
             hx-trigger="click" 
-            hx-target="#chat-head-{{ .ChatID }}"
+            hx-target="#chat-head-{{ .ChatId }}"
             hx-swap="innerHTML" 
-            hx-include="#chat-delete-{{ .ChatID }}"
+            hx-include="#chat-delete-{{ .ChatId }}"
         >
-            <input type="hidden" name="chatid" value="{{ .ChatID }}">
+            <input type="hidden" name="chatid" value="{{ .ChatId }}">
             <div class="chat-header-delete" 
                 hx-trigger="click" 
-                hx-action="chat-delete-{{ .ChatID }}.submit()"
+                hx-action="chat-delete-{{ .ChatId }}.submit()"
             >
                 [delete]
             </div>
         </form>
     {{ else if eq .User .Viewer }}
-        <form id="chat-leave-{{ .ChatID }}"
+        <form id="chat-leave-{{ .ChatId }}"
             hx-post="/user/leave" 
             hx-trigger="click" 
-            hx-target="#chat-head-{{ .ChatID }}"
+            hx-target="#chat-head-{{ .ChatId }}"
             hx-swap="innerHTML" 
-            hx-include="#chat-leave-{{ .ChatID }}"
+            hx-include="#chat-leave-{{ .ChatId }}"
         >
-            <input type="hidden" name="chatid" value="{{ .ChatID }}">
+            <input type="hidden" name="chatid" value="{{ .ChatId }}">
             <div class="chat-header-leave" 
                 hx-trigger="click" 
-                hx-action="chat-leave-{{ .ChatID }}.submit()"
+                hx-action="chat-leave-{{ .ChatId }}.submit()"
             >
                 [leave]
             </div>

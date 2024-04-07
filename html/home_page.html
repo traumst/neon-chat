@@ -3,50 +3,7 @@
 <head>
     <title>Home</title>
     <style>
-        body, html { 
-            height: 100%; 
-            margin: 0; 
-            padding: 0; 
-            font-family: Arial, sans-serif; 
-            background-color: #f0f0f0; 
-        }
-        .container { 
-            display: flex; 
-            height: 95%; 
-            width: 90%; 
-            margin: auto; 
-            box-shadow: 0 0 10px rgba(0,0,0,0.1); 
-            background-color: #fff; 
-        }
-        .left-panel, .right-panel { 
-            padding: 20px; 
-            box-sizing: border-box; 
-        }
-        .left-panel { 
-            width: 30%; 
-            border-right: 1px solid #ddd; 
-        }
-        .right-panel { 
-            width: 70%; 
-        }
-        .active-user {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-
-            justify-content: space-between;
-        }
-        .active-user p { 
-            font-weight: bold; 
-        }
-        .chat-list ul { 
-            list-style-type: none; 
-            padding: 0; 
-        }
-        .chat-list li { 
-            padding: 10px 0; 
-            border-bottom: 1px solid #ddd; 
-        }
+        /* 
         .chat-list li:hover {
             background-color: #f0f0f0;
         }
@@ -61,7 +18,7 @@
         }
         .add-chat button { 
             padding: 10px 20px; 
-        }
+        } */
     </style>
     {{ if .LoadLocal }}
     <script src="/script/htmx.1.9.10.min.js"></script>
@@ -71,18 +28,21 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.11/htmx.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.11/ext/sse.min.js"></script>
     {{ end }}
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
 </head>
-<body>
-<div class="container" hx-ext="sse" sse-trigger="load" sse-connect="/poll">
-    <div class="left-panel">
-        <div class="active-user">
-            <p>Active user: {{ .ActiveUser }}</p>
-            <form action="/logout" method="POST">
-                <button type="submit">Logout</button>
+<body class="h-screen m-0 p-0">
+<div hx-ext="sse" sse-trigger="load" sse-connect="/poll" 
+    class="flex flex-row grow-0 h-fit w-90 m-2 p-4 gap-4 shadow-md">
+    <div class="left-panel p-2 w-30 border-r flex flex-col h-fit">
+        <div class="active-user flex flex-row justify-between p-2">
+            <p class="font-bold">Active user: {{ .ActiveUser }}</p>
+            <form action="/logout" method="POST" class="pl-2">
+                <button type="submit">[logout]</button>
             </form>
-        </div>
-        <div class="chat-list">
-            <ul class="chat-headers" sse-swap="chat-add" hx-swap="beforeend"> 
+        </div> 
+        <hr />
+        <div class="chat-list p-2">
+            <ul class="chat-headers flex flex-col gap-2" sse-swap="chat-add" hx-swap="beforeend"> 
                 {{ with $chats := .Chats }}
                     {{ range $index, $chat := $chats }} 
                         {{ template "chat_li.html" $chat }}
@@ -92,18 +52,19 @@
                 {{ end }}
             </ul>
         </div>
-        <div class="add-chat">
+        <hr />
+        <div class="add-chat flex grow-0">
             <form hx-post="/chat" hx-trigger="submit" hx-target=".open-chat" hx-swap="innerHTML">
-                <input type="text" id="addChatFormInput" name="chatName" placeholder="...create chat...">
+                <input type="text" id="addChatFormInput" name="chatName" placeholder="new chat">
                 <button type="submit" id="addChatFormBtn">Create</button>
             </form>
         </div>
     </div>
-    <div class="right-panel">
+    <div class="right-panel p-2 w-full border-l flex flex-col h-fit">
         <div class="open-chat">
             {{ with .OpenTemplate }}
                 <div class="open-chat-content" 
-                    hx-get="/chat/{{ .ChatID }}" 
+                    hx-get="/chat/{{ .ChatId }}" 
                     hx-trigger="load"
                     hx-target="this"
                     hx-swap="innerHTML">

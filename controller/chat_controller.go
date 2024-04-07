@@ -40,7 +40,7 @@ func OpenChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if chatId < 0 {
-		log.Printf("<-%s-- OpenChat ERROR chatID, %s\n", reqId, err)
+		log.Printf("<-%s-- OpenChat ERROR chatId, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf("Invalid chat id %d", chatId)))
 		return
@@ -87,9 +87,9 @@ func AddChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("--%s-> AddChat TRACE adding user[%d] chat[%s]\n", reqId, user.Id, chatName)
-	chatID := app.AddChat(user, chatName)
-	log.Printf("--%s-> AddChat TRACE user[%d] opening chat[%s][%d]\n", reqId, user.Id, chatName, chatID)
-	openChat, err := app.OpenChat(user.Id, chatID)
+	chatId := app.AddChat(user, chatName)
+	log.Printf("--%s-> AddChat TRACE user[%d] opening chat[%s][%d]\n", reqId, user.Id, chatName, chatId)
+	openChat, err := app.OpenChat(user.Id, chatId)
 	if err != nil {
 		log.Printf("<-%s-- AddChat ERROR chat, %s\n", reqId, err)
 		errMsg := fmt.Sprintf("ERROR: %s", err.Error())
@@ -97,7 +97,7 @@ func AddChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(errMsg))
 		return
 	}
-	log.Printf("--%s-> AddChat TRACE templating chat[%s][%d]\n", reqId, chatName, chatID)
+	log.Printf("--%s-> AddChat TRACE templating chat[%s][%d]\n", reqId, chatName, chatId)
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -202,12 +202,13 @@ func DeleteChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		log.Printf("<-%s-- DeleteChat TRACE distributes user[%d] deletes chat[%d]\n", reqId, user.Id, chat.Id)
+		log.Printf("<-%s-- DeleteChat TRACE distributes user[%d] closes chat[%d]\n", reqId, user.Id, chat.Id)
 		err = handler.DistributeChat(app, chat, user, nil, nil, e.ChatClose)
 		if err != nil {
 			log.Printf("<-%s-- DeleteChat ERROR cannot distribute chat close, %s\n", reqId, err)
 			return
 		}
+		log.Printf("<-%s-- DeleteChat TRACE distributes user[%d] deletes chat[%d]\n", reqId, user.Id, chat.Id)
 		err = handler.DistributeChat(app, chat, user, nil, nil, e.ChatDeleted)
 		if err != nil {
 			log.Printf("<-%s-- DeleteChat ERROR cannot distribute chat deleted, %s\n", reqId, err)

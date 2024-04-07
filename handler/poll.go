@@ -100,24 +100,23 @@ func trySend(conn *model.Conn, up event.LiveUpdate) error {
 
 func SSEvent(w *http.ResponseWriter, event event.SSEvent, up event.LiveUpdate) error {
 	if up.ChatId < 0 {
-		panic("ChatID should not be empty")
+		panic("ChatId should not be empty")
 	}
 	if up.UserId == 0 {
-		panic("UserID should not be empty")
+		panic("UserId should not be empty")
 	}
 	eventName := Format(event, up.ChatId, up.UserId, up.MsgId)
-	eventID := utils.RandStringBytes(5)
+	eventId := utils.RandStringBytes(5)
 	data := trim(up.Data)
-	writer := *w
-	_, err := fmt.Fprintf(writer, "id: %s\n", eventID)
+	_, err := fmt.Fprintf(*w, "id: %s\n", eventId)
 	if err != nil {
-		return fmt.Errorf("failed to write id[%s]", eventID)
+		return fmt.Errorf("failed to write id[%s]", eventId)
 	}
-	_, err = fmt.Fprintf(writer, "event: %s\n", eventName)
+	_, err = fmt.Fprintf(*w, "event: %s\n", eventName)
 	if err != nil {
 		return fmt.Errorf("failed to write event[%s]", eventName)
 	}
-	_, err = fmt.Fprintf(writer, "data: %s\n\n", data)
+	_, err = fmt.Fprintf(*w, "data: %s\n\n", data)
 	if err != nil {
 		return fmt.Errorf("failed to write data[%s]", data)
 	}

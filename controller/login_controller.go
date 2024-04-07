@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"html/template"
 	"log"
 	"net/http"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"go.chat/handler"
 	"go.chat/model"
 	a "go.chat/model/app"
+	"go.chat/model/template"
 	"go.chat/utils"
 )
 
@@ -18,11 +18,32 @@ const (
 	authType = a.AuthTypeLocal
 )
 
-func RenderLogin(w http.ResponseWriter, r *http.Request) {
+func RenderLogin(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> RenderLogin\n", utils.GetReqId(r))
-	loginTmpl, _ := template.ParseFiles("html/login_page.html")
+	template := template.LoginTemplate{
+		Login: template.AuthForm{
+			Id:    "login",
+			Label: "Login",
+			Title: "Login",
+		},
+		Signup: template.AuthForm{
+			Id:    "signup",
+			Label: "Signup",
+			Title: "Signup",
+		},
+		LoadLocal: app.LoadLocal(),
+	}
+
+	html, err := template.HTML()
+	if err != nil {
+		log.Printf("--%s-> RenderLogin ERROR on template.HTML, %s\n", utils.GetReqId(r), err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Internal Server Error"))
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	loginTmpl.Execute(w, nil)
+	w.Write([]byte(html))
 }
 
 func Login(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
@@ -35,7 +56,7 @@ func Login(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Re
 	u := r.FormValue("user")
 	p := r.FormValue("pass")
 	if u == "" || p == "" {
-		RenderLogin(w, r)
+		RenderLogin(app, w, r)
 		return
 	}
 	log.Printf("--%s-> Login TRACE authentication check for user[%s] auth[%s]\n",
@@ -65,7 +86,7 @@ func Login(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Re
 		log.Printf("--%s-> Login ERROR on track user[%d][%s], %s\n", utils.GetReqId(r), user.Id, user.Name, err)
 	}
 	utils.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
-	RenderLogin(w, r)
+	RenderLogin(app, w, r)
 }
 
 func SignUp(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
@@ -78,7 +99,7 @@ func SignUp(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.R
 	u := r.FormValue("user")
 	p := r.FormValue("pass")
 	if u == "" || p == "" {
-		RenderLogin(w, r)
+		RenderLogin(app, w, r)
 		return
 	}
 	log.Printf("--%s-> SignUp TRACE authentication check for user[%s] auth[%s]\n",
@@ -126,8 +147,8 @@ func SignUp(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.R
 	log.Printf("--%s-> SignUp TRACE OUT\n", utils.GetReqId(r))
 }
 
-func Logout(w http.ResponseWriter, r *http.Request) {
+func Logout(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Logout TRACE \n", utils.GetReqId(r))
 	utils.ClearSessionCookie(w)
-	RenderLogin(w, r)
+	RenderLogin(app, w, r)
 }

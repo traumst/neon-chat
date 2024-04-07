@@ -38,12 +38,12 @@ func (db *DBConn) AddAuth(auth a.UserAuth) (*a.UserAuth, error) {
 		return nil, fmt.Errorf("error adding auth: %s", err)
 	}
 
-	lastID, err := result.LastInsertId()
+	lastId, err := result.LastInsertId()
 	if err != nil {
 		return nil, fmt.Errorf("error getting last insert id: %s", err)
 	}
 
-	auth.Id = uint(lastID)
+	auth.Id = uint(lastId)
 	return &auth, nil
 }
 

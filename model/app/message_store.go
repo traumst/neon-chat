@@ -9,7 +9,7 @@ import (
 type MessageStore struct {
 	mu       sync.Mutex
 	messages []*Message
-	nextID   int
+	nextId   int
 }
 
 func (s *MessageStore) Add(m *Message) (*Message, error) {
@@ -20,9 +20,9 @@ func (s *MessageStore) Add(m *Message) (*Message, error) {
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	m.ID = s.nextID
+	m.Id = s.nextId
 	s.messages = append(s.messages, m)
-	s.nextID += 1
+	s.nextId += 1
 	return m, nil
 }
 
@@ -51,13 +51,13 @@ func (s *MessageStore) Delete(m *Message) error {
 	if m == nil {
 		return fmt.Errorf("cannot remove NIL")
 	}
-	if m.ID < 0 || m.ID >= len(s.messages) {
+	if m.Id < 0 || m.Id >= len(s.messages) {
 		return fmt.Errorf("message not found")
 	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.messages[m.ID] = nil
+	s.messages[m.Id] = nil
 	return nil
 }
 

@@ -190,11 +190,11 @@ func TestUserConns(t *testing.T) {
 	conns := uc.userConns(user2.Id)
 	if len(conns) != 1 {
 		t.Errorf("TestUserConns expected 1 conn, got [%d]", len(conns))
-	} else if conns[0].ID != conn2.ID ||
+	} else if conns[0].Id != conn2.Id ||
 		conns[0].Origin != conn2.Origin ||
 		conns[0].User.Id != conn2.User.Id {
 		t.Errorf("TestUserConns expected conn[%d|%s|%d], got conn[%d|%s|%d]",
-			conn2.ID, conn2.Origin, conn2.User.Id,
-			conns[0].ID, conns[0].Origin, conns[0].User.Id)
+			conn2.Id, conn2.Origin, conn2.User.Id,
+			conns[0].Id, conns[0].Origin, conns[0].User.Id)
 	}
 }

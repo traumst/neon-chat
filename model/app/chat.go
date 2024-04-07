@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"go.chat/model/template"
+	t "go.chat/model/template"
 )
 
 type Chat struct {
@@ -20,9 +20,9 @@ func (c *Chat) isOwner(userId uint) bool {
 	return c.Owner.Id == userId
 }
 
-func (c *Chat) isAuthor(userId uint, msgID int) bool {
-	msg, _ := c.history.Get(msgID)
-	if msg != nil && msg.ID == msgID {
+func (c *Chat) isAuthor(userId uint, msgId int) bool {
+	msg, _ := c.history.Get(msgId)
+	if msg != nil && msg.Id == msgId {
 		return msg.Author.Id == userId
 	}
 	return false
@@ -110,29 +110,27 @@ func (c *Chat) DropMessage(userId uint, msgId int) (*Message, error) {
 	return msg, c.history.Delete(msg)
 }
 
-func (c *Chat) Template(user *User) *template.ChatTemplate {
-	var messages []template.MessageTemplate
+func (c *Chat) Template(user *User) *t.ChatTemplate {
+	var messages []t.MessageTemplate
 	for _, msg := range c.history.GetAll() {
 		if msg == nil {
 			continue
 		}
 		messages = append(messages, *msg.Template(user))
 	}
-	userNames := make([]string, len(c.users))
+	users := make([]t.UserTemplate, len(c.users))
 	for i, u := range c.users {
-		userNames[i] = u.Name
+		users[i] = t.UserTemplate{Id: u.Id, Name: u.Name}
 	}
-	return &template.ChatTemplate{
-		ChatID:   c.Id,
+	usr := t.UserTemplate{Id: user.Id, Name: user.Name}
+	ownr := t.UserTemplate{Id: c.Owner.Id, Name: c.Owner.Name}
+	return &t.ChatTemplate{
+		ChatId:   c.Id,
 		Name:     c.Name,
-		User:     user.Name,
-		Viewer:   user.Name,
-		Owner:    c.Owner.Name,
-		Users:    userNames,
+		User:     usr,
+		Viewer:   usr,
+		Owner:    ownr,
+		Users:    users,
 		Messages: messages,
 	}
 }
-
-// func (c *Chat) String() string {
-// 	return fmt.Sprintf("Chat{ID:%d,Name:%s,Owner:%s", c.Id, c.Name, c.Owner)
-// }

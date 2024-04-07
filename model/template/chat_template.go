@@ -6,12 +6,12 @@ import (
 )
 
 type ChatTemplate struct {
-	ChatID   int
+	ChatId   int
 	Name     string
-	User     string
-	Viewer   string
-	Owner    string
-	Users    []string
+	User     UserTemplate
+	Viewer   UserTemplate
+	Owner    UserTemplate
+	Users    []UserTemplate
 	Messages []MessageTemplate
 }
 
@@ -20,7 +20,6 @@ func (c *ChatTemplate) HTML() (string, error) {
 	chatTmpl := template.Must(template.ParseFiles(
 		"html/bits/chat_div.html",
 		"html/bits/members_div.html",
-		"html/bits/member_div.html",
 		"html/bits/message_li.html"))
 	err := chatTmpl.Execute(&buf, c)
 	if err != nil {

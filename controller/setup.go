@@ -12,7 +12,6 @@ import (
 func Setup(app *model.AppState, conn *db.DBConn, loadLocal bool) {
 	// loaded in reverse order
 	allMiddleware := []Middleware{
-		MinificationMiddleware,
 		LoggerMiddleware,
 		ReqIdMiddleware}
 
@@ -94,7 +93,7 @@ func handleAuth(app *model.AppState, conn *db.DBConn, allMiddleware []Middleware
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.Method == "GET" {
 				log.Printf("--%s-> handleAuth.RenderLogin\n", utils.GetReqId(r))
-				RenderLogin(w, r)
+				RenderLogin(app, w, r)
 			} else if r.Method == "POST" {
 				log.Printf("--%s-> handleAuth.Login\n", utils.GetReqId(r))
 				Login(app, conn, w, r)
@@ -111,6 +110,6 @@ func handleAuth(app *model.AppState, conn *db.DBConn, allMiddleware []Middleware
 		}), allMiddleware))
 	http.Handle("/logout", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			Logout(w, r)
+			Logout(app, w, r)
 		}), allMiddleware))
 }

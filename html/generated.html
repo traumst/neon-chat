@@ -45,7 +45,7 @@
 </html>
 
 <div style="visibility: hidden">
-{{ block "login" . }}
+{{ define "login" . }}
 <div>
     <div class="flex flex-col space-y-1.5 p-6 bg-gray-700">
         <h3 class="font-semibold whitespace-nowrap tracking-tight text-2xl text-gray-300">
@@ -83,7 +83,7 @@
 </div>
 {{ end }}
 
-{{ block "register" . }}
+{{ define "register" . }}
 <div>
     <div class="flex flex-col space-y-1.5 p-6 bg-gray-700">
         <h3 class="font-semibold whitespace-nowrap tracking-tight text-2xl text-gray-300">
@@ -121,7 +121,7 @@
 </div>
 {{ end }}
 
-{{ block "logout" . }}
+{{ define "logout" . }}
 <div>
     <div class="flex flex-col space-y-1.5 p-6 bg-gray-700">
         <h3 class="font-semibold whitespace-nowrap tracking-tight text-2xl text-gray-300">
@@ -137,7 +137,7 @@
 </div>
 {{ end }}
 
-{{ block "user-chats" . }}
+{{ define "user-chats" . }}
 <div>
     <div class="flex-col space-y-1.5 p-6 bg-gray-700 flex justify-between items-center">
         <h3 class="font-semibold whitespace-nowrap tracking-tight text-2xl text-gray-300">
@@ -176,7 +176,7 @@
 </div>
 {{ end }}
 
-{{ block "open-chat" . }}
+{{ define "open-chat" . }}
 <div class="chat text-card-foreground bg-gray-800 shadow-2xl rounded-lg border-4 border-gray-700 flex flex-col flex-grow"
     data-v0-t="card">
     <div class="chat-users flex-col space-y-1.5 p-6 bg-gray-700 flex justify-between items-center">

@@ -12,7 +12,7 @@ import (
 )
 
 type Conn struct {
-	ID     int
+	Id     int
 	User   *app.User
 	Origin string
 	Writer http.ResponseWriter
@@ -40,7 +40,7 @@ func (uc *UserConn) Add(user *app.User, origin string, w http.ResponseWriter, r 
 	log.Printf("∞---%s---> UserConn.Add TRACE user[%d] added from conn[%s]\n", utils.GetReqId(&r), user.Id, origin)
 	id := len(*uc)
 	newConn := Conn{
-		ID:     id,
+		Id:     id,
 		User:   user,
 		Origin: origin,
 		Writer: w,

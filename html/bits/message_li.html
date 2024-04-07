@@ -1,7 +1,7 @@
 <li class="chat-message" 
-    id="chat-{{ .ChatID }}-msg-{{ .MsgID }}"
-    sse-swap="msg-drop-chat-{{ .ChatID }}-msg-{{ .MsgID }}"
-    hx-target="#chat-{{ .ChatID }}-msg-{{ .MsgID }}"
+    id="chat-{{ .ChatId }}-msg-{{ .MsgId }}"
+    sse-swap="msg-drop-chat-{{ .ChatId }}-msg-{{ .MsgId }}"
+    hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
     hx-swap="innerHTML" 
 >
     <div class="chat-message">
@@ -12,14 +12,14 @@
             hx-post="/message/delete" 
             hx-trigger="click" 
             hx-swap="innerHTML" 
-            hx-target="#chat-{{ .ChatID }}-msg-{{ .MsgID }}"
+            hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
             hx-include=".chat-message-delete"
         >
-            <input type="hidden" name="msgid" value="{{ .MsgID }}">
-            <input type="hidden" name="chatid" value="{{ .ChatID }}">
+            <input type="hidden" name="msgid" value="{{ .MsgId }}">
+            <input type="hidden" name="chatid" value="{{ .ChatId }}">
             <div class="chat-message-delete" 
                 hx-trigger="click" 
-                hx-action="chat-message-delete-{{ .MsgID }}.submit()"
+                hx-action="chat-message-delete-{{ .MsgId }}.submit()"
             >
                 [delete]
             </div>

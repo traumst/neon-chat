@@ -38,12 +38,12 @@ func (db *DBConn) AddUser(user *app.User) (*app.User, error) {
 		return nil, fmt.Errorf("error adding user: %s", err)
 	}
 
-	lastID, err := result.LastInsertId()
+	lastId, err := result.LastInsertId()
 	if err != nil {
 		return nil, fmt.Errorf("error getting last insert id: %s", err)
 	}
 
-	user.Id = uint(lastID)
+	user.Id = uint(lastId)
 	return user, nil
 }
 

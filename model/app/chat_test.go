@@ -39,15 +39,15 @@ func TestIsAuthor(t *testing.T) {
 	u2 := User{Id: 2, Name: "Jill", Type: UserType(UserTypeFree)}
 	o := User{Id: 3, Name: "Mr Bill", Type: UserType(UserTypeFree)}
 	c := Chat{Owner: &o, users: []*User{&u1, &u2}}
-	m := Message{ID: 1, Owner: &o, Author: &u1, Text: "test message"}
+	m := Message{Id: 1, Owner: &o, Author: &u1, Text: "test message"}
 	mwid, err := c.history.Add(&m)
 	if err != nil {
 		t.Errorf("TestIsAuthor failed to add message: %s", err)
 	}
-	if c.isAuthor(o.Id, mwid.ID) {
+	if c.isAuthor(o.Id, mwid.Id) {
 		t.Errorf("TestIsAuthor [%d] should not have been the author of the message", o.Id)
 	}
-	if !c.isAuthor(u1.Id, mwid.ID) {
+	if !c.isAuthor(u1.Id, mwid.Id) {
 		t.Errorf("TestIsAuthor [%d] should have been the author of the message", u1.Id)
 	}
 	t.Logf("TestIsOwner finished")

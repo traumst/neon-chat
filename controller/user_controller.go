@@ -29,7 +29,7 @@ func InviteUser(app *model.AppState, conn *db.DBConn, w http.ResponseWriter, r *
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
-	chatID, err := strconv.Atoi(r.FormValue("chatId"))
+	chatId, err := strconv.Atoi(r.FormValue("chatId"))
 	if err != nil {
 		log.Printf("<-%s-- InviteUser ERROR chat id, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -42,16 +42,16 @@ func InviteUser(app *model.AppState, conn *db.DBConn, w http.ResponseWriter, r *
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	log.Printf("--%s-> InviteUser TRACE inviting[%d] to chat[%d]\n", reqId, invitee.Id, chatID)
-	err = app.InviteUser(user.Id, chatID, invitee)
+	log.Printf("--%s-> InviteUser TRACE inviting[%d] to chat[%d]\n", reqId, invitee.Id, chatId)
+	err = app.InviteUser(user.Id, chatId, invitee)
 	if err != nil {
 		log.Printf("<-%s-- InviteUser ERROR invite, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	chat, err := app.GetChat(user.Id, chatID)
+	chat, err := app.GetChat(user.Id, chatId)
 	if err != nil {
-		log.Printf("<-%s-- InviteUser ERROR cannot find chat[%d], %s\n", reqId, chatID, err)
+		log.Printf("<-%s-- InviteUser ERROR cannot find chat[%d], %s\n", reqId, chatId, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -68,15 +68,14 @@ func InviteUser(app *model.AppState, conn *db.DBConn, w http.ResponseWriter, r *
 	go func() {
 		defer wg.Done()
 		template := template.MemberTemplate{
-			ChatID: chatID,
-			Name:   chat.Name,
-			User:   invitee.Name,
-			Viewer: chat.Owner.Name,
-			Owner:  chat.Owner.Name,
+			ChatId:   chatId,
+			ChatName: chat.Name,
+			Viewer:   template.UserTemplate{Id: chat.Owner.Id, Name: chat.Owner.Name},
+			Owner:    template.UserTemplate{Id: chat.Owner.Id, Name: chat.Owner.Name},
 		}
 		html, err := template.ShortHTML()
 		if err != nil {
-			log.Printf("<-%s-- InviteUser ERROR cannot template chat[%d], %s\n", reqId, chatID, err)
+			log.Printf("<-%s-- InviteUser ERROR cannot template chat[%d], %s\n", reqId, chatId, err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -86,7 +85,7 @@ func InviteUser(app *model.AppState, conn *db.DBConn, w http.ResponseWriter, r *
 	wg.Wait()
 
 	log.Printf("<-%s-- InviteUser TRACE user[%d] added to chat[%d] by user[%d]\n",
-		reqId, invitee.Id, chatID, user.Id)
+		reqId, invitee.Id, chatId, user.Id)
 }
 
 func ExpelUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {

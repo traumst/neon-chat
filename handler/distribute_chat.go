@@ -20,8 +20,14 @@ func DistributeChat(
 	subjectUser *app.User, // which user changed
 	event e.UpdateType,
 ) error {
-	var targetUsers []*app.User
 	var err error
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("recovered %v", r)
+		}
+	}()
+
+	var targetUsers []*app.User
 	if targetUser != nil {
 		targetUsers = []*app.User{targetUser}
 	} else {
@@ -49,6 +55,9 @@ func DistributeChat(
 	for _, user := range targetUsers {
 		go func() {
 			defer wg.Done()
+			if subjectUser == nil {
+				subjectUser = user
+			}
 			log.Printf("∞----> DistributeChat TRACE event[%v] about subject[%d] will be sent to user[%d] in chat[%d]\n",
 				event, subjectUser.Id, user.Id, chat.Id)
 			err := distributeChatToUser(
@@ -71,7 +80,7 @@ func DistributeChat(
 		log.Printf("∞----> DistributeChat ERROR occurred during distribution: %v\n", errors)
 		return error(fmt.Errorf("DistributeChat errors: [%v]", errors))
 	} else {
-		return nil
+		return err
 	}
 }
 
@@ -168,15 +177,15 @@ func chatExpel(conn *model.Conn, event e.UpdateType, authorId uint, chatId int, 
 	return nil
 }
 
-func chatDelete(conn *model.Conn, event e.UpdateType, authorId uint, chatID int, subjectId uint) error {
+func chatDelete(conn *model.Conn, event e.UpdateType, authorId uint, chatId int, subjectId uint) error {
 	log.Printf("∞----> chatDelete TRACE author[%d] deleted chat[%d] for subject[%d], target[%d]\n",
-		authorId, chatID, subjectId, conn.User.Id)
+		authorId, chatId, subjectId, conn.User.Id)
 	if subjectId != 0 && conn.User.Id != subjectId {
 		return fmt.Errorf("chat_delete expect target and subject to be the same")
 	}
 	conn.In <- e.LiveUpdate{
 		Event:    event,
-		ChatId:   chatID,
+		ChatId:   chatId,
 		UserId:   conn.User.Id,
 		MsgId:    -1,
 		AuthorId: authorId,

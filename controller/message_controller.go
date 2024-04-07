@@ -44,8 +44,8 @@ func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> AddMessage TRACE storing message for user[%d] in chat[%s]\n",
 		utils.GetReqId(r), author.Id, chat.Name)
 	message, err := chat.AddMessage(author.Id, a.Message{
-		ID:     0,
-		ChatID: chat.Id,
+		Id:     0,
+		ChatId: chat.Id,
 		Owner:  chat.Owner,
 		Author: author,
 		Text:   msg,
@@ -86,13 +86,13 @@ func DeleteMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	inChatID := r.PostFormValue("chatid")
-	if inChatID == "" {
+	inChatId := r.PostFormValue("chatid")
+	if inChatId == "" {
 		log.Printf("<-%s-- DeleteChat ERROR parse args, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	chatID, err := strconv.Atoi(inChatID)
+	chatId, err := strconv.Atoi(inChatId)
 	if err != nil {
 		log.Printf("<-%s-- DeleteMessage ERROR parse chatid, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -104,26 +104,26 @@ func DeleteMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if chatID != chat.Id {
-		log.Printf("<-%s-- DeleteMessage ERROR chat id mismatch, %d != %d\n", reqId, chatID, chat.Id)
+	if chatId != chat.Id {
+		log.Printf("<-%s-- DeleteMessage ERROR chat id mismatch, %d != %d\n", reqId, chatId, chat.Id)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	inMsgID := r.PostFormValue("msgid")
-	if inMsgID == "" {
+	inMsgId := r.PostFormValue("msgid")
+	if inMsgId == "" {
 		log.Printf("<-%s-- DeleteChat ERROR parse args, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	msgID, err := strconv.Atoi(inMsgID)
+	msgId, err := strconv.Atoi(inMsgId)
 	if err != nil {
 		log.Printf("<-%s-- DeleteMessage ERROR parse msgid, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	msg, err := chat.DropMessage(author.Id, msgID)
+	msg, err := chat.DropMessage(author.Id, msgId)
 	if err != nil {
-		log.Printf("<-%s-- DeleteMessage ERROR remove message[%d] from [%s], %s\n", reqId, msgID, chat.Name, err)
+		log.Printf("<-%s-- DeleteMessage ERROR remove message[%d] from [%s], %s\n", reqId, msgId, chat.Name, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

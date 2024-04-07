@@ -85,8 +85,8 @@ func (state *AppState) AddChat(user *app.User, chatName string) int {
 	defer state.mu.Unlock()
 
 	log.Printf("∞--------> AppState.AddChat TRACE add chat[%s] for user[%d]\n", chatName, user.Id)
-	chatID := state.chats.AddChat(user, chatName)
-	return chatID
+	chatId := state.chats.AddChat(user, chatName)
+	return chatId
 }
 
 func (state *AppState) CloseChat(userId uint, chatId int) error {

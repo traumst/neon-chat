@@ -9,32 +9,32 @@
     {{ $top := . }}
     {{ range $index, $user := .Users }}
         <div class="member" 
-            id="chat-{{ $top.ChatID }}-user-{{ $user }}" 
-            sse-swap="chat-expel-{{ $top.ChatID }}-user-{{ $user }}"
-            hx-target="#chat-{{ $top.ChatID }}-user-{{ $user }}"
+            id="chat-{{ $top.ChatId }}-user-{{ $user.Id }}" 
+            sse-swap="chat-expel-{{ $top.ChatId }}-user-{{ $user.Id }}"
+            hx-target="#chat-{{ $top.ChatId }}-user-{{ $user.Id }}"
             hx-swap="innerHTML"
         >
-            {{ if eq $user $top.Owner }}
-                [<b><i>{{$user}}</i></b>]
-            {{ else if eq $top.Viewer $top.Owner }}
-                <form id="member-delete-{{ $top.ChatID }}-user-{{ $user }}"
+            {{ if eq $top.Owner.Id $user.Id }}
+                [<b><i>{{$user.Name}}</i></b>]
+            {{ else if eq $top.Owner.Id $top.Viewer.Id }}
+                <form id="member-delete-{{ $top.ChatId }}-user-{{ $user.Id }}"
                     hx-post="/user/expel" 
                     hx-trigger="click" 
-                    hx-target="#chat-{{ $top.ChatID }}-user-{{ $user }}"
+                    hx-target="#chat-{{ $top.ChatId }}-user-{{ $user.Id }}"
                     hx-swap="innerHTML" 
-                    hx-include="#member-delete-{{ $top.ChatID }}-user-{{ $user }}"
+                    hx-include="#member-delete-{{ $top.ChatId }}-user-{{ $user.Id }}"
                 >
-                    <input type="hidden" name="chatid" value="{{ $top.ChatID }}">
-                    <input type="hidden" name="userid" value="{{ $user }}">
+                    <input type="hidden" name="chatid" value="{{ $top.ChatId }}">
+                    <input type="hidden" name="userid" value="{{ $user.Id }}">
                     <div class="member-delete-button" 
                         hx-trigger="click" 
-                        hx-action="member-delete-{{ $top.ChatID }}-user-{{ $user }}.submit()"
+                        hx-action="member-delete-{{ $top.ChatId }}-user-{{ $user.Id }}.submit()"
                     >
-                        [{{$user}}]
+                        [<b>{{$user.Name}}</b>]
                     </div>
                 </form>
             {{ else }}
-                [{{$user}}]
+                [{{$user.Name}}]
             {{ end }}
         </div>
     {{ end }}
