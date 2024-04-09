@@ -16,7 +16,7 @@ type Config struct {
 }
 
 func (a *Config) String() string {
-	return fmt.Sprintf("{Port:%d}", a.Port)
+	return fmt.Sprintf("{LoadLocal:%t,Port:%d,Sqlite:%s}", a.LoadLocal, a.Port, a.Sqlite)
 }
 
 func Help() string {

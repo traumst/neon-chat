@@ -40,7 +40,7 @@ func main() {
 		log.Println(utils.Help())
 		os.Exit(13)
 	}
-	log.Printf("	  parsed config: %s\n", config)
+	log.Printf("\tparsed config: %s\n", config)
 
 	// TODO args.DBPath
 	log.Println("	connecting db...")

@@ -73,7 +73,7 @@
     hx-swap="innerHTML" 
 >
 </div>
-<div class="open-chat-name">
+<div class="open-chat-name shadow">
     <h2>chat {{ .Name }}</h2>
     <p class="open-chat-users">Users: 
         {{ template "members_div.html" . }}
@@ -95,7 +95,7 @@
     </form>
 </div>
 {{ if eq .Owner.Id .User.Id }}
-<div class="invite-user">
+<div class="invite-user shadow">
     <form method="POST" hx-target=".member-list" hx-post="/user/invite" hx-trigger="submit" hx-swap="beforeend">
         <input type="hidden" name="chatId" value="{{ .ChatId }}">
         <input type="text" name="invitee" placeholder="...type invitee username here...">
@@ -104,7 +104,7 @@
 </div>
 {{ end }}
 <hr />
-<div class="open-chat-history">
+<div class="open-chat-history shadow">
     <ul class="message-list" 
         hx-target=".message-list" 
         sse-swap="msg-add-chat-{{ .ChatId }}" 

@@ -1,4 +1,8 @@
-<li class="chat-message" 
+<li class="chat-message
+    flex flex-row 
+    m-1 p-4
+    shadow-md 
+    border-3 rounded-sm" 
     id="chat-{{ .ChatId }}-msg-{{ .MsgId }}"
     sse-swap="msg-drop-chat-{{ .ChatId }}-msg-{{ .MsgId }}"
     hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"

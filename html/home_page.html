@@ -4,9 +4,6 @@
     <title>Home</title>
     <style>
         /* 
-        .chat-list li:hover {
-            background-color: #f0f0f0;
-        }
         .chat-list li:last-child { 
             border-bottom: none; 
         }
@@ -32,7 +29,12 @@
 </head>
 <body class="h-screen m-0 p-0">
 <div hx-ext="sse" sse-trigger="load" sse-connect="/poll" 
-    class="flex flex-row grow-0 h-fit w-90 m-2 p-4 gap-4 shadow-md">
+    class="
+        flex flex-row 
+        grow-0 h-fit w-90 
+        m-2 p-4 gap-4 
+        shadow-md 
+        border-2 rounded-lg">
     <div class="left-panel p-2 w-30 border-r flex flex-col h-fit">
         <div class="active-user flex flex-row justify-between p-2">
             <p class="font-bold">Active user: {{ .ActiveUser }}</p>
@@ -41,8 +43,8 @@
             </form>
         </div> 
         <hr />
-        <div class="chat-list p-2">
-            <ul class="chat-headers flex flex-col gap-2" sse-swap="chat-add" hx-swap="beforeend"> 
+        <div class="chat-list p-2 shadow-md">
+            <ul class="chat-headers flex flex-col gap-2 last:b-0" sse-swap="chat-add" hx-swap="beforeend"> 
                 {{ with $chats := .Chats }}
                     {{ range $index, $chat := $chats }} 
                         {{ template "chat_li.html" $chat }}
@@ -53,8 +55,14 @@
             </ul>
         </div>
         <hr />
-        <div class="add-chat flex grow-0">
-            <form hx-post="/chat" hx-trigger="submit" hx-target=".open-chat" hx-swap="innerHTML">
+        <div class="add-chat">
+            <form hx-post="/chat" hx-trigger="submit" hx-target=".open-chat" hx-swap="innerHTML"
+             class="
+                flex flex-row 
+                grow-0 h-fit w-90 
+                m-2 p-4 gap-4 
+                shadow-md 
+                border-2 rounded-lg">
                 <input type="text" id="addChatFormInput" name="chatName" placeholder="new chat">
                 <button type="submit" id="addChatFormBtn">Create</button>
             </form>

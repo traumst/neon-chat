@@ -36,6 +36,7 @@ func Setup(app *model.AppState, conn *db.DBConn, loadLocal bool) {
 	http.Handle("/favicon.ico", http.HandlerFunc(FavIcon))
 	if loadLocal {
 		http.Handle("/script/", http.HandlerFunc(ServeFile))
+		http.Handle("/css/", http.HandlerFunc(ServeFile))
 	}
 	http.Handle("/gen2", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
