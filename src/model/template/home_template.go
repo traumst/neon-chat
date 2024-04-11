@@ -15,10 +15,10 @@ type HomeTemplate struct {
 func (h *HomeTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
 	homeTmpl := template.Must(template.ParseFiles(
-		"html/home_page.html",
-		"html/bits/welcome_div.html",
-		"html/bits/chat_div.html",
-		"html/bits/chat_li.html"))
+		"static/html/home_page.html",
+		"static/html/bits/welcome_div.html",
+		"static/html/bits/chat_div.html",
+		"static/html/bits/chat_li.html"))
 	err := homeTmpl.Execute(&buf, h)
 	if err != nil {
 		return "", err

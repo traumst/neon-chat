@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 
 	"go.chat/src/handler"
@@ -30,7 +31,7 @@ func OpenChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 		return
 	}
-	path := utils.ParseUrlPath(r)
+	path := strings.Split(r.URL.Path, "/")
 	log.Printf("--%s-> OpenChat, %s\n", reqId, path[2])
 	chatId, err := strconv.Atoi(path[2])
 	if err != nil {
@@ -217,7 +218,7 @@ func DeleteChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	}()
 	go func(chatId int, userId uint) {
 		defer wg.Done()
-		log.Printf("<-%s-- DeleteChat TRACE user[%d] deletes chat[%d]\n", reqId, userId, chatId)
+		log.Printf("<-%s-- DeleteChat TRACE user[%d] deletes chat[%d]\n", reqId, userId, chat.Id)
 		w.WriteHeader(http.StatusAccepted)
 		w.Write([]byte("[DELETED_C]"))
 	}(chat.Id, user.Id)

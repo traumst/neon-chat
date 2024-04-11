@@ -18,9 +18,9 @@ type ChatTemplate struct {
 func (c *ChatTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
 	chatTmpl := template.Must(template.ParseFiles(
-		"html/bits/chat_div.html",
-		"html/bits/members_div.html",
-		"html/bits/message_li.html"))
+		"static/html/bits/chat_div.html",
+		"static/html/bits/members_div.html",
+		"static/html/bits/message_li.html"))
 	err := chatTmpl.Execute(&buf, c)
 	if err != nil {
 		return "", err
@@ -30,7 +30,7 @@ func (c *ChatTemplate) HTML() (string, error) {
 
 func (c *ChatTemplate) ShortHTML() (string, error) {
 	var buf bytes.Buffer
-	shortTmpl := template.Must(template.ParseFiles("html/bits/chat_li.html"))
+	shortTmpl := template.Must(template.ParseFiles("static/html/bits/chat_li.html"))
 	err := shortTmpl.Execute(&buf, c)
 	if err != nil {
 		return "", err

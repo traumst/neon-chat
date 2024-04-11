@@ -4,35 +4,42 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"go.chat/src/utils"
 )
 
 func FavIcon(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "icon/favicon.ico")
+	http.ServeFile(w, r, "static/icon/favicon.ico")
 }
 
 func ServeFile(w http.ResponseWriter, r *http.Request) {
-	//log.Printf("--%s-> ServeFile", utils.GetReqId(r))
-	// _, err := utils.GetSessionCookie(r)
-	// if err != nil {
-	// 	utils.ClearSessionCookie(w)
-	// 	log.Printf("--%s-> ServeFile WARN cookie\n", utils.GetReqId(r))
-	// 	http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
-	// 	return
-	// }
-	path := utils.ParseUrlPath(r)
-	if len(path) < 1 {
-		log.Printf("<-%s-- ServeFile ERROR args\n", utils.GetReqId(r))
+	//log.Printf("--%s-> ServeFile TRACE serving [%s]\n", utils.GetReqId(r), r.URL.Path)
+	pathParts := strings.Split(r.URL.Path, "/")
+	fileName := pathParts[len(pathParts)-1]
+	ext := strings.Split(fileName, ".")
+
+	var filePath string
+	switch ext[len(ext)-1] {
+	case "js":
+		filePath = fmt.Sprintf("./static/script/%s", fileName)
+	case "css":
+		filePath = fmt.Sprintf("./static/css/%s", fileName)
+	case "html":
+		filePath = fmt.Sprintf("./static/html/%s", fileName)
+	case "ico":
+		filePath = fmt.Sprintf("./static/icon/%s", fileName)
+	default:
+		filePath = ""
+	}
+
+	if filePath == "" {
+		log.Printf("<-%s-- ServeFile ERROR serving [%s]\n", utils.GetReqId(r), r.URL.Path)
+		w.Write([]byte("invalid path"))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	filename := fmt.Sprintf("%s/%s", path[1], path[2])
-	if filename == "" {
-		log.Printf("<-%s-- ServeFile ERROR filename path[%v]\n", utils.GetReqId(r), filename)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	//log.Printf("<-%s-- ServeFile TRACE serving %s\n", utils.GetReqId(r), filename)
-	http.ServeFile(w, r, filename)
+
+	//log.Printf("<-%s-- ServeFile TRACE serving [%s]\n", utils.GetReqId(r), filePath)
+	http.ServeFile(w, r, filePath)
 }

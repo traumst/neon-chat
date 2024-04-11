@@ -11,9 +11,7 @@ import (
 
 func Setup(app *model.AppState, conn *db.DBConn, loadLocal bool) {
 	// loaded in reverse order
-	allMiddleware := []Middleware{
-		LoggerMiddleware,
-		ReqIdMiddleware}
+	allMiddleware := []Middleware{LoggerMiddleware, ReqIdMiddleware}
 
 	handleAuth(app, conn, allMiddleware)
 	handleUser(app, conn, allMiddleware)
@@ -33,11 +31,23 @@ func Setup(app *model.AppState, conn *db.DBConn, loadLocal bool) {
 		}), allMiddleware))
 
 	// static files
-	http.Handle("/favicon.ico", http.HandlerFunc(FavIcon))
+	minMiddleware := []Middleware{ReqIdMiddleware}
+	http.Handle("/favicon.ico", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ServeFile(w, r)
+		}), minMiddleware))
 	if loadLocal {
-		http.Handle("/script/", http.HandlerFunc(ServeFile))
-		http.Handle("/css/", http.HandlerFunc(ServeFile))
+		http.Handle("/script/", ChainMiddleware(
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				ServeFile(w, r)
+			}), minMiddleware))
+		http.Handle("/css/", ChainMiddleware(
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				ServeFile(w, r)
+			}), minMiddleware))
 	}
+
+	// tmp, experimental
 	http.Handle("/gen2", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			Gen2(app, w, r)

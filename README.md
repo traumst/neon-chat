@@ -12,7 +12,10 @@ This app is being build as an excercise for me to
 
 ### *Right now...*
 
-Leaving chat should update users in chat
+__BUGS:__
+* ~~login does not work - only signup~~
+* ~~after restart need to re-login~~
+* invite not sent to owner
 
 It's time to start sanitizing raw user input.
 Def break the chat: ' "

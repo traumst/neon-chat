@@ -2,7 +2,6 @@ package utils
 
 import (
 	"net/http"
-	"strings"
 )
 
 func SetReqId(r *http.Request, s *string) string {
@@ -24,11 +23,6 @@ func SetSseHeaders(w *http.ResponseWriter) {
 	(*w).Header().Set("Content-Type", "text/event-stream")
 	(*w).Header().Set("Cache-Control", "no-cache")
 	(*w).Header().Set("Connection", "keep-alive")
-}
-
-func ParseUrlPath(r *http.Request) []string {
-	path := strings.Split(r.URL.Path, "/")
-	return path
 }
 
 func ParseUrlArgs(r *http.Request) map[string]string {

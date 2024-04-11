@@ -20,7 +20,8 @@ func ChainMiddleware(h http.Handler, middleware []Middleware) http.Handler {
 func ReqIdMiddleware(next http.Handler) http.Handler {
 	//log.Printf("---> ReqIdMiddleware TRACE")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//log.Printf("---> ReqIdMiddleware TRACE reqId set to [%s]", utils.SetReqId(r, nil))
+		_ = utils.SetReqId(r, nil)
+		//log.Printf("---> ReqIdMiddleware TRACE reqId set to [%s]", reqId)
 		next.ServeHTTP(w, r)
 	})
 }

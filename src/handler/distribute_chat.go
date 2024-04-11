@@ -20,25 +20,28 @@ func DistributeChat(
 	subjectUser *app.User, // which user changed
 	event e.UpdateType,
 ) error {
-	var err error
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("recovered %v", r)
-		}
-	}()
+	if author == nil {
+		return fmt.Errorf("author is nil")
+	}
+	if chat == nil {
+		return fmt.Errorf("chat is nil")
+	}
+	if state == nil {
+		return fmt.Errorf("state is nil")
+	}
 
+	var err error
 	var targetUsers []*app.User
 	if targetUser != nil {
 		targetUsers = []*app.User{targetUser}
 	} else {
 		targetUsers, err = chat.GetUsers(author.Id)
 		if err != nil {
-			err = fmt.Errorf("DistributeChat: get users, chat[%d], %s", chat.Id, err)
+			err = fmt.Errorf("get users, chat[%d], %s", chat.Id, err)
 		} else if len(targetUsers) == 0 {
-			err = fmt.Errorf("DistributeChat: chatUsers are empty, chat[%+v], %s", chat, err)
+			err = fmt.Errorf("chatUsers are empty, chat[%d], %s", chat.Id, err)
 		}
 	}
-
 	if err != nil {
 		log.Printf("∞----> DistributeChat ERROR, %s\n", err)
 		return err
@@ -49,21 +52,23 @@ func DistributeChat(
 		return nil
 	}
 
+	if subjectUser == nil {
+		subjectUser = author
+	}
+
 	var wg sync.WaitGroup
 	var errors []string
 	wg.Add(targetUsersCount)
-	for _, user := range targetUsers {
+	for _, targetUser := range targetUsers {
 		go func() {
 			defer wg.Done()
-			if subjectUser == nil {
-				subjectUser = user
-			}
-			log.Printf("∞----> DistributeChat TRACE event[%v] about subject[%d] will be sent to user[%d] in chat[%d]\n",
-				event, subjectUser.Id, user.Id, chat.Id)
+
+			log.Printf("∞----> DistributeChat TRACE event[%v] about subject[%v] will be sent to user[%v] in chat[%v]\n",
+				event, subjectUser, targetUser, chat)
 			err := distributeChatToUser(
 				state,
 				author,
-				user.Id,
+				targetUser,
 				chat,
 				subjectUser,
 				event,
@@ -87,17 +92,17 @@ func DistributeChat(
 func distributeChatToUser(
 	state *model.AppState,
 	author *app.User,
-	targetUserId uint,
+	targetUser *app.User,
 	targetChat *app.Chat,
 	subjectUser *app.User,
 	event e.UpdateType,
 ) error {
-	conn, err := state.GetConn(targetUserId)
+	conn, err := state.GetConn(targetUser.Id)
 	if err != nil {
 		return err
 	}
-	if conn.User.Id != targetUserId {
-		return fmt.Errorf("user[%d] does not own conn[%v], user[%d] does", targetUserId, conn.Origin, conn.User.Id)
+	if conn.User.Id != targetUser.Id {
+		return fmt.Errorf("user[%d] does not own conn[%v], user[%d] does", targetUser.Id, conn.Origin, conn.User.Id)
 	}
 
 	switch event {

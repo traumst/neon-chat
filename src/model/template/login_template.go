@@ -18,7 +18,7 @@ type LoginTemplate struct {
 }
 
 func (lt *LoginTemplate) HTML() (string, error) {
-	template := template.Must(template.ParseFiles("html/login_page.html"))
+	template := template.Must(template.ParseFiles("static/html/login_page.html"))
 	var buf bytes.Buffer
 	err := template.Execute(&buf, lt)
 	if err != nil {

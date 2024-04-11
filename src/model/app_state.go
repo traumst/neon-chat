@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sync"
 
+	"go.chat/src/db"
 	"go.chat/src/model/app"
 	"go.chat/src/utils"
 )
@@ -15,6 +16,7 @@ var ApplicationState AppState
 type AppState struct {
 	mu        sync.Mutex
 	isInit    bool
+	db        *db.DBConn
 	chats     app.ChatList
 	userConn  UserConn
 	users     []app.User
@@ -25,9 +27,10 @@ type AppConfig struct {
 	LoadLocal bool
 }
 
-func (state *AppState) Init(config AppConfig) {
+func (state *AppState) Init(db *db.DBConn, config AppConfig) {
 	ApplicationState = AppState{
 		isInit:    true,
+		db:        db,
 		chats:     app.ChatList{},
 		userConn:  make(UserConn, 0),
 		users:     make([]app.User, 0),
@@ -185,11 +188,19 @@ func (state *AppState) GetUser(userId uint) (*app.User, error) {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
+	var appUser *app.User
+	var err error
+
 	log.Printf("∞--------> AppState.GetUser TRACE get user[%d]\n", userId)
 	for _, user := range state.users {
 		if user.Id == userId {
-			return &user, nil
+			appUser = &user
 		}
 	}
-	return nil, fmt.Errorf("user[%d] not found", userId)
+
+	if appUser == nil {
+		appUser, err = state.db.GetUserById(userId)
+	}
+
+	return appUser, err
 }

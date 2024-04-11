@@ -66,3 +66,23 @@ func (db *DBConn) GetUser(name string) (*app.User, error) {
 	}
 	return &user, err
 }
+
+func (db *DBConn) GetUserById(id uint) (*app.User, error) {
+	if db == nil {
+		return nil, fmt.Errorf("db is nil")
+	}
+	if !db.isConn || !db.isInit {
+		return nil, fmt.Errorf("db is not connected")
+	}
+	if id == 0 {
+		return nil, fmt.Errorf("id was 0")
+	}
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	var user app.User
+	err := db.conn.Get(&user, `SELECT * FROM users WHERE id = ?`, id)
+	if err != nil {
+		return nil, fmt.Errorf("userId[%d] not found: %s", id, err)
+	}
+	return &user, err
+}

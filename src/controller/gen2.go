@@ -21,7 +21,7 @@ func Gen2(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var buf bytes.Buffer
-	tmpl := template.Must(template.ParseFiles("html/generated.html"))
+	tmpl := template.Must(template.ParseFiles("static/html/generated.html"))
 	err = tmpl.Execute(&buf, nil)
 	if err != nil {
 		log.Printf("--%s-> Gen2 TRACE, user[%d] gets content\n", utils.GetReqId(r), user.Id)
