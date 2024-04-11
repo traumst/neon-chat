@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <style>
+        /* 
+        .add-chat input { 
+            width: 70%; 
+            padding: 10px; 
+            margin-right: 10px; 
+            box-sizing: border-box; 
+        }
+        .add-chat button { 
+            padding: 10px 20px; 
+        } */
+    </style>
+    {{ if .LoadLocal }}
+    <script src="/script/htmx.1.9.10.min.js"></script>
+    <script src="/script/htmx.1.9.10.sse.js"></script>
+    <script src="/script/htmx.1.9.10.debug.js"></script>
+    <link href="/css/tailwind.css" rel="stylesheet">
+    {{ else }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.11/htmx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.11/ext/sse.min.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    {{ end }}
+</head>
+<body class="h-full m-0 p-0">
+<div hx-ext="sse" sse-trigger="load" sse-connect="/poll" 
+    class="
+        flex flex-row 
+        grow-0 w-90 
+        m-2 p-4 gap-4 
+        shadow-md 
+        border-2 rounded-lg">
+    <div class="left-panel 
+        flex flex-col
+        p-2 
+        min-w-1/10 max-w-3/10
+        h-fit 
+        border-r">
+        <div class="active-user flex flex-row justify-between p-2">
+            <p class="font-bold">Active user: {{ .ActiveUser }}</p>
+            <form action="/logout" method="POST" class="pl-2">
+                <button type="submit">[logout]</button>
+            </form>
+        </div> 
+        <hr />
+        <div class="chat-list p-2">
+            <ul sse-swap="chat-add" hx-swap="beforeend"
+                class="chat-headers 
+                    justify-start 
+                    flex flex-col 
+                    gap-y-2 
+                    last:b-0"> 
+                {{ with $chats := .Chats }}
+                    {{ range $index, $chat := $chats }} 
+                        {{ template "chat_li.html" $chat }}
+                    {{ end }}
+                {{ else }}
+                    <li>No chats yet</li>
+                {{ end }}
+            </ul>
+        </div>
+        <hr />
+        <div class="add-chat justify-between">
+            <form hx-post="/chat" hx-trigger="submit" hx-target=".open-chat" hx-swap="innerHTML"
+             class="
+                flex flex-row 
+                grow-0 h-fit w-90 
+                m-2 p-4 gap-4 
+                shadow-md 
+                border-2 rounded-lg">
+                <input type="text" id="addChatFormInput" name="chatName" placeholder="new chat">
+                <button type="submit" id="addChatFormBtn" class="px-3 py-5">
+                    Create
+                </button>
+            </form>
+        </div>
+    </div>
+    <div class="right-panel p-2 w-full border-l flex flex-col h-fit">
+        <div class="open-chat">
+            {{ with .OpenTemplate }}
+                <div class="open-chat-content" 
+                    hx-get="/chat/{{ .ChatId }}" 
+                    hx-trigger="load"
+                    hx-target="this"
+                    hx-swap="innerHTML">
+                </div>
+            {{ else }}
+                {{ template "welcome_div.html" . }}
+            {{ end }}
+        </div>
+    </div>
+</div>
+</body>
+</html>
