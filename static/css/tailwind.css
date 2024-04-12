@@ -615,6 +615,10 @@ video {
   width: 100%;
 }
 
+.min-w-96 {
+  min-width: 24rem;
+}
+
 .flex-grow {
   flex-grow: 1;
 }

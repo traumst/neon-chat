@@ -209,7 +209,7 @@ func LeaveChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	go func() {
 		defer wg.Done()
 		log.Printf("--%s-∞ LeaveChat TRACE distributing user[%d] left chat[%d]\n", reqId, user.Id, chat.Id)
-		err := handler.DistributeChat(app, chat, user, user, user, e.ChatClose)
+		err := handler.DistributeChat(app, chat, user, user, nil, e.ChatClose)
 		if err != nil {
 			log.Printf("<-%s-- LeaveChat ERROR cannot distribute chat close, %s\n", reqId, err)
 			return
@@ -235,9 +235,9 @@ func LeaveChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 
 	err = app.DropUser(user.Id, chat.Id, user.Id)
 	if err != nil {
-		log.Printf("<-%s-- LeaveChat ERROR invite, %s\n", reqId, err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		log.Printf("<-%s-- LeaveChat ERROR dropUser, %s\n", reqId, err)
+		// w.WriteHeader(http.StatusBadRequest)
+		// return
 	}
-	log.Printf("--%s-> LeaveChat TRACE chat[%d] removed[%d]\n", reqId, chatId, user.Id)
+	log.Printf("<-%s-- LeaveChat TRACE chat[%d] removed[%d]\n", reqId, chatId, user.Id)
 }

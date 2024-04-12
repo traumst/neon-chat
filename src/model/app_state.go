@@ -42,6 +42,7 @@ func (state *AppState) LoadLocal() bool {
 	return state.loadLocal
 }
 
+// CONN
 func (state *AppState) ReplaceConn(w http.ResponseWriter, r http.Request, user *app.User) *Conn {
 	conn, err := state.GetConn(user.Id)
 	for err == nil && conn != nil {
@@ -83,88 +84,7 @@ func (state *AppState) DropConn(conn *Conn) error {
 	return state.userConn.Drop(conn)
 }
 
-func (state *AppState) AddChat(user *app.User, chatName string) int {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-
-	log.Printf("∞--------> AppState.AddChat TRACE add chat[%s] for user[%d]\n", chatName, user.Id)
-	chatId := state.chats.AddChat(user, chatName)
-	return chatId
-}
-
-func (state *AppState) CloseChat(userId uint, chatId int) error {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-
-	log.Printf("∞--------> AppState.CloseChat TRACE close chat[%d] for user[%d]\n", chatId, userId)
-	return state.chats.CloseChat(userId, chatId)
-}
-
-func (state *AppState) DeleteChat(userId uint, chat *app.Chat) error {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-
-	log.Printf("∞--------> AppState.DeleteChat TRACE get chats for user[%d]\n", userId)
-	err := state.chats.CloseChat(userId, chat.Id)
-	if err != nil {
-		return fmt.Errorf("AppState.DeleteChat failed to close chat, %s", err)
-	}
-	return state.chats.DeleteChat(userId, chat)
-}
-
-func (state *AppState) OpenChat(userId uint, chatId int) (*app.Chat, error) {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-
-	log.Printf("∞--------> AppState.OpenChat TRACE open chat[%d] for user[%d]\n", chatId, userId)
-	return state.chats.OpenChat(userId, chatId)
-}
-
-func (state *AppState) InviteUser(userId uint, chatId int, invitee *app.User) error {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-
-	log.Printf("∞--------> AppState.InviteUser TRACE invite user[%d] chat[%d] by user[%d]\n",
-		invitee.Id, chatId, userId)
-	return state.chats.InviteUser(userId, chatId, invitee)
-}
-
-func (state *AppState) DropUser(userId uint, chatId int, removeId uint) error {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-
-	log.Printf("∞--------> AppState.DropUser TRACE removing user[%d] chat[%d] by user[%d]\n", removeId, chatId, userId)
-	err := state.chats.CloseChat(removeId, chatId)
-	if err != nil {
-		log.Printf("cannot close chat[%d] for user[%d], %s\n", chatId, userId, err)
-	}
-	return state.chats.ExpelUser(userId, chatId, removeId)
-}
-
-func (state *AppState) GetChats(userId uint) []*app.Chat {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-
-	log.Printf("∞--------> AppState.GetChats TRACE get chats for user[%d]\n", userId)
-	return state.chats.GetChats(userId)
-}
-
-func (state *AppState) GetChat(userId uint, chatId int) (*app.Chat, error) {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-
-	log.Printf("∞--------> AppState.GetChat TRACE get chat[%d] for user[%d]\n", chatId, userId)
-	return state.chats.GetChat(userId, chatId)
-}
-
-func (state *AppState) GetOpenChat(userId uint) *app.Chat {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-
-	log.Printf("∞--------> AppState.GetOpenChat TRACE get open chat for user[%d]\n", userId)
-	return state.chats.GetOpenChat(userId)
-}
-
+// USER
 func (state *AppState) TrackUser(user *app.User) error {
 	if user == nil {
 		return fmt.Errorf("user was nil")
@@ -203,4 +123,87 @@ func (state *AppState) GetUser(userId uint) (*app.User, error) {
 	}
 
 	return appUser, err
+}
+
+func (state *AppState) InviteUser(userId uint, chatId int, invitee *app.User) error {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.InviteUser TRACE invite user[%d] chat[%d] by user[%d]\n",
+		invitee.Id, chatId, userId)
+	return state.chats.InviteUser(userId, chatId, invitee)
+}
+
+func (state *AppState) DropUser(userId uint, chatId int, removeId uint) error {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.DropUser TRACE removing user[%d] chat[%d] by user[%d]\n", removeId, chatId, userId)
+	err := state.chats.CloseChat(removeId, chatId)
+	if err != nil {
+		log.Printf("cannot close chat[%d] for user[%d], %s\n", chatId, userId, err)
+	}
+	return state.chats.ExpelUser(userId, chatId, removeId)
+}
+
+// CHAT
+func (state *AppState) AddChat(user *app.User, chatName string) int {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.AddChat TRACE add chat[%s] for user[%d]\n", chatName, user.Id)
+	chatId := state.chats.AddChat(user, chatName)
+	return chatId
+}
+
+func (state *AppState) GetChats(userId uint) []*app.Chat {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.GetChats TRACE get chats for user[%d]\n", userId)
+	return state.chats.GetChats(userId)
+}
+
+func (state *AppState) GetChat(userId uint, chatId int) (*app.Chat, error) {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.GetChat TRACE get chat[%d] for user[%d]\n", chatId, userId)
+	return state.chats.GetChat(userId, chatId)
+}
+
+func (state *AppState) GetOpenChat(userId uint) *app.Chat {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.GetOpenChat TRACE get open chat for user[%d]\n", userId)
+	return state.chats.GetOpenChat(userId)
+}
+
+func (state *AppState) OpenChat(userId uint, chatId int) (*app.Chat, error) {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.OpenChat TRACE open chat[%d] for user[%d]\n", chatId, userId)
+	return state.chats.OpenChat(userId, chatId)
+}
+
+func (state *AppState) CloseChat(userId uint, chatId int) error {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.CloseChat TRACE close chat[%d] for user[%d]\n", chatId, userId)
+	return state.chats.CloseChat(userId, chatId)
+}
+
+func (state *AppState) DeleteChat(userId uint, chat *app.Chat) error {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.DeleteChat TRACE get chats for user[%d]\n", userId)
+	err := state.chats.CloseChat(userId, chat.Id)
+	if err != nil {
+		return fmt.Errorf("AppState.DeleteChat failed to close chat, %s", err)
+	}
+	return state.chats.DeleteChat(userId, chat)
 }

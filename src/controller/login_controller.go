@@ -62,31 +62,19 @@ func Login(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Re
 	log.Printf("--%s-> Login TRACE authentication check for user[%s] auth[%s]\n",
 		utils.GetReqId(r), u, authType)
 	user, auth, err := handler.Authenticate(db, u, p, authType)
-	if user == nil {
-		log.Printf("<-%s-- Login INFO user[%s] not found\n", utils.GetReqId(r), u)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Not found"))
-		return
-	}
-	if auth == nil {
-		log.Printf("<-%s-- Login INFO user[%s] has no auth\n", utils.GetReqId(r), u)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Not Found"))
-		return
-	}
-	if err != nil {
-		log.Printf("<-%s-- Login ERROR on authenticate[%s], %s\n", utils.GetReqId(r), u, err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Not Found"))
+	if user != nil && auth != nil {
+		err = app.TrackUser(user)
+		if err != nil {
+			log.Printf("--%s-> Login WARN on track user[%d][%s], %s\n", utils.GetReqId(r), user.Id, user.Name, err)
+		}
+		utils.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
+		http.Redirect(w, r, "/", http.StatusPermanentRedirect)
 		return
 	}
 
-	err = app.TrackUser(user)
-	if err != nil {
-		log.Printf("--%s-> Login WARN on track user[%d][%s], %s\n", utils.GetReqId(r), user.Id, user.Name, err)
-	}
-	utils.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
-	http.Redirect(w, r, "/", http.StatusFound)
+	log.Printf("<-%s-- Login ERROR on authenticate[%s], %s\n", utils.GetReqId(r), u, err)
+	w.WriteHeader(http.StatusBadRequest)
+	w.Write([]byte("Not Found"))
 	log.Printf("<-%s-- Login TRACE OUT\n", utils.GetReqId(r))
 }
 
@@ -99,12 +87,11 @@ func SignUp(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.R
 	}
 	u := r.FormValue("user")
 	p := r.FormValue("pass")
+	log.Printf("--%s-> SignUp TRACE authentication check for user[%s] auth[%s]\n", utils.GetReqId(r), u, authType)
 	if u == "" || p == "" {
 		RenderLogin(app, w, r)
 		return
 	}
-	log.Printf("--%s-> SignUp TRACE authentication check for user[%s] auth[%s]\n",
-		utils.GetReqId(r), u, authType)
 	user, auth, err := handler.Authenticate(db, u, p, authType)
 	if user != nil && auth != nil {
 		log.Printf("--%s-> SignUp TRACE signedIn instead of signUp user[%s], %s\n", utils.GetReqId(r), u, err)
@@ -117,8 +104,8 @@ func SignUp(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.R
 		return
 	}
 	if user != nil {
-		log.Printf("--%s-> SignUp ERROR user[%s] already taken by user[%d], %s\n",
-			utils.GetReqId(r), user.Name, user.Id, err)
+		log.Printf("--%s-> SignUp ERROR name[%s] already taken by user[%d], %s\n",
+			utils.GetReqId(r), u, user.Id, err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Operation failed"))
 		return
