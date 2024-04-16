@@ -6,11 +6,10 @@ import (
 	"sync"
 
 	"go.chat/src/handler"
-	"go.chat/src/model"
 	"go.chat/src/utils"
 )
 
-func PollUpdates(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+func PollUpdates(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		log.Printf("<-%s-- PollUpdates TRACE does not provide %s\n", utils.GetReqId(r), r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)

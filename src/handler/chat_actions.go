@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"log"
 
-	"go.chat/src/model"
 	"go.chat/src/model/app"
 	e "go.chat/src/model/event"
 	"go.chat/src/model/template"
 )
 
-func chatCreate(conn *model.Conn, event e.UpdateType, targetChat *app.Chat, author *app.User) error {
+func chatCreate(conn *Conn, event e.UpdateType, targetChat *app.Chat, author *app.User) error {
 	log.Printf("∞----> chatCreate TRACE author[%d] created chat[%d]\n",
 		author.Id, targetChat.Id)
 	if author.Id != conn.User.Id || conn.User.Id != author.Id {
@@ -32,7 +31,7 @@ func chatCreate(conn *model.Conn, event e.UpdateType, targetChat *app.Chat, auth
 	return nil
 }
 
-func chatInvite(conn *model.Conn, event e.UpdateType, targetChat *app.Chat, authorId uint, subject *app.User) error {
+func chatInvite(conn *Conn, event e.UpdateType, targetChat *app.Chat, authorId uint, subject *app.User) error {
 	log.Printf("∞----> chatCreate TRACE author[%d] invited subject[%d] to chat[%d], target[%d]\n",
 		authorId, subject.Id, targetChat.Id, conn.User.Id)
 	if authorId == conn.User.Id || conn.User.Id != subject.Id {
@@ -54,7 +53,7 @@ func chatInvite(conn *model.Conn, event e.UpdateType, targetChat *app.Chat, auth
 	return nil
 }
 
-func chatExpel(conn *model.Conn, event e.UpdateType, chatId int, authorId uint, subjectId uint) error {
+func chatExpel(conn *Conn, event e.UpdateType, chatId int, authorId uint, subjectId uint) error {
 	log.Printf("∞----> chatExpel TRACE to user[%d] about author[%d] dropped subject[%d] from chat[%d]\n",
 		conn.User.Id, authorId, subjectId, chatId)
 	if conn.User.Id == authorId {
@@ -71,7 +70,7 @@ func chatExpel(conn *model.Conn, event e.UpdateType, chatId int, authorId uint, 
 	return nil
 }
 
-func chatDelete(conn *model.Conn, event e.UpdateType, chatId int, authorId uint, targetId uint) error {
+func chatDelete(conn *Conn, event e.UpdateType, chatId int, authorId uint, targetId uint) error {
 	log.Printf("∞----> chatDelete TRACE deleted chat[%d] for subject[%d], target[%d]\n",
 		chatId, targetId, conn.User.Id)
 	if targetId != 0 && conn.User.Id != targetId {
@@ -88,7 +87,7 @@ func chatDelete(conn *model.Conn, event e.UpdateType, chatId int, authorId uint,
 	return nil
 }
 
-func chatClose(conn *model.Conn, event e.UpdateType, chatId int, authorId uint, targetId uint) error {
+func chatClose(conn *Conn, event e.UpdateType, chatId int, authorId uint, targetId uint) error {
 	log.Printf("∞----> chatClose TRACE user[%d] closed chat[%d] for subject[%d]\n", authorId, chatId, targetId)
 	if targetId != 0 && conn.User.Id != targetId {
 		return fmt.Errorf("chatClose conn[%s] belongs to other user[%d]", conn.Origin, conn.User.Id)

@@ -5,12 +5,11 @@ import (
 	"net/http"
 
 	"go.chat/src/handler"
-	"go.chat/src/model"
 	"go.chat/src/model/template"
 	"go.chat/src/utils"
 )
 
-func RenderHome(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+func RenderHome(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Home", utils.GetReqId(r))
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil {

@@ -7,13 +7,12 @@ import (
 	"sync"
 
 	"go.chat/src/db"
-	"go.chat/src/model"
 	a "go.chat/src/model/app"
 	"go.chat/src/utils"
 )
 
 func ReadSession(
-	app *model.AppState,
+	app *AppState,
 	w http.ResponseWriter,
 	r *http.Request,
 ) (*a.User, error) {

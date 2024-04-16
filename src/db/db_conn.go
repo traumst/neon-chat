@@ -8,7 +8,6 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
-	"go.chat/src/utils"
 )
 
 type DBConn struct {
@@ -26,7 +25,7 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 		}
 		file.Close()
 	} else {
-		log.Printf("  opening db file [%s] [%s]", fi.Name(), utils.Size(fi.Size()))
+		log.Printf("  opening db file [%s] [%d]", fi.Name(), fi.Size())
 	}
 
 	conn, err := sqlx.Open("sqlite3", dbPath)

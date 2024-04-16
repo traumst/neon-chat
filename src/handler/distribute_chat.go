@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"log"
 
-	"go.chat/src/model"
 	"go.chat/src/model/app"
 	e "go.chat/src/model/event"
 )
 
 // empty targetUser means all users in chat
 func DistributeChat(
-	state *model.AppState,
+	state *AppState,
 	chat *app.Chat,
 	author *app.User, // who made the change
 	targetUser *app.User, // who to inform, nil for all users in chat
@@ -45,7 +44,7 @@ func DistributeChat(
 }
 
 func distributeToUsers(
-	state *model.AppState,
+	state *AppState,
 	chat *app.Chat,
 	author *app.User,
 	targetUsers []*app.User,
@@ -76,7 +75,7 @@ func distributeToUsers(
 }
 
 func distributeChatToUser(
-	state *model.AppState,
+	state *AppState,
 	author *app.User,
 	targetUser *app.User,
 	targetChat *app.Chat,

@@ -9,13 +9,12 @@ import (
 
 	"go.chat/src/db"
 	"go.chat/src/handler"
-	"go.chat/src/model"
 	e "go.chat/src/model/event"
 	"go.chat/src/model/template"
 	"go.chat/src/utils"
 )
 
-func InviteUser(app *model.AppState, conn *db.DBConn, w http.ResponseWriter, r *http.Request) {
+func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> InviteUser\n", reqId)
 	if r.Method != "POST" {
@@ -89,7 +88,7 @@ func InviteUser(app *model.AppState, conn *db.DBConn, w http.ResponseWriter, r *
 		reqId, invitee.Id, chatId, user.Id)
 }
 
-func ExpelUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> ExpelUser\n", reqId)
 	if r.Method != "POST" {
@@ -169,7 +168,7 @@ func ExpelUser(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> ExpelUser TRACE chat[%d] owner[%d] removed[%d]\n", reqId, chatId, user.Id, expelled.Id)
 }
 
-func LeaveChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> LeaveChat\n", reqId)
 	if r.Method != "POST" {

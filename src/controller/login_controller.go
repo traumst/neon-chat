@@ -7,7 +7,6 @@ import (
 
 	"go.chat/src/db"
 	"go.chat/src/handler"
-	"go.chat/src/model"
 	a "go.chat/src/model/app"
 	"go.chat/src/model/template"
 	"go.chat/src/utils"
@@ -18,7 +17,7 @@ const (
 	authType = a.AuthTypeLocal
 )
 
-func RenderLogin(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+func RenderLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> RenderLogin\n", utils.GetReqId(r))
 	template := template.LoginTemplate{
 		Login: template.AuthForm{
@@ -46,7 +45,7 @@ func RenderLogin(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(html))
 }
 
-func Login(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
+func Login(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Login TRACE IN\n", utils.GetReqId(r))
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -78,7 +77,7 @@ func Login(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Re
 	log.Printf("<-%s-- Login TRACE OUT\n", utils.GetReqId(r))
 }
 
-func SignUp(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
+func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> SignUp TRACE IN\n", utils.GetReqId(r))
 	if r.Method != "PUT" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -135,7 +134,7 @@ func SignUp(app *model.AppState, db *db.DBConn, w http.ResponseWriter, r *http.R
 	log.Printf("--%s-> SignUp TRACE OUT\n", utils.GetReqId(r))
 }
 
-func Logout(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+func Logout(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Logout TRACE \n", utils.GetReqId(r))
 	utils.ClearSessionCookie(w)
 	RenderLogin(app, w, r)

@@ -1,4 +1,4 @@
-package model
+package handler
 
 import (
 	"net/http/httptest"

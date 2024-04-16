@@ -9,14 +9,13 @@ import (
 	"sync"
 
 	"go.chat/src/handler"
-	"go.chat/src/model"
 	e "go.chat/src/model/event"
 	"go.chat/src/model/template"
 	"go.chat/src/utils"
 )
 
 // TODO if try to open missing chat - fire event to remove
-func OpenChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+func OpenChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> OpenChat\n", reqId)
 	if r.Method != "GET" {
@@ -67,7 +66,7 @@ func OpenChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(html))
 }
 
-func AddChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+func AddChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> AddChat\n", reqId)
 	if r.Method != "POST" {
@@ -125,7 +124,7 @@ func AddChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	wg.Wait()
 }
 
-func CloseChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+func CloseChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> CloseChat\n", reqId)
 	if r.Method != "POST" {
@@ -167,7 +166,7 @@ func CloseChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(html))
 }
 
-func DeleteChat(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+func DeleteChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> DeleteChat TRACE\n", reqId)
 	if r.Method != "POST" {

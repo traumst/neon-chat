@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	"go.chat/src/db"
-	"go.chat/src/model"
+	"go.chat/src/handler"
 	"go.chat/src/utils"
 )
 
-func Setup(app *model.AppState, conn *db.DBConn, loadLocal bool) {
+func Setup(app *handler.AppState, conn *db.DBConn, loadLocal bool) {
 	// loaded in reverse order
 	allMiddleware := []Middleware{LoggerMiddleware, ReqIdMiddleware}
 
@@ -54,7 +54,7 @@ func Setup(app *model.AppState, conn *db.DBConn, loadLocal bool) {
 		}), allMiddleware))
 }
 
-func handleMsgs(app *model.AppState, allMiddleware []Middleware) {
+func handleMsgs(app *handler.AppState, allMiddleware []Middleware) {
 	http.Handle("/message/delete", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			DeleteMessage(app, w, r)
@@ -65,7 +65,7 @@ func handleMsgs(app *model.AppState, allMiddleware []Middleware) {
 		}), allMiddleware))
 }
 
-func handleChat(app *model.AppState, allMiddleware []Middleware) {
+func handleChat(app *handler.AppState, allMiddleware []Middleware) {
 	http.Handle("/chat/delete", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			DeleteChat(app, w, r)
@@ -84,7 +84,7 @@ func handleChat(app *model.AppState, allMiddleware []Middleware) {
 		}), allMiddleware))
 }
 
-func handleUser(app *model.AppState, conn *db.DBConn, allMiddleware []Middleware) {
+func handleUser(app *handler.AppState, conn *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/user/invite", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			InviteUser(app, conn, w, r)
@@ -99,7 +99,7 @@ func handleUser(app *model.AppState, conn *db.DBConn, allMiddleware []Middleware
 		}), allMiddleware))
 }
 
-func handleAuth(app *model.AppState, conn *db.DBConn, allMiddleware []Middleware) {
+func handleAuth(app *handler.AppState, conn *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/login", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.Method == "GET" {

@@ -5,13 +5,12 @@ import (
 	"log"
 	"sync"
 
-	"go.chat/src/model"
 	"go.chat/src/model/app"
 	e "go.chat/src/model/event"
 )
 
 func DistributeMsg(
-	state *model.AppState,
+	state *AppState,
 	chat *app.Chat,
 	authorId uint,
 	msg *app.Message,
@@ -57,7 +56,7 @@ func DistributeMsg(
 }
 
 func distributeMsgToUser(
-	state *model.AppState,
+	state *AppState,
 	chatId int,
 	msgId int,
 	userId uint,

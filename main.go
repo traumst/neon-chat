@@ -11,7 +11,7 @@ import (
 
 	"go.chat/src/controller"
 	"go.chat/src/db"
-	"go.chat/src/model"
+	"go.chat/src/handler"
 	"go.chat/src/utils"
 )
 
@@ -50,8 +50,8 @@ func main() {
 	}
 
 	log.Println("	init app state...")
-	app := &model.ApplicationState
-	app.Init(db, model.AppConfig{LoadLocal: config.LoadLocal})
+	app := &handler.ApplicationState
+	app.Init(db, handler.AppConfig{LoadLocal: config.LoadLocal})
 
 	log.Println("	init controllers...")
 	controller.Setup(app, db, config.LoadLocal)

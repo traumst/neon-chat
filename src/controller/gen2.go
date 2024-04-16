@@ -7,11 +7,10 @@ import (
 	"net/http"
 
 	"go.chat/src/handler"
-	"go.chat/src/model"
 	"go.chat/src/utils"
 )
 
-func Gen2(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+func Gen2(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Gen2", utils.GetReqId(r))
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {

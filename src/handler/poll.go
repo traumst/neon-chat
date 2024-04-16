@@ -7,12 +7,11 @@ import (
 	"strings"
 	"sync"
 
-	"go.chat/src/model"
 	"go.chat/src/model/event"
 	"go.chat/src/utils"
 )
 
-func PollUpdatesForUser(conn *model.Conn, pollingUserId uint) {
+func PollUpdatesForUser(conn *Conn, pollingUserId uint) {
 	log.Printf("∞--%s--> APP.PollUpdatesForUser TRACE IN, triggered by [%d]\n", conn.Origin, conn.User.Id)
 	var wg sync.WaitGroup
 	done := false
@@ -35,7 +34,7 @@ func PollUpdatesForUser(conn *model.Conn, pollingUserId uint) {
 	wg.Wait()
 }
 
-func sendUpdates(conn *model.Conn, up event.LiveUpdate, pollingUserId uint) {
+func sendUpdates(conn *Conn, up event.LiveUpdate, pollingUserId uint) {
 	log.Printf("∞--%s--> APP.sendUpdates TRACE IN user[%d], input[%s]\n", conn.Origin, pollingUserId, up.String())
 	origin := conn.Origin
 	if conn.User.Id != pollingUserId {
@@ -53,7 +52,7 @@ func sendUpdates(conn *model.Conn, up event.LiveUpdate, pollingUserId uint) {
 	log.Printf("<--%s--∞ APP.sendUpdates TRACE OUT user[%d]\n", origin, pollingUserId)
 }
 
-func trySend(conn *model.Conn, up event.LiveUpdate) error {
+func trySend(conn *Conn, up event.LiveUpdate) error {
 	w := conn.Writer
 	if up.UserId == 0 {
 		return fmt.Errorf("trySend ERROR user is empty, user[%d], msg[%s]", up.UserId, up.Data)

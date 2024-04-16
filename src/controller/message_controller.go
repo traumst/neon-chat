@@ -6,13 +6,12 @@ import (
 	"strconv"
 
 	"go.chat/src/handler"
-	"go.chat/src/model"
 	a "go.chat/src/model/app"
 	e "go.chat/src/model/event"
 	"go.chat/src/utils"
 )
 
-func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> AddMessage TRACE\n", utils.GetReqId(r))
 	if r.Method != "POST" {
 		log.Printf("--%s-> AddMessage ERROR request method\n", utils.GetReqId(r))
@@ -74,7 +73,7 @@ func AddMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(html))
 }
 
-func DeleteMessage(app *model.AppState, w http.ResponseWriter, r *http.Request) {
+func DeleteMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> DeleteMessage\n", reqId)
 	author, err := handler.ReadSession(app, w, r)
