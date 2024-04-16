@@ -18,18 +18,6 @@ func Setup(app *model.AppState, conn *db.DBConn, loadLocal bool) {
 	handleChat(app, allMiddleware)
 	handleMsgs(app, allMiddleware)
 
-	// live updates
-	http.Handle("/poll", ChainMiddleware(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			PollUpdates(app, w, r)
-		}), allMiddleware))
-
-	// home, default
-	http.Handle("/", ChainMiddleware(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			RenderHome(app, w, r)
-		}), allMiddleware))
-
 	// static files
 	minMiddleware := []Middleware{ReqIdMiddleware}
 	http.Handle("/favicon.ico", ChainMiddleware(
@@ -51,6 +39,18 @@ func Setup(app *model.AppState, conn *db.DBConn, loadLocal bool) {
 	http.Handle("/gen2", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			Gen2(app, w, r)
+		}), allMiddleware))
+
+	// live updates
+	http.Handle("/poll", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			PollUpdates(app, w, r)
+		}), allMiddleware))
+
+	// home, default
+	http.Handle("/", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			RenderHome(app, w, r)
 		}), allMiddleware))
 }
 

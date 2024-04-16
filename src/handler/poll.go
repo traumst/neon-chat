@@ -63,32 +63,32 @@ func trySend(conn *model.Conn, up event.LiveUpdate) error {
 	}
 	switch up.Event {
 	case event.MessageAdded:
-		err := SSEvent(&w, event.MessageAddEventName, up)
+		err := flushEvent(&w, event.MessageAddEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to add message to user[%d], %s", up.UserId, err)
 		}
 	case event.MessageDeleted:
-		err := SSEvent(&w, event.MessageDropEventName, up)
+		err := flushEvent(&w, event.MessageDropEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to delete message to user[%d], %s", up.UserId, err)
 		}
 	case event.ChatCreated, event.ChatInvite:
-		err := SSEvent(&w, event.ChatAddEventName, up)
+		err := flushEvent(&w, event.ChatAddEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to send to user[%d], %s", up.UserId, err)
 		}
 	case event.ChatExpel:
-		err := SSEvent(&w, event.ChatExpelEventName, up)
+		err := flushEvent(&w, event.ChatExpelEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to drop user from chat to user[%d], %s", up.UserId, err)
 		}
 	case event.ChatClose:
-		err := SSEvent(&w, event.ChatCloseEventName, up)
+		err := flushEvent(&w, event.ChatCloseEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to close chat to user[%d], %s", up.UserId, err)
 		}
 	case event.ChatDeleted:
-		err := SSEvent(&w, event.ChatDropEventName, up)
+		err := flushEvent(&w, event.ChatDropEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to delete chat to user[%d], %s", up.UserId, err)
 		}
@@ -98,14 +98,14 @@ func trySend(conn *model.Conn, up event.LiveUpdate) error {
 	return nil
 }
 
-func SSEvent(w *http.ResponseWriter, event event.SSEvent, up event.LiveUpdate) error {
+func flushEvent(w *http.ResponseWriter, event event.SSEvent, up event.LiveUpdate) error {
 	if up.ChatId < 0 {
 		panic("ChatId should not be empty")
 	}
 	if up.UserId == 0 {
 		panic("UserId should not be empty")
 	}
-	eventName := Format(event, up.ChatId, up.UserId, up.MsgId)
+	eventName := formatEventName(event, up.ChatId, up.UserId, up.MsgId)
 	eventId := utils.RandStringBytes(5)
 	data := trim(up.Data)
 	_, err := fmt.Fprintf(*w, "id: %s\n", eventId)
@@ -128,7 +128,12 @@ func SSEvent(w *http.ResponseWriter, event event.SSEvent, up event.LiveUpdate) e
 	return nil
 }
 
-func Format(e event.SSEvent, chatId int, userId uint, msgId int) string {
+func formatEventName(
+	e event.SSEvent,
+	chatId int,
+	userId uint,
+	msgId int,
+) string {
 	switch e {
 	case event.MessageAddEventName:
 		return fmt.Sprintf("%s-chat-%d", event.MessageAddEventName, chatId)

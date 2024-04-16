@@ -13,9 +13,9 @@ This app is being build as an excercise for me to
 ### *Right now...*
 
 __BUGS:__
-* ~~login does not work - only signup~~
-* ~~after restart need to re-login~~
+* chat-creation accumulates and sends first msg after that N times
 * invite not sent to owner
+* expel closes chat, should also remove chat_li
 
 It's time to start sanitizing raw user input.
 Def break the chat: ' "
@@ -25,9 +25,8 @@ Def break the chat: ' "
     * clear related textbox
     * new chat -> remove chat-list placeholder
     * new msg -> remove chat-history placeholder
-* User registraction sucks
 
-And UI looks like shit, have to style it
+And UI looks like shit, have to style it NOW
 
 ### Message Broadcasting: 
 - track user deltas: chats, messages

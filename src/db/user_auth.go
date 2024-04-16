@@ -58,7 +58,7 @@ func (db *DBConn) GetAuth(userid uint, auth a.AuthType, hash string) (*a.UserAut
 	}
 
 	var dbAuth a.UserAuth
-	err := db.conn.Get(&dbAuth, `SELECT * FROM auth WHERE user_id = ? AND type = ? and hash = ?`, userid, auth, hash)
+	err := db.conn.Get(&dbAuth, `SELECT * FROM auth WHERE user_id = ? AND type = ? AND hash = ?`, userid, auth, hash)
 	if err != nil {
 		return nil, fmt.Errorf("error getting auth: %s", err)
 	}

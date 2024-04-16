@@ -2,11 +2,13 @@ package db
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"sync"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
+	"go.chat/src/utils"
 )
 
 type DBConn struct {
@@ -17,12 +19,14 @@ type DBConn struct {
 }
 
 func ConnectDB(dbPath string) (*DBConn, error) {
-	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+	if fi, err := os.Stat(dbPath); os.IsNotExist(err) {
 		file, err := os.Create(dbPath)
 		if err != nil {
 			return nil, fmt.Errorf("error creating db file: %s", err)
 		}
 		file.Close()
+	} else {
+		log.Printf("  opening db file [%s] [%s]", fi.Name(), utils.Size(fi.Size()))
 	}
 
 	conn, err := sqlx.Open("sqlite3", dbPath)
