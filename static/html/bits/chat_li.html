@@ -1,6 +1,6 @@
 <li id="chat-head-{{ .ChatId }}" 
     title="{{ .Name }}"
-    sse-swap="chat-drop-{{ .ChatId }}"
+    sse-swap="{{ .ChatDropEvent }}"
     hx-target="#chat-head-{{ .ChatId }}" 
     hx-swap="innerHTML"
     class="chat-header 

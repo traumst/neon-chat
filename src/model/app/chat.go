@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	e "go.chat/src/model/event"
 	t "go.chat/src/model/template"
 )
 
@@ -125,12 +126,15 @@ func (c *Chat) Template(user *User) *t.ChatTemplate {
 	usr := t.UserTemplate{Id: user.Id, Name: user.Name}
 	ownr := t.UserTemplate{Id: c.Owner.Id, Name: c.Owner.Name}
 	return &t.ChatTemplate{
-		ChatId:   c.Id,
-		Name:     c.Name,
-		User:     usr,
-		Viewer:   usr,
-		Owner:    ownr,
-		Users:    users,
-		Messages: messages,
+		ChatId:          c.Id,
+		Name:            c.Name,
+		User:            usr,
+		Viewer:          usr,
+		Owner:           ownr,
+		Users:           users,
+		Messages:        messages,
+		ChatDropEvent:   e.ChatDropEventName.Format(c.Id, user.Id, -1),
+		ChatCloseEvent:  e.ChatCloseEventName.Format(c.Id, user.Id, -1),
+		MessageAddEvent: e.MessageAddEventName.Format(c.Id, user.Id, -1),
 	}
 }

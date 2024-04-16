@@ -1,5 +1,10 @@
 package event
 
+import (
+	"fmt"
+	"strings"
+)
+
 type SSEvent string
 
 const (
@@ -12,3 +17,36 @@ const (
 	MessageAddEventName  SSEvent = "msg-add"
 	MessageDropEventName SSEvent = "msg-drop"
 )
+
+func (e SSEvent) Format(
+	chatId int,
+	userId uint,
+	msgId int,
+) string {
+	switch e {
+	case MessageAddEventName:
+		return fmt.Sprintf("%s-chat-%d", MessageAddEventName, chatId)
+	case MessageDropEventName:
+		return fmt.Sprintf("%s-chat-%d-msg-%d", MessageDropEventName, chatId, msgId)
+	case ChatAddEventName:
+		return string(ChatAddEventName)
+	case ChatExpelEventName:
+		return fmt.Sprintf("%s-%d-user-%d", ChatExpelEventName, chatId, userId)
+	case ChatDropEventName:
+		return fmt.Sprintf("%s-%d", ChatDropEventName, chatId)
+	case ChatCloseEventName:
+		return fmt.Sprintf("%s-%d", ChatCloseEventName, chatId)
+	default:
+		panic(fmt.Sprintf("unknown event type[%v]", e))
+	}
+}
+
+func Trim(s string) string {
+	// must escape newlines in SSE
+	res := strings.ReplaceAll(s, "\n", " ")
+	// remove double spaces
+	for strings.Contains(res, "  ") {
+		res = strings.ReplaceAll(res, "  ", " ")
+	}
+	return res
+}

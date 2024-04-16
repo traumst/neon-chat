@@ -10,6 +10,7 @@ type HomeTemplate struct {
 	OpenTemplate *ChatTemplate
 	ActiveUser   string
 	LoadLocal    bool
+	ChatAddEvent string
 }
 
 func (h *HomeTemplate) HTML() (string, error) {

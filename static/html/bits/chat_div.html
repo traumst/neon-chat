@@ -68,7 +68,7 @@
 </style>
 <div 
     id="open-chat-{{ .ChatId }}"
-    sse-swap="chat-close-{{ .ChatId }}"
+    sse-swap="{{ .ChatCloseEvent }}"
     hx-target=".open-chat"
     hx-swap="innerHTML" 
 >
@@ -107,7 +107,7 @@
 <div class="open-chat-history shadow">
     <ul class="message-list" 
         hx-target=".message-list" 
-        sse-swap="msg-add-chat-{{ .ChatId }}" 
+        sse-swap="{{ .MessageAddEvent}}" 
         hx-swap="beforeend"
     >
         {{ with $chatMsgs := .Messages }}

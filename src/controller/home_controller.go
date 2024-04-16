@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"go.chat/src/handler"
+	"go.chat/src/model/event"
 	"go.chat/src/model/template"
 	"go.chat/src/utils"
 )
@@ -30,11 +31,16 @@ func RenderHome(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	for _, chat := range app.GetChats(user.Id) {
 		chatTemplates = append(chatTemplates, chat.Template(user))
 	}
+	openChatId := -1
+	if openChatTemplate != nil {
+		openChatId = openChat.Id
+	}
 	home := template.HomeTemplate{
 		OpenTemplate: openChatTemplate,
 		Chats:        chatTemplates,
 		ActiveUser:   user.Name,
 		LoadLocal:    app.LoadLocal(),
+		ChatAddEvent: event.ChatAddEventName.Format(openChatId, user.Id, -1),
 	}
 	html, err := home.HTML()
 	if err != nil {

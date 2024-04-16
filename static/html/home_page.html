@@ -47,7 +47,7 @@
         </div> 
         <hr />
         <div class="chat-list p-2">
-            <ul sse-swap="chat-add" hx-swap="beforeend"
+            <ul sse-swap="{{ .ChatAddEvent }}" hx-swap="beforeend"
                 class="chat-headers 
                     justify-start 
                     flex flex-col 
