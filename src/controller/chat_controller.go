@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"go.chat/src/handler"
-	e "go.chat/src/model/event"
+	"go.chat/src/model/event"
 	"go.chat/src/model/template"
 	"go.chat/src/utils"
 )
@@ -103,7 +103,7 @@ func AddChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		err = handler.DistributeChat(app, openChat, user, user, user, e.ChatCreated)
+		err = handler.DistributeChat(app, openChat, user, user, user, event.ChatCreated)
 		if err != nil {
 			log.Printf("<-%s-- AddChat ERROR cannot distribute chat header, %s\n", reqId, err)
 		}
@@ -203,13 +203,13 @@ func DeleteChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	go func() {
 		defer wg.Done()
 		log.Printf("<-%s-- DeleteChat TRACE distributes user[%d] closes chat[%d]\n", reqId, user.Id, chat.Id)
-		err = handler.DistributeChat(app, chat, user, nil, nil, e.ChatClose)
+		err = handler.DistributeChat(app, chat, user, nil, nil, event.ChatClose)
 		if err != nil {
 			log.Printf("<-%s-- DeleteChat ERROR cannot distribute chat close, %s\n", reqId, err)
 			return
 		}
 		log.Printf("<-%s-- DeleteChat TRACE distributes user[%d] deletes chat[%d]\n", reqId, user.Id, chat.Id)
-		err = handler.DistributeChat(app, chat, user, nil, nil, e.ChatDeleted)
+		err = handler.DistributeChat(app, chat, user, nil, nil, event.ChatDeleted)
 		if err != nil {
 			log.Printf("<-%s-- DeleteChat ERROR cannot distribute chat deleted, %s\n", reqId, err)
 			return

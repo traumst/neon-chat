@@ -9,7 +9,7 @@ import (
 
 	"go.chat/src/db"
 	"go.chat/src/handler"
-	e "go.chat/src/model/event"
+	"go.chat/src/model/event"
 	"go.chat/src/model/template"
 	"go.chat/src/utils"
 )
@@ -59,7 +59,7 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		err := handler.DistributeChat(app, chat, user, invitee, invitee, e.ChatInvite)
+		err := handler.DistributeChat(app, chat, user, invitee, invitee, event.ChatInvite)
 		if err != nil {
 			log.Printf("<-%s-- InviteUser ERROR cannot distribute chat invite, %s\n", reqId, err)
 		}
@@ -72,7 +72,7 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 			User:           template.UserTemplate{Id: invitee.Id, Name: invitee.Name},
 			Viewer:         template.UserTemplate{Id: chat.Owner.Id, Name: chat.Owner.Name},
 			Owner:          template.UserTemplate{Id: chat.Owner.Id, Name: chat.Owner.Name},
-			ChatExpelEvent: e.ChatExpelEventName.Format(chatId, invitee.Id, -9),
+			ChatExpelEvent: event.ChatExpelEventName.Format(chatId, invitee.Id, -9),
 		}
 		html, err := template.ShortHTML()
 		if err != nil {
@@ -136,17 +136,17 @@ func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		defer wg.Done()
 		log.Printf("--%s-∞ ExpelUser TRACE distributing user[%d] removed[%d] from chat[%d]\n",
 			reqId, user.Id, expelled.Id, chat.Id)
-		err := handler.DistributeChat(app, chat, user, expelled, expelled, e.ChatClose)
+		err := handler.DistributeChat(app, chat, user, expelled, expelled, event.ChatClose)
 		if err != nil {
 			log.Printf("<-%s-- ExpelUser ERROR cannot distribute chat close, %s\n", reqId, err)
 			return
 		}
-		err = handler.DistributeChat(app, chat, user, expelled, expelled, e.ChatDeleted)
+		err = handler.DistributeChat(app, chat, user, expelled, expelled, event.ChatDeleted)
 		if err != nil {
 			log.Printf("<-%s-- ExpelUser ERROR cannot distribute chat deleted, %s\n", reqId, err)
 			return
 		}
-		err = handler.DistributeChat(app, chat, user, nil, expelled, e.ChatExpel)
+		err = handler.DistributeChat(app, chat, user, nil, expelled, event.ChatExpel)
 		if err != nil {
 			log.Printf("<-%s-- ExpelUser ERROR cannot distribute chat user expel, %s\n", reqId, err)
 			return
@@ -209,17 +209,17 @@ func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	go func() {
 		defer wg.Done()
 		log.Printf("--%s-∞ LeaveChat TRACE distributing user[%d] left chat[%d]\n", reqId, user.Id, chat.Id)
-		err := handler.DistributeChat(app, chat, user, user, nil, e.ChatClose)
+		err := handler.DistributeChat(app, chat, user, user, nil, event.ChatClose)
 		if err != nil {
 			log.Printf("<-%s-- LeaveChat ERROR cannot distribute chat close, %s\n", reqId, err)
 			return
 		}
-		err = handler.DistributeChat(app, chat, user, user, user, e.ChatDeleted)
+		err = handler.DistributeChat(app, chat, user, user, nil, event.ChatDeleted)
 		if err != nil {
 			log.Printf("<-%s-- LeaveChat ERROR cannot distribute chat deleted, %s\n", reqId, err)
 			return
 		}
-		err = handler.DistributeChat(app, chat, user, nil, user, e.ChatExpel)
+		err = handler.DistributeChat(app, chat, user, nil, user, event.ChatExpel)
 		if err != nil {
 			log.Printf("<-%s-- LeaveChat ERROR cannot distribute chat user drop, %s\n", reqId, err)
 			return

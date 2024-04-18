@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"sync"
 
-	e "go.chat/src/model/event"
+	"go.chat/src/model/event"
 	"go.chat/src/utils"
 )
 
@@ -33,7 +33,7 @@ func PollUpdatesForUser(conn *Conn, pollingUserId uint) {
 	wg.Wait()
 }
 
-func sendUpdates(conn *Conn, up e.LiveUpdate, pollingUserId uint) {
+func sendUpdates(conn *Conn, up event.LiveUpdate, pollingUserId uint) {
 	log.Printf("∞--%s--> APP.sendUpdates TRACE IN user[%d], input[%s]\n", conn.Origin, pollingUserId, up.String())
 	origin := conn.Origin
 	if conn.User.Id != pollingUserId {
@@ -51,7 +51,7 @@ func sendUpdates(conn *Conn, up e.LiveUpdate, pollingUserId uint) {
 	log.Printf("<--%s--∞ APP.sendUpdates TRACE OUT user[%d]\n", origin, pollingUserId)
 }
 
-func trySend(conn *Conn, up e.LiveUpdate) error {
+func trySend(conn *Conn, up event.LiveUpdate) error {
 	w := conn.Writer
 	if up.UserId == 0 {
 		return fmt.Errorf("trySend ERROR user is empty, user[%d], msg[%s]", up.UserId, up.Data)
@@ -60,33 +60,33 @@ func trySend(conn *Conn, up e.LiveUpdate) error {
 		return fmt.Errorf("trySend ERROR writer is nil")
 	}
 	switch up.Event {
-	case e.MessageAdded:
-		err := flushEvent(&w, e.MessageAddEventName, up)
+	case event.MessageAdded:
+		err := flushEvent(&w, event.MessageAddEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to add message to user[%d], %s", up.UserId, err)
 		}
-	case e.MessageDeleted:
-		err := flushEvent(&w, e.MessageDropEventName, up)
+	case event.MessageDeleted:
+		err := flushEvent(&w, event.MessageDropEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to delete message to user[%d], %s", up.UserId, err)
 		}
-	case e.ChatCreated, e.ChatInvite:
-		err := flushEvent(&w, e.ChatAddEventName, up)
+	case event.ChatCreated, event.ChatInvite:
+		err := flushEvent(&w, event.ChatAddEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to send to user[%d], %s", up.UserId, err)
 		}
-	case e.ChatExpel:
-		err := flushEvent(&w, e.ChatExpelEventName, up)
+	case event.ChatExpel:
+		err := flushEvent(&w, event.ChatExpelEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to drop user from chat to user[%d], %s", up.UserId, err)
 		}
-	case e.ChatClose:
-		err := flushEvent(&w, e.ChatCloseEventName, up)
+	case event.ChatClose:
+		err := flushEvent(&w, event.ChatCloseEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to close chat to user[%d], %s", up.UserId, err)
 		}
-	case e.ChatDeleted:
-		err := flushEvent(&w, e.ChatDropEventName, up)
+	case event.ChatDeleted:
+		err := flushEvent(&w, event.ChatDropEventName, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to delete chat to user[%d], %s", up.UserId, err)
 		}
@@ -96,16 +96,16 @@ func trySend(conn *Conn, up e.LiveUpdate) error {
 	return nil
 }
 
-func flushEvent(w *http.ResponseWriter, event e.SSEvent, up e.LiveUpdate) error {
+func flushEvent(w *http.ResponseWriter, evnt event.SSEvent, up event.LiveUpdate) error {
 	if up.ChatId < 0 {
 		panic("ChatId should not be empty")
 	}
 	if up.UserId == 0 {
 		panic("UserId should not be empty")
 	}
-	eventName := event.Format(up.ChatId, up.UserId, up.MsgId)
+	eventName := evnt.Format(up.ChatId, up.UserId, up.MsgId)
 	eventId := utils.RandStringBytes(5)
-	data := e.Trim(up.Data)
+	data := event.Trim(up.Data)
 	_, err := fmt.Fprintf(*w, "id: %s\n", eventId)
 	if err != nil {
 		return fmt.Errorf("failed to write id[%s]", eventId)

@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"go.chat/src/model/app"
-	e "go.chat/src/model/event"
+	"go.chat/src/model/event"
 	"go.chat/src/utils"
 )
 
@@ -17,8 +17,8 @@ type Conn struct {
 	Origin string
 	Writer http.ResponseWriter
 	Reader http.Request
-	In     chan e.LiveUpdate
-	//Out    chan e.LiveUpdate
+	In     chan event.LiveUpdate
+	//Out    chan event.LiveUpdate
 }
 
 type UserConn []Conn
@@ -45,8 +45,8 @@ func (uc *UserConn) Add(user *app.User, origin string, w http.ResponseWriter, r 
 		Origin: origin,
 		Writer: w,
 		Reader: r,
-		In:     make(chan e.LiveUpdate, 64),
-		//Out:    make(chan e.LiveUpdate, 64),
+		In:     make(chan event.LiveUpdate, 64),
+		//Out:    make(chan event.LiveUpdate, 64),
 	}
 	*uc = append(*uc, newConn)
 	return &newConn

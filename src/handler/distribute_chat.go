@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"go.chat/src/model/app"
-	e "go.chat/src/model/event"
+	"go.chat/src/model/event"
 )
 
 // empty targetUser means all users in chat
@@ -15,7 +15,7 @@ func DistributeChat(
 	author *app.User, // who made the change
 	targetUser *app.User, // who to inform, nil for all users in chat
 	subjectUser *app.User, // which chat changed, nil for every user in chat
-	event e.UpdateType,
+	evnt event.UpdateType,
 ) error {
 	if author == nil {
 		return fmt.Errorf("author is nil")
@@ -33,14 +33,16 @@ func DistributeChat(
 		targetUsers = []*app.User{targetUser}
 	} else {
 		targetUsers, err = chat.GetUsers(author.Id)
-		if err != nil {
-			return fmt.Errorf("get users, chat[%d], %s", chat.Id, err)
-		} else if len(targetUsers) == 0 {
-			return fmt.Errorf("chatUsers are empty, chat[%d], %s", chat.Id, err)
-		}
 	}
 
-	return distributeToUsers(state, chat, author, targetUsers, subjectUser, event)
+	if err != nil {
+		return fmt.Errorf("get users, chat[%d], %s", chat.Id, err)
+	}
+	if len(targetUsers) == 0 {
+		return fmt.Errorf("chatUsers are empty, chat[%d], %s", chat.Id, err)
+	}
+
+	return distributeToUsers(state, chat, author, targetUsers, subjectUser, evnt)
 }
 
 func distributeToUsers(
@@ -49,19 +51,19 @@ func distributeToUsers(
 	author *app.User,
 	targetUsers []*app.User,
 	subjectUser *app.User,
-	event e.UpdateType,
+	evnt event.UpdateType,
 ) error {
 	var errors []string
 	for _, targetUser := range targetUsers {
 		log.Printf("∞----> distributeToUsers TRACE event[%v] about subject[%v] will be sent to user[%v] in chat[%v]\n",
-			event, subjectUser, targetUser, chat)
+			evnt, subjectUser, targetUser, chat)
 		err := distributeChatToUser(
 			state,
 			author,
 			targetUser,
 			chat,
 			subjectUser,
-			event,
+			evnt,
 		)
 		if err != nil {
 			errors = append(errors, err.Error())
@@ -80,7 +82,7 @@ func distributeChatToUser(
 	targetUser *app.User,
 	targetChat *app.Chat,
 	subjectUser *app.User,
-	event e.UpdateType,
+	evnt event.UpdateType,
 ) error {
 	if author == nil {
 		return fmt.Errorf("author is nil")
@@ -97,15 +99,15 @@ func distributeChatToUser(
 		return fmt.Errorf("user[%d] does not own conn[%v], user[%d] does", targetUser.Id, conn.Origin, conn.User.Id)
 	}
 
-	switch event {
-	case e.ChatCreated:
+	switch evnt {
+	case event.ChatCreated:
 		if author.Id != targetChat.Owner.Id {
 			return fmt.Errorf("author[%d] is not owner[%d] of chat[%d]",
 				author.Id, targetChat.Owner.Id, targetChat.Id)
 		}
-		return chatCreate(conn, event, targetChat, author)
+		return chatCreate(conn, evnt, targetChat, author)
 
-	case e.ChatInvite:
+	case event.ChatInvite:
 		if author.Id != targetChat.Owner.Id {
 			return fmt.Errorf("author[%d] is not owner[%d] of chat[%d]",
 				author.Id, targetChat.Owner.Id, targetChat.Id)
@@ -113,32 +115,26 @@ func distributeChatToUser(
 		if subjectUser == nil {
 			return fmt.Errorf("subjectUser is nil for chatInvite")
 		}
-		return chatInvite(conn, event, targetChat, author.Id, subjectUser)
+		return chatInvite(conn, evnt, targetChat, author.Id, subjectUser)
 
-	case e.ChatDeleted:
-		if author.Id != targetChat.Owner.Id {
+	case event.ChatDeleted:
+		if author.Id != targetChat.Owner.Id && author.Id != targetUser.Id {
 			return fmt.Errorf("author[%d] is not owner[%d] of chat[%d]",
 				author.Id, targetChat.Owner.Id, targetChat.Id)
 		}
 		if targetUser == nil {
 			return fmt.Errorf("targetUser is nil for chatDeleted")
 		}
-		if subjectUser != nil {
-			return fmt.Errorf("subjectUser[%d] is not nil for chatDeleted", subjectUser.Id)
-		}
-		return chatDelete(conn, event, targetChat.Id, author.Id, targetUser.Id)
+		return chatDelete(conn, evnt, targetChat.Id, author.Id, targetUser.Id)
 
-	case e.ChatExpel:
+	case event.ChatExpel:
 		if author.Id != targetChat.Owner.Id && author.Id != subjectUser.Id {
 			return fmt.Errorf("author[%d] is not allowed to expel user[%d] from chat[%d]",
 				author.Id, subjectUser.Id, targetChat.Id)
 		}
-		if targetUser != nil {
-			return fmt.Errorf("targetUser[%d] is not nil for chatExpel", targetUser.Id)
-		}
-		return chatExpel(conn, event, targetChat.Id, author.Id, subjectUser.Id)
+		return chatExpel(conn, evnt, targetChat.Id, author.Id, subjectUser.Id)
 
-	case e.ChatClose:
+	case event.ChatClose:
 		if targetUser == nil {
 			return fmt.Errorf("targetUser is nil for chatClose")
 		}
@@ -149,9 +145,9 @@ func distributeChatToUser(
 		if subjectUser != nil {
 			return fmt.Errorf("subjectUser[%d] is not nil for chatClose", subjectUser.Id)
 		}
-		return chatClose(conn, event, targetChat.Id, author.Id, targetUser.Id)
+		return chatClose(conn, evnt, targetChat.Id, author.Id, targetUser.Id)
 
 	default:
-		return fmt.Errorf("unknown event type[%v]", event)
+		return fmt.Errorf("unknown event type[%v]", evnt)
 	}
 }

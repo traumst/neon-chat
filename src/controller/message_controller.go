@@ -7,7 +7,7 @@ import (
 
 	"go.chat/src/handler"
 	a "go.chat/src/model/app"
-	e "go.chat/src/model/event"
+	"go.chat/src/model/event"
 	"go.chat/src/utils"
 )
 
@@ -63,7 +63,7 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = handler.DistributeMsg(app, chat, author.Id, message, e.MessageAdded)
+	err = handler.DistributeMsg(app, chat, author.Id, message, event.MessageAdded)
 	if err != nil {
 		log.Printf("<-%s-- AddMessage ERROR distribute message, %s\n", utils.GetReqId(r), err)
 	}
@@ -126,7 +126,7 @@ func DeleteMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = handler.DistributeMsg(app, chat, author.Id, msg, e.MessageDeleted)
+	err = handler.DistributeMsg(app, chat, author.Id, msg, event.MessageDeleted)
 	if err != nil {
 		log.Printf("<-%s-- DeleteMessage ERROR distribute message, %s\n", reqId, err)
 	}

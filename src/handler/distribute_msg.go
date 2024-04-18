@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"go.chat/src/model/app"
-	e "go.chat/src/model/event"
+	"go.chat/src/model/event"
 )
 
 func DistributeMsg(
@@ -14,7 +14,7 @@ func DistributeMsg(
 	chat *app.Chat,
 	authorId uint,
 	msg *app.Message,
-	event e.UpdateType,
+	evnt event.UpdateType,
 ) error {
 	users, err := chat.GetUsers(authorId)
 	if err != nil || users == nil {
@@ -40,7 +40,7 @@ func DistributeMsg(
 				errors = append(errors, err.Error())
 				return
 			}
-			err = distributeMsgToUser(state, chat.Id, msg.Id, user.Id, authorId, event, data)
+			err = distributeMsgToUser(state, chat.Id, msg.Id, user.Id, authorId, evnt, data)
 			if err != nil {
 				errors = append(errors, err.Error())
 			}
@@ -61,10 +61,10 @@ func distributeMsgToUser(
 	msgId int,
 	userId uint,
 	authorId uint,
-	event e.UpdateType,
+	evnt event.UpdateType,
 	data string,
 ) error {
-	log.Printf("∞----> distributeMsgToUser TRACE user[%d] chat[%d] event[%v]\n", userId, chatId, event)
+	log.Printf("∞----> distributeMsgToUser TRACE user[%d] chat[%d] event[%v]\n", userId, chatId, evnt)
 	openChat := state.GetOpenChat(userId)
 	if openChat == nil {
 		return fmt.Errorf("user[%d] has no open chat to distribute", userId)
@@ -78,24 +78,24 @@ func distributeMsgToUser(
 		return fmt.Errorf("user[%d] not connected, err:%s", userId, err.Error())
 	}
 
-	msg := e.LiveUpdate{
-		Event:    event,
+	msg := event.LiveUpdate{
+		Event:    evnt,
 		ChatId:   chatId,
 		MsgId:    msgId,
 		AuthorId: authorId,
 		UserId:   userId,
 	}
 
-	switch event {
-	case e.MessageAdded:
+	switch evnt {
+	case event.MessageAdded:
 		msg.Data = data
 		conn.In <- msg
 		return nil
-	case e.MessageDeleted:
+	case event.MessageDeleted:
 		msg.Data = "[deletedM]"
 		conn.In <- msg
 		return nil
 	default:
-		return fmt.Errorf("unknown event type: %v", event)
+		return fmt.Errorf("unknown event type: %v", evnt)
 	}
 }
