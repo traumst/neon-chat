@@ -6,12 +6,13 @@ import (
 )
 
 type MessageTemplate struct {
-	MsgId      int
-	ChatId     int
-	Owner      string
-	Author     string
-	Text       string
-	ActiveUser string
+	MsgId            int
+	ChatId           int
+	Owner            string
+	Author           string
+	Text             string
+	ActiveUser       string
+	MessageDropEvent string
 }
 
 func (m *MessageTemplate) HTML() (string, error) {

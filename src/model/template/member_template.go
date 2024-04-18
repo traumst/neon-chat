@@ -6,11 +6,12 @@ import (
 )
 
 type MemberTemplate struct {
-	ChatId   int
-	ChatName string
-	User     UserTemplate
-	Viewer   UserTemplate
-	Owner    UserTemplate
+	ChatId         int
+	ChatName       string
+	User           UserTemplate
+	Viewer         UserTemplate
+	Owner          UserTemplate
+	ChatExpelEvent string
 }
 
 func (c *MemberTemplate) ShortHTML() (string, error) {

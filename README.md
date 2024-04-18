@@ -5,18 +5,17 @@ As simple as: register, create chat rooms, invite other users, chat.
 This app is being build as an excercise for me to 
 - learn go
 - further explore htmx abilities
-- explore SSE as websocket alternative
+- explore server sent events as websocket alternative
+- fiddle with tailwind
 - <s>prove react is overrated</s>
 
 ## TODOs
 
-### *Right now...*
+### Known bugs
+* last open session is the only session a user can have
+* chat-create accumulates and sends first msg N times to each receiver
 
-__BUGS:__
-* chat-creation accumulates and sends first msg after that N times
-* invite not sent to owner
-* expel closes chat, should also remove chat_li
-
+### Pressing issues
 It's time to start sanitizing raw user input.
 Def break the chat: ' "
 
@@ -38,13 +37,12 @@ And UI looks like shit, have to style it NOW
 - cache instead of map
 
 ### User Authentication
-- client should send session token to authenticate __all__ connections
+- middleware auth
 - email verification
 - 2FA
 
 ### GUI
-- style the app, pick a futuristic dark theme
-- should remain minimal and snappy
+- style the app with dark theme with green/purple accents
 - apply custom font jetbrains.com/lp/mono/
 
 ### Chat features

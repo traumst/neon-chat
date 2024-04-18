@@ -67,11 +67,12 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 	go func() {
 		defer wg.Done()
 		template := template.MemberTemplate{
-			ChatId:   chatId,
-			ChatName: chat.Name,
-			User:     template.UserTemplate{Id: invitee.Id, Name: invitee.Name},
-			Viewer:   template.UserTemplate{Id: chat.Owner.Id, Name: chat.Owner.Name},
-			Owner:    template.UserTemplate{Id: chat.Owner.Id, Name: chat.Owner.Name},
+			ChatId:         chatId,
+			ChatName:       chat.Name,
+			User:           template.UserTemplate{Id: invitee.Id, Name: invitee.Name},
+			Viewer:         template.UserTemplate{Id: chat.Owner.Id, Name: chat.Owner.Name},
+			Owner:          template.UserTemplate{Id: chat.Owner.Id, Name: chat.Owner.Name},
+			ChatExpelEvent: e.ChatExpelEventName.Format(chatId, invitee.Id, -9),
 		}
 		html, err := template.ShortHTML()
 		if err != nil {

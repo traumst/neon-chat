@@ -40,7 +40,7 @@ func RenderHome(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		Chats:        chatTemplates,
 		ActiveUser:   user.Name,
 		LoadLocal:    app.LoadLocal(),
-		ChatAddEvent: event.ChatAddEventName.Format(openChatId, user.Id, -1),
+		ChatAddEvent: event.ChatAddEventName.Format(openChatId, user.Id, -5),
 	}
 	html, err := home.HTML()
 	if err != nil {
