@@ -2,18 +2,6 @@
 <html>
 <head>
     <title>Home</title>
-    <style>
-        /* 
-        .add-chat input { 
-            width: 70%; 
-            padding: 10px; 
-            margin-right: 10px; 
-            box-sizing: border-box; 
-        }
-        .add-chat button { 
-            padding: 10px 20px; 
-        } */
-    </style>
     {{ if .LoadLocal }}
     <script src="/script/htmx.1.9.10.min.js"></script>
     <script src="/script/htmx.1.9.10.sse.js"></script>
@@ -48,29 +36,28 @@
         <hr />
         <div class="chat-list p-2">
             <ul sse-swap="{{ .ChatAddEvent }}" hx-swap="beforeend"
-                class="chat-headers 
-                    justify-start 
-                    flex flex-col 
-                    gap-y-2 
-                    last:b-0"> 
+                class="chat-headers justify-start flex flex-col gap-y-2 last:b-0"> 
                 {{ with $chats := .Chats }}
                     {{ range $index, $chat := $chats }} 
                         {{ template "chat_li.html" $chat }}
                     {{ end }}
                 {{ else }}
-                    <li>No chats yet</li>
+                    <li id="noChats">No chats yet</li>
                 {{ end }}
             </ul>
+            <script>
+                document.body.addEventListener('htmx:afterSwap', function (event) {
+                    var noChatsElement = document.getElementById('noChats');
+                    if (noChatsElement) {
+                        noChatsElement.remove();
+                    }
+                });
+            </script>
         </div>
         <hr />
         <div class="add-chat justify-between">
             <form hx-post="/chat" hx-trigger="submit" hx-target=".open-chat" hx-swap="innerHTML"
-             class="
-                flex flex-row 
-                grow-0 h-fit w-90 
-                m-2 p-4 gap-4 
-                shadow-md 
-                border-2 rounded-lg">
+                class="flex flex-row grow-0 h-fit w-90 m-2 p-4 gap-4 shadow-md border-2 rounded-lg">
                 <input type="text" id="addChatFormInput" name="chatName" placeholder="new chat">
                 <button type="submit" id="addChatFormBtn" class="px-3 py-5">
                     Create

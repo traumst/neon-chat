@@ -5,9 +5,7 @@
     {{ if .LoadLocal }}
     <script src="/script/htmx.1.9.10.min.js"></script>
     <script src="/script/htmx.1.9.10.sse.js"></script>
-    <script src="/script/htmx.1.9.10.debug.js"></script>
     <link href="/css/tailwind.css" type="text/css" rel="stylesheet">
-    <style href></style>
     {{ else }}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.11/htmx.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.11/ext/sse.min.js"></script>
@@ -42,9 +40,7 @@
     </script>
 </head>
 <body>
-    <section id="auth" class="
-        gap-2 
-        flex flex-row justify-center">
+    <section id="auth" class="gap-2 flex flex-row justify-center">
         {{ template "authForm" .Login }}
         {{ template "authForm" .Signup }}
     </section>
@@ -53,21 +49,13 @@
 
 {{ define "authForm" }}
 <div id="{{ .Id }}" class="p-4 flex flex-row">
-    <form class="shadow-lg
-        flex flex-col
-        border-2 rounded-lg
-        gap-2
-        gap-y-8
-        w-9/24">
+    <form class="shadow-lg flex flex-col border-2 rounded-lg gap-2 gap-y-8 w-9/24">
         <label for="user" class="p-1 m-1">
-            User:
-            <input type="text" name="user" placeholder="username"
-                class="p-1 m-2 border-1 rounded-md shadow"
-            >
+            User: <input type="text" name="user" placeholder="username"
+                class="p-1 m-2 border-1 rounded-md shadow">
         </label>
         <label for="pass" class="p-1 m-1">
-            Pass:
-            <input type="password" name="pass" placeholder="********"
+            Pass: <input type="password" name="pass" placeholder="********"
                 class="p-1 m-2 border-1 rounded-md shadow"
             >
         </label>

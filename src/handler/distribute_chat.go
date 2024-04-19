@@ -132,6 +132,9 @@ func distributeChatToUser(
 			return fmt.Errorf("author[%d] is not allowed to expel user[%d] from chat[%d]",
 				author.Id, subjectUser.Id, targetChat.Id)
 		}
+		if subjectUser == nil {
+			return fmt.Errorf("subjectUser is nil for chatExpel")
+		}
 		return chatExpel(conn, evnt, targetChat.Id, author.Id, subjectUser.Id)
 
 	case event.ChatClose:

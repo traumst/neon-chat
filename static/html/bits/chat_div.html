@@ -110,19 +110,27 @@
 {{ end }}
 <hr />
 <div class="open-chat-history shadow">
-    <ul class="message-list" 
-        hx-target=".message-list" 
+    <ul hx-target=".message-list" 
         sse-swap="{{ .MessageAddEvent }}" 
         hx-swap="beforeend"
+        class="message-list" 
     >
         {{ with $chatMsgs := .Messages }}
             {{ range $index, $msg := $chatMsgs }} 
                 {{ template "message_li.html" $msg }}
             {{ end }}
         {{ else }}
-            <li>No previous messages...</li>
+            <li id="noMsgs">No previous messages...</li>
         {{ end }}
     </ul>
+    <script>
+        document.body.addEventListener('htmx:afterSwap', function (event) {
+            var noChatsElement = document.getElementById('noMsgs');
+            if (noChatsElement) {
+                noChatsElement.remove();
+            }
+        });
+    </script>
     <form 
         hx-post="/message" 
         hx-trigger="submit" 

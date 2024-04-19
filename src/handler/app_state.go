@@ -201,9 +201,6 @@ func (state *AppState) DeleteChat(userId uint, chat *app.Chat) error {
 	defer state.mu.Unlock()
 
 	log.Printf("∞--------> AppState.DeleteChat TRACE get chats for user[%d]\n", userId)
-	err := state.chats.CloseChat(userId, chat.Id)
-	if err != nil {
-		return fmt.Errorf("AppState.DeleteChat failed to close chat, %s", err)
-	}
+	_ = state.chats.CloseChat(userId, chat.Id)
 	return state.chats.DeleteChat(userId, chat)
 }
