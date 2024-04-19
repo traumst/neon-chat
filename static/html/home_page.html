@@ -47,7 +47,7 @@
             </ul>
             <script>
                 document.body.addEventListener('htmx:afterSwap', function (event) {
-                    var noChatsElement = document.getElementById('noChats');
+                    const noChatsElement = document.getElementById('noChats');
                     if (noChatsElement) {
                         noChatsElement.remove();
                     }
@@ -58,11 +58,17 @@
         <div class="add-chat justify-between">
             <form hx-post="/chat" hx-trigger="submit" hx-target=".open-chat" hx-swap="innerHTML"
                 class="flex flex-row grow-0 h-fit w-90 m-2 p-4 gap-4 shadow-md border-2 rounded-lg">
-                <input type="text" id="addChatFormInput" name="chatName" placeholder="new chat">
+                <input id="newChatName" type="text" id="addChatFormInput" name="chatName" placeholder="new chat">
                 <button type="submit" id="addChatFormBtn" class="px-3 py-5">
                     Create
                 </button>
             </form>
+            <script>
+                document.body.addEventListener('htmx:afterSwap', function (event) {
+                    const newChatName = document.getElementById('newChatName');
+                    newChatName.value = '';
+                });
+            </script>
         </div>
     </div>
     <div class="right-panel p-2 w-full border-l flex flex-col h-fit">

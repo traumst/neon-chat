@@ -13,15 +13,13 @@ This app is being build as an excercise for me to
 
 ### Known bugs
 * chat-create accumulates and sends first msg N times to each receiver
+* last open session is the only session a user can have
 
 ### Pressing issues
 * UI looks like shit, have to style it NOW
-* last open session is the only session a user can have
 * it's time to start sanitizing raw user input.
     * Def break the chat: ' "
 * HTMX hx- stuff should sit next to target
-* buttons onclick should
-    * clear related textbox
 
 ### Message Broadcasting: 
 - track user deltas: chats, messages

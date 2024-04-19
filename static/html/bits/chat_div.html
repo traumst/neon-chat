@@ -125,7 +125,7 @@
     </ul>
     <script>
         document.body.addEventListener('htmx:afterSwap', function (event) {
-            var noChatsElement = document.getElementById('noMsgs');
+            const noChatsElement = document.getElementById('noMsgs');
             if (noChatsElement) {
                 noChatsElement.remove();
             }
@@ -138,9 +138,15 @@
         hx-swap="beforeend"
     >
         <input type="hidden" name="chatId" value="{{ .ChatId }}">
-        <input type="text" name="msg" placeholder="...type message here...">
+        <input id="newMsgText" type="text" name="msg" placeholder="...type message here...">
         <button type="submit">Send</button>
     </form>
+    <script>
+        document.body.addEventListener('htmx:afterSwap', function (event) {
+            const newMsgText = document.getElementById('newMsgText');
+            newMsgText.value = '';
+        });
+    </script>
 </div>
 
 {{ define "members_div" }}
