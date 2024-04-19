@@ -1,0 +1,23 @@
+<div class="member" 
+    id="chat-drop-{{ .ChatId }}-user-{{ .User.Id }}"
+    sse-swap="{{ .ChatExpelEvent }}"
+    hx-target="#chat-drop-{{ .ChatId }}-user-{{ .User.Id }}"
+    hx-swap="innerHTML"
+>
+    <form id="member-delete-{{ .ChatId }}-user-{{ .User.Id }}"
+        hx-post="/user/expel" 
+        hx-trigger="click" 
+        hx-target="#chat-drop-{{ .ChatId }}-user-{{ .User.Id }}"
+        hx-swap="innerHTML" 
+        hx-include="#member-delete-{{ .ChatId }}-user-{{ .User.Id }}"
+    >
+        <input type="hidden" name="chatid" value="{{ .ChatId }}">
+        <input type="hidden" name="userid" value="{{ .User.Id }}">
+        <div class="member-delete-button" 
+            hx-trigger="click" 
+            hx-action="member-delete-{{ .ChatId }}-user-{{ .User.Id }}.submit()"
+        >
+            [{{.User.Name}}]
+        </div>
+    </form>
+</div>

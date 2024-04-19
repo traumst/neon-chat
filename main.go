@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"go.chat/controller"
-	"go.chat/db"
-	"go.chat/model"
-	"go.chat/utils"
+	"go.chat/src/controller"
+	"go.chat/src/db"
+	"go.chat/src/handler"
+	"go.chat/src/utils"
 )
 
 func main() {
@@ -40,7 +40,7 @@ func main() {
 		log.Println(utils.Help())
 		os.Exit(13)
 	}
-	log.Printf("	  parsed config: %s\n", config)
+	log.Printf("\tparsed config: %s\n", config)
 
 	// TODO args.DBPath
 	log.Println("	connecting db...")
@@ -50,8 +50,8 @@ func main() {
 	}
 
 	log.Println("	init app state...")
-	app := &model.ApplicationState
-	app.Init(model.AppConfig{LoadLocal: config.LoadLocal})
+	app := &handler.ApplicationState
+	app.Init(db, handler.AppConfig{LoadLocal: config.LoadLocal})
 
 	log.Println("	init controllers...")
 	controller.Setup(app, db, config.LoadLocal)
