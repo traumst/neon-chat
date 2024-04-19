@@ -1,0 +1,20 @@
+package template
+
+import (
+	"bytes"
+	"html/template"
+)
+
+type WelcomeTemplate struct {
+	ActiveUser string
+}
+
+func (w *WelcomeTemplate) HTML() (string, error) {
+	var buf bytes.Buffer
+	welcomeTmpl := template.Must(template.ParseFiles("static/html/bits/welcome_div.html"))
+	err := welcomeTmpl.Execute(&buf, w)
+	if err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
