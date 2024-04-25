@@ -1,12 +1,10 @@
 package controller
 
 import (
-	"log"
 	"net/http"
 
 	"go.chat/src/db"
 	"go.chat/src/handler"
-	"go.chat/src/utils"
 )
 
 func Setup(app *handler.AppState, conn *db.DBConn, loadLocal bool) {
@@ -102,18 +100,7 @@ func handleUser(app *handler.AppState, conn *db.DBConn, allMiddleware []Middlewa
 func handleAuth(app *handler.AppState, conn *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/login", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.Method == "GET" {
-				log.Printf("--%s-> handleAuth.RenderLogin\n", utils.GetReqId(r))
-				RenderLogin(app, w, r)
-			} else if r.Method == "POST" {
-				log.Printf("--%s-> handleAuth.Login\n", utils.GetReqId(r))
-				Login(app, conn, w, r)
-			} else {
-				log.Printf("--%s-> handleAuth invalid method [%s]\n", utils.GetReqId(r), r.Method)
-				w.WriteHeader(http.StatusMethodNotAllowed)
-				w.Write([]byte("Bad Request"))
-				return
-			}
+			Login(app, conn, w, r)
 		}), allMiddleware))
 	http.Handle("/signup", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

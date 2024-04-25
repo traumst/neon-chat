@@ -25,7 +25,7 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("--%s-> InviteUser WARN user, %s\n", utils.GetReqId(r), err)
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+		RenderHome(app, w, r)
 		return
 	}
 	chatId, err := strconv.Atoi(r.FormValue("chatId"))
@@ -100,7 +100,7 @@ func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("--%s-> ExpelUser WARN user, %s\n", utils.GetReqId(r), err)
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+		RenderHome(app, w, r)
 		return
 	}
 	chatId, err := strconv.Atoi(r.FormValue("chatid"))
@@ -181,7 +181,7 @@ func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("--%s-> LeaveChat WARN user, %s\n", utils.GetReqId(r), err)
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+		RenderHome(app, w, r)
 		return
 	}
 	chatId, err := strconv.Atoi(r.FormValue("chatid"))

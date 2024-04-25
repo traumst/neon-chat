@@ -12,10 +12,13 @@ This app is being build as an excercise for me to
 ## TODOs
 
 ### Known bugs
-* chat-create accumulates and sends first msg N times to each receiver
+* same user can be invited to the same chat 2+ times
 * last open session is the only session a user can have
+* add/remove chat/msg should be done by sse, not api response
+* `members_div` in `home.html` is different from `members_div.html`
 
 ### Pressing issues
+* login/signup should be in left-panel on home
 * UI looks like shit, have to style it NOW
 * it's time to start sanitizing raw user input.
     * Def break the chat: ' "

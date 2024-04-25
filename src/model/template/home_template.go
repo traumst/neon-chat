@@ -6,11 +6,13 @@ import (
 )
 
 type HomeTemplate struct {
-	Chats        []*ChatTemplate
-	OpenTemplate *ChatTemplate
-	ActiveUser   string
-	LoadLocal    bool
-	ChatAddEvent string
+	Chats         []*ChatTemplate
+	OpenTemplate  *ChatTemplate
+	ActiveUser    string
+	LoadLocal     bool
+	ChatAddEvent  string
+	IsAuthorized  bool
+	LoginTemplate LoginTemplate
 }
 
 func (h *HomeTemplate) HTML() (string, error) {
@@ -18,6 +20,7 @@ func (h *HomeTemplate) HTML() (string, error) {
 	homeTmpl := template.Must(template.ParseFiles(
 		"static/html/home_page.html",
 		"static/html/bits/welcome_div.html",
+		"static/html/bits/login_div.html",
 		"static/html/bits/chat_div.html",
 		"static/html/bits/chat_li.html"))
 	err := homeTmpl.Execute(&buf, h)

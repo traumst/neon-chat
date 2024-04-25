@@ -1,0 +1,54 @@
+<script>
+    function handleAuthResponse(response) {
+        if (response.ok) {
+            window.location.href = '/';
+        } else {
+            alert('Login failed:', response.status, response.statusText, response.body);
+        }
+    }
+    window.onload = function() {
+        document.querySelector('#login form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var formData = new FormData(event.target);
+            fetch('/login', {
+                method: 'POST',
+                body: formData
+            }).then(handleAuthResponse);
+        });
+        document.querySelector('#signup form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var formData = new FormData(event.target);
+            fetch('/signup', {
+                method: 'PUT',
+                body: formData
+            }).then(handleAuthResponse);
+        });
+    };
+</script>
+<div>
+    <section id="auth" class="gap-2 flex flex-row justify-center">
+        {{ template "authForm" .Login }}
+        {{ template "authForm" .Signup }}
+    </section>
+</div>
+
+{{ define "authForm" }}
+<div id="{{ .Id }}" class="p-4 flex flex-row">
+    <form class="shadow-lg flex flex-col border-2 rounded-lg gap-2 gap-y-8 w-9/24">
+        <label for="user" class="p-1 m-1">
+            User: <input type="text" id="user" name="user" placeholder="username"
+                class="p-1 m-2 border-1 rounded-md shadow">
+        </label>
+        <label for="pass" class="p-1 m-1">
+            Pass: <input type="password" id="pass" name="pass" placeholder="********"
+                class="p-1 m-2 border-1 rounded-md shadow"
+            >
+        </label>
+        <button type="submit"
+            class="p-1 m-2 border-1 rounded-md shadow"
+        >
+            {{ .Label }}
+        </button>
+    </form>
+</div>
+{{ end }}

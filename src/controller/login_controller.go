@@ -8,7 +8,6 @@ import (
 	"go.chat/src/db"
 	"go.chat/src/handler"
 	a "go.chat/src/model/app"
-	"go.chat/src/model/template"
 	"go.chat/src/utils"
 )
 
@@ -16,34 +15,6 @@ const (
 	// TODO provide authType as form input
 	authType = a.AuthTypeLocal
 )
-
-func RenderLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> RenderLogin\n", utils.GetReqId(r))
-	template := template.LoginTemplate{
-		Login: template.AuthForm{
-			Id:    "login",
-			Label: "Login",
-			Title: "Login",
-		},
-		Signup: template.AuthForm{
-			Id:    "signup",
-			Label: "Signup",
-			Title: "Signup",
-		},
-		LoadLocal: app.LoadLocal(),
-	}
-
-	html, err := template.HTML()
-	if err != nil {
-		log.Printf("--%s-> RenderLogin ERROR on template.HTML, %s\n", utils.GetReqId(r), err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Internal Server Error"))
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(html))
-}
 
 func Login(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Login TRACE IN\n", utils.GetReqId(r))
@@ -55,7 +26,7 @@ func Login(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.
 	u := r.FormValue("user")
 	p := r.FormValue("pass")
 	if u == "" || p == "" {
-		RenderLogin(app, w, r)
+		RenderHome(app, w, r)
 		return
 	}
 	log.Printf("--%s-> Login TRACE authentication check for user[%s] auth[%s]\n",
@@ -88,7 +59,7 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 	p := r.FormValue("pass")
 	log.Printf("--%s-> SignUp TRACE authentication check for user[%s] auth[%s]\n", utils.GetReqId(r), u, authType)
 	if u == "" || p == "" {
-		RenderLogin(app, w, r)
+		RenderHome(app, w, r)
 		return
 	}
 	user, auth, err := handler.Authenticate(db, u, p, authType)
@@ -137,5 +108,6 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 func Logout(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Logout TRACE \n", utils.GetReqId(r))
 	utils.ClearSessionCookie(w)
-	RenderLogin(app, w, r)
+	http.Header.Add(w.Header(), "HX-Refresh", "true")
+	w.WriteHeader(http.StatusOK)
 }
