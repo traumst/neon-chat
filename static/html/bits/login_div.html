@@ -10,6 +10,7 @@
         document.querySelector('#login form').addEventListener('submit', function(event) {
             event.preventDefault();
             var formData = new FormData(event.target);
+            console.log('login data', formData)
             fetch('/login', {
                 method: 'POST',
                 body: formData
@@ -18,6 +19,7 @@
         document.querySelector('#signup form').addEventListener('submit', function(event) {
             event.preventDefault();
             var formData = new FormData(event.target);
+            console.log('login data', formData)
             fetch('/signup', {
                 method: 'PUT',
                 body: formData
@@ -26,21 +28,21 @@
     };
 </script>
 <div>
-    <section id="auth" class="gap-2 flex flex-row justify-center">
+    <section id="auth" class="gap-2 flex flex-col justify-center">
         {{ template "authForm" .Login }}
         {{ template "authForm" .Signup }}
     </section>
 </div>
 
 {{ define "authForm" }}
-<div id="{{ .Id }}" class="p-4 flex flex-row">
-    <form class="shadow-lg flex flex-col border-2 rounded-lg gap-2 gap-y-8 w-9/24">
-        <label for="user" class="p-1 m-1">
-            User: <input type="text" id="user" name="user" placeholder="username"
+<div id="{{ .Id }}" class="flex p-4 ">
+    <form class="flex flex-col shadow-lg border-2 rounded-lg">
+        <label for="{{ .Id }}-user" class="p-1 m-1">
+            User: <input type="text" name="{{ .Id }}-user" placeholder="username"
                 class="p-1 m-2 border-1 rounded-md shadow">
         </label>
-        <label for="pass" class="p-1 m-1">
-            Pass: <input type="password" id="pass" name="pass" placeholder="********"
+        <label for="{{ .Id }}-pass" class="p-1 m-1">
+            Pass: <input type="password" name="{{ .Id }}-pass" placeholder="********"
                 class="p-1 m-2 border-1 rounded-md shadow"
             >
         </label>

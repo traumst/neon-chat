@@ -5,7 +5,9 @@
     class="chat-message
         flex flex-row
         m-1 p-4
-        shadow-md"
+        shadow-md
+        hover:bg-gradient-to-br from-indigo-700 to-zinc-700
+        transition duration-500 ease-in-out"
 >
     <div class="chat-message flex">
         <strong>{{ .Author }}:</strong> {{ .Text }}

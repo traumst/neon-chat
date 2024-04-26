@@ -23,9 +23,10 @@ func Login(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.
 		w.Write([]byte("Bad Request"))
 		return
 	}
-	u := r.FormValue("user")
-	p := r.FormValue("pass")
+	u := r.FormValue("login-user")
+	p := r.FormValue("login-pass")
 	if u == "" || p == "" {
+		log.Printf("--%s-> Login TRACE empty user[%s]", utils.GetReqId(r), u)
 		RenderHome(app, w, r)
 		return
 	}
@@ -55,8 +56,8 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 		w.Write([]byte("Bad Request"))
 		return
 	}
-	u := r.FormValue("user")
-	p := r.FormValue("pass")
+	u := r.FormValue("signup-user")
+	p := r.FormValue("signup-pass")
 	log.Printf("--%s-> SignUp TRACE authentication check for user[%s] auth[%s]\n", utils.GetReqId(r), u, authType)
 	if u == "" || p == "" {
 		RenderHome(app, w, r)

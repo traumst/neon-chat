@@ -7,7 +7,7 @@
     <script src="/script/htmx.1.9.10.sse.js"></script>
     <script src="/script/htmx.1.9.10.debug.js"></script>
     <script src="/script/tailwindcss.3.4.3.min.js"></script>
-    <!-- Need to build tailwind to minimize -->
+    <!-- Need to build tailwind to minimize it -->
     <!-- <link href="/css/tailwind.css" rel="stylesheet"> -->
     {{ else }}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.11/htmx.min.js"></script>
@@ -15,12 +15,15 @@
     <script src="https://cdn.tailwindcss.com/3.4.3"></script>
     {{ end }}
 </head>
-<body hx-ext="sse" sse-trigger="load" sse-connect="/poll"
+<body 
+    {{ if .IsAuthorized }}
+        hx-ext="sse" sse-trigger="load" sse-connect="/poll"
+    {{ end }}
     class="flex
         justify-between
         h-screen
         w-screen
-        m-0 p-4 gap-4
+        p-1 gap-4
         border-2 rounded-lg
         bg-gradient-to-br from-indigo-800 to-zinc-700
         text-gray-400
@@ -35,7 +38,11 @@
         overflow-x-hidden
         shadow-md">
         {{ if .IsAuthorized }}
-            <div class="active-user flex flex-row justify-between p-2">
+            <div class="active-user 
+                flex flex-row 
+                justify-between 
+                p-2 
+                shadow-md">
                 <p class="font-bold">Active user: {{ .ActiveUser }}</p>
                 <form 
                     hx-post="/logout" 
@@ -44,10 +51,8 @@
                     class="pl-2">
                     <button type="submit">[logout]</button>
                 </form>
-            </div> 
-            <hr />
+            </div>
             {{ template "chatListDiv" . }}
-            <hr />
             {{ template "addChatDiv" . }}
         {{ else }}
             {{ template "login_div.html" .LoginTemplate }}
@@ -66,9 +71,11 @@
 </html>
 
 {{ define "chatListDiv" }}
-<div class="chat-list p-2 h-3/4 overflow-auto">
-    <ul sse-swap="{{ .ChatAddEvent }}" hx-swap="beforeend scroll:bottom show:top"
-        class="chat-headers flex flex-col gap-y-2 last:b-0"> 
+<div class="chat-list p-2 h-5/6 overflow-auto">
+    <ul sse-swap="{{ .ChatAddEvent }}" hx-swap="beforeend"
+        class="chat-headers 
+            flex flex-col 
+            gap-y-2 "> 
         {{ with $chats := .Chats }}
             {{ range $index, $chat := $chats }} 
                 {{ template "chat_li.html" $chat }}

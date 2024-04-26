@@ -18,11 +18,13 @@ This app is being build as an excercise for me to
 * `members_div` in `home.html` is different from `members_div.html`
 
 ### Pressing issues
-* login/signup should be in left-panel on home
-* UI looks like shit, have to style it NOW
+* UI looks like shit, styling it NOW
+    * Chat should take entire viewport
+    * Left panel / Right panel should allign
+    * Scroll bar should be subtle
+    * Adding li to ul should scroll to it
 * it's time to start sanitizing raw user input.
     * Def break the chat: ' "
-* HTMX hx- stuff should sit next to target
 
 ### Message Broadcasting: 
 - track user deltas: chats, messages
