@@ -4,19 +4,25 @@
     hx-target="#chat-head-{{ .ChatId }}" 
     hx-swap="innerHTML"
     class="chat-header 
-        flex flex-row justify-between
-        shadow
-        hover:bg-gradient-to-br from-indigo-700 to-zinc-700
-        hover:text-green-500">
+        flex flex-row h-7 justify-between
+        ml-5
+        px-3
+        shadow-md shadow-indigo-800
+        {{ if eq .Owner.Id .User.Id }}
+        border-b-2 border-amber-500 rounded-xl
+        {{ else }}
+        border-b-2 border-green-700 rounded-xl
+        {{ end }}
+        hover:text-green-500
+        hover:shadow-green-800">
     <div
         hx-trigger="click" 
         hx-get="/chat/{{.ChatId}}" 
         hx-target=".open-chat" 
         hx-swap="innerHTML"
-        class="overflow-hidden"
+        class="flex flex-row w-full justify-between overflow-hidden"
     >
         <b>{{.Name}}</b> 
-    </div>
     {{ if eq .Owner.Id .User.Id }}
         <form id="chat-delete-{{ .ChatId }}"
             title="delete chat ${{ .Name }}"
@@ -52,4 +58,5 @@
             </div>
         </form>
     {{ end }}
+    </div>
 </li>

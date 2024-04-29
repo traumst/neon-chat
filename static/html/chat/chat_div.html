@@ -25,12 +25,18 @@
             </form>
         </div>
     </div>
-    <div class="open-chat-users flex flex-row justify-between">
+    <div class="open-chat-users 
+        flex flex-row justify-between 
+        p-1
+        border-b-4 border-zinc-700 rounded-lg
+        shadow shadow-zinc-800">
         <div class="member-list flex flex-row">
-            Members: {{ template "membersList" . }}
+            <span>Members: </span>&nbsp;
+            {{ template "membersList" . }}
         </div> 
         {{ if eq .Owner.Id .User.Id }}
-            <form method="POST" 
+            <form id="inviteUserToChatForm"
+                method="POST" 
                 hx-target=".member-list" 
                 hx-post="/user/invite" 
                 hx-trigger="submit" 
@@ -43,8 +49,7 @@
                         text-center
                         rounded-md
                         bg-gradient-to-br from-indigo-800 to-zinc-700
-                        text-gray-400
-                        shadow">
+                        text-gray-400">
                 <button type="submit" class="hidden">Invite</button>
             </form>
             <script>
@@ -57,7 +62,7 @@
             </script>
         {{ end }}
     </div>
-    <div class="chat-content flex flex-col grow overflow-y-auto">
+    <div class="chat-content flex flex-col p-2 grow overflow-y-auto">
         {{ template "messageHistoryList" . }}
     </div>
     <div class="chat-footer flex flex-col">
@@ -136,7 +141,7 @@
             >
                 <input type="hidden" name="chatid" value="{{ $top.ChatId }}">
                 <input type="hidden" name="userid" value="{{ $user.Id }}">
-                <button type="submit" class="member-delete-button">
+                <button type="submit" class="member-delete-button hover:text-orange-500">
                     [{{ $user.Name }}]
                 </button>
             </form>

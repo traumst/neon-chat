@@ -4,12 +4,24 @@
     hx-swap="innerHTML" 
     class="chat-message-li 
         flex flex-row justify-between
+        p-2
+        h-fit
         gap-1
         shadow
-        hover:bg-gradient-to-br from-indigo-700 to-zinc-700
+        {{ if eq .Author .ActiveUser }}
+            ml-5
+            border-b-4 border-green-700 rounded-lg
+            shadow shadow-indigo-800
+        {{ else }}
+            mr-5
+            border-b-4 border-indigo-700 rounded-lg
+            shadow shadow-green-800
+        {{ end }}
+        hover:shadow-green-500
         hover:text-green-500">
-    <div class="chat-message-content flex">
-        <strong>{{ .Author }}:</strong> {{ .Text }}
+    <div class="chat-message-content flex flex-row">
+        <sub class="mr-0">[{{ .Author }}]</sub><pre>&nbsp;</pre>
+        <span>{{ .Text }}</span>
     </div>
     {{ if or (eq .Author .ActiveUser) (eq .Owner .ActiveUser) }}
         <form id="delete-message"

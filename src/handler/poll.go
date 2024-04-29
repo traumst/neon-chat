@@ -15,7 +15,6 @@ func PollUpdatesForUser(conn *Conn, pollingUserId uint) {
 	var wg sync.WaitGroup
 	done := false
 	for !done {
-		log.Printf("∞--%s--> APP.PollUpdatesForUser TRACE user[%d] is waiting for updates\n", conn.Origin, conn.User.Id)
 		select {
 		case <-conn.Reader.Context().Done():
 			log.Printf("<--%s--∞ APP.PollUpdatesForUser WARN user[%d] conn[%v] disonnected\n",
@@ -25,6 +24,8 @@ func PollUpdatesForUser(conn *Conn, pollingUserId uint) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
+				log.Printf("∞--%s--> APP.PollUpdatesForUser TRACE user[%d] is receiving update[%v]\n",
+					conn.Origin, conn.User.Id, up)
 				sendUpdates(conn, up, pollingUserId)
 				//conn.Out <- up
 			}()
