@@ -16,7 +16,7 @@ type MemberTemplate struct {
 
 func (c *MemberTemplate) ShortHTML() (string, error) {
 	var buf bytes.Buffer
-	shortTmpl := template.Must(template.ParseFiles("static/html/bits/member_div.html"))
+	shortTmpl := template.Must(template.ParseFiles("static/html/chat/member_div.html"))
 	err := shortTmpl.Execute(&buf, c)
 	if err != nil {
 		return "", err
