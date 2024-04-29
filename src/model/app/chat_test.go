@@ -33,8 +33,6 @@ func TestIsUserInChat(t *testing.T) {
 
 func TestIsAuthor(t *testing.T) {
 	t.Logf("TestIsAuthor started")
-	//u := "test-user"
-	//o := "other-user"
 	u1 := User{Id: 1, Name: "John", Type: UserType(UserTypeFree)}
 	u2 := User{Id: 2, Name: "Jill", Type: UserType(UserTypeFree)}
 	o := User{Id: 3, Name: "Mr Bill", Type: UserType(UserTypeFree)}

@@ -2,96 +2,127 @@
 <html>
 <head>
     <title>Home</title>
-    <style>
-        /* 
-        .add-chat input { 
-            width: 70%; 
-            padding: 10px; 
-            margin-right: 10px; 
-            box-sizing: border-box; 
-        }
-        .add-chat button { 
-            padding: 10px 20px; 
-        } */
-    </style>
     {{ if .LoadLocal }}
     <script src="/script/htmx.1.9.10.min.js"></script>
     <script src="/script/htmx.1.9.10.sse.js"></script>
     <script src="/script/htmx.1.9.10.debug.js"></script>
-    <link href="/css/tailwind.css" rel="stylesheet">
+    <script src="/script/tailwindcss.3.4.3.min.js"></script>
+    <!-- Need to build tailwind to minimize it -->
+    <!-- <link href="/css/tailwind.css" rel="stylesheet"> -->
     {{ else }}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.11/htmx.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.11/ext/sse.min.js"></script>
-    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.3"></script>
     {{ end }}
 </head>
-<body class="h-full m-0 p-0">
-<div hx-ext="sse" sse-trigger="load" sse-connect="/poll" 
-    class="
-        flex flex-row 
-        grow-0 min-w-96 
-        m-2 p-4 gap-4 
-        shadow-md 
-        border-2 rounded-lg">
+<body 
+    {{ if .IsAuthorized }}
+        hx-ext="sse" sse-trigger="load" sse-connect="/poll"
+    {{ end }}
+    class="flex
+        justify-between
+        items-center
+        h-screen
+        w-screen
+        border-2 rounded-lg
+        bg-gradient-to-br from-indigo-800 to-zinc-700
+        text-gray-400
+        shadow-md
+        overflow-hidden">
     <div class="left-panel 
         flex flex-col
-        p-2 
-        min-w-1/10 max-w-3/10
-        h-fit 
-        border-r">
-        <div class="active-user flex flex-row justify-between p-2">
-            <p class="font-bold">Active user: {{ .ActiveUser }}</p>
-            <form action="/logout" method="POST" class="pl-2">
-                <button type="submit">[logout]</button>
-            </form>
-        </div> 
-        <hr />
-        <div class="chat-list p-2">
-            <ul sse-swap="{{ .ChatAddEvent }}" hx-swap="beforeend"
-                class="chat-headers 
-                    justify-start 
-                    flex flex-col 
-                    gap-y-2 
-                    last:b-0"> 
-                {{ with $chats := .Chats }}
-                    {{ range $index, $chat := $chats }} 
-                        {{ template "chat_li.html" $chat }}
-                    {{ end }}
-                {{ else }}
-                    <li>No chats yet</li>
-                {{ end }}
-            </ul>
-        </div>
-        <hr />
-        <div class="add-chat justify-between">
-            <form hx-post="/chat" hx-trigger="submit" hx-target=".open-chat" hx-swap="innerHTML"
-             class="
-                flex flex-row 
-                grow-0 h-fit w-90 
-                m-2 p-4 gap-4 
-                shadow-md 
-                border-2 rounded-lg">
-                <input type="text" id="addChatFormInput" name="chatName" placeholder="new chat">
-                <button type="submit" id="addChatFormBtn" class="px-3 py-5">
-                    Create
-                </button>
-            </form>
-        </div>
+        h-screen
+        w-1/3
+        overflow-y-auto
+        overflow-x-hidden
+        p-2
+        shadow">
+        {{ if .IsAuthorized }}
+            <div class="active-user 
+                flex w-full justify-between 
+                p-2
+                shadow">
+                <div class="font-bold">U-R: {{ .ActiveUser }}</div>
+                <form title="log out {{ .ActiveUser }}"
+                    hx-post="/logout" 
+                    hx-trigger="submit" 
+                    hx-target="body"
+                    class="hover:text-orange-500">
+                    <button type="submit">[logout]</button>
+                </form>
+            </div>
+            <div class="add-chat flex w-full p-2">
+                {{ template "addChatDiv" . }}
+            </div>
+            <div class="chat-list flex justify-between p-2 overflow-x-hidden">
+                {{ template "chatListDiv" . }}
+            </div>
+        {{ else }}
+            {{ template "login_div.html" .LoginTemplate }}
+        {{ end }}
     </div>
-    <div class="right-panel p-2 w-full border-l flex flex-col h-fit">
+    
+    <div class="right-panel 
+        flex flex-grow flex-col 
+        h-screen 
+        w-2/3 
+        p-2
+        shadow">
         <div class="open-chat">
-            {{ with .OpenTemplate }}
-                <div class="open-chat-content" 
-                    hx-get="/chat/{{ .ChatId }}" 
-                    hx-trigger="load"
-                    hx-target="this"
-                    hx-swap="innerHTML">
-                </div>
+            {{ if .IsAuthorized }}
+                {{ with .OpenTemplate }}
+                    {{ template "chat_div.html" . }}
+                {{ else }}
+                    {{ template "welcome_div.html" . }}
+                {{ end }}
             {{ else }}
                 {{ template "welcome_div.html" . }}
             {{ end }}
         </div>
     </div>
-</div>
 </body>
 </html>
+
+{{ define "addChatDiv" }}
+<form id="add-chat-form"
+    hx-post="/chat" 
+    hx-trigger="submit" 
+    hx-target=".open-chat" 
+    hx-swap="innerHTML"
+    hx-ext="debug"
+    class="w-full">
+    <input id="newChatName" type="text" name="chatName" placeholder="open new chat" 
+        class="w-full text-center rounded-md
+            bg-gradient-to-br from-indigo-800 to-zinc-700
+            text-gray-400
+            shadow-md">
+    <button type="submit" class="hidden">
+        Create
+    </button>
+</form>
+<script>
+    document.body.addEventListener('htmx:afterSwap', event => {
+        const newChatName = document.getElementById('newChatName');
+        if (newChatName) {
+            newChatName.value = '';
+        }
+    });
+</script>
+{{ end }}
+
+{{ define "chatListDiv" }}
+<ul sse-swap="{{ .ChatAddEvent }}" 
+    hx-swap="afterbegin" 
+    class="chat-headers flex flex-col w-full"> 
+    {{ with $chats := .ReverseChats }}
+        {{ range $index, $chat := $chats }} 
+            {{ template "chat_li.html" $chat }}
+        {{ end }}
+    {{ else }}
+        <li id="noChats" sse-swap="{{ .ChatAddEvent }}" hx-swap="delete" target="#noChats" 
+            class="flex px-2 py-4">
+            No chats yet
+        </li>
+    {{ end }}
+</ul>
+{{ end }}

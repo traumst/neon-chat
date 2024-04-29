@@ -56,9 +56,6 @@ func chatInvite(conn *Conn, evnt event.UpdateType, targetChat *app.Chat, authorI
 func chatExpel(conn *Conn, evnt event.UpdateType, chatId int, authorId uint, subjectId uint) error {
 	log.Printf("∞----> chatExpel TRACE to user[%d] about author[%d] dropped subject[%d] from chat[%d]\n",
 		conn.User.Id, authorId, subjectId, chatId)
-	if conn.User.Id == authorId {
-		return nil
-	}
 	conn.In <- event.LiveUpdate{
 		Event:    evnt,
 		ChatId:   chatId,

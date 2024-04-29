@@ -1,29 +1,31 @@
-<li class="chat-message
-    flex flex-row 
-    m-1 p-4
-    shadow-md 
-    border-3 rounded-sm" 
-    id="chat-{{ .ChatId }}-msg-{{ .MsgId }}"
+<li id="chat-{{ .ChatId }}-msg-{{ .MsgId }}"
     sse-swap="{{ .MessageDropEvent }}"
     hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
     hx-swap="innerHTML" 
->
-    <div class="chat-message">
+    class="chat-message-li 
+        flex flex-row justify-between
+        gap-1
+        shadow
+        hover:bg-gradient-to-br from-indigo-700 to-zinc-700
+        hover:text-green-500">
+    <div class="chat-message-content flex">
         <strong>{{ .Author }}:</strong> {{ .Text }}
     </div>
     {{ if or (eq .Author .ActiveUser) (eq .Owner .ActiveUser) }}
         <form id="delete-message"
+            title="delete message from {{ .Author }}"
             hx-post="/message/delete" 
             hx-trigger="click" 
             hx-swap="innerHTML" 
             hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
             hx-include=".chat-message-delete"
+            class="flex ml-auto"
         >
             <input type="hidden" name="msgid" value="{{ .MsgId }}">
             <input type="hidden" name="chatid" value="{{ .ChatId }}">
-            <div class="chat-message-delete" 
-                hx-trigger="click" 
+            <div hx-trigger="click" 
                 hx-action="chat-message-delete-{{ .MsgId }}.submit()"
+                class="chat-message-delete hover:text-orange-500"
             >
                 [delete]
             </div>

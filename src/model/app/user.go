@@ -5,8 +5,7 @@ type UserType string
 // TODO add flags/permissions mapping
 
 const (
-	UserTypeAdmin UserType = "user-type-admin"
-	UserTypeFree  UserType = "user-type-free"
+	UserTypeFree UserType = "user-type-free"
 )
 
 type User struct {

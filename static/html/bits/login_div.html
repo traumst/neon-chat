@@ -1,0 +1,52 @@
+<div id="auth" class="flex flex-col justify-around p-2 shadow">
+    <div id="{{ .Login.Id }}" class="flex">
+        {{ template "authForm" .Login }}
+    </div>
+    <div id="{{ .Signup.Id }}" class="flex">
+        {{ template "authForm" .Signup }}
+    </div>
+</div>
+<script>
+    async function handleAuthResponse(response) {
+        if (response.ok) {
+            window.location.href = '/';
+        } else {
+            const data = await response.text()
+            alert(`Login failed: ${response.statusText} ${response.status}\nError message: ${data}`);
+        }
+    }
+    window.onload = function() {
+        document.querySelector('#login form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            console.log('login data', formData)
+            fetch('/login', { method: 'POST', body: formData })
+                .then(handleAuthResponse)
+                .catch(console.log);
+        });
+        document.querySelector('#signup form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            console.log('signup data', formData)
+            fetch('/signup', { method: 'PUT', body: formData })
+                .then(handleAuthResponse)
+                .catch(console.log);
+        });
+    };
+</script>
+
+{{ define "authForm" }}
+<form class="flex flex-col shadow-lg border-2 rounded-lg">
+    <label for="{{ .Id }}-user">
+        User: <input type="text" name="{{ .Id }}-user" placeholder="username"
+            class="border-1 rounded-md shadow">
+    </label>
+    <label for="{{ .Id }}-pass">
+        Pass: <input type="password" name="{{ .Id }}-pass" placeholder="********"
+            class="border-1 rounded-md shadow">
+    </label>
+    <button type="submit" class="shadow">
+        {{ .Label }}
+    </button>
+</form>
+{{ end }}

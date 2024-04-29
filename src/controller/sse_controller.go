@@ -17,8 +17,7 @@ func PollUpdates(app *handler.AppState, w http.ResponseWriter, r *http.Request) 
 	}
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
-		log.Printf("--%s-> DeleteUser WARN user, %s\n", utils.GetReqId(r), err)
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+		log.Printf("--%s-> PollUpdates WARN user, %s\n", utils.GetReqId(r), err)
 		return
 	}
 	log.Printf("---%s--> PollUpdates TRACE IN polling updates for user[%d]\n", utils.GetReqId(r), user.Id)
