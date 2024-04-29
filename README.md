@@ -12,6 +12,7 @@ This app is being build as an excercise for me to
 ## TODOs
 
 ### Known bugs
+* first msgs of each user break other's chat, doesn't happen after reload with existing messages
 * same user can be invited to the same chat 2+ times
 * last open session is the only session a user can have
 * add/remove chat/msg should be done by sse, not api response
@@ -19,8 +20,6 @@ This app is being build as an excercise for me to
 
 ### Pressing issues
 * UI looks like shit, styling it NOW
-    * Chat should take entire viewport
-    * Left panel / Right panel should allign
     * Scroll bar should be subtle
     * Adding li to ul should scroll to it
 * it's time to start sanitizing raw user input.
@@ -29,6 +28,7 @@ This app is being build as an excercise for me to
 ### Message Broadcasting: 
 - track user deltas: chats, messages
 - only serve deltas
+- buffer for unstable connection/s
 - test overload of a conn channel
 
 ### Persistence

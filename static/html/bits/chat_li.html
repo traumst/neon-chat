@@ -1,16 +1,13 @@
 <li id="chat-head-{{ .ChatId }}" 
-    title="{{ .Name }}"
+    title="chat {{ .Name }}"
     sse-swap="{{ .ChatDropEvent }}"
     hx-target="#chat-head-{{ .ChatId }}" 
     hx-swap="innerHTML"
     class="chat-header 
-        shadow-md
-        flex flex-row 
-        justify-between 
-        hover:bg-gray-500 hover:text-green-500 
-        p-2 
-        gap-2" 
->
+        flex flex-row justify-between
+        shadow
+        hover:bg-gradient-to-br from-indigo-700 to-zinc-700
+        hover:text-green-500">
     <div
         hx-trigger="click" 
         hx-get="/chat/{{.ChatId}}" 
@@ -20,11 +17,9 @@
     >
         <b>{{.Name}}</b> 
     </div>
-    <div >
-
-    </div>
     {{ if eq .Owner.Id .User.Id }}
         <form id="chat-delete-{{ .ChatId }}"
+            title="delete chat ${{ .Name }}"
             hx-post="/chat/delete" 
             hx-trigger="click" 
             hx-target="#chat-head-{{ .ChatId }}"
@@ -32,15 +27,16 @@
             hx-include="#chat-delete-{{ .ChatId }}"
         >
             <input type="hidden" name="chatid" value="{{ .ChatId }}">
-            <div class="chat-header-delete" 
-                hx-trigger="click" 
+            <div hx-trigger="click" 
                 hx-action="chat-delete-{{ .ChatId }}.submit()"
+                class="chat-header-delete hover:text-orange-500"
             >
                 [delete]
             </div>
         </form>
     {{ else if eq .User .Viewer }}
         <form id="chat-leave-{{ .ChatId }}"
+            title="leave chat {{ .Name }}"
             hx-post="/user/leave" 
             hx-trigger="click" 
             hx-target="#chat-head-{{ .ChatId }}"

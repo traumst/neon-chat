@@ -38,7 +38,7 @@ func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	home := template.HomeTemplate{
 		OpenTemplate:  nil,
 		Chats:         nil,
-		ActiveUser:    "",
+		ActiveUser:    "User",
 		LoadLocal:     app.LoadLocal(),
 		ChatAddEvent:  "",
 		IsAuthorized:  false,

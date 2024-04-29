@@ -1,56 +1,52 @@
+<div id="auth" class="flex flex-col justify-around p-2 shadow">
+    <div id="{{ .Login.Id }}" class="flex">
+        {{ template "authForm" .Login }}
+    </div>
+    <div id="{{ .Signup.Id }}" class="flex">
+        {{ template "authForm" .Signup }}
+    </div>
+</div>
 <script>
-    function handleAuthResponse(response) {
+    async function handleAuthResponse(response) {
         if (response.ok) {
             window.location.href = '/';
         } else {
-            alert('Login failed:', response.status, response.statusText, response.body);
+            const data = await response.text()
+            alert(`Login failed: ${response.statusText} ${response.status}\nError message: ${data}`);
         }
     }
     window.onload = function() {
         document.querySelector('#login form').addEventListener('submit', function(event) {
             event.preventDefault();
-            var formData = new FormData(event.target);
+            const formData = new FormData(event.target);
             console.log('login data', formData)
-            fetch('/login', {
-                method: 'POST',
-                body: formData
-            }).then(handleAuthResponse);
+            fetch('/login', { method: 'POST', body: formData })
+                .then(handleAuthResponse)
+                .catch(console.log);
         });
         document.querySelector('#signup form').addEventListener('submit', function(event) {
             event.preventDefault();
-            var formData = new FormData(event.target);
-            console.log('login data', formData)
-            fetch('/signup', {
-                method: 'PUT',
-                body: formData
-            }).then(handleAuthResponse);
+            const formData = new FormData(event.target);
+            console.log('signup data', formData)
+            fetch('/signup', { method: 'PUT', body: formData })
+                .then(handleAuthResponse)
+                .catch(console.log);
         });
     };
 </script>
-<div>
-    <section id="auth" class="gap-2 flex flex-col justify-center">
-        {{ template "authForm" .Login }}
-        {{ template "authForm" .Signup }}
-    </section>
-</div>
 
 {{ define "authForm" }}
-<div id="{{ .Id }}" class="flex p-4 ">
-    <form class="flex flex-col shadow-lg border-2 rounded-lg">
-        <label for="{{ .Id }}-user" class="p-1 m-1">
-            User: <input type="text" name="{{ .Id }}-user" placeholder="username"
-                class="p-1 m-2 border-1 rounded-md shadow">
-        </label>
-        <label for="{{ .Id }}-pass" class="p-1 m-1">
-            Pass: <input type="password" name="{{ .Id }}-pass" placeholder="********"
-                class="p-1 m-2 border-1 rounded-md shadow"
-            >
-        </label>
-        <button type="submit"
-            class="p-1 m-2 border-1 rounded-md shadow"
-        >
-            {{ .Label }}
-        </button>
-    </form>
-</div>
+<form class="flex flex-col shadow-lg border-2 rounded-lg">
+    <label for="{{ .Id }}-user">
+        User: <input type="text" name="{{ .Id }}-user" placeholder="username"
+            class="border-1 rounded-md shadow">
+    </label>
+    <label for="{{ .Id }}-pass">
+        Pass: <input type="password" name="{{ .Id }}-pass" placeholder="********"
+            class="border-1 rounded-md shadow">
+    </label>
+    <button type="submit" class="shadow">
+        {{ .Label }}
+    </button>
+</form>
 {{ end }}

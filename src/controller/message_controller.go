@@ -133,5 +133,5 @@ func DeleteMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request
 
 	log.Printf("<-%s-- DeleteMessage done\n", reqId)
 	w.WriteHeader(http.StatusAccepted)
-	w.Write([]byte("[deleted]"))
+	w.Write([]byte("[DeletedM]"))
 }

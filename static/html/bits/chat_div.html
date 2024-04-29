@@ -1,142 +1,148 @@
 <div id="open-chat-{{ .ChatId }}"
     sse-swap="{{ .ChatCloseEvent }}"
-    hx-target=".open-chat"
-    hx-swap="innerHTML" ></div>
-<div class="open-chat-name 
-    flex flex-row 
-    justify-between 
-    p-2
-    shadow-md">
-    <div>Chat {{ .Name }}</div>
-    <div class="open-chat-users 
-            flex flex-row
-            justify-start
-            m-0">
-        Users in Chat: {{ template "members_div" . }}
-    </div>
-    <form id="chat-close-{{ .ChatId }}"
-        hx-post="/chat/close" 
-        hx-trigger="click" 
-        hx-target=".open-chat"
-        hx-swap="innerHTML" 
-        hx-include="#chat-close-{{ .ChatId }}"
-    >
-        <input type="hidden" name="chatid" value="{{ .ChatId }}">
-        <div class="chat-header-close" 
-            hx-trigger="click" 
-            hx-action="chat-close-{{ .ChatId }}.submit()"
-        >
-        [close]
+    hx-swap="outerHTML" 
+    class="flex flex-col h-screen p-2 pb-4 gap-y-2"
+>
+    <div class="chat-header flex flex-row justify-end">
+        <div class="open-chat-name flex flex-row justify-between shadow">
+            Chat {{ .Name }}
         </div>
-    </form>
-</div>
-{{ if eq .Owner.Id .User.Id }}
-<div class="invite-user p-2 shadow-md">
-    <form method="POST" 
-        hx-target=".member-list" 
-        hx-post="/user/invite" 
-        hx-trigger="submit" 
-        hx-swap="beforeend"
-    >
-        <input type="hidden" name="chatId" value="{{ .ChatId }}"
-            class="p-2 m-2">
-        <input id="inviteUser" type="text" name="invitee" placeholder="...type invitee username here..."
-            class="p-2 
-                bg-gradient-to-br from-indigo-800 to-zinc-700
-                text-gray-400
-                shadow-md">
-        <button type="submit">Invite User</button>
-    </form>
-    <script>
-        document.body.addEventListener('htmx:afterSwap', function (event) {
-            const invitedUsed = document.getElementById('inviteUser');
-            if (invitedUsed) {
-                invitedUsed.value = '';
-            }
-        });
-    </script>
-</div>
-{{ end }}
-<div class="open-chat-history p-2 h-screen">
-    <ul hx-target=".message-list" 
-        sse-swap="{{ .MessageAddEvent }}" 
-        hx-swap="beforeend"
-        class="message-list 
-            flex flex-col 
-            h-5/6
-            overflow-y-auto" 
-    >
-        {{ with $chatMsgs := .Messages }}
-            {{ range $index, $msg := $chatMsgs }} 
-                {{ template "message_li.html" $msg }}
-            {{ end }}
-        {{ else }}
-            <li id="noMsgs" sse-swap="{{ .MessageAddEvent }}" hx-swap="delete">
-                No previous messages...
-            </li>
+        <div class="flex flex-row">
+            <form id="chat-close-{{ .ChatId }}"
+                title="close chat {{ .Name }}"
+                hx-post="/chat/close" 
+                hx-trigger="click" 
+                hx-target=".open-chat"
+                hx-swap="innerHTML" 
+                hx-include="#chat-close-{{ .ChatId }}"
+            >
+                <input type="hidden" name="chatid" value="{{ .ChatId }}">
+                <div hx-trigger="click" 
+                    hx-action="chat-close-{{ .ChatId }}.submit()"
+                    class="chat-header-close hover:text-orange-500">
+                [close]
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="open-chat-users flex flex-row justify-between">
+        <div class="member-list flex flex-row">
+            Members: {{ template "membersList" . }}
+        </div> 
+        {{ if eq .Owner.Id .User.Id }}
+            <form method="POST" 
+                hx-target=".member-list" 
+                hx-post="/user/invite" 
+                hx-trigger="submit" 
+                hx-swap="beforeend"
+                class="flex-row flex-shrink"
+            >
+                <input type="hidden" name="chatId" value="{{ .ChatId }}">
+                <input id="inviteUser" type="text" name="invitee" placeholder="invite user"
+                    class="w-full
+                        text-center
+                        rounded-md
+                        bg-gradient-to-br from-indigo-800 to-zinc-700
+                        text-gray-400
+                        shadow">
+                <button type="submit" class="hidden">Invite</button>
+            </form>
+            <script>
+                document.body.addEventListener('htmx:afterSwap', function (event) {
+                    const invitedUsed = document.getElementById('inviteUser');
+                    if (invitedUsed) {
+                        invitedUsed.value = '';
+                    }
+                });
+            </script>
         {{ end }}
-    </ul>
-    <form id="add-message-form"
-        hx-post="/message" 
-        hx-trigger="submit" 
-        hx-target=".message-list" 
-        hx-swap="beforeend"
-        class="flex flex-row h-fit p-2 shadow-md"
-    >
-        <input type="hidden" name="chatId" value="{{ .ChatId }}"
-            class="flex h-2 p-2 m-2">
-        <input id="newMsgText" type="text" name="msg" placeholder="...type message here..."
-            class="flex p-2 m-2
-                bg-gradient-to-br from-indigo-800 to-zinc-700
-                text-gray-400
-                shadow-md">
-        <button type="submit" class="flex px-3 py-5">
-            Send
-        </button>
-    </form>
-    <script>
-        document.body.addEventListener('htmx:afterSwap', event => {
-            const newMsgText = document.getElementById('newMsgText');
-            if (newMsgText) {
-                newMsgText.value = '';
-            }
-        });
-    </script>
+    </div>
+    <div class="chat-content flex flex-col grow overflow-y-auto">
+        {{ template "messageHistoryList" . }}
+    </div>
+    <div class="chat-footer flex flex-col">
+        {{ template "sendMessageForm" . }}
+    </div>
 </div>
 
-{{ define "members_div" }}
-<div class="member-list flex" >
-    {{ $top := . }}
-    {{ range $index, $user := .Users }}
-        <div class="member transition duration-1000 ease-in-out" 
-            id="chat-{{ $top.ChatId }}-user-{{ $user.Id }}" 
-            sse-swap="{{ $top.ChatExpelEvent }}"
-            hx-target="#chat-{{ $top.ChatId }}-user-{{ $user.Id }}"
-            hx-swap="innerHTML"
-        >
-            {{ if eq $top.Owner.Id $user.Id }}
-                [<b><i>{{$user.Name}}</i></b>]
-            {{ else if eq $top.Owner.Id $top.Viewer.Id }}
-                <form id="member-delete-{{ $top.ChatId }}-user-{{ $user.Id }}"
-                    hx-post="/user/expel" 
-                    hx-trigger="click" 
-                    hx-target="#chat-{{ $top.ChatId }}-user-{{ $user.Id }}"
-                    hx-swap="innerHTML" 
-                    hx-include="#member-delete-{{ $top.ChatId }}-user-{{ $user.Id }}"
-                >
-                    <input type="hidden" name="chatid" value="{{ $top.ChatId }}">
-                    <input type="hidden" name="userid" value="{{ $user.Id }}">
-                    <div class="member-delete-button" 
-                        hx-trigger="click" 
-                        hx-action="member-delete-{{ $top.ChatId }}-user-{{ $user.Id }}.submit()"
-                    >
-                        [{{$user.Name}}]
-                    </div>
-                </form>
-            {{ else }}
-                [{{$user.Name}}]
-            {{ end }}
-        </div>
+
+{{ define "messageHistoryList" }}
+<ul hx-target=".message-list" 
+    sse-swap="{{ .MessageAddEvent }}" 
+    hx-swap="beforeend"
+    class="message-list" 
+>
+    {{ with $chatMsgs := .Messages }}
+        {{ range $index, $msg := $chatMsgs }} 
+            {{ template "message_li.html" $msg }}
+        {{ end }}
+    {{ else }}
+        <li id="noMsgs" sse-swap="{{ .MessageAddEvent }}" hx-swap="delete" hx-target="#noMsgs">
+            No previous messages...
+        </li>
     {{ end }}
-</div>
+</ul>
+{{ end }}
+
+{{ define "sendMessageForm" }}
+<form
+    hx-post="/message" 
+    hx-trigger="submit" 
+    hx-target=".message-list" 
+    hx-swap="beforeend"
+    class="flex mt-auto shadow-md"
+>
+    <input type="hidden" name="chatId" value="{{ .ChatId }}">
+    <input id="newMsgText" type="text" name="msg" placeholder="send message"
+        class="w-full
+            text-center
+            rounded-md
+            bg-gradient-to-br from-indigo-800 to-zinc-700
+            text-gray-400
+            shadow-md">
+    <button type="submit" class="hidden">
+        Send
+    </button>
+</form>
+<script>
+    document.body.addEventListener('htmx:afterSwap', event => {
+        const newMsgText = document.getElementById('newMsgText');
+        if (newMsgText) {
+            newMsgText.value = '';
+        }
+    });
+</script>
+{{ end }}
+
+{{ define "membersList" }}
+{{ $top := . }}
+{{ range $index, $user := .Users }}
+    <div class="member" 
+        id="chat-{{ $top.ChatId }}-user-{{ $user.Id }}" 
+        sse-swap="{{ $top.ChatExpelEvent }}"
+        hx-target="#chat-{{ $top.ChatId }}-user-{{ $user.Id }}"
+        hx-swap="innerHTML"
+    >
+        {{ if eq $top.Viewer.Id $user.Id }}
+            [<b title="this is you">{{ $user.Name }}</b>]
+        {{ else if eq $top.Owner.Id $top.Viewer.Id }}
+            <form id="member-delete-{{ $top.ChatId }}-user-{{ $user.Id }}"
+                title="expel {{ $user.Name }}"
+                hx-post="/user/expel" 
+                hx-trigger="click" 
+                hx-target="#chat-{{ $top.ChatId }}-user-{{ $user.Id }}"
+                hx-swap="innerHTML" 
+                hx-include="#member-delete-{{ $top.ChatId }}-user-{{ $user.Id }}"
+            >
+                <input type="hidden" name="chatid" value="{{ $top.ChatId }}">
+                <input type="hidden" name="userid" value="{{ $user.Id }}">
+                <button type="submit" class="member-delete-button">
+                    [{{ $user.Name }}]
+                </button>
+            </form>
+        {{ else }}
+            [{{ $user.Name }}]
+        {{ end }}
+    </div>
+{{ end }}
 {{ end }}
