@@ -5,7 +5,7 @@
 >
     <div class="chat-header flex flex-row justify-end">
         <div class="open-chat-name flex flex-row justify-between shadow">
-            Chat {{ .Name }}
+            {{ .Name }}
         </div>
         <div class="flex flex-row">
             <form id="chat-close-{{ .ChatId }}"
@@ -20,7 +20,7 @@
                 <div hx-trigger="click" 
                     hx-action="chat-close-{{ .ChatId }}.submit()"
                     class="chat-header-close hover:text-orange-500">
-                [close]
+                    <sub>[close]</sub>
                 </div>
             </form>
         </div>
@@ -62,6 +62,25 @@
             </script>
         {{ end }}
     </div>
+    <style>
+        .chat-content::-webkit-scrollbar {
+            width: .37rem;
+        }
+        .chat-content::-webkit-scrollbar-track {
+            background: #4338ca;
+            border-width: 2px;
+            border-color: #3f3f46;
+            border-radius: 4px;
+            box-shadow: #3f3f46;
+        }
+        .chat-content::-webkit-scrollbar-thumb {
+            background: #166534;
+            border-width: 3px;
+            border-color: #3f3f46;
+            border-radius: 8px;
+            box-shadow: #3f3f46;
+        }
+    </style>
     <div class="chat-content flex flex-col p-2 grow overflow-y-auto">
         {{ template "messageHistoryList" . }}
     </div>
@@ -69,7 +88,6 @@
         {{ template "sendMessageForm" . }}
     </div>
 </div>
-
 
 {{ define "messageHistoryList" }}
 <ul hx-target=".message-list" 

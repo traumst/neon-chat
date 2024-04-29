@@ -24,8 +24,8 @@ func PollUpdatesForUser(conn *Conn, pollingUserId uint) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				log.Printf("∞--%s--> APP.PollUpdatesForUser TRACE user[%d] is receiving update[%v]\n",
-					conn.Origin, conn.User.Id, up)
+				log.Printf("∞--%s--> APP.PollUpdatesForUser TRACE user[%d] is receiving update[%s]\n",
+					conn.Origin, conn.User.Id, up.Event)
 				sendUpdates(conn, up, pollingUserId)
 				//conn.Out <- up
 			}()

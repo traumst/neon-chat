@@ -60,12 +60,29 @@
                     hx-trigger="submit" 
                     hx-target="body"
                     class="hover:text-orange-500">
-                    <button type="submit">[logout]</button>
+                    <button type="submit"><sub>[logout]</sub></button>
                 </form>
             </div>
             <div class="add-chat flex w-full p-3">
                 {{ template "addChatDiv" . }}
             </div>
+
+            <style>
+                .chat-list::-webkit-scrollbar {
+                    width: .37rem;
+                }
+                .chat-list::-webkit-scrollbar-track {
+                    background: #7B1FA2;
+                    border-width: 4px;
+                    border-radius: 2px;
+                }
+                .chat-list::-webkit-scrollbar-thumb {
+                    background: #388E3C;
+                    border-width: 4px;
+                    border-radius: 8px;
+                    box-shadow: #3f3f46;
+                }
+            </style>
             <div class="chat-list flex justify-between overflow-x-hidden">
                 {{ template "chatListDiv" . }}
             </div>

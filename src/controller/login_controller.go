@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -45,7 +46,7 @@ func Login(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.
 
 	log.Printf("<-%s-- Login ERROR on authenticate[%s], %s\n", utils.GetReqId(r), u, err)
 	w.WriteHeader(http.StatusBadRequest)
-	w.Write([]byte("Not Found"))
+	w.Write([]byte(fmt.Sprintf("Credentials not found for [%s:%s]", authType, u)))
 	log.Printf("<-%s-- Login TRACE OUT\n", utils.GetReqId(r))
 }
 
@@ -53,7 +54,7 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 	log.Printf("--%s-> SignUp TRACE IN\n", utils.GetReqId(r))
 	if r.Method != "PUT" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte("Bad Request"))
+		w.Write([]byte("This shouldn't happen"))
 		return
 	}
 	u := r.FormValue("signup-user")
@@ -78,7 +79,7 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 		log.Printf("--%s-> SignUp ERROR name[%s] already taken by user[%d], %s\n",
 			utils.GetReqId(r), u, user.Id, err)
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Operation failed"))
+		w.Write([]byte("Failed to register, [%s] is already taken"))
 		return
 	}
 
@@ -94,7 +95,7 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 		log.Printf("--%s-> SignUp ERROR on register user[%v], %s\n", utils.GetReqId(r), user, err)
 		// TODO handler.Delete(db, user) - to remove partial data
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Operation failed"))
+		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", a.UserTypeFree, u)))
 		return
 	}
 	err = app.TrackUser(user)

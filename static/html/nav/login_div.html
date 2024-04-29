@@ -6,6 +6,23 @@
         {{ template "authForm" .Signup }}
     </div>
 </div>
+<style>
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-10px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(10px);
+    }
+}
+.shake {
+    animation: shake 0.8s; /* Adjust time as necessary */
+    animation-iteration-count: infinite; /* Remove or adjust for non-repeating shakes */
+}
+</style>
 <script>
     async function handleAuthResponse(response) {
         if (response.ok) {
@@ -22,7 +39,10 @@
             console.log('login data', formData)
             fetch('/login', { method: 'POST', body: formData })
                 .then(handleAuthResponse)
-                .catch(console.log);
+                .catch(error => {
+                    console.error("login error", error);
+
+                });
         });
         document.querySelector('#signup form').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -30,7 +50,9 @@
             console.log('signup data', formData)
             fetch('/signup', { method: 'PUT', body: formData })
                 .then(handleAuthResponse)
-                .catch(console.log);
+                .catch(error => {
+                    console.error("signup error", error);
+                });
         });
     };
 </script>
