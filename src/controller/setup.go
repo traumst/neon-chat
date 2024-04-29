@@ -33,12 +33,6 @@ func Setup(app *handler.AppState, conn *db.DBConn, loadLocal bool) {
 			}), minMiddleware))
 	}
 
-	// tmp, experimental
-	http.Handle("/gen2", ChainMiddleware(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			Gen2(app, w, r)
-		}), allMiddleware))
-
 	// live updates
 	http.Handle("/poll", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
