@@ -105,7 +105,8 @@ func flushEvent(w *http.ResponseWriter, evnt event.SSEvent, up event.LiveUpdate)
 	}
 	eventName := evnt.Format(up.ChatId, up.UserId, up.MsgId)
 	eventId := utils.RandStringBytes(5)
-	data := event.Trim(up.Data)
+	// must escape newlines in SSE
+	data := utils.Trim(up.Data)
 	_, err := fmt.Fprintf(*w, "id: %s\n", eventId)
 	if err != nil {
 		return fmt.Errorf("failed to write id[%s]", eventId)

@@ -5,5 +5,8 @@
 # echo "Building tailwind..."
 # ~/code/bin/tailwindcss -i static/css/input.css -o static/css/tailwind.css
 
+echo "Running tests"
+go test ./...
+
 echo "Starting server..."
 go run main.go
