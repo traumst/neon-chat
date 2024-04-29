@@ -92,7 +92,7 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 	user, auth, err = handler.Register(db, user, p, authType)
 	if err != nil || user == nil || auth == nil {
 		log.Printf("--%s-> SignUp ERROR on register user[%v], %s\n", utils.GetReqId(r), user, err)
-		// TODO handler.Delete(db, user)
+		// TODO handler.Delete(db, user) - to remove partial data
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Operation failed"))
 		return

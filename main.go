@@ -42,7 +42,6 @@ func main() {
 	}
 	log.Printf("\tparsed config: %s\n", config)
 
-	// TODO args.DBPath
 	log.Println("	connecting db...")
 	db, err := db.ConnectDB(config.Sqlite)
 	if err != nil {

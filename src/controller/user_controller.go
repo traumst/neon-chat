@@ -235,9 +235,8 @@ func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 
 	err = app.DropUser(user.Id, chat.Id, user.Id)
 	if err != nil {
-		log.Printf("<-%s-- LeaveChat ERROR dropUser, %s\n", reqId, err)
-		// w.WriteHeader(http.StatusBadRequest)
-		// return
+		log.Printf("<-%s-- LeaveChat out ERROR dropUser, %s\n", reqId, err)
+	} else {
+		log.Printf("<-%s-- LeaveChat out TRACE chat[%d] removed[%d]\n", reqId, chatId, user.Id)
 	}
-	log.Printf("<-%s-- LeaveChat TRACE chat[%d] removed[%d]\n", reqId, chatId, user.Id)
 }
