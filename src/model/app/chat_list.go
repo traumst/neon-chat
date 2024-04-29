@@ -140,7 +140,7 @@ func (cl *ChatList) DeleteChat(userId uint, chat *Chat) error {
 	cl.chats[chat.Id] = nil
 
 	if cl.open[userId] == nil {
-		// noop
+		// TODO trigger event to remove li on client
 	} else if cl.open[userId].Id == chat.Id {
 		cl.open[userId] = nil
 	}

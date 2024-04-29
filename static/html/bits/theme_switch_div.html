@@ -1,0 +1,39 @@
+<div class="switch-theme">
+    <select id="theme-selection" name="theme-selection" 
+        style="appearance: none; background-color: transparent" 
+        class="text-2xl">
+        <option value="dark" selected>🕯️</option>
+        <option value="light">💡</option>
+    </select>
+    <script>
+        const dark = ['text-gray', 'bg-black', 'shadow-grey'];
+        const light = ['text-black', 'bg-grey', 'shadow-black'];
+        const all = [...dark, ...light];
+        function cycleThemeSelection(element) {
+            element.preventDefault();
+            const select = element.target;
+            select.selectedIndex = (select.selectedIndex + 1) % select.options.length;
+            const newTheme = select.options[select.selectedIndex].value;
+            console.log('theme switch to', newTheme);
+            // const body = document.body;
+            // const members = document.querySelectorAll('.theme-selection');
+            // body.classList.remove(...all);
+            // members.forEach(member => member.classList.remove(...all));
+            // switch (newTheme) {
+            //     case 'dark':
+            //         body.classList.add(...dark);
+            //         members.forEach(member => member.classList.add(...dark));
+            //         break;
+            //     case 'light':
+            //         body.classList.add(...light);
+            //         members.forEach(member => member.classList.add(...light));
+            //         break;
+            //     default:
+            //         console.error('Unknown theme:', newTheme);
+            //         break;
+            // }
+        }
+        document.getElementById('theme-selection')
+            .addEventListener('mousedown', cycleThemeSelection);
+    </script>
+</div>

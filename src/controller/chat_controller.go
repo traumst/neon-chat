@@ -27,7 +27,7 @@ func OpenChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	if user == nil {
 		log.Printf("--%s-> OpenChat INFO user is not authorized, %s\n", utils.GetReqId(r), err)
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+		RenderHome(app, w, r)
 		return
 	}
 	path := strings.Split(r.URL.Path, "/")
@@ -77,7 +77,7 @@ func AddChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	if user == nil {
 		log.Printf("--%s-> AddChat INFO user is not authorized, %s\n", utils.GetReqId(r), err)
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+		RenderHome(app, w, r)
 		return
 	}
 	chatName := r.FormValue("chatName")
@@ -134,7 +134,7 @@ func CloseChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("--%s-> CloseChat WARN user, %s\n", utils.GetReqId(r), err)
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+		RenderHome(app, w, r)
 		return
 	}
 	chatIdStr := r.PostFormValue("chatid")
@@ -176,7 +176,7 @@ func DeleteChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("--%s-> DeleteChat WARN user, %s\n", utils.GetReqId(r), err)
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+		RenderHome(app, w, r)
 		return
 	}
 	chatId := r.PostFormValue("chatid")

@@ -67,15 +67,19 @@ func distributeMsgToUser(
 	log.Printf("∞----> distributeMsgToUser TRACE user[%d] chat[%d] event[%v]\n", userId, chatId, evnt)
 	openChat := state.GetOpenChat(userId)
 	if openChat == nil {
-		return fmt.Errorf("user[%d] has no open chat to distribute", userId)
+		log.Printf("<----- distributeMsgToUser INFO user[%d] has no open chat to distribute", userId)
+		return nil
 	}
 	if openChat.Id != chatId {
-		return fmt.Errorf("user[%d] has open chat[%d] different from message chat[%d]", userId, openChat.Id, chatId)
+		log.Printf("<----- distributeMsgToUser INFO user[%d] has open chat[%d] different from message chat[%d]",
+			userId, openChat.Id, chatId)
+		return nil
 	}
 
 	conn, err := state.GetConn(userId)
 	if err != nil {
-		return fmt.Errorf("user[%d] not connected, err:%s", userId, err.Error())
+		log.Printf("<----- distributeMsgToUser INFO user[%d] not connected, err:%s", userId, err.Error())
+		return nil
 	}
 
 	msg := event.LiveUpdate{

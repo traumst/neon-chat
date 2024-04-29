@@ -20,7 +20,7 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 	author, err := handler.ReadSession(app, w, r)
 	if err != nil || author == nil {
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+		RenderHome(app, w, r)
 		return
 	}
 	log.Printf("--%s-> AddMessage TRACE parsing input\n", utils.GetReqId(r))
@@ -78,7 +78,7 @@ func DeleteMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request
 	log.Printf("--%s-> DeleteMessage\n", reqId)
 	author, err := handler.ReadSession(app, w, r)
 	if err != nil || author == nil {
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+		RenderHome(app, w, r)
 		return
 	}
 	if r.Method != "POST" {
@@ -133,5 +133,5 @@ func DeleteMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request
 
 	log.Printf("<-%s-- DeleteMessage done\n", reqId)
 	w.WriteHeader(http.StatusAccepted)
-	w.Write([]byte("[deleted]"))
+	w.Write([]byte("[DeletedM]"))
 }
