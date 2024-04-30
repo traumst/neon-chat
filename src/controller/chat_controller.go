@@ -81,6 +81,8 @@ func AddChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	chatName := r.FormValue("chatName")
+	chatName = utils.TrimSpaces(chatName)
+	chatName = utils.TrimSpecial(chatName)
 	if chatName == "" {
 		log.Printf("<-%s-- AddChat ERROR chat name [%s]\n", reqId, chatName)
 		w.WriteHeader(http.StatusBadRequest)

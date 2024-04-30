@@ -10,7 +10,7 @@ import (
 )
 
 func FavIcon(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "static/icon/favicon.ico")
+	http.ServeFile(w, r, "static/icon/scarab-bnw.svg")
 }
 
 func ServeFile(w http.ResponseWriter, r *http.Request) {
@@ -28,6 +28,8 @@ func ServeFile(w http.ResponseWriter, r *http.Request) {
 	case "html":
 		filePath = fmt.Sprintf("./static/html/%s", fileName)
 	case "ico":
+		filePath = fmt.Sprintf("./static/icon/%s", fileName)
+	case "svg":
 		filePath = fmt.Sprintf("./static/icon/%s", fileName)
 	default:
 		filePath = ""

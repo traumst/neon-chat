@@ -36,6 +36,8 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 		return
 	}
 	inviteeName := r.FormValue("invitee")
+	inviteeName = utils.TrimSpaces(inviteeName)
+	inviteeName = utils.TrimSpecial(inviteeName)
 	invitee, err := conn.GetUser(inviteeName)
 	if err != nil || invitee == nil {
 		log.Printf("<-%s-- InviteUser ERROR invitee not found, %s\n", reqId, err)

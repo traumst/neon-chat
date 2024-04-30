@@ -25,6 +25,8 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("--%s-> AddMessage TRACE parsing input\n", utils.GetReqId(r))
 	msg := r.FormValue("msg")
+	msg = utils.TrimSpaces(msg)
+	msg = utils.TrimSpecial(msg)
 	if msg == "" {
 		log.Printf("--%s-> AddMessage WARN \n", utils.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)

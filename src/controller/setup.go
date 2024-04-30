@@ -20,6 +20,10 @@ func Setup(app *handler.AppState, conn *db.DBConn, loadLocal bool) {
 	minMiddleware := []Middleware{ReqIdMiddleware}
 	http.Handle("/favicon.ico", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			FavIcon(w, r)
+		}), minMiddleware))
+	http.Handle("/icon/", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ServeFile(w, r)
 		}), minMiddleware))
 	if loadLocal {

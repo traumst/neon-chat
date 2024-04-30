@@ -25,7 +25,11 @@ func Login(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.
 		return
 	}
 	u := r.FormValue("login-user")
+	u = utils.TrimSpaces(u)
+	u = utils.TrimSpecial(u)
 	p := r.FormValue("login-pass")
+	p = utils.TrimSpaces(p)
+	p = utils.TrimSpecial(p)
 	if u == "" || p == "" {
 		log.Printf("--%s-> Login TRACE empty user[%s]", utils.GetReqId(r), u)
 		RenderHome(app, w, r)
@@ -58,10 +62,15 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 		return
 	}
 	u := r.FormValue("signup-user")
+	u = utils.TrimSpaces(u)
+	u = utils.TrimSpecial(u)
 	p := r.FormValue("signup-pass")
+	p = utils.TrimSpaces(p)
+	p = utils.TrimSpecial(p)
 	log.Printf("--%s-> SignUp TRACE authentication check for user[%s] auth[%s]\n", utils.GetReqId(r), u, authType)
-	if u == "" || p == "" {
-		RenderHome(app, w, r)
+	if u == "" || p == "" || len(u) < 4 || len(p) < 8 {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid user / pass"))
 		return
 	}
 	user, auth, err := handler.Authenticate(db, u, p, authType)
