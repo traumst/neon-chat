@@ -32,11 +32,30 @@
         }
         .left-panel.closed {
             width: 9%;
-            /* transform: translateX(-100%); */
         }
         .left-panel.open {
             width: 33%;
-            /* transform: translateX(0); */
+        }
+        .active-user {
+            transition: all 0.3s ease;
+        }
+        .active-user.closed .other-info {
+            display: none;
+        }
+        .chat-list {
+            transition: all 0.3s ease;
+        }
+        .chat-list.closed .other-info {
+            display: none;
+        }
+        .left-panel-toggle {
+            transition: all 0.3s ease;
+        }
+        .left-panel-toggle.closed::before {
+            content: "⇽-⇾";
+        }
+        .left-panel-toggle.open::before {
+            content: "⇾-⇽";
         }
         .ticker:hover {
             overflow: visible;
@@ -84,7 +103,7 @@
     <script>
         document.body.addEventListener('htmx:beforeOnLoad', function(event) {
             if (event.detail.xhr.status >= 400) {
-                alert(`Action failed: ${event.detail.xhr.responseText}`)
+                alert(`Action failed ${event.detail.xhr.status} ${event.detail.xhr.responseText}`)
                 console.debug("Action failed:", 
                     event.detail.xhr.responseText, 
                     event.detail.xhr.status, 
@@ -93,11 +112,35 @@
         });
         function togglePanel() {
             const panel = document.querySelector('.left-panel');
-            if (panel.classList.contains('closed')) {
-                openLeftPanel(panel);
-            } else {
-                closeLeftPanel(panel);
+            const isClosed = panel.classList.contains('closed');
+            if (isClosed) {
+                openPanel(panel);
+                return;
+            } 
+            const isOpen = panel.classList.contains('open');
+            if (isOpen) {
+                closePanel(panel);
+                return;
             }
+            openPanel(panel);
+        }
+        function openPanel(panel) {
+            openLeftPanel(panel);
+            [...panel.children].forEach(element => {
+                openLeftPanel(element);
+                if (element.id === 'left-panel-toggle') {
+                    element.innerHTML = '⇾  ⇽';
+                }
+            });
+        }
+        function closePanel(panel) {
+            closeLeftPanel(panel);
+            [...panel.children].forEach(element => {
+                closeLeftPanel(element);
+                if (element.id === 'left-panel-toggle') {
+                    element.innerHTML = '⇽⇾';
+                }
+            });
         }
         function openLeftPanel(panel) {
             panel.classList.remove('closed');
@@ -122,12 +165,12 @@
                 flex flex-row justify-end 
                 p-2
                 shadow">
-                <div class="font-bold">user '{{ .ActiveUser }}'</div>
+                <div class="font-bold">{{ .ActiveUser }}</div>
                 <form title="log out {{ .ActiveUser }}"
                     hx-post="/logout" 
                     hx-trigger="submit" 
                     hx-target="body"
-                    class="hover:text-red-700">
+                    class="other-info hover:text-red-700">
                     <button type="submit"><sub>[logout]</sub></button>
                 </form>
             </div>
@@ -138,7 +181,9 @@
             <div class="chat-list flex justify-between overflow-x-hidden">
                 {{ template "chatListDiv" . }}
             </div>
-            <button id="left-panel-toggle" onclick="togglePanel()">[toggle]</button>
+            <button id="left-panel-toggle" onclick="togglePanel()" class="transition duration-100 mt-auto">
+                <script>togglePanel()</script>
+            </button>
         {{ else }}
             {{ template "login_div.html" .LoginTemplate }}
         {{ end }}

@@ -5,8 +5,8 @@
     hx-swap="innerHTML"
     class="chat-header
         flex flex-row h-7 justify-between
-        ml-5
-        px-3
+        items-center
+        px-2
         shadow-md shadow-indigo-800
         {{ if eq .Owner.Id .User.Id }}
         border-b-2 border-blue-700 rounded-xl
@@ -23,15 +23,14 @@
         class="flex flex-row 
             w-full 
             justify-between 
-            overflow-hidden
-            "
+            overflow-hidden"
     >
         <div class="ticker flex whitespace-nowrap overflow-hidden">
             <b>{{.Name}}</b>
         </div>
     {{ if eq .Owner.Id .User.Id }}
         <form id="chat-delete-{{ .ChatId }}"
-            class="flex"
+            class="flex other-info"
             title="delete chat ${{ .Name }}"
             hx-post="/chat/delete" 
             hx-trigger="click" 
