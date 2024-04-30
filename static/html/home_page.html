@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Home</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Min Chat</title>
+    <link rel="icon" type="image/svg+xml" href="icon/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="icon/scarab-bnw.svg">
     {{ if .LoadLocal }}
     <script src="/script/htmx.1.9.10.min.js"></script>
     <script src="/script/htmx.1.9.10.sse.js"></script>
@@ -39,7 +43,49 @@
                     event.detail.xhr.statusText)
             }
         });
+        function togglePanel() {
+            const panel = document.querySelector('.left-panel');
+            if (panel.classList.contains('closed')) {
+                openLeftPanel(panel);
+            } else {
+                closeLeftPanel(panel);
+            }
+        }
+        function openLeftPanel(panel) {
+            panel.classList.remove('closed');
+            panel.classList.add('open');
+        }
+        function closeLeftPanel(panel) {
+            panel.classList.remove('open');
+            panel.classList.add('closed');
+        }
     </script>
+    <style>
+        .left-panel {
+            transition: all 0.3s ease;
+        }
+        .left-panel.closed {
+            width: 9%;
+            /* transform: translateX(-100%); */
+        }
+        .left-panel.open {
+            width: 33%;
+            /* transform: translateX(0); */
+        }
+        .ticker:hover {
+            overflow: visible;
+            animation: ticker 5s linear infinite;
+            animation-iteration-count: 1;
+        }
+        @keyframes ticker {
+            from {
+                transform: translateX(0);
+            }
+            to {
+                transform: translateX(-100%);
+            }
+        }
+    </style>
     <div class="left-panel 
         flex flex-col
         h-screen
@@ -59,7 +105,7 @@
                     hx-post="/logout" 
                     hx-trigger="submit" 
                     hx-target="body"
-                    class="hover:text-orange-500">
+                    class="hover:text-red-700">
                     <button type="submit"><sub>[logout]</sub></button>
                 </form>
             </div>
@@ -86,6 +132,7 @@
             <div class="chat-list flex justify-between overflow-x-hidden">
                 {{ template "chatListDiv" . }}
             </div>
+            <button id="left-panel-toggle" onclick="togglePanel()">[toggle]</button>
         {{ else }}
             {{ template "login_div.html" .LoginTemplate }}
         {{ end }}
@@ -129,12 +176,14 @@
     hx-swap="innerHTML"
     hx-ext="debug"
     class="w-full">
-    <input id="newChatName" type="text" name="chatName" placeholder="open new chat" 
+    <input id="newChatName" type="text" name="chatName" placeholder="new chat name" title="enter to send"
         class="w-full text-center rounded-md
-            bg-gradient-to-br from-indigo-800 to-zinc-700
-            text-gray-400">
+            bg-gradient-to-br from-green-800 to-indigo-800
+            text-gray-400
+            shadow shadow-zinc-700
+            hover:shadow-lg hover:shadow-zinc-500">
     <button type="submit" class="hidden">
-        Create
+        Create Chat
     </button>
 </form>
 <script>

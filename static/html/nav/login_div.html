@@ -1,28 +1,23 @@
-<div id="auth" class="flex flex-col justify-around p-2 shadow">
-    <div id="{{ .Login.Id }}" class="flex">
+<div id="auth" class="flex flex-col p-2 gap-y-4 justify-around">
+    <div id="{{ .Login.Id }}" class="flex
+    text-center
+    rounded-md
+    bg-gradient-to-br from-green-800 to-indigo-800
+    text-gray-400
+    shadow shadow-zinc-700
+    hover:shadow-lg hover:shadow-zinc-500">
         {{ template "authForm" .Login }}
     </div>
-    <div id="{{ .Signup.Id }}" class="flex">
+    <div id="{{ .Signup.Id }}" class="flex
+    text-center
+    rounded-md
+    bg-gradient-to-br from-green-800 to-indigo-800
+    text-gray-400
+    shadow shadow-zinc-700
+    hover:shadow-lg hover:shadow-zinc-500">
         {{ template "authForm" .Signup }}
     </div>
 </div>
-<style>
-@keyframes shake {
-    0%, 100% {
-        transform: translateX(0);
-    }
-    10%, 30%, 50%, 70%, 90% {
-        transform: translateX(-10px);
-    }
-    20%, 40%, 60%, 80% {
-        transform: translateX(10px);
-    }
-}
-.shake {
-    animation: shake 0.8s; /* Adjust time as necessary */
-    animation-iteration-count: infinite; /* Remove or adjust for non-repeating shakes */
-}
-</style>
 <script>
     async function handleAuthResponse(response) {
         if (response.ok) {
@@ -58,14 +53,24 @@
 </script>
 
 {{ define "authForm" }}
-<form class="flex flex-col shadow-lg border-2 rounded-lg">
+<form class="flex flex-col w-full p-4 gap-y-4 shadow-lg rounded-lg">
     <label for="{{ .Id }}-user">
         User: <input type="text" name="{{ .Id }}-user" placeholder="username"
-            class="border-1 rounded-md shadow">
+            class="text-center
+                rounded-md
+                bg-gradient-to-br from-green-800 to-indigo-800
+                text-gray-400
+                shadow shadow-zinc-700
+                hover:shadow-lg hover:shadow-zinc-500">
     </label>
     <label for="{{ .Id }}-pass">
         Pass: <input type="password" name="{{ .Id }}-pass" placeholder="********"
-            class="border-1 rounded-md shadow">
+            class="text-center
+                rounded-md
+                bg-gradient-to-br from-green-800 to-indigo-800
+                text-gray-400
+                shadow shadow-zinc-700
+                hover:shadow-lg hover:shadow-zinc-500">
     </label>
     <button type="submit" class="shadow">
         {{ .Label }}

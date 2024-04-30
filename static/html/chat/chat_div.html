@@ -19,7 +19,7 @@
                 <input type="hidden" name="chatid" value="{{ .ChatId }}">
                 <div hx-trigger="click" 
                     hx-action="chat-close-{{ .ChatId }}.submit()"
-                    class="chat-header-close hover:text-orange-500">
+                    class="chat-header-close hover:text-red-700">
                     <sub>[close]</sub>
                 </div>
             </form>
@@ -44,13 +44,15 @@
                 class="flex-row flex-shrink"
             >
                 <input type="hidden" name="chatId" value="{{ .ChatId }}">
-                <input id="inviteUser" type="text" name="invitee" placeholder="invite user"
+                <input id="inviteUser" type="text" name="invitee" placeholder="invite user" title="enter to send"
                     class="w-full
                         text-center
                         rounded-md
-                        bg-gradient-to-br from-indigo-800 to-zinc-700
-                        text-gray-400">
-                <button type="submit" class="hidden">Invite</button>
+                        bg-gradient-to-br from-indigo-800 to-green-800
+                        text-gray-400
+                        shadow shadow-zinc-700
+                        hover:shadow-lg hover:shadow-zinc-500">
+                <button type="submit" class="hidden">Send Invite</button>
             </form>
             <script>
                 document.body.addEventListener('htmx:afterSwap', function (event) {
@@ -116,15 +118,16 @@
     class="flex mt-auto shadow-md"
 >
     <input type="hidden" name="chatId" value="{{ .ChatId }}">
-    <input id="newMsgText" type="text" name="msg" placeholder="send message"
+    <input id="newMsgText" type="text" name="msg" placeholder="type message" title="enter to send"
         class="w-full
             text-center
             rounded-md
-            bg-gradient-to-br from-indigo-800 to-zinc-700
+            bg-gradient-to-br from-green-800 to-indigo-800
             text-gray-400
-            shadow-md">
+            shadow shadow-zinc-700
+            hover:shadow-lg hover:shadow-zinc-500">
     <button type="submit" class="hidden">
-        Send
+        Send Message
     </button>
 </form>
 <script>
@@ -159,7 +162,7 @@
             >
                 <input type="hidden" name="chatid" value="{{ $top.ChatId }}">
                 <input type="hidden" name="userid" value="{{ $user.Id }}">
-                <button type="submit" class="member-delete-button hover:text-orange-500">
+                <button type="submit" class="member-delete-button hover:text-red-700">
                     [{{ $user.Name }}]
                 </button>
             </form>

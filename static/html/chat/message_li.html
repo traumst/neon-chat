@@ -9,11 +9,11 @@
         gap-1
         shadow
         {{ if eq .Author .ActiveUser }}
-            ml-5
+            ml-20
             border-b-4 border-green-700 rounded-lg
-            shadow shadow-indigo-800
+            shadow shadow-green-800
         {{ else }}
-            mr-5
+            mr-20
             border-b-4 border-indigo-700 rounded-lg
             shadow shadow-green-800
         {{ end }}
@@ -21,7 +21,7 @@
         hover:text-green-500">
     <div class="chat-message-content flex flex-row">
         <sub class="mr-0">[{{ .Author }}]</sub><pre>&nbsp;</pre>
-        <span>{{ .Text }}</span>
+        <div>{{ .Text }}</div>
     </div>
     {{ if or (eq .Author .ActiveUser) (eq .Owner .ActiveUser) }}
         <form id="delete-message"
@@ -37,7 +37,7 @@
             <input type="hidden" name="chatid" value="{{ .ChatId }}">
             <div hx-trigger="click" 
                 hx-action="chat-message-delete-{{ .MsgId }}.submit()"
-                class="chat-message-delete hover:text-orange-500"
+                class="chat-message-delete hover:text-red-700"
             >
                 <sub>[delete]</sub>
             </div>
