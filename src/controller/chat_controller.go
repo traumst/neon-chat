@@ -72,18 +72,23 @@ func AddChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		log.Printf("<-%s-- AddChat TRACE auth does not allow %s\n", reqId, r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte("action not allowed"))
 		return
 	}
 	user, err := handler.ReadSession(app, w, r)
 	if user == nil {
 		log.Printf("--%s-> AddChat INFO user is not authorized, %s\n", utils.GetReqId(r), err)
-		RenderHome(app, w, r)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("user is not authorized"))
 		return
 	}
 	chatName := r.FormValue("chatName")
-	if chatName == "" {
+	chatName = utils.TrimSpaces(chatName)
+	chatName = utils.TrimSpecial(chatName)
+	if chatName == "" || len(chatName) < 5 {
 		log.Printf("<-%s-- AddChat ERROR chat name [%s]\n", reqId, chatName)
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf("bad chat name [%s]", chatName)))
 		return
 	}
 	log.Printf("--%s-> AddChat TRACE adding user[%d] chat[%s]\n", reqId, user.Id, chatName)
@@ -115,6 +120,7 @@ func AddChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Printf("<--%s-- sendChatContent ERROR cannot template chat [%+v], %s", reqId, template, err)
 			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("failed to template chat"))
 			return
 		}
 		log.Printf("<-%s-- sendChatContent TRACE writing response\n", reqId)

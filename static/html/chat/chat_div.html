@@ -4,8 +4,8 @@
     class="flex flex-col h-screen p-2 pb-4 gap-y-2"
 >
     <div class="chat-header flex flex-row justify-end">
-        <div class="open-chat-name flex flex-row justify-between shadow">
-            Chat {{ .Name }}
+        <div class="open-chat-name flex font-bold">
+            chat '{{ .Name }}'
         </div>
         <div class="flex flex-row">
             <form id="chat-close-{{ .ChatId }}"
@@ -19,18 +19,24 @@
                 <input type="hidden" name="chatid" value="{{ .ChatId }}">
                 <div hx-trigger="click" 
                     hx-action="chat-close-{{ .ChatId }}.submit()"
-                    class="chat-header-close hover:text-orange-500">
-                [close]
+                    class="chat-header-close hover:text-red-700">
+                    <sub>[close]</sub>
                 </div>
             </form>
         </div>
     </div>
-    <div class="open-chat-users flex flex-row justify-between">
+    <div class="open-chat-users 
+        flex flex-row justify-between 
+        p-1
+        border-b-4 border-zinc-700 rounded-lg
+        shadow shadow-zinc-800">
         <div class="member-list flex flex-row">
-            Members: {{ template "membersList" . }}
+            <span>Members: </span>&nbsp;
+            {{ template "membersList" . }}
         </div> 
         {{ if eq .Owner.Id .User.Id }}
-            <form method="POST" 
+            <form id="inviteUserToChatForm"
+                method="POST" 
                 hx-target=".member-list" 
                 hx-post="/user/invite" 
                 hx-trigger="submit" 
@@ -38,14 +44,15 @@
                 class="flex-row flex-shrink"
             >
                 <input type="hidden" name="chatId" value="{{ .ChatId }}">
-                <input id="inviteUser" type="text" name="invitee" placeholder="invite user"
+                <input id="inviteUser" type="text" name="invitee" placeholder="invite user" title="enter to send"
                     class="w-full
                         text-center
                         rounded-md
-                        bg-gradient-to-br from-indigo-800 to-zinc-700
+                        bg-gradient-to-br from-indigo-800 to-green-800
                         text-gray-400
-                        shadow">
-                <button type="submit" class="hidden">Invite</button>
+                        shadow shadow-zinc-700
+                        hover:shadow-lg hover:shadow-zinc-500">
+                <button type="submit" class="hidden">Send Invite</button>
             </form>
             <script>
                 document.body.addEventListener('htmx:afterSwap', function (event) {
@@ -57,14 +64,32 @@
             </script>
         {{ end }}
     </div>
-    <div class="chat-content flex flex-col grow overflow-y-auto">
+    <style>
+        .chat-content::-webkit-scrollbar {
+            width: .37rem;
+        }
+        .chat-content::-webkit-scrollbar-track {
+            background: #4338ca;
+            border-width: 2px;
+            border-color: #3f3f46;
+            border-radius: 4px;
+            box-shadow: #3f3f46;
+        }
+        .chat-content::-webkit-scrollbar-thumb {
+            background: #166534;
+            border-width: 3px;
+            border-color: #3f3f46;
+            border-radius: 8px;
+            box-shadow: #3f3f46;
+        }
+    </style>
+    <div class="chat-content flex flex-col p-2 grow overflow-y-auto">
         {{ template "messageHistoryList" . }}
     </div>
     <div class="chat-footer flex flex-col">
         {{ template "sendMessageForm" . }}
     </div>
 </div>
-
 
 {{ define "messageHistoryList" }}
 <ul hx-target=".message-list" 
@@ -82,6 +107,31 @@
         </li>
     {{ end }}
 </ul>
+<script>
+    function scrollToLastChild(parent) {
+        const lastElement = parent.children[parent.children.length-1];
+        lastElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+    messageListObserver = null;
+    messageListObserver = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                scrollToLastChild(mutation.target);
+            }
+        });
+    });
+    msgList = null;
+    msgList = document.querySelector(".message-list");
+    if (msgList) {
+        messageListObserverOptions = null;
+        messageListObserverOptions = { childList: true, subtree: true, characterData: true };
+        messageListObserver.observe(msgList, messageListObserverOptions);
+    }
+    scrollToLastChild(msgList);
+</script>
 {{ end }}
 
 {{ define "sendMessageForm" }}
@@ -90,18 +140,30 @@
     hx-trigger="submit" 
     hx-target=".message-list" 
     hx-swap="beforeend"
+    hx-include="[name='chatId'],[name='msg']"
     class="flex mt-auto shadow-md"
 >
     <input type="hidden" name="chatId" value="{{ .ChatId }}">
-    <input id="newMsgText" type="text" name="msg" placeholder="send message"
+    <input id="newMsgText" type="text" name="msg" 
+        placeholder="type message" 
+        title="enter to send"
         class="w-full
-            text-center
-            rounded-md
-            bg-gradient-to-br from-indigo-800 to-zinc-700
-            text-gray-400
-            shadow-md">
+        text-center
+        rounded-md
+        bg-gradient-to-br from-green-800 to-indigo-800
+        text-gray-400
+        shadow shadow-zinc-700
+        hover:shadow-lg hover:shadow-zinc-500">
+    <script>
+        // TODO resize to fit whole message
+        // textarea = document.getElementById('newMsgText');
+        // textarea.addEventListener('input', function resizeMsgInput() {
+        //     this.style.height = 'auto'; 
+        //     this.style.height = this.scrollHeight + 'px';
+        // });
+    </script>
     <button type="submit" class="hidden">
-        Send
+        Send Message
     </button>
 </form>
 <script>
@@ -136,7 +198,7 @@
             >
                 <input type="hidden" name="chatid" value="{{ $top.ChatId }}">
                 <input type="hidden" name="userid" value="{{ $user.Id }}">
-                <button type="submit" class="member-delete-button">
+                <button type="submit" class="member-delete-button hover:text-red-700">
                     [{{ $user.Name }}]
                 </button>
             </form>

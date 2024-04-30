@@ -4,12 +4,24 @@
     hx-swap="innerHTML" 
     class="chat-message-li 
         flex flex-row justify-between
+        p-2
+        h-fit
         gap-1
         shadow
-        hover:bg-gradient-to-br from-indigo-700 to-zinc-700
+        {{ if eq .Author .ActiveUser }}
+            ml-20
+            border-b-4 border-green-700 rounded-lg
+            shadow shadow-green-800
+        {{ else }}
+            mr-20
+            border-b-4 border-indigo-700 rounded-lg
+            shadow shadow-green-800
+        {{ end }}
+        hover:shadow-green-500
         hover:text-green-500">
-    <div class="chat-message-content flex">
-        <strong>{{ .Author }}:</strong> {{ .Text }}
+    <div class="chat-message-content flex flex-row overflow-hidden">
+        <pre class="mr-0">[{{ .Author }}]</pre><pre>&nbsp;</pre>
+        <div class="break-all">{{ .Text }}</div>
     </div>
     {{ if or (eq .Author .ActiveUser) (eq .Owner .ActiveUser) }}
         <form id="delete-message"
@@ -25,9 +37,9 @@
             <input type="hidden" name="chatid" value="{{ .ChatId }}">
             <div hx-trigger="click" 
                 hx-action="chat-message-delete-{{ .MsgId }}.submit()"
-                class="chat-message-delete hover:text-orange-500"
+                class="chat-message-delete hover:text-red-700"
             >
-                [delete]
+                <sub>[delete]</sub>
             </div>
         </form>
     {{ end }}

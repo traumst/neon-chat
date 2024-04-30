@@ -2,7 +2,6 @@ package event
 
 import (
 	"fmt"
-	"strings"
 )
 
 type SSEvent string
@@ -39,14 +38,4 @@ func (e SSEvent) Format(
 	default:
 		panic(fmt.Sprintf("unknown event type[%v]", e))
 	}
-}
-
-func Trim(s string) string {
-	// must escape newlines in SSE
-	res := strings.ReplaceAll(s, "\n", " ")
-	// remove double spaces
-	for strings.Contains(res, "  ") {
-		res = strings.ReplaceAll(res, "  ", " ")
-	}
-	return res
 }

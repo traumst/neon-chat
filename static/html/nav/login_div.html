@@ -1,8 +1,20 @@
-<div id="auth" class="flex flex-col justify-around p-2 shadow">
-    <div id="{{ .Login.Id }}" class="flex">
+<div id="auth" class="flex flex-col p-2 gap-y-4 justify-around">
+    <div id="{{ .Login.Id }}" class="flex
+    text-center
+    rounded-md
+    bg-gradient-to-br from-green-800 to-indigo-800
+    text-gray-400
+    shadow shadow-zinc-700
+    hover:shadow-lg hover:shadow-zinc-500">
         {{ template "authForm" .Login }}
     </div>
-    <div id="{{ .Signup.Id }}" class="flex">
+    <div id="{{ .Signup.Id }}" class="flex
+    text-center
+    rounded-md
+    bg-gradient-to-br from-green-800 to-indigo-800
+    text-gray-400
+    shadow shadow-zinc-700
+    hover:shadow-lg hover:shadow-zinc-500">
         {{ template "authForm" .Signup }}
     </div>
 </div>
@@ -22,7 +34,10 @@
             console.log('login data', formData)
             fetch('/login', { method: 'POST', body: formData })
                 .then(handleAuthResponse)
-                .catch(console.log);
+                .catch(error => {
+                    console.error("login error", error);
+
+                });
         });
         document.querySelector('#signup form').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -30,20 +45,32 @@
             console.log('signup data', formData)
             fetch('/signup', { method: 'PUT', body: formData })
                 .then(handleAuthResponse)
-                .catch(console.log);
+                .catch(error => {
+                    console.error("signup error", error);
+                });
         });
     };
 </script>
 
 {{ define "authForm" }}
-<form class="flex flex-col shadow-lg border-2 rounded-lg">
+<form class="flex flex-col w-full p-4 gap-y-4 shadow-lg rounded-lg">
     <label for="{{ .Id }}-user">
         User: <input type="text" name="{{ .Id }}-user" placeholder="username"
-            class="border-1 rounded-md shadow">
+            class="text-center
+                rounded-md
+                bg-gradient-to-br from-green-800 to-indigo-800
+                text-gray-400
+                shadow shadow-zinc-700
+                hover:shadow-lg hover:shadow-zinc-500">
     </label>
     <label for="{{ .Id }}-pass">
         Pass: <input type="password" name="{{ .Id }}-pass" placeholder="********"
-            class="border-1 rounded-md shadow">
+            class="text-center
+                rounded-md
+                bg-gradient-to-br from-green-800 to-indigo-800
+                text-gray-400
+                shadow shadow-zinc-700
+                hover:shadow-lg hover:shadow-zinc-500">
     </label>
     <button type="submit" class="shadow">
         {{ .Label }}

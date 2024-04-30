@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -20,14 +21,19 @@ func Login(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.
 	log.Printf("--%s-> Login TRACE IN\n", utils.GetReqId(r))
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte("Bad Request"))
+		w.Write([]byte("action not allowed"))
 		return
 	}
 	u := r.FormValue("login-user")
+	u = utils.TrimSpaces(u)
+	u = utils.TrimSpecial(u)
 	p := r.FormValue("login-pass")
-	if u == "" || p == "" {
+	p = utils.TrimSpaces(p)
+	p = utils.TrimSpecial(p)
+	if u == "" || p == "" || len(u) < 4 || len(p) < 8 {
 		log.Printf("--%s-> Login TRACE empty user[%s]", utils.GetReqId(r), u)
-		RenderHome(app, w, r)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("bad login credentials"))
 		return
 	}
 	log.Printf("--%s-> Login TRACE authentication check for user[%s] auth[%s]\n",
@@ -45,7 +51,7 @@ func Login(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.
 
 	log.Printf("<-%s-- Login ERROR on authenticate[%s], %s\n", utils.GetReqId(r), u, err)
 	w.WriteHeader(http.StatusBadRequest)
-	w.Write([]byte("Not Found"))
+	w.Write([]byte(fmt.Sprintf("Credentials not found for [%s:%s]", authType, u)))
 	log.Printf("<-%s-- Login TRACE OUT\n", utils.GetReqId(r))
 }
 
@@ -53,14 +59,19 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 	log.Printf("--%s-> SignUp TRACE IN\n", utils.GetReqId(r))
 	if r.Method != "PUT" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte("Bad Request"))
+		w.Write([]byte("This shouldn't happen"))
 		return
 	}
 	u := r.FormValue("signup-user")
+	u = utils.TrimSpaces(u)
+	u = utils.TrimSpecial(u)
 	p := r.FormValue("signup-pass")
+	p = utils.TrimSpaces(p)
+	p = utils.TrimSpecial(p)
 	log.Printf("--%s-> SignUp TRACE authentication check for user[%s] auth[%s]\n", utils.GetReqId(r), u, authType)
-	if u == "" || p == "" {
-		RenderHome(app, w, r)
+	if u == "" || p == "" || len(u) < 4 || len(p) < 8 {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("bad signup credentials"))
 		return
 	}
 	user, auth, err := handler.Authenticate(db, u, p, authType)
@@ -78,7 +89,7 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 		log.Printf("--%s-> SignUp ERROR name[%s] already taken by user[%d], %s\n",
 			utils.GetReqId(r), u, user.Id, err)
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Operation failed"))
+		w.Write([]byte("Failed to register, [%s] is already taken"))
 		return
 	}
 
@@ -94,7 +105,7 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 		log.Printf("--%s-> SignUp ERROR on register user[%v], %s\n", utils.GetReqId(r), user, err)
 		// TODO handler.Delete(db, user) - to remove partial data
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Operation failed"))
+		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", a.UserTypeFree, u)))
 		return
 	}
 	err = app.TrackUser(user)
