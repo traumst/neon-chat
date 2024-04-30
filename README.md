@@ -12,41 +12,31 @@ This app is being build as an excercise for me to
 ## TODOs
 
 ### Known bugs
-* same user can be invited to the same chat 2+ times
-* last open session is the only session a user can have
-* add/remove chat/msg should be done by sse, not api response
-* `members_div` in `home.html` is different from `members_div.html`
+- same user can be invited to the same chat 2+ times
+- last open session is the only session a user can have
+- add/remove chat/msg should be done by sse, not api response
 
-### Pressing issues
-* UI looks like shit, styling it NOW
-    * <s>Scroll bar should be subtle</s>
-    * <s>Adding li to ul should scroll to it</s>
-* it's time to start sanitizing raw user input.
-    * <s>Def break the chat: ' "</s>
+### GUI
+- top and bottom controls
+- user settings page
 
-### User Notifications:
-* mute / unmute chat
-* new chat invite
-* new msg in chat
+### Moderation
+- Add ability to mute/block users in chat
+- Add ability for users to mute/report other users
 
-### Message Broadcasting: 
-- track user deltas: chats, messages
-- only serve deltas
-- buffer for unstable connection/s
-- test overload of a conn channel
-
-### Persistence
-- message store
-- cache instead of map
+### User Notifications
+- mute / unmute chat
+- new chat invite
+- new msg in chat
 
 ### User Authentication
 - middleware auth
 - email verification
 - 2FA
 
-### GUI
-- <s>style the app with dark theme with green/purple accents</s>
-- apply custom font jetbrains.com/lp/mono/
+### Persistence
+- message store
+- cache instead of map
 
 ### Chat features
 - Search chats by: 
@@ -57,19 +47,21 @@ This app is being build as an excercise for me to
     1. content
     2. author
 
+### Message Broadcasting: 
+- track user deltas: chats, messages
+- only serve deltas
+- buffer for unstable connection/s
+- test overload of a conn channel
+
 ### Client storage
 - local / innodb
 - store chats with history on client
 - load only chat deltas
 
-### Moderation
-- Add ability to mute/block users in chat
-- Add ability for users to mute/report other users
+## Later
 
 ### *Security Considerations*
 - Validate nd sanitize all incoming messages to prevent cross-site scripting (XSS) attacks.
-
-## Later
 
 ### *GPTs*:
 - Consider for content moderation assistance
