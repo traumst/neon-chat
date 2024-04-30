@@ -19,9 +19,9 @@
         {{ end }}
         hover:shadow-green-500
         hover:text-green-500">
-    <div class="chat-message-content flex flex-row">
-        <sub class="mr-0">[{{ .Author }}]</sub><pre>&nbsp;</pre>
-        <div>{{ .Text }}</div>
+    <div class="chat-message-content flex flex-row overflow-hidden">
+        <pre class="mr-0">[{{ .Author }}]</pre><pre>&nbsp;</pre>
+        <div class="break-all">{{ .Text }}</div>
     </div>
     {{ if or (eq .Author .ActiveUser) (eq .Owner .ActiveUser) }}
         <form id="delete-message"

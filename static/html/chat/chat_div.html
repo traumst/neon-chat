@@ -107,6 +107,31 @@
         </li>
     {{ end }}
 </ul>
+<script>
+    function scrollToLastChild(parent) {
+        const lastElement = parent.children[parent.children.length-1];
+        lastElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+    messageListObserver = null;
+    messageListObserver = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                scrollToLastChild(mutation.target);
+            }
+        });
+    });
+    msgList = null;
+    msgList = document.querySelector(".message-list");
+    if (msgList) {
+        messageListObserverOptions = null;
+        messageListObserverOptions = { childList: true, subtree: true, characterData: true };
+        messageListObserver.observe(msgList, messageListObserverOptions);
+    }
+    scrollToLastChild(msgList);
+</script>
 {{ end }}
 
 {{ define "sendMessageForm" }}
@@ -118,7 +143,9 @@
     class="flex mt-auto shadow-md"
 >
     <input type="hidden" name="chatId" value="{{ .ChatId }}">
-    <input id="newMsgText" type="text" name="msg" placeholder="type message" title="enter to send"
+    <input id="newMsgText" type="text" name="msg" 
+        placeholder="type message" 
+        title="enter to send"
         class="w-full
             text-center
             rounded-md
