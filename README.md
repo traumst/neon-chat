@@ -12,7 +12,6 @@ This app is being build as an excercise for me to
 ## TODOs
 
 ### Known bugs
-* first msgs of each user break other's chat, doesn't happen after reload with existing messages
 * same user can be invited to the same chat 2+ times
 * last open session is the only session a user can have
 * add/remove chat/msg should be done by sse, not api response
@@ -20,10 +19,15 @@ This app is being build as an excercise for me to
 
 ### Pressing issues
 * UI looks like shit, styling it NOW
-    * Scroll bar should be subtle
-    * Adding li to ul should scroll to it
+    * <s>Scroll bar should be subtle</s>
+    * <s>Adding li to ul should scroll to it</s>
 * it's time to start sanitizing raw user input.
-    * Def break the chat: ' "
+    * <s>Def break the chat: ' "</s>
+
+### User Notifications:
+* mute / unmute chat
+* new chat invite
+* new msg in chat
 
 ### Message Broadcasting: 
 - track user deltas: chats, messages
@@ -41,7 +45,7 @@ This app is being build as an excercise for me to
 - 2FA
 
 ### GUI
-- style the app with dark theme with green/purple accents
+- <s>style the app with dark theme with green/purple accents</s>
 - apply custom font jetbrains.com/lp/mono/
 
 ### Chat features

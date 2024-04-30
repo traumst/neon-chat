@@ -16,6 +16,7 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		log.Printf("--%s-> AddMessage ERROR request method\n", utils.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("action not allowed"))
 		return
 	}
 	author, err := handler.ReadSession(app, w, r)
@@ -25,10 +26,12 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("--%s-> AddMessage TRACE parsing input\n", utils.GetReqId(r))
 	msg := r.FormValue("msg")
-	if msg == "" {
+	msg = utils.TrimSpaces(msg)
+	msg = utils.TrimSpecial(msg)
+	if msg == "" || len(msg) < 2 {
 		log.Printf("--%s-> AddMessage WARN \n", utils.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
-		http.Redirect(w, r, "/", http.StatusBadRequest)
+		w.Write([]byte("message too short"))
 		return
 	}
 	log.Printf("--%s-> AddMessage TRACE opening current chat for user[%d]\n", utils.GetReqId(r), author.Id)
@@ -37,7 +40,7 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	if chat == nil {
 		log.Printf("--%s-> AddMessage WARN no open chat for user[%d]\n", utils.GetReqId(r), author.Id)
 		w.WriteHeader(http.StatusBadRequest)
-		http.Redirect(w, r, "/", http.StatusBadRequest)
+		w.Write([]byte("chat not found"))
 		return
 	}
 	log.Printf("--%s-> AddMessage TRACE storing message for user[%d] in chat[%s]\n",
@@ -52,6 +55,7 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("--%s-> AddMessage ERROR add message, %s\n", utils.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed adding message"))
 		return
 	}
 
@@ -60,6 +64,7 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("<-%s-- AddMessage ERROR html [%+v], %s\n", utils.GetReqId(r), message, err)
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed templating message"))
 		return
 	}
 

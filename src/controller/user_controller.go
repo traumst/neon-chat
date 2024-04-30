@@ -32,13 +32,17 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 	if err != nil {
 		log.Printf("<-%s-- InviteUser ERROR chat id, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Chat not found"))
 		return
 	}
 	inviteeName := r.FormValue("invitee")
+	inviteeName = utils.TrimSpaces(inviteeName)
+	inviteeName = utils.TrimSpecial(inviteeName)
 	invitee, err := conn.GetUser(inviteeName)
 	if err != nil || invitee == nil {
 		log.Printf("<-%s-- InviteUser ERROR invitee not found, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf("Invitee not found [%s]", inviteeName)))
 		return
 	}
 	log.Printf("--%s-> InviteUser TRACE inviting[%d] to chat[%d]\n", reqId, invitee.Id, chatId)
@@ -46,12 +50,14 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 	if err != nil {
 		log.Printf("<-%s-- InviteUser ERROR invite, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("Failed to invite user [%s]", invitee.Name)))
 		return
 	}
 	chat, err := app.GetChat(user.Id, chatId)
 	if err != nil || chat == nil {
-		log.Printf("<-%s-- InviteUser ERROR cannot find chat[%d], %s\n", reqId, chatId, err)
+		log.Printf("<-%s-- InviteUser ERROR user[%d] cannot invite into chat[%d], %s\n", reqId, user.Id, chatId, err)
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("Cannot invite user [%s] into this chat", invitee.Name)))
 		return
 	}
 

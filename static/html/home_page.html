@@ -1,7 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Home</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Min Chat</title>
+    <link rel="icon" type="image/svg+xml" href="icon/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="icon/scarab-bnw.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap">
     {{ if .LoadLocal }}
     <script src="/script/htmx.1.9.10.min.js"></script>
     <script src="/script/htmx.1.9.10.sse.js"></script>
@@ -14,6 +21,51 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.11/ext/sse.min.js"></script>
     <script src="https://cdn.tailwindcss.com/3.4.3"></script>
     {{ end }}
+    <style>
+        body {
+            font: inherit;
+            font-size: .9rem;
+            font-family: 'JetBrains Mono', sans-serif; /* Using Google Fonts example */
+        }
+        .left-panel {
+            transition: all 0.3s ease;
+        }
+        .left-panel.closed {
+            width: 9%;
+            /* transform: translateX(-100%); */
+        }
+        .left-panel.open {
+            width: 33%;
+            /* transform: translateX(0); */
+        }
+        .ticker:hover {
+            overflow: visible;
+            animation: ticker 5s linear infinite;
+            animation-iteration-count: 1;
+        }
+        @keyframes ticker {
+            from {
+                transform: translateX(0);
+            }
+            to {
+                transform: translateX(-100%);
+            }
+        }
+        .chat-list::-webkit-scrollbar {
+            width: .37rem;
+        }
+        .chat-list::-webkit-scrollbar-track {
+            background: #7B1FA2;
+            border-width: 4px;
+            border-radius: 2px;
+        }
+        .chat-list::-webkit-scrollbar-thumb {
+            background: #388E3C;
+            border-width: 4px;
+            border-radius: 8px;
+            box-shadow: #3f3f46;
+        }
+    </style>
 </head>
 <body 
     {{ if .IsAuthorized }}
@@ -24,39 +76,69 @@
         items-center
         h-screen
         w-screen
-        border-2 rounded-lg
+        border-2 border-zinc-800 rounded-lg
         bg-gradient-to-br from-indigo-800 to-zinc-700
         text-gray-400
         shadow-md
         overflow-hidden">
+    <script>
+        document.body.addEventListener('htmx:beforeOnLoad', function(event) {
+            if (event.detail.xhr.status >= 400) {
+                alert(`Action failed: ${event.detail.xhr.responseText}`)
+                console.debug("Action failed:", 
+                    event.detail.xhr.responseText, 
+                    event.detail.xhr.status, 
+                    event.detail.xhr.statusText)
+            }
+        });
+        function togglePanel() {
+            const panel = document.querySelector('.left-panel');
+            if (panel.classList.contains('closed')) {
+                openLeftPanel(panel);
+            } else {
+                closeLeftPanel(panel);
+            }
+        }
+        function openLeftPanel(panel) {
+            panel.classList.remove('closed');
+            panel.classList.add('open');
+        }
+        function closeLeftPanel(panel) {
+            panel.classList.remove('open');
+            panel.classList.add('closed');
+        }
+    </script>
     <div class="left-panel 
         flex flex-col
         h-screen
         w-1/3
+        p-2
         overflow-y-auto
         overflow-x-hidden
-        p-2
-        shadow">
+        border-2 border-zinc-600 rounded-lg
+        shadow shadow-zinc-800">
         {{ if .IsAuthorized }}
             <div class="active-user 
-                flex w-full justify-between 
+                flex flex-row justify-end 
                 p-2
                 shadow">
-                <div class="font-bold">U-R: {{ .ActiveUser }}</div>
+                <div class="font-bold">user '{{ .ActiveUser }}'</div>
                 <form title="log out {{ .ActiveUser }}"
                     hx-post="/logout" 
                     hx-trigger="submit" 
                     hx-target="body"
-                    class="hover:text-orange-500">
-                    <button type="submit">[logout]</button>
+                    class="hover:text-red-700">
+                    <button type="submit"><sub>[logout]</sub></button>
                 </form>
             </div>
-            <div class="add-chat flex w-full p-2">
+            <div class="add-chat flex w-full p-3">
                 {{ template "addChatDiv" . }}
             </div>
-            <div class="chat-list flex justify-between p-2 overflow-x-hidden">
+
+            <div class="chat-list flex justify-between overflow-x-hidden">
                 {{ template "chatListDiv" . }}
             </div>
+            <button id="left-panel-toggle" onclick="togglePanel()">[toggle]</button>
         {{ else }}
             {{ template "login_div.html" .LoginTemplate }}
         {{ end }}
@@ -67,7 +149,8 @@
         h-screen 
         w-2/3 
         p-2
-        shadow">
+        border-2 border-zinc-700 rounded-lg
+        shadow shadow-zinc-900">
         <div class="open-chat">
             {{ if .IsAuthorized }}
                 {{ with .OpenTemplate }}
@@ -80,6 +163,14 @@
             {{ end }}
         </div>
     </div>
+    <script>
+        document.body.addEventListener('htmx:beforeOnLoad', function(event) {
+            if (event.detail.xhr.status >= 400) {  // Check for HTTP error codes (400+)
+                // Handle error, e.g., show a message, log, etc.
+                console.error("Error loading data: ", event.detail.xhr.responseText);
+            }
+        });
+    </script>
 </body>
 </html>
 
@@ -91,13 +182,14 @@
     hx-swap="innerHTML"
     hx-ext="debug"
     class="w-full">
-    <input id="newChatName" type="text" name="chatName" placeholder="open new chat" 
+    <input id="newChatName" type="text" name="chatName" placeholder="new chat name" title="enter to send"
         class="w-full text-center rounded-md
-            bg-gradient-to-br from-indigo-800 to-zinc-700
+            bg-gradient-to-br from-green-800 to-indigo-800
             text-gray-400
-            shadow-md">
+            shadow shadow-zinc-700
+            hover:shadow-lg hover:shadow-zinc-500">
     <button type="submit" class="hidden">
-        Create
+        Create Chat
     </button>
 </form>
 <script>
@@ -113,7 +205,7 @@
 {{ define "chatListDiv" }}
 <ul sse-swap="{{ .ChatAddEvent }}" 
     hx-swap="afterbegin" 
-    class="chat-headers flex flex-col w-full"> 
+    class="chat-headers flex flex-col w-full py-2"> 
     {{ with $chats := .ReverseChats }}
         {{ range $index, $chat := $chats }} 
             {{ template "chat_li.html" $chat }}
@@ -125,4 +217,29 @@
         </li>
     {{ end }}
 </ul>
+<script>
+    function scrollToFirstChild(parent) {
+        const firstElement = parent.children[0];
+        firstElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+    chatHeaderObserver = null;
+    chatHeaderObserver = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                scrollToFirstChild(mutation.target);
+            }
+        });
+    });
+    chatHeaders = null;
+    chatHeaders = document.querySelector(".chat-headers");
+    if (chatHeaders) {
+        chatHeaderObserverOptions = null;
+        chatHeaderObserverOptions = { childList: true, subtree: true, characterData: true };
+        chatHeaderObserver.observe(chatHeaders, chatHeaderObserverOptions);
+    }
+    scrollToFirstChild(chatHeaders);
+</script>
 {{ end }}
