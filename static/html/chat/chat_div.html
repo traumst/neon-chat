@@ -4,8 +4,8 @@
     class="flex flex-col h-screen p-2 pb-4 gap-y-2"
 >
     <div class="chat-header flex flex-row justify-end">
-        <div class="open-chat-name flex flex-row justify-between shadow">
-            {{ .Name }}
+        <div class="open-chat-name flex font-bold">
+            chat '{{ .Name }}'
         </div>
         <div class="flex flex-row">
             <form id="chat-close-{{ .ChatId }}"
@@ -140,6 +140,7 @@
     hx-trigger="submit" 
     hx-target=".message-list" 
     hx-swap="beforeend"
+    hx-include="[name='chatId'],[name='msg']"
     class="flex mt-auto shadow-md"
 >
     <input type="hidden" name="chatId" value="{{ .ChatId }}">
@@ -147,12 +148,20 @@
         placeholder="type message" 
         title="enter to send"
         class="w-full
-            text-center
-            rounded-md
-            bg-gradient-to-br from-green-800 to-indigo-800
-            text-gray-400
-            shadow shadow-zinc-700
-            hover:shadow-lg hover:shadow-zinc-500">
+        text-center
+        rounded-md
+        bg-gradient-to-br from-green-800 to-indigo-800
+        text-gray-400
+        shadow shadow-zinc-700
+        hover:shadow-lg hover:shadow-zinc-500">
+    <script>
+        // TODO resize to fit whole message
+        // textarea = document.getElementById('newMsgText');
+        // textarea.addEventListener('input', function resizeMsgInput() {
+        //     this.style.height = 'auto'; 
+        //     this.style.height = this.scrollHeight + 'px';
+        // });
+    </script>
     <button type="submit" class="hidden">
         Send Message
     </button>

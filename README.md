@@ -19,10 +19,10 @@ This app is being build as an excercise for me to
 
 ### Pressing issues
 * UI looks like shit, styling it NOW
-    * Scroll bar should be subtle
-    * Adding li to ul should scroll to it
+    * <s>Scroll bar should be subtle</s>
+    * <s>Adding li to ul should scroll to it</s>
 * it's time to start sanitizing raw user input.
-    * Def break the chat: ' "
+    * <s>Def break the chat: ' "</s>
 
 ### User Notifications:
 * mute / unmute chat
@@ -45,7 +45,7 @@ This app is being build as an excercise for me to
 - 2FA
 
 ### GUI
-- style the app with dark theme with green/purple accents
+- <s>style the app with dark theme with green/purple accents</s>
 - apply custom font jetbrains.com/lp/mono/
 
 ### Chat features

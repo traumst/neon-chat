@@ -21,7 +21,7 @@ func Login(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.
 	log.Printf("--%s-> Login TRACE IN\n", utils.GetReqId(r))
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte("Bad Request"))
+		w.Write([]byte("action not allowed"))
 		return
 	}
 	u := r.FormValue("login-user")
@@ -30,9 +30,10 @@ func Login(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.
 	p := r.FormValue("login-pass")
 	p = utils.TrimSpaces(p)
 	p = utils.TrimSpecial(p)
-	if u == "" || p == "" {
+	if u == "" || p == "" || len(u) < 4 || len(p) < 8 {
 		log.Printf("--%s-> Login TRACE empty user[%s]", utils.GetReqId(r), u)
-		RenderHome(app, w, r)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("bad login credentials"))
 		return
 	}
 	log.Printf("--%s-> Login TRACE authentication check for user[%s] auth[%s]\n",
@@ -70,7 +71,7 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 	log.Printf("--%s-> SignUp TRACE authentication check for user[%s] auth[%s]\n", utils.GetReqId(r), u, authType)
 	if u == "" || p == "" || len(u) < 4 || len(p) < 8 {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Invalid user / pass"))
+		w.Write([]byte("bad signup credentials"))
 		return
 	}
 	user, auth, err := handler.Authenticate(db, u, p, authType)
