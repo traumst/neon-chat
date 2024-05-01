@@ -25,9 +25,15 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("--%s-> AddMessage TRACE parsing input\n", utils.GetReqId(r))
+	chatId, err := strconv.Atoi(r.FormValue("chatId"))
+	if err != nil {
+		log.Printf("--%s-> AddMessage WARN \n", utils.GetReqId(r))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid chat id"))
+		return
+	}
 	msg := r.FormValue("msg")
 	msg = utils.TrimSpaces(msg)
-	msg = utils.TrimSpecial(msg)
 	if msg == "" || len(msg) < 2 {
 		log.Printf("--%s-> AddMessage WARN \n", utils.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
@@ -35,9 +41,8 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("--%s-> AddMessage TRACE opening current chat for user[%d]\n", utils.GetReqId(r), author.Id)
-	// TODO verify open chat is modified chat
 	chat := app.GetOpenChat(author.Id)
-	if chat == nil {
+	if chat == nil || chat.Id != chatId {
 		log.Printf("--%s-> AddMessage WARN no open chat for user[%d]\n", utils.GetReqId(r), author.Id)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("chat not found"))

@@ -28,7 +28,6 @@ func DistributeMsg(
 	var wg sync.WaitGroup
 	var errors []string
 	for _, user := range users {
-		// TODO remove this
 		if user.Id == authorId {
 			log.Printf("∞----> DistributeMsg TRACE new message is not sent to author[%d]\n", user.Id)
 			continue

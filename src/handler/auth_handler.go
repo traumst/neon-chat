@@ -84,7 +84,6 @@ func Register(
 	if db == nil || u == nil {
 		return nil, nil, fmt.Errorf("missing mandatory args user[%v] db[%v]", u, db)
 	}
-	// TODO sterilize user input
 	if u.Name == "" || pass == "" || u.Salt == "" {
 		return nil, nil, fmt.Errorf("invalid args user[%s] salt[%s]", u.Name, u.Salt)
 	}
@@ -102,6 +101,10 @@ func Register(
 	}
 	auth, err := createAuth(db, user, pass, authType)
 	if err != nil || auth == nil {
+		if recoverErr := deleteUser(db, user); recoverErr != nil {
+			panic(fmt.Sprintf("failed to recovery-delete user[%d][%s], %s", user.Id, user.Name, err))
+		}
+
 		return nil, nil, fmt.Errorf("failed to create auth[%s] for user[%v], %s", authType, user, err)
 	}
 	log.Printf("-----> Register TRACE user[%v] auth[%v] created\n", user, auth)
@@ -122,6 +125,19 @@ func createUser(db *db.DBConn, user *a.User) (*a.User, error) {
 		return nil, fmt.Errorf("user[%s] was not created", created.Name)
 	}
 	return created, err
+}
+
+func deleteUser(db *db.DBConn, user *a.User) error {
+	if user.Id < 1 {
+		log.Printf("-----> deleteUser TRACE completing user[%s] signup\n", user.Name)
+		return nil
+	}
+	log.Printf("-----> deleteUser TRACE creating user[%s]\n", user.Name)
+	err := db.DropUser(user.Id)
+	if err != nil {
+		return fmt.Errorf("failed to delete, %s", err)
+	}
+	return nil
 }
 
 func createAuth(db *db.DBConn, user *a.User, pass string, authType a.AuthType) (*a.UserAuth, error) {

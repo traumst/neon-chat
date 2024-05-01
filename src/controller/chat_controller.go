@@ -14,7 +14,6 @@ import (
 	"go.chat/src/utils"
 )
 
-// TODO if try to open missing chat - fire event to remove
 func OpenChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := utils.GetReqId(r)
 	log.Printf("--%s-> OpenChat\n", reqId)

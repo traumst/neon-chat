@@ -85,6 +85,7 @@ And the app should be available at http://localhost:8080
     2. author
 
 ### User Authentication
+- provide authType as form input
 - middleware auth
 - email verification
 - 2FA

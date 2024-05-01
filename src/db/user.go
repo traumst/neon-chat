@@ -47,6 +47,25 @@ func (db *DBConn) AddUser(user *app.User) (*app.User, error) {
 	return user, nil
 }
 
+func (db *DBConn) DropUser(userId uint) error {
+	if !db.IsActive() {
+		return fmt.Errorf("db is not connected")
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	if userId == 0 {
+		return fmt.Errorf("user does not have an id[%d]", userId)
+	}
+
+	_, err := db.conn.Exec(`DELETE FROM users where id = ?`, userId)
+	if err != nil {
+		return fmt.Errorf("error deleting user: %s", err.Error())
+	}
+
+	return nil
+}
+
 func (db *DBConn) GetUser(name string) (*app.User, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
