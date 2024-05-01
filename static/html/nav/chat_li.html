@@ -43,7 +43,7 @@
                 hx-action="chat-delete-{{ .ChatId }}.submit()"
                 class="chat-header-delete hover:text-red-700"
             >
-                <sub>[delete]</sub>
+                <sub title="delete chat">[delete]</sub>
             </div>
         </form>
     {{ else if eq .User .Viewer }}
