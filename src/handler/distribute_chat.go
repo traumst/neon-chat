@@ -83,7 +83,13 @@ func distributeChatToUser(
 	targetChat *app.Chat,
 	subjectUser *app.User,
 	evnt event.UpdateType,
-) error {
+) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panicked: %v", r)
+		}
+	}()
+
 	if author == nil {
 		return fmt.Errorf("author is nil")
 	}
@@ -91,7 +97,8 @@ func distributeChatToUser(
 		return fmt.Errorf("targetChat is nil")
 	}
 
-	conn, err := state.GetConn(targetUser.Id)
+	var conn *Conn
+	conn, err = state.GetConn(targetUser.Id)
 	if err != nil {
 		return err
 	}
@@ -101,51 +108,22 @@ func distributeChatToUser(
 
 	switch evnt {
 	case event.ChatCreated:
-		if author.Id != targetChat.Owner.Id {
-			return fmt.Errorf("author[%d] is not owner[%d] of chat[%d]",
-				author.Id, targetChat.Owner.Id, targetChat.Id)
-		}
-		return chatCreate(conn, evnt, targetChat, author)
+		return chatCreate(conn, targetChat, author)
 
 	case event.ChatInvite:
-		if author.Id != targetChat.Owner.Id {
-			return fmt.Errorf("author[%d] is not owner[%d] of chat[%d]",
-				author.Id, targetChat.Owner.Id, targetChat.Id)
-		}
-		if subjectUser == nil {
-			return fmt.Errorf("subjectUser is nil for chatInvite")
-		}
-		return chatInvite(conn, evnt, targetChat, author.Id, subjectUser)
+		return chatInvite(conn, targetChat, author.Id, subjectUser)
 
 	case event.ChatDeleted:
-		if author.Id != targetChat.Owner.Id && author.Id != targetUser.Id {
-			return fmt.Errorf("author[%d] is not owner[%d] of chat[%d]",
-				author.Id, targetChat.Owner.Id, targetChat.Id)
-		}
-		if targetUser == nil {
-			return fmt.Errorf("targetUser is nil for chatDeleted")
-		}
-		return chatDelete(conn, evnt, targetChat.Id, author.Id, targetUser.Id)
+		return chatDelete(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser.Id)
 
 	case event.ChatExpel:
-		if author.Id != targetChat.Owner.Id && author.Id != subjectUser.Id {
-			return fmt.Errorf("author[%d] is not allowed to expel user[%d] from chat[%d]",
-				author.Id, subjectUser.Id, targetChat.Id)
-		}
-		if subjectUser == nil {
-			return fmt.Errorf("subjectUser is nil for chatExpel")
-		}
-		return chatExpel(conn, evnt, targetChat.Id, author.Id, subjectUser.Id)
+		return chatExpel(conn, targetChat.Id, targetChat.Owner.Id, author.Id, subjectUser.Id)
+
+	case event.ChatLeave:
+		return chatLeave(conn, targetChat.Id, targetChat.Owner.Id, author.Id, subjectUser.Id)
 
 	case event.ChatClose:
-		if targetUser == nil {
-			return fmt.Errorf("targetUser is nil for chatClose")
-		}
-		if author.Id != targetChat.Owner.Id && author.Id != targetUser.Id {
-			return fmt.Errorf("author[%d] is not allowed to close chat[%d] for user[%d]",
-				author.Id, targetChat.Id, targetUser.Id)
-		}
-		return chatClose(conn, evnt, targetChat.Id, author.Id, targetUser.Id)
+		return chatClose(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser.Id)
 
 	default:
 		return fmt.Errorf("unknown event type[%v]", evnt)

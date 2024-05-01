@@ -44,6 +44,9 @@ func (c *Chat) AddUser(ownerId uint, user *User) error {
 	if !c.isOwner(ownerId) {
 		return fmt.Errorf("only the owner can invite users")
 	}
+	if c.isUserInChat(user.Id) {
+		return fmt.Errorf("user already in chat")
+	}
 	c.users = append(c.users, user)
 	return nil
 }

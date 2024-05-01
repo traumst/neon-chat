@@ -110,18 +110,15 @@ func (state *AppState) GetUser(userId uint) (*app.User, error) {
 
 	var appUser *app.User
 	var err error
-
 	log.Printf("∞--------> AppState.GetUser TRACE get user[%d]\n", userId)
 	for _, user := range state.users {
 		if user.Id == userId {
 			appUser = &user
 		}
 	}
-
 	if appUser == nil {
 		appUser, err = state.db.GetUserById(userId)
 	}
-
 	return appUser, err
 }
 
@@ -131,6 +128,9 @@ func (state *AppState) InviteUser(userId uint, chatId int, invitee *app.User) er
 
 	log.Printf("∞--------> AppState.InviteUser TRACE invite user[%d] chat[%d] by user[%d]\n",
 		invitee.Id, chatId, userId)
+	if userId == invitee.Id {
+		return fmt.Errorf("user cannot invite self")
+	}
 	return state.chats.InviteUser(userId, chatId, invitee)
 }
 
@@ -139,10 +139,7 @@ func (state *AppState) DropUser(userId uint, chatId int, removeId uint) error {
 	defer state.mu.Unlock()
 
 	log.Printf("∞--------> AppState.DropUser TRACE removing user[%d] chat[%d] by user[%d]\n", removeId, chatId, userId)
-	err := state.chats.CloseChat(removeId, chatId)
-	if err != nil {
-		log.Printf("∞--------> AppState.DropUser TRACE cannot close chat[%d] for user[%d], %s\n", chatId, userId, err)
-	}
+	_ = state.chats.CloseChat(removeId, chatId)
 	return state.chats.ExpelUser(userId, chatId, removeId)
 }
 

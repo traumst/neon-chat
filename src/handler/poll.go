@@ -18,7 +18,7 @@ func PollUpdatesForUser(app *AppState, conn *Conn, pollingUserId uint) {
 	for !done {
 		select {
 		case <-conn.Reader.Context().Done():
-			log.Printf("<--%s--∞ APP.PollUpdatesForUser WARN user[%d] conn[%v] disonnected\n",
+			log.Printf("<--%s--∞ APP.PollUpdatesForUser DEBUG user[%d] conn[%v] disonnected\n",
 				conn.Origin, pollingUserId, conn.Origin)
 			done = true
 		case up := <-conn.In:
