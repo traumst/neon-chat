@@ -36,13 +36,14 @@ func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		LoadLocal: app.LoadLocal(),
 	}
 	home := template.HomeTemplate{
-		OpenTemplate:  nil,
-		Chats:         nil,
-		ActiveUser:    "User",
-		LoadLocal:     app.LoadLocal(),
-		ChatAddEvent:  "",
-		IsAuthorized:  false,
-		LoginTemplate: login,
+		Chats:          nil,
+		OpenTemplate:   nil,
+		ActiveUser:     "User",
+		LoadLocal:      app.LoadLocal(),
+		IsAuthorized:   false,
+		LoginTemplate:  login,
+		ChatAddEvent:   "",
+		ChatCloseEvent: "",
 	}
 	html, err := home.HTML()
 	if err != nil {
@@ -74,12 +75,13 @@ func homePage(app *handler.AppState, w http.ResponseWriter, r *http.Request, use
 		openChatId = openChat.Id
 	}
 	home := template.HomeTemplate{
-		OpenTemplate: openChatTemplate,
-		Chats:        chatTemplates,
-		ActiveUser:   user.Name,
-		LoadLocal:    app.LoadLocal(),
-		ChatAddEvent: event.ChatAddEventName.Format(openChatId, user.Id, -5),
-		IsAuthorized: true,
+		Chats:          chatTemplates,
+		OpenTemplate:   openChatTemplate,
+		ActiveUser:     user.Name,
+		LoadLocal:      app.LoadLocal(),
+		IsAuthorized:   true,
+		ChatAddEvent:   event.ChatAddEventName.Format(openChatId, user.Id, -5),
+		ChatCloseEvent: event.ChatCloseEventName.Format(openChatId, user.Id, -6),
 	}
 	html, err := home.HTML()
 	if err != nil {

@@ -6,13 +6,14 @@ import (
 )
 
 type HomeTemplate struct {
-	Chats         []*ChatTemplate
-	OpenTemplate  *ChatTemplate
-	ActiveUser    string
-	LoadLocal     bool
-	ChatAddEvent  string
-	IsAuthorized  bool
-	LoginTemplate LoginTemplate
+	Chats          []*ChatTemplate
+	OpenTemplate   *ChatTemplate
+	ActiveUser     string
+	LoadLocal      bool
+	ChatAddEvent   string
+	IsAuthorized   bool
+	LoginTemplate  LoginTemplate
+	ChatCloseEvent string
 }
 
 func (h *HomeTemplate) HTML() (string, error) {

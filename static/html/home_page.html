@@ -205,7 +205,9 @@
         p-2
         border-2 border-zinc-700 rounded-lg
         shadow shadow-zinc-900">
-        <div class="open-chat">
+        <div sse-swap="{{ .ChatCloseEvent }}"
+            hx-swap="innerHTML"  
+            class="open-chat">
             {{ if .IsAuthorized }}
                 {{ with .OpenTemplate }}
                     {{ template "chat_div.html" . }}
