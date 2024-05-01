@@ -16,7 +16,8 @@ func DistributeMsg(
 	msg *app.Message,
 	evnt event.UpdateType,
 ) error {
-	users, err := chat.GetUsers(authorId)
+	// have to get users by owner - author may have been removed
+	users, err := chat.GetUsers(chat.Owner.Id)
 	if err != nil || users == nil {
 		return fmt.Errorf("DistributeMsg: get users, chat[%+v], %s", chat, err)
 	}

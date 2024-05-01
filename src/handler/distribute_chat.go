@@ -32,14 +32,15 @@ func DistributeChat(
 	if targetUser != nil {
 		targetUsers = []*app.User{targetUser}
 	} else {
-		targetUsers, err = chat.GetUsers(author.Id)
+		// have to get users by owner - author may have been removed
+		targetUsers, err = chat.GetUsers(chat.Owner.Id)
 	}
 
 	if err != nil {
-		return fmt.Errorf("get users, chat[%d], %s", chat.Id, err)
+		return fmt.Errorf("fail to get users from chat[%d], %s", chat.Id, err)
 	}
 	if len(targetUsers) == 0 {
-		return fmt.Errorf("chatUsers are empty, chat[%d], %s", chat.Id, err)
+		return fmt.Errorf("chatUsers are empty in chat[%d], %s", chat.Id, err)
 	}
 
 	return distributeToUsers(state, chat, author, targetUsers, subjectUser, evnt)
