@@ -41,22 +41,48 @@ And the app should be available at http://localhost:8080
 ## TODOs
 
 ### Known bugs
-- same user can be invited to the same chat 2+ times
 - last open session is the only session a user can have
-- add/remove chat/msg should be done by sse, not api response
 
 ### GUI
-- top and bottom controls
+- top controls
+    1. local time now iso
+    2. local session expiration iso
+    3. settings link
+- bottom controls
+    1. status 🟢🟡🔴
+    2. light/dark mode switch
+    3. mute user
 - user settings page
+    1. rename
+    2. avatar?
+    3. alternative auth options
+    4. light/dark mode
+    5. mute list - per user - per chat
 
 ### Moderation
-- Add ability to mute/block users in chat
 - Add ability for users to mute/report other users
+- Add ability to ban users from chat
 
 ### User Notifications
-- mute / unmute chat
+- setting on/off
+    - mute / unmute chat
 - new chat invite
 - new msg in chat
+
+### Search
+- fuzzy name matching methods
+    - https://www.sqlite.org/lang_corefunc.html#soundex
+    - word embeding - %VALUE%
+    - common key [C530, V500] - fast - mostly latin
+    - edit distance [cindy-cindi=1] - only latin - in-memory
+    - statistical similarity - slow
+- search chats by: 
+    1. chat name
+    2. invited user name
+    3. message content
+- search messages by:
+    1. content
+    2. author
 
 ### User Authentication
 - middleware auth
@@ -67,27 +93,18 @@ And the app should be available at http://localhost:8080
 - message store
 - cache instead of map
 
-### Chat features
-- Search chats by: 
-    1. chat name
-    2. invited user name
-    3. message content
-- Search messages by:
-    1. content
-    2. author
-
 ### Message Broadcasting: 
 - track user deltas: chats, messages
 - only serve deltas
 - buffer for unstable connection/s
 - test overload of a conn channel
 
+## Later
+
 ### Client storage
 - local / innodb
 - store chats with history on client
 - load only chat deltas
-
-## Later
 
 ### *Security Considerations*
 - Validate nd sanitize all incoming messages to prevent cross-site scripting (XSS) attacks.
