@@ -30,7 +30,7 @@ func Login(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.
 	p := r.FormValue("login-pass")
 	p = utils.TrimSpaces(p)
 	p = utils.TrimSpecial(p)
-	if u == "" || p == "" || len(u) < 4 || len(p) < 8 {
+	if u == "" || p == "" || len(u) < 4 || len(p) < 4 {
 		log.Printf("--%s-> Login TRACE empty user[%s]", utils.GetReqId(r), u)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("bad login credentials"))
@@ -69,7 +69,7 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 	p = utils.TrimSpaces(p)
 	p = utils.TrimSpecial(p)
 	log.Printf("--%s-> SignUp TRACE authentication check for user[%s] auth[%s]\n", utils.GetReqId(r), u, authType)
-	if u == "" || p == "" || len(u) < 4 || len(p) < 8 {
+	if u == "" || p == "" || len(u) < 4 || len(p) < 4 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("bad signup credentials"))
 		return

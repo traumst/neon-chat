@@ -25,7 +25,8 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("--%s-> InviteUser WARN user, %s\n", utils.GetReqId(r), err)
-		RenderHome(app, w, r)
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Unauthorized"))
 		return
 	}
 	chatId, err := strconv.Atoi(r.FormValue("chatId"))
@@ -38,6 +39,11 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 	inviteeName := r.FormValue("invitee")
 	inviteeName = utils.TrimSpaces(inviteeName)
 	inviteeName = utils.TrimSpecial(inviteeName)
+	if inviteeName == "" || len(inviteeName) < 4 {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Bad invitee name"))
+		return
+	}
 	invitee, err := conn.GetUser(inviteeName)
 	if err != nil || invitee == nil {
 		log.Printf("<-%s-- InviteUser ERROR invitee not found, %s\n", reqId, err)

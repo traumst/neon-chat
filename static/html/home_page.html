@@ -208,14 +208,6 @@
             {{ end }}
         </div>
     </div>
-    <script>
-        document.body.addEventListener('htmx:beforeOnLoad', function(event) {
-            if (event.detail.xhr.status >= 400) {  // Check for HTTP error codes (400+)
-                // Handle error, e.g., show a message, log, etc.
-                console.error("Error loading data: ", event.detail.xhr.responseText);
-            }
-        });
-    </script>
 </body>
 </html>
 
