@@ -217,6 +217,13 @@ func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = app.DropUser(user.Id, chat.Id, user.Id)
+	if err != nil {
+		log.Printf("<-%s-- LeaveChat out ERROR dropUser, %s\n", reqId, err)
+	} else {
+		log.Printf("<-%s-- LeaveChat out TRACE chat[%d] removed[%d]\n", reqId, chatId, user.Id)
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
@@ -227,16 +234,19 @@ func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 			log.Printf("<-%s-- LeaveChat ERROR cannot distribute chat close, %s\n", reqId, err)
 			return
 		}
+		log.Printf("--%s-- LeaveChat TRACE distributed chat close", reqId)
 		err = handler.DistributeChat(app, chat, user, user, nil, event.ChatDeleted)
 		if err != nil {
 			log.Printf("<-%s-- LeaveChat ERROR cannot distribute chat deleted, %s\n", reqId, err)
 			return
 		}
-		err = handler.DistributeChat(app, chat, user, nil, user, event.ChatExpel)
+		log.Printf("--%s-- LeaveChat TRACE distributed chat deleted", reqId)
+		err = handler.DistributeChat(app, chat, user, nil, user, event.ChatLeave)
 		if err != nil {
 			log.Printf("<-%s-- LeaveChat ERROR cannot distribute chat user drop, %s\n", reqId, err)
 			return
 		}
+		log.Printf("--%s-- LeaveChat TRACE distributed chat leave", reqId)
 	}()
 	go func() {
 		defer wg.Done()
@@ -245,11 +255,4 @@ func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("[LEFT_U]"))
 	}()
 	wg.Wait()
-
-	err = app.DropUser(user.Id, chat.Id, user.Id)
-	if err != nil {
-		log.Printf("<-%s-- LeaveChat out ERROR dropUser, %s\n", reqId, err)
-	} else {
-		log.Printf("<-%s-- LeaveChat out TRACE chat[%d] removed[%d]\n", reqId, chatId, user.Id)
-	}
 }

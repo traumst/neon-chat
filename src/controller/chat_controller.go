@@ -204,6 +204,13 @@ func DeleteChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = app.DeleteChat(user.Id, chat)
+	if err != nil {
+		log.Printf("<-%s-- DeleteChat ERROR remove chat[%d] from [%s], %s\n", reqId, id, chat.Name, err)
+	} else {
+		log.Printf("<-%s-- DeleteChat TRACE user[%d] deleted chat [%d]\n", reqId, user.Id, id)
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
@@ -228,12 +235,4 @@ func DeleteChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("[DELETED_C]"))
 	}(chat.Id, user.Id)
 	wg.Wait()
-
-	// TODO this needs to move and add recovery
-	err = app.DeleteChat(user.Id, chat)
-	if err != nil {
-		log.Printf("<-%s-- DeleteChat ERROR remove chat[%d] from [%s], %s\n", reqId, id, chat.Name, err)
-	} else {
-		log.Printf("<-%s-- DeleteChat TRACE user[%d] deleted chat [%d]\n", reqId, user.Id, id)
-	}
 }
