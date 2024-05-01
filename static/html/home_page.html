@@ -10,43 +10,49 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap">
     {{ if .LoadLocal }}
-    <script src="/script/htmx.1.9.10.min.js"></script>
+    <!-- Need to update version before uncommenting -->
+    <!-- <script src="/script/htmx.1.9.10.min.js"></script>
     <script src="/script/htmx.1.9.10.sse.js"></script>
     <script src="/script/htmx.1.9.10.debug.js"></script>
-    <script src="/script/tailwindcss.3.4.3.min.js"></script>
+    <script src="/script/tailwindcss.3.4.3.min.js"></script> -->
     <!-- Need to build tailwind to minimize it -->
     <!-- <link href="/css/tailwind.css" rel="stylesheet"> -->
     {{ else }}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.11/htmx.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.11/ext/sse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.12/htmx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.12/ext/sse.min.js"></script>
     <script src="https://cdn.tailwindcss.com/3.4.3"></script>
     {{ end }}
     <style>
         body {
             font: inherit;
-            font-size: .9rem;
+            font-size: .8rem;
             font-family: 'JetBrains Mono', sans-serif; /* Using Google Fonts example */
         }
-        .left-panel {
-            transition: all 0.3s ease;
+        @keyframes fadeInFromLeft {
+            0% {
+                opacity: 0;
+                transform: translateX(-25);
+                transform: translateY(13%);
+            }
+            50% {
+                opacity: .3;
+                transform: translateX(-10);
+                transform: translateY(-13%);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+                transform: translateY(0);
+            }
+        }
+        .default-transition {
+            animation: fadeInFromLeft .37s ease forwards;
         }
         .left-panel.closed {
             width: 9%;
         }
-        .left-panel.open {
-            width: 33%;
-        }
-        .active-user {
-            transition: all 0.3s ease;
-        }
         .closed .other-info {
             display: none;
-        }
-        .chat-list {
-            transition: all 0.3s ease;
-        }
-        .left-panel-toggle {
-            transition: all 0.3s ease;
         }
         .left-panel-toggle.closed::before {
             content: "⇽-⇾";
@@ -148,7 +154,7 @@
             panel.classList.add('closed');
         }
     </script>
-    <div class="left-panel 
+    <div class="left-panel
         flex flex-col
         h-screen
         w-1/3
@@ -158,7 +164,7 @@
         border-2 border-zinc-600 rounded-lg
         shadow shadow-zinc-800">
         {{ if .IsAuthorized }}
-            <div class="active-user 
+            <div class="active-user default-transition
                 flex flex-row justify-between 
                 p-2
                 shadow">
@@ -187,10 +193,12 @@
                 {{ template "addChatDiv" . }}
             </div>
 
-            <div class="chat-list flex justify-between overflow-x-hidden">
+            <div class="chat-list default-transition flex justify-between overflow-x-hidden">
                 {{ template "chatListDiv" . }}
             </div>
-            <button id="left-panel-toggle" onclick="togglePanel()" class="transition duration-100 mt-auto">
+            <button id="left-panel-toggle" 
+                onclick="togglePanel()" 
+                class="default-transition mt-auto">
                 <script>togglePanel()</script>
             </button>
         {{ else }}
@@ -198,14 +206,14 @@
         {{ end }}
     </div>
     
-    <div class="right-panel 
+    <div class="right-panel
         flex flex-grow flex-col 
         h-screen 
         w-2/3 
         p-2
         border-2 border-zinc-700 rounded-lg
         shadow shadow-zinc-900">
-        <div class="open-chat">
+        <div class="open-chat default-transition">
             {{ if .IsAuthorized }}
                 {{ with .OpenTemplate }}
                     {{ template "chat_div.html" . }}
@@ -250,7 +258,7 @@
 {{ define "chatListDiv" }}
 <ul sse-swap="{{ .ChatAddEvent }}" 
     hx-swap="afterbegin" 
-    class="chat-headers flex flex-col w-full py-2"> 
+    class="chat-headers default-transition flex flex-col w-full py-2"> 
     {{ with $chats := .ReverseChats }}
         {{ range $index, $chat := $chats }} 
             {{ template "chat_li.html" $chat }}

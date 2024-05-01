@@ -111,7 +111,7 @@ func (uc *UserConn) userConns(userId uint) []*Conn {
 	return conns
 }
 
-func (conn *Conn) sendUpdates(up event.LiveUpdate, pollingUserId uint) {
+func (conn *Conn) SendUpdates(up event.LiveUpdate, pollingUserId uint) {
 	log.Printf("∞--%s--> APP.sendUpdates TRACE IN user[%d], input[%s]\n", conn.Origin, pollingUserId, up.String())
 	origin := conn.Origin
 	if conn.User.Id != pollingUserId {

@@ -217,15 +217,21 @@ func DeleteChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	go func() {
 		defer wg.Done()
 		log.Printf("<-%s-- DeleteChat TRACE distributes user[%d] closes chat[%d]\n", reqId, user.Id, chat.Id)
-		err = handler.DistributeChat(app, chat, user, nil, nil, event.ChatClose)
+		err = handler.DistributeChat(app, chat, user, nil, user, event.ChatClose)
 		if err != nil {
 			log.Printf("<-%s-- DeleteChat ERROR cannot distribute chat close, %s\n", reqId, err)
 			return
 		}
 		log.Printf("<-%s-- DeleteChat TRACE distributes user[%d] deletes chat[%d]\n", reqId, user.Id, chat.Id)
-		err = handler.DistributeChat(app, chat, user, nil, nil, event.ChatDeleted)
+		err = handler.DistributeChat(app, chat, user, nil, user, event.ChatDeleted)
 		if err != nil {
 			log.Printf("<-%s-- DeleteChat ERROR cannot distribute chat deleted, %s\n", reqId, err)
+			return
+		}
+		log.Printf("<-%s-- DeleteChat TRACE distributes user[%d] expel all from chat[%d]\n", reqId, user.Id, chat.Id)
+		err = handler.DistributeChat(app, chat, user, nil, nil, event.ChatExpel)
+		if err != nil {
+			log.Printf("<-%s-- ExpelUser ERROR cannot distribute chat user expel, %s\n", reqId, err)
 			return
 		}
 	}()

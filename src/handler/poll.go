@@ -24,7 +24,7 @@ func PollUpdatesForUser(app *AppState, conn *Conn, pollingUserId uint) {
 		case up := <-conn.In:
 			log.Printf("∞--%s--> APP.PollUpdatesForUser TRACE user[%d] is receiving update[%s]\n",
 				conn.Origin, conn.User.Id, up.Event)
-			conn.sendUpdates(up, pollingUserId)
+			conn.SendUpdates(up, pollingUserId)
 		}
 	}
 }

@@ -1,13 +1,31 @@
 <div id="open-chat-{{ .ChatId }}"
     sse-swap="{{ .ChatCloseEvent }}"
     hx-swap="outerHTML" 
-    class="flex flex-col p-2 pb-4 gap-y-2"
+    class="default-transition flex flex-col p-2 pb-4 gap-y-2"
 >
     <div class="chat-header flex flex-row justify-end">
         <div class="open-chat-name flex font-bold">
             {{ .Name }}
         </div>
         <div class="flex flex-row">
+            <form id="chat-delete-{{ .ChatId }}-2"
+                class="flex"
+                title="delete chat ${{ .Name }}"
+                hx-post="/chat/delete" 
+                hx-trigger="click" 
+                hx-target="#chat-head-{{ .ChatId }}"
+                hx-swap="innerHTML" 
+                hx-include="#chat-delete-{{ .ChatId }}"
+            >
+                <input type="hidden" name="chatid" value="{{ .ChatId }}">
+                <div hx-trigger="click" 
+                    hx-action="chat-delete-{{ .ChatId }}.submit()"
+                    class="chat-header-delete hover:text-red-700"
+                >
+                    <sub title="delete chat">[delete]</sub>
+                </div>
+            </form>
+
             <form id="chat-close-{{ .ChatId }}"
                 title="close chat {{ .Name }}"
                 hx-post="/chat/close" 
