@@ -10,3 +10,4 @@ log/*
 .DS_Store
 *.db
 .env
+go.chat

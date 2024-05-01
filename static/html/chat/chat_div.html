@@ -12,7 +12,7 @@
                 title="close chat {{ .Name }}"
                 hx-post="/chat/close" 
                 hx-trigger="click" 
-                hx-target=".open-chat"
+                hx-target="#open-chat-{{ .ChatId }}"
                 hx-swap="innerHTML" 
                 hx-include="#chat-close-{{ .ChatId }}"
             >
@@ -110,7 +110,7 @@
 <script>
     function scrollToLastChild(parent) {
         const lastElement = parent.children[parent.children.length-1];
-        lastElement.scrollIntoView({
+        lastElement?.scrollIntoView({
             behavior: 'smooth',
             block: 'start'
         });
@@ -154,14 +154,6 @@
         text-gray-400
         shadow shadow-zinc-700
         hover:shadow-lg hover:shadow-zinc-500">
-    <script>
-        // TODO resize to fit whole message
-        // textarea = document.getElementById('newMsgText');
-        // textarea.addEventListener('input', function resizeMsgInput() {
-        //     this.style.height = 'auto'; 
-        //     this.style.height = this.scrollHeight + 'px';
-        // });
-    </script>
     <button type="submit" class="hidden">
         Send Message
     </button>
