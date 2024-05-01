@@ -20,6 +20,7 @@ func (h *HomeTemplate) HTML() (string, error) {
 	homeTmpl := template.Must(template.ParseFiles(
 		"static/html/home_page.html",
 		"static/html/welcome_div.html",
+		"static/html/user_settings_div.html",
 		"static/html/nav/login_div.html",
 		"static/html/nav/chat_li.html",
 		"static/html/chat/chat_div.html",

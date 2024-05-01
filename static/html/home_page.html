@@ -162,17 +162,29 @@
         shadow shadow-zinc-800">
         {{ if .IsAuthorized }}
             <div class="active-user 
-                flex flex-row justify-end 
+                flex flex-row justify-between 
                 p-2
                 shadow">
-                <div class="font-bold">{{ .ActiveUser }}</div>
-                <form title="log out {{ .ActiveUser }}"
-                    hx-post="/logout" 
-                    hx-trigger="submit" 
-                    hx-target="body"
-                    class="other-info hover:text-red-700">
-                    <button type="submit"><sub>[logout]</sub></button>
-                </form>
+                <div id="openSettingButton" 
+                    title="open settings" 
+                    hx-get="/settings" 
+                    hx-trigger="click" 
+                    hx-target=".open-chat" 
+                    hx-swap="innerHTML"
+                    class="bg-transparent text-xl hover:text-green-700"
+                >
+                    ⚙
+                </div>
+                <div class="flex">
+                    <div class="font-bold">{{ .ActiveUser }}</div>
+                    <form title="log out {{ .ActiveUser }}"
+                        hx-post="/logout" 
+                        hx-trigger="submit" 
+                        hx-target="body"
+                        class="other-info hover:text-red-700">
+                        <button type="submit"><sub>[logout]</sub></button>
+                    </form>
+                </div>
             </div>
             <div class="add-chat flex w-full p-3">
                 {{ template "addChatDiv" . }}
@@ -217,7 +229,6 @@
     hx-trigger="submit" 
     hx-target=".open-chat" 
     hx-swap="innerHTML"
-    hx-ext="debug"
     class="w-full">
     <input id="newChatName" type="text" name="chatName" placeholder="new chat name" title="enter to send"
         class="w-full text-center rounded-md

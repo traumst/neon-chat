@@ -16,6 +16,16 @@ func Setup(app *handler.AppState, conn *db.DBConn, loadLocal bool) {
 	handleChat(app, allMiddleware)
 	handleMsgs(app, allMiddleware)
 
+	// TODO allow user to set configs
+	http.Handle("/settings", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			OpenSettings(app, w, r)
+		}), allMiddleware))
+	http.Handle("/settings/close", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			CloseSettings(app, w, r)
+		}), allMiddleware))
+
 	// static files
 	minMiddleware := []Middleware{ReqIdMiddleware}
 	http.Handle("/favicon.ico", ChainMiddleware(
