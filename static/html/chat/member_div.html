@@ -1,6 +1,6 @@
 <div class="member" 
     id="chat-drop-{{ .ChatId }}-user-{{ .User.Id }}"
-    sse-swap="{{ .ChatExpelEvent }}"
+    sse-swap="{{ .ChatExpelEvent }},{{ .ChatLeaveEvent }}"
     hx-target="#chat-drop-{{ .ChatId }}-user-{{ .User.Id }}"
     hx-swap="innerHTML"
 >

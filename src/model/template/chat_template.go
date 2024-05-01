@@ -16,6 +16,7 @@ type ChatTemplate struct {
 	ChatDropEvent   string
 	ChatCloseEvent  string
 	ChatExpelEvent  string
+	ChatLeaveEvent  string
 	MessageAddEvent string
 }
 

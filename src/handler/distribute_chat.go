@@ -145,9 +145,6 @@ func distributeChatToUser(
 			return fmt.Errorf("author[%d] is not allowed to close chat[%d] for user[%d]",
 				author.Id, targetChat.Id, targetUser.Id)
 		}
-		if subjectUser != nil {
-			return fmt.Errorf("subjectUser[%d] is not nil for chatClose", subjectUser.Id)
-		}
 		return chatClose(conn, evnt, targetChat.Id, author.Id, targetUser.Id)
 
 	default:

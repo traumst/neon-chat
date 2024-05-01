@@ -85,6 +85,7 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 			Viewer:         template.UserTemplate{Id: chat.Owner.Id, Name: chat.Owner.Name},
 			Owner:          template.UserTemplate{Id: chat.Owner.Id, Name: chat.Owner.Name},
 			ChatExpelEvent: event.ChatExpelEventName.Format(chatId, invitee.Id, -9),
+			ChatLeaveEvent: event.ChatLeaveEventName.Format(chatId, invitee.Id, -9),
 		}
 		html, err := template.ShortHTML()
 		if err != nil {
@@ -168,7 +169,7 @@ func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		defer wg.Done()
 		log.Printf("<-%s-- ExpelUser TRACE user[%d] removed[%d] from chat[%d]\n", reqId, user.Id, expelled.Id, chat.Id)
 		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte(fmt.Sprintf("expelled <s>%s</s>", expelled.Name)))
+		w.Write([]byte(fmt.Sprintf("~<s>%s</s>~", expelled.Name)))
 	}()
 	wg.Wait()
 

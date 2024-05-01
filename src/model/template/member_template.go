@@ -12,6 +12,7 @@ type MemberTemplate struct {
 	Viewer         UserTemplate
 	Owner          UserTemplate
 	ChatExpelEvent string
+	ChatLeaveEvent string
 }
 
 func (c *MemberTemplate) ShortHTML() (string, error) {

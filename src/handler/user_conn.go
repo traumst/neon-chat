@@ -156,7 +156,12 @@ func (conn *Conn) trySend(up event.LiveUpdate) error {
 	case event.ChatExpel:
 		err := flushEvent(&w, event.ChatExpelEventName, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to drop user from chat to user[%d], %s", up.UserId, err)
+			return fmt.Errorf("trySend ERROR failed to expel user[%d] from chat[%d], %s", up.UserId, up.ChatId, err)
+		}
+	case event.ChatLeave:
+		err := flushEvent(&w, event.ChatLeaveEventName, up)
+		if err != nil {
+			return fmt.Errorf("trySend ERROR failed to leave user[%d] from chat[%d], %s", up.UserId, up.ChatId, err)
 		}
 	case event.ChatClose:
 		err := flushEvent(&w, event.ChatCloseEventName, up)

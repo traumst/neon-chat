@@ -181,7 +181,7 @@
 {{ range $index, $user := .Users }}
     <div class="member" 
         id="chat-{{ $top.ChatId }}-user-{{ $user.Id }}" 
-        sse-swap="{{ $top.ChatExpelEvent }}"
+        sse-swap="{{ $top.ChatExpelEvent }},{{ $top.ChatLeaveEvent }}"
         hx-target="#chat-{{ $top.ChatId }}-user-{{ $user.Id }}"
         hx-swap="innerHTML"
     >

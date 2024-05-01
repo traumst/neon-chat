@@ -33,7 +33,7 @@ func PollUpdates(app *handler.AppState, w http.ResponseWriter, r *http.Request) 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		handler.PollUpdatesForUser(conn, user.Id)
+		handler.PollUpdatesForUser(app, conn, user.Id)
 	}()
 	wg.Wait()
 	log.Printf("<-%s-- PollUpdates TRACE OUT user[%d]\n", utils.GetReqId(r), user.Id)

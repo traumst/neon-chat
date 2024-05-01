@@ -9,6 +9,7 @@ const (
 	ChatClose      UpdateType = "chat_close"
 	ChatInvite     UpdateType = "chat_invite"
 	ChatExpel      UpdateType = "chat_expel"
+	ChatLeave      UpdateType = "chat_leave"
 	MessageAdded   UpdateType = "message_added"
 	MessageDeleted UpdateType = "message_deleted"
 )

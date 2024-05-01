@@ -13,6 +13,7 @@ const (
 	ChatDropEventName    SSEvent = "chat-drop"
 	ChatCloseEventName   SSEvent = "chat-close"
 	ChatExpelEventName   SSEvent = "chat-expel"
+	ChatLeaveEventName   SSEvent = "chat-leave"
 	MessageAddEventName  SSEvent = "msg-add"
 	MessageDropEventName SSEvent = "msg-drop"
 )
@@ -31,6 +32,8 @@ func (e SSEvent) Format(
 		return string(ChatAddEventName)
 	case ChatExpelEventName:
 		return fmt.Sprintf("%s-%d-user-%d", ChatExpelEventName, chatId, userId)
+	case ChatLeaveEventName:
+		return fmt.Sprintf("%s-%d-user-%d", ChatLeaveEventName, chatId, userId)
 	case ChatDropEventName:
 		return fmt.Sprintf("%s-%d", ChatDropEventName, chatId)
 	case ChatCloseEventName:

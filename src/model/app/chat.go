@@ -136,6 +136,7 @@ func (c *Chat) Template(user *User) *t.ChatTemplate {
 		ChatDropEvent:   e.ChatDropEventName.Format(c.Id, user.Id, -1),
 		ChatCloseEvent:  e.ChatCloseEventName.Format(c.Id, user.Id, -2),
 		ChatExpelEvent:  e.ChatExpelEventName.Format(c.Id, user.Id, -4),
+		ChatLeaveEvent:  e.ChatLeaveEventName.Format(c.Id, user.Id, -4),
 		MessageAddEvent: e.MessageAddEventName.Format(c.Id, user.Id, -3),
 	}
 }
