@@ -59,7 +59,7 @@
                 hx-post="/user/invite" 
                 hx-trigger="submit" 
                 hx-swap="beforeend"
-                class="flex-row flex-shrink"
+                class="flex-row flex-shrink border-2 rounded border-emerald-400"
             >
                 <input type="hidden" name="chatId" value="{{ .ChatId }}">
                 <input id="inviteUser" type="text" name="invitee" placeholder="invite user" title="enter to send"
@@ -159,7 +159,7 @@
     hx-target=".message-list" 
     hx-swap="beforeend"
     hx-include="[name='chatId'],[name='msg']"
-    class="flex mt-auto shadow-md"
+    class="flex mt-auto border-2 rounded border-emerald-400"
 >
     <input type="hidden" name="chatId" value="{{ .ChatId }}">
     <input id="newMsgText" type="text" name="msg" 

@@ -42,6 +42,7 @@ And the app should be available at http://localhost:8080
 
 ### Known bugs
 - last open session is the only session a user can have
+- member_div is not the same as memberDiv on chat_div
 
 ### GUI
 - top controls

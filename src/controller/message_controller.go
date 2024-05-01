@@ -34,7 +34,7 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 	msg := r.FormValue("msg")
 	msg = utils.TrimSpaces(msg)
-	if msg == "" || len(msg) < 2 {
+	if msg == "" || len(msg) < 1 {
 		log.Printf("--%s-> AddMessage WARN \n", utils.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("message too short"))
