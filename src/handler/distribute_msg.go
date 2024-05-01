@@ -14,20 +14,21 @@ func DistributeMsg(
 	chat *app.Chat,
 	authorId uint,
 	msg *app.Message,
-	evnt event.UpdateType,
+	updateType event.UpdateType,
 ) error {
 	// have to get users by owner - author may have been removed
 	users, err := chat.GetUsers(chat.Owner.Id)
 	if err != nil || users == nil {
-		return fmt.Errorf("DistributeMsg: get users, chat[%+v], %s", chat, err)
+		return fmt.Errorf("DistributeMsg: get users, chat[%d], %s", chat.Id, err)
 	}
 	if len(users) == 0 {
-		return fmt.Errorf("DistributeMsg: chatUsers are empty, chat[%+v], %s", chat, err)
+		return fmt.Errorf("DistributeMsg: chatUsers are empty, chat[%d], %s", chat.Id, err)
 	}
 
 	var wg sync.WaitGroup
 	var errors []string
 	for _, user := range users {
+		// TODO remove this
 		if user.Id == authorId {
 			log.Printf("∞----> DistributeMsg TRACE new message is not sent to author[%d]\n", user.Id)
 			continue
@@ -41,7 +42,7 @@ func DistributeMsg(
 				errors = append(errors, err.Error())
 				return
 			}
-			err = distributeMsgToUser(state, chat.Id, msg.Id, user.Id, authorId, evnt, data)
+			err = distributeMsgToUser(state, chat.Id, msg.Id, user.Id, authorId, updateType, data)
 			if err != nil {
 				errors = append(errors, err.Error())
 			}
@@ -62,10 +63,10 @@ func distributeMsgToUser(
 	msgId int,
 	userId uint,
 	authorId uint,
-	evnt event.UpdateType,
+	updateType event.UpdateType,
 	data string,
 ) error {
-	log.Printf("∞----> distributeMsgToUser TRACE user[%d] chat[%d] event[%v]\n", userId, chatId, evnt)
+	log.Printf("∞----> distributeMsgToUser TRACE user[%d] chat[%d] event[%v]\n", userId, chatId, updateType)
 	openChat := state.GetOpenChat(userId)
 	if openChat == nil {
 		log.Printf("<----- distributeMsgToUser INFO user[%d] has no open chat to distribute", userId)
@@ -84,14 +85,14 @@ func distributeMsgToUser(
 	}
 
 	msg := event.LiveUpdate{
-		Event:    evnt,
+		Event:    updateType,
 		ChatId:   chatId,
 		MsgId:    msgId,
 		AuthorId: authorId,
 		UserId:   userId,
 	}
 
-	switch evnt {
+	switch updateType {
 	case event.MessageAdded:
 		msg.Data = data
 		conn.In <- msg
@@ -101,6 +102,6 @@ func distributeMsgToUser(
 		conn.In <- msg
 		return nil
 	default:
-		return fmt.Errorf("unknown event type: %v", evnt)
+		return fmt.Errorf("unknown event type: %v", updateType)
 	}
 }

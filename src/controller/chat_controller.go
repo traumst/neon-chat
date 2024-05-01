@@ -46,15 +46,16 @@ func OpenChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("--%s-> OpenChat TRACE chat[%d]\n", reqId, chatId)
+	var html string
 	openChat, err := app.OpenChat(user.Id, chatId)
 	if err != nil {
 		log.Printf("<-%s-- OpenChat ERROR chat, %s\n", reqId, err)
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Chat not found"))
-		return
+		welcome := template.WelcomeTemplate{ActiveUser: user.Name}
+		html, err = welcome.HTML()
+	} else {
+		log.Printf("--%s-> OpenChat TRACE html template\n", reqId)
+		html, err = openChat.Template(user).HTML()
 	}
-	log.Printf("--%s-> OpenChat TRACE html template\n", reqId)
-	html, err := openChat.Template(user).HTML()
 	if err != nil {
 		log.Printf("<-%s-- OpenChat ERROR html template, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -118,7 +119,7 @@ func AddChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		template := openChat.Template(user)
 		html, err := template.HTML()
 		if err != nil {
-			log.Printf("<--%s-- sendChatContent ERROR cannot template chat [%+v], %s", reqId, template, err)
+			log.Printf("<--%s-- sendChatContent ERROR cannot template chat[%d], %s", reqId, template.ChatId, err)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("failed to template chat"))
 			return

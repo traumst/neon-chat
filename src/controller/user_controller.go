@@ -229,13 +229,13 @@ func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	go func() {
 		defer wg.Done()
 		log.Printf("--%s-∞ LeaveChat TRACE distributing user[%d] left chat[%d]\n", reqId, user.Id, chat.Id)
-		err := handler.DistributeChat(app, chat, user, user, nil, event.ChatClose)
+		err := handler.DistributeChat(app, chat, user, user, user, event.ChatClose)
 		if err != nil {
 			log.Printf("<-%s-- LeaveChat ERROR cannot distribute chat close, %s\n", reqId, err)
 			return
 		}
 		log.Printf("--%s-- LeaveChat TRACE distributed chat close", reqId)
-		err = handler.DistributeChat(app, chat, user, user, nil, event.ChatDeleted)
+		err = handler.DistributeChat(app, chat, user, user, user, event.ChatDeleted)
 		if err != nil {
 			log.Printf("<-%s-- LeaveChat ERROR cannot distribute chat deleted, %s\n", reqId, err)
 			return
