@@ -4,8 +4,8 @@ go.sum
 tmp/build-errors.log
 tmp/main
 main
-script/htmx.min.js
-script/htmx.1.9.10.min.js
+script/*
+css/*
 log/*
 .DS_Store
 *.db

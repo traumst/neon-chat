@@ -11,12 +11,11 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap">
     {{ if .LoadLocal }}
     <!-- Need to update version before uncommenting -->
-    <!-- <script src="/script/htmx.1.9.10.min.js"></script>
-    <script src="/script/htmx.1.9.10.sse.js"></script>
-    <script src="/script/htmx.1.9.10.debug.js"></script>
-    <script src="/script/tailwindcss.3.4.3.min.js"></script> -->
+    <script src="/script/htmx.min.1.9.12.js"></script>
+    <script src="/script/htmx.sse.1.9.12.js"></script>
+    <!-- <script src="/script/tailwindcss.3.4.3.min.js"></script> -->
     <!-- Need to build tailwind to minimize it -->
-    <!-- <link href="/css/tailwind.css" rel="stylesheet"> -->
+    <link href="/css/tailwind.css" rel="stylesheet">
     {{ else }}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.12/htmx.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.12/ext/sse.min.js"></script>

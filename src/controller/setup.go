@@ -7,7 +7,7 @@ import (
 	"go.chat/src/handler"
 )
 
-func Setup(app *handler.AppState, conn *db.DBConn, loadLocal bool) {
+func Setup(app *handler.AppState, conn *db.DBConn) {
 	// loaded in reverse order
 	allMiddleware := []Middleware{LoggerMiddleware, ReqIdMiddleware}
 
