@@ -9,12 +9,13 @@ import (
 	a "go.chat/src/model/app"
 	"go.chat/src/model/event"
 	"go.chat/src/utils"
+	h "go.chat/src/utils/http"
 )
 
 func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> AddMessage TRACE\n", utils.GetReqId(r))
+	log.Printf("--%s-> AddMessage TRACE\n", h.GetReqId(r))
 	if r.Method != "POST" {
-		log.Printf("--%s-> AddMessage ERROR request method\n", utils.GetReqId(r))
+		log.Printf("--%s-> AddMessage ERROR request method\n", h.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("action not allowed"))
 		return
@@ -24,10 +25,10 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		RenderHome(app, w, r)
 		return
 	}
-	log.Printf("--%s-> AddMessage TRACE parsing input\n", utils.GetReqId(r))
+	log.Printf("--%s-> AddMessage TRACE parsing input\n", h.GetReqId(r))
 	chatId, err := strconv.Atoi(r.FormValue("chatId"))
 	if err != nil {
-		log.Printf("--%s-> AddMessage WARN \n", utils.GetReqId(r))
+		log.Printf("--%s-> AddMessage WARN \n", h.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid chat id"))
 		return
@@ -35,21 +36,21 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	msg := r.FormValue("msg")
 	msg = utils.TrimSpaces(msg)
 	if msg == "" || len(msg) < 1 {
-		log.Printf("--%s-> AddMessage WARN \n", utils.GetReqId(r))
+		log.Printf("--%s-> AddMessage WARN \n", h.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("message too short"))
 		return
 	}
-	log.Printf("--%s-> AddMessage TRACE opening current chat for user[%d]\n", utils.GetReqId(r), author.Id)
+	log.Printf("--%s-> AddMessage TRACE opening current chat for user[%d]\n", h.GetReqId(r), author.Id)
 	chat := app.GetOpenChat(author.Id)
 	if chat == nil || chat.Id != chatId {
-		log.Printf("--%s-> AddMessage WARN no open chat for user[%d]\n", utils.GetReqId(r), author.Id)
+		log.Printf("--%s-> AddMessage WARN no open chat for user[%d]\n", h.GetReqId(r), author.Id)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("chat not found"))
 		return
 	}
 	log.Printf("--%s-> AddMessage TRACE storing message for user[%d] in chat[%s]\n",
-		utils.GetReqId(r), author.Id, chat.Name)
+		h.GetReqId(r), author.Id, chat.Name)
 	message, err := chat.AddMessage(author.Id, a.Message{
 		Id:     0,
 		ChatId: chat.Id,
@@ -58,16 +59,16 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		Text:   msg,
 	})
 	if err != nil {
-		log.Printf("--%s-> AddMessage ERROR add message, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> AddMessage ERROR add message, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed adding message"))
 		return
 	}
 
-	log.Printf("--%s-> AddMessage TRACE templating message\n", utils.GetReqId(r))
+	log.Printf("--%s-> AddMessage TRACE templating message\n", h.GetReqId(r))
 	html, err := message.Template(author).HTML()
 	if err != nil {
-		log.Printf("<-%s-- AddMessage ERROR html [%+v], %s\n", utils.GetReqId(r), message, err)
+		log.Printf("<-%s-- AddMessage ERROR html [%+v], %s\n", h.GetReqId(r), message, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed templating message"))
 		return
@@ -75,16 +76,16 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 
 	err = handler.DistributeMsg(app, chat, author.Id, message, event.MessageAdded)
 	if err != nil {
-		log.Printf("<-%s-- AddMessage ERROR distribute message, %s\n", utils.GetReqId(r), err)
+		log.Printf("<-%s-- AddMessage ERROR distribute message, %s\n", h.GetReqId(r), err)
 	}
 
-	log.Printf("<-%s-- AddMessage TRACE serving html\n", utils.GetReqId(r))
+	log.Printf("<-%s-- AddMessage TRACE serving html\n", h.GetReqId(r))
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte(html))
 }
 
 func DeleteMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	reqId := utils.GetReqId(r)
+	reqId := h.GetReqId(r)
 	log.Printf("--%s-> DeleteMessage\n", reqId)
 	author, err := handler.ReadSession(app, w, r)
 	if err != nil || author == nil {

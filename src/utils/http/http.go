@@ -2,12 +2,14 @@ package utils
 
 import (
 	"net/http"
+
+	"go.chat/src/utils"
 )
 
 func SetReqId(r *http.Request, s *string) string {
 	var reqId string
 	if s == nil {
-		reqId = RandStringBytes(5)
+		reqId = utils.RandStringBytes(5)
 	} else {
 		reqId = *s
 	}

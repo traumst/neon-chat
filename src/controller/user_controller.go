@@ -12,10 +12,11 @@ import (
 	"go.chat/src/model/event"
 	"go.chat/src/model/template"
 	"go.chat/src/utils"
+	h "go.chat/src/utils/http"
 )
 
 func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r *http.Request) {
-	reqId := utils.GetReqId(r)
+	reqId := h.GetReqId(r)
 	log.Printf("--%s-> InviteUser\n", reqId)
 	if r.Method != "POST" {
 		log.Printf("<-%s-- InviteUser TRACE auth does not allow %s\n", reqId, r.Method)
@@ -24,7 +25,7 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 	}
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
-		log.Printf("--%s-> InviteUser WARN user, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> InviteUser WARN user, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("Unauthorized"))
 		return
@@ -103,7 +104,7 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 }
 
 func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	reqId := utils.GetReqId(r)
+	reqId := h.GetReqId(r)
 	log.Printf("--%s-> ExpelUser\n", reqId)
 	if r.Method != "POST" {
 		log.Printf("<-%s-- ExpelUser TRACE auth does not allow %s\n", reqId, r.Method)
@@ -112,7 +113,7 @@ func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
-		log.Printf("--%s-> ExpelUser WARN user, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> ExpelUser WARN user, %s\n", h.GetReqId(r), err)
 		RenderHome(app, w, r)
 		return
 	}
@@ -183,7 +184,7 @@ func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 }
 
 func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	reqId := utils.GetReqId(r)
+	reqId := h.GetReqId(r)
 	log.Printf("--%s-> LeaveChat\n", reqId)
 	if r.Method != "POST" {
 		log.Printf("<-%s-- LeaveChat TRACE auth does not allow %s\n", reqId, r.Method)
@@ -193,7 +194,7 @@ func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> LeaveChat TRACE check login\n", reqId)
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
-		log.Printf("--%s-> LeaveChat WARN user, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> LeaveChat WARN user, %s\n", h.GetReqId(r), err)
 		RenderHome(app, w, r)
 		return
 	}

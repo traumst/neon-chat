@@ -9,6 +9,7 @@ import (
 	"go.chat/src/model/app"
 	"go.chat/src/model/event"
 	"go.chat/src/utils"
+	h "go.chat/src/utils/http"
 )
 
 type Conn struct {
@@ -37,7 +38,7 @@ func (uc *UserConn) IsConn(userId uint) (bool, *Conn) {
 func (uc *UserConn) Add(user *app.User, origin string, w http.ResponseWriter, r http.Request) *Conn {
 	mu.Lock()
 	defer mu.Unlock()
-	log.Printf("∞---%s---> UserConn.Add TRACE user[%d] added from conn[%s]\n", utils.GetReqId(&r), user.Id, origin)
+	log.Printf("∞---%s---> UserConn.Add TRACE user[%d] added from conn[%s]\n", h.GetReqId(&r), user.Id, origin)
 	id := len(*uc)
 	newConn := Conn{
 		Id:     id,

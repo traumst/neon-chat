@@ -9,6 +9,7 @@ import (
 	"go.chat/src/db"
 	a "go.chat/src/model/app"
 	"go.chat/src/utils"
+	h "go.chat/src/utils/http"
 )
 
 func ReadSession(
@@ -16,11 +17,11 @@ func ReadSession(
 	w http.ResponseWriter,
 	r *http.Request,
 ) (*a.User, error) {
-	log.Printf("--%s-> ReadSession TRACE IN\n", utils.GetReqId(r))
-	cookie, err := utils.GetSessionCookie(r)
-	log.Printf("--%s-> ReadSession TRACE session cookie[%v], err[%s]\n", utils.GetReqId(r), cookie, err)
+	log.Printf("--%s-> ReadSession TRACE IN\n", h.GetReqId(r))
+	cookie, err := h.GetSessionCookie(r)
+	log.Printf("--%s-> ReadSession TRACE session cookie[%v], err[%s]\n", h.GetReqId(r), cookie, err)
 	if err != nil {
-		utils.ClearSessionCookie(w)
+		h.ClearSessionCookie(w)
 		return nil, fmt.Errorf("failed to read session cookie, %s", err)
 	}
 	var user *a.User
@@ -31,10 +32,10 @@ func ReadSession(
 		defer wg.Done()
 		user, err = app.GetUser(cookie.UserId)
 		if user == nil {
-			utils.ClearSessionCookie(w)
+			h.ClearSessionCookie(w)
 			err = fmt.Errorf("failed to get user from cookie[%v]", cookie)
 		} else {
-			log.Printf("--%s-> ReadSession TRACE session user[%d][%s], err[%s]\n", utils.GetReqId(r),
+			log.Printf("--%s-> ReadSession TRACE session user[%d][%s], err[%s]\n", h.GetReqId(r),
 				user.Id, user.Name, err)
 		}
 	}()

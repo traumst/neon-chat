@@ -8,7 +8,7 @@ import (
 
 	"go.chat/src/db"
 	"go.chat/src/model/app"
-	"go.chat/src/utils"
+	h "go.chat/src/utils/http"
 )
 
 var ApplicationState AppState
@@ -46,7 +46,7 @@ func (state *AppState) LoadLocal() bool {
 func (state *AppState) ReplaceConn(w http.ResponseWriter, r http.Request, user *app.User) *Conn {
 	conn, err := state.GetConn(user.Id)
 	for err == nil && conn != nil {
-		log.Printf("∞---%s---> AppState.ReplaceConn WARN drop old conn to user[%d]\n", utils.GetReqId(&r), user.Id)
+		log.Printf("∞---%s---> AppState.ReplaceConn WARN drop old conn to user[%d]\n", h.GetReqId(&r), user.Id)
 		state.DropConn(conn)
 		conn, err = state.GetConn(user.Id)
 	}
@@ -59,12 +59,12 @@ func (state *AppState) addConn(w http.ResponseWriter, r http.Request, user *app.
 	defer state.mu.Unlock()
 
 	if state.userConn == nil {
-		log.Printf("----%s---> AppState.AddConn TRACE init UserConn\n", utils.GetReqId(&r))
+		log.Printf("----%s---> AppState.AddConn TRACE init UserConn\n", h.GetReqId(&r))
 		state.userConn = make(UserConn, 0)
 	}
 
-	log.Printf("----%s---> AppState.AddConn TRACE add conn for user[%d]\n", utils.GetReqId(&r), user.Id)
-	return state.userConn.Add(user, utils.GetReqId(&r), w, r)
+	log.Printf("----%s---> AppState.AddConn TRACE add conn for user[%d]\n", h.GetReqId(&r), user.Id)
+	return state.userConn.Add(user, h.GetReqId(&r), w, r)
 }
 
 func (state *AppState) GetConn(userId uint) (*Conn, error) {

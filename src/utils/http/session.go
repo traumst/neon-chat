@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chat/src/model/app"
+	"go.chat/src/utils"
 )
 
 type Session struct {
@@ -18,12 +19,12 @@ type Session struct {
 }
 
 func (s Session) String() string {
-	cookie := fmt.Sprintf("%d:%s:%s:%s", s.UserId, s.UserType, RandStringBytes(9), s.AuthType)
+	cookie := fmt.Sprintf("%d:%s:%s:%s", s.UserId, s.UserType, utils.RandStringBytes(9), s.AuthType)
 	return base64.StdEncoding.EncodeToString([]byte(cookie))
 }
 
 func GetSessionCookie(r *http.Request) (*Session, error) {
-	cookie, err := r.Cookie(SessionCookie)
+	cookie, err := r.Cookie(utils.SessionCookie)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +39,7 @@ func SetSessionCookie(w http.ResponseWriter, user *app.User, auth *app.UserAuth,
 		AuthType: auth.Type,
 	}
 	http.SetCookie(w, &http.Cookie{
-		Name:    SessionCookie,
+		Name:    utils.SessionCookie,
 		Value:   cookie.String(),
 		Expires: expiration,
 	})
@@ -46,7 +47,7 @@ func SetSessionCookie(w http.ResponseWriter, user *app.User, auth *app.UserAuth,
 
 func ClearSessionCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
-		Name:    SessionCookie,
+		Name:    utils.SessionCookie,
 		Value:   "",
 		Expires: time.Now(),
 	})

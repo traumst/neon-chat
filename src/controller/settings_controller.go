@@ -6,11 +6,11 @@ import (
 
 	"go.chat/src/handler"
 	t "go.chat/src/model/template"
-	"go.chat/src/utils"
+	h "go.chat/src/utils/http"
 )
 
 func OpenSettings(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	reqId := utils.GetReqId(r)
+	reqId := h.GetReqId(r)
 	log.Printf("--%s-> OpenSettings\n", reqId)
 	if r.Method != "GET" {
 		log.Printf("<-%s-- OpenSettings TRACE auth does not allow %s\n", reqId, r.Method)
@@ -19,7 +19,7 @@ func OpenSettings(app *handler.AppState, w http.ResponseWriter, r *http.Request)
 	}
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
-		log.Printf("--%s-> OpenSettings WARN user, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> OpenSettings WARN user, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("User is not authorized"))
 		return
@@ -40,7 +40,7 @@ func OpenSettings(app *handler.AppState, w http.ResponseWriter, r *http.Request)
 }
 
 func CloseSettings(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	reqId := utils.GetReqId(r)
+	reqId := h.GetReqId(r)
 	log.Printf("--%s-> CloseSettings\n", reqId)
 	if r.Method != "GET" {
 		log.Printf("<-%s-- CloseSettings TRACE auth does not allow %s\n", reqId, r.Method)
@@ -50,7 +50,7 @@ func CloseSettings(app *handler.AppState, w http.ResponseWriter, r *http.Request
 	}
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
-		log.Printf("--%s-> CloseSettings WARN user, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> CloseSettings WARN user, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("User is unauthorized"))
 		return
@@ -64,7 +64,7 @@ func CloseSettings(app *handler.AppState, w http.ResponseWriter, r *http.Request
 		html, err = welcome.HTML()
 	}
 	if err != nil {
-		log.Printf("--%s-> CloseSettings ERROR  %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> CloseSettings ERROR  %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to template response"))
 		return

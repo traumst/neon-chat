@@ -12,10 +12,11 @@ import (
 	"go.chat/src/model/event"
 	"go.chat/src/model/template"
 	"go.chat/src/utils"
+	h "go.chat/src/utils/http"
 )
 
 func OpenChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	reqId := utils.GetReqId(r)
+	reqId := h.GetReqId(r)
 	log.Printf("--%s-> OpenChat\n", reqId)
 	if r.Method != "GET" {
 		log.Printf("<-%s-- OpenChat TRACE auth does not allow %s\n", reqId, r.Method)
@@ -25,7 +26,7 @@ func OpenChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := handler.ReadSession(app, w, r)
 	if user == nil {
-		log.Printf("--%s-> OpenChat INFO user is not authorized, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> OpenChat INFO user is not authorized, %s\n", h.GetReqId(r), err)
 		RenderHome(app, w, r)
 		return
 	}
@@ -67,7 +68,7 @@ func OpenChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 }
 
 func AddChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	reqId := utils.GetReqId(r)
+	reqId := h.GetReqId(r)
 	log.Printf("--%s-> AddChat\n", reqId)
 	if r.Method != "POST" {
 		log.Printf("<-%s-- AddChat TRACE auth does not allow %s\n", reqId, r.Method)
@@ -77,7 +78,7 @@ func AddChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := handler.ReadSession(app, w, r)
 	if user == nil {
-		log.Printf("--%s-> AddChat INFO user is not authorized, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> AddChat INFO user is not authorized, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("user is not authorized"))
 		return
@@ -97,9 +98,8 @@ func AddChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	openChat, err := app.OpenChat(user.Id, chatId)
 	if err != nil {
 		log.Printf("<-%s-- AddChat ERROR chat, %s\n", reqId, err)
-		errMsg := fmt.Sprintf("ERROR: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(errMsg))
+		w.Write([]byte("failed to open new chat"))
 		return
 	}
 	log.Printf("--%s-> AddChat TRACE templating chat[%s][%d]\n", reqId, chatName, chatId)
@@ -131,7 +131,7 @@ func AddChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 }
 
 func CloseChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	reqId := utils.GetReqId(r)
+	reqId := h.GetReqId(r)
 	log.Printf("--%s-> CloseChat\n", reqId)
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -139,7 +139,7 @@ func CloseChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
-		log.Printf("--%s-> CloseChat WARN user, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> CloseChat WARN user, %s\n", h.GetReqId(r), err)
 		RenderHome(app, w, r)
 		return
 	}
@@ -173,7 +173,7 @@ func CloseChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	reqId := utils.GetReqId(r)
+	reqId := h.GetReqId(r)
 	log.Printf("--%s-> DeleteChat TRACE\n", reqId)
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -181,7 +181,7 @@ func DeleteChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
-		log.Printf("--%s-> DeleteChat WARN user, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> DeleteChat WARN user, %s\n", h.GetReqId(r), err)
 		RenderHome(app, w, r)
 		return
 	}
