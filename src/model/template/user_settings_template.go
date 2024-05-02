@@ -6,7 +6,8 @@ import (
 )
 
 type UserSettingsTemplate struct {
-	UserId uint
+	UserId     uint
+	ActiveUser string
 }
 
 func (h *UserSettingsTemplate) HTML() (string, error) {

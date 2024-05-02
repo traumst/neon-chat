@@ -25,7 +25,8 @@ func OpenSettings(app *handler.AppState, w http.ResponseWriter, r *http.Request)
 		return
 	}
 	settings := t.UserSettingsTemplate{
-		UserId: user.Id,
+		UserId:     user.Id,
+		ActiveUser: user.Name,
 	}
 	html, err := settings.HTML()
 	if err != nil {
@@ -70,4 +71,8 @@ func CloseSettings(app *handler.AppState, w http.ResponseWriter, r *http.Request
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
+}
+
+func ChangeAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+
 }

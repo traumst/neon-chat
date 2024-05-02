@@ -45,6 +45,13 @@ And the app should be available at http://localhost:8080
 - member_div is not the same as memberDiv on chat_div
 
 ### GUI
+- user settings page
+    1. change avatar
+    2. change name
+    3. change pass
+    3. add alternative auth
+    4. light/dark mode
+    5. mute list - per user - per chat
 - top controls
     1. local time now iso
     2. local session expiration iso
@@ -53,16 +60,27 @@ And the app should be available at http://localhost:8080
     1. status 🟢🟡🔴
     2. light/dark mode switch
     3. mute user
-- user settings page
-    1. rename
-    2. avatar?
-    3. alternative auth options
-    4. light/dark mode
-    5. mute list - per user - per chat
+
+### Extend functionality
+- @users in chat
+- @messages in chat
+- messages in chat
+- *web call*
 
 ### Moderation
 - Add ability for users to mute/report other users
 - Add ability to ban users from chat
+
+### User Authentication
+- middleware auth
+- provide authType as form input
+- email auth
+- google auth
+- *2FA / MFA*
+
+### Persistence
+- message store
+- cache instead of map
 
 ### User Notifications
 - setting on/off
@@ -84,16 +102,6 @@ And the app should be available at http://localhost:8080
 - search messages by:
     1. content
     2. author
-
-### User Authentication
-- provide authType as form input
-- middleware auth
-- email verification
-- 2FA
-
-### Persistence
-- message store
-- cache instead of map
 
 ### Message Broadcasting: 
 - track user deltas: chats, messages

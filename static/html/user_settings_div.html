@@ -1,12 +1,84 @@
-<div class="default-transition flex flex-col">
+<div class="default-transition flex flex-col h-full m-7 p-2 gap-y-4 shadow">
     <div id="closeSettingButton" 
         title="close settings" 
         hx-get="/settings/close" 
         hx-trigger="click" 
         hx-target=".open-chat" 
         hx-swap="innerHTML" 
-        class="flex justify-end">
-        <sub title="close settings">[close]</sub>
+        class="flex justify-end shadow">
+        <sub title="close settings" class="hover:text-red-700">[close]</sub>
     </div>
-    <div>I'm a teapot</div>
+    <!-- additional user settings to consider
+            1. alternative auth options
+            2. light/dark mode
+            3. mute list - per user - per chat
+     -->
+    <div id="user-settings" class="flex flex-col gap-y-4 
+        shadow-md shadow-zinc-700">
+        <div id="user-setting-avatar" class="flex flex-row hover:fill-amber-700">
+            <!-- TODO avatar placeholder -->
+            <img class="w-[2em] h-[2em]" src="icon/scarab-bnw.svg">
+            <sub class="hover:text-amber-700">[edit]</sub>
+        </div>
+
+        <div id="user-setting-name" class="flex flex-row">
+            <div>
+                Username:&nbsp;
+            </div>
+            <div id="user-current-name" onclick="showNameEdit()">
+                {{ .ActiveUser }}
+                <sub class="hover:text-amber-700">[edit]</sub>
+            </div>
+            <form id="user-updated-name" class="default-transition hidden">
+                <input type="text" name="newName" autocomplete="new-username" 
+                    onfocusout="hideNameEdit()" onkeydown="handleKeyDown(event)"
+                    class="bg-gradient-to-br from-green-800 to-indigo-800
+                    text-gray-400
+                    shadow shadow-green-700
+                    hover:shadow-lg hover:shadow-zinc-500">
+            </form>
+            <script>
+                // this makes edit username switch between desplay and edit
+                function showNameEdit() {
+                    const name = document.querySelector('#user-current-name');
+                    name.classList.add('hidden');
+                    const newName = document.querySelector('#user-updated-name');
+                    newName.classList.remove('hidden');
+                    newName.querySelector('input').focus();
+                }
+                function hideNameEdit() {
+                    const name = document.querySelector('#user-current-name');
+                    name.classList.remove('hidden');
+                    const newName = document.querySelector('#user-updated-name');
+                    newName.classList.add('hidden');
+                }
+            </script>
+        </div>
+
+        <!-- TODO only submit if confirm matches -->
+        <form id="user-setting-pass" class="flex flex-col gap-y-4">
+            <input type="text" name="username" style="display: none;" autocomplete="username">
+            <div class="flex flex-row justify-between">
+                <label for="newPass">new password</label>
+                <input name="newPass" type="password" autocomplete="password"
+                    onkeydown="handleKeyDown(event)"
+                    class="bg-gradient-to-br from-green-800 to-indigo-800
+                    text-gray-400
+                    shadow shadow-green-700
+                    hover:shadow-lg hover:shadow-zinc-500">
+            </div>
+            <div class="flex flex-row justify-between">
+                <label for="newPassConf">confirm password</label>
+                <input name="newPassConf" type="password" autocomplete="password"
+                    onkeydown="handleKeyDown(event)"
+                    class="bg-gradient-to-br from-green-800 to-indigo-800
+                        text-gray-400
+                        shadow shadow-green-700
+                        hover:shadow-lg hover:shadow-zinc-500">
+            </div>
+        </form>
+    </div>
+    <div class="flex mt-auto">
+        last changed [prop] [val] [timestamp]
+    </div>
 </div>

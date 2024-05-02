@@ -104,6 +104,13 @@
         shadow-md
         overflow-hidden">
     <script>
+        function handleKeyDown(event) {
+            console.log("handleKeyDown", event.target)
+            if (event.key === 'Escape') {
+                console.log("handleKeyDown ESCAPE", event.target)
+                event.target.blur();
+            }
+        }
         document.body.addEventListener('htmx:beforeOnLoad', function(event) {
             if (event.detail.xhr.status >= 400) {
                 alert(`Action failed ${event.detail.xhr.status} ${event.detail.xhr.responseText}`)
