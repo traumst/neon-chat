@@ -29,27 +29,84 @@
         p-2
         shadow"
     >
-        <div id="actveUserName">
-            {{ .ActiveUser }}   
-        </div>
-        <div title="log out {{ .ActiveUser }}"
+        {{ .ActiveUser }}&nbsp;
+        <sub title="log out {{ .ActiveUser }}"
             hx-post="/logout" 
             hx-trigger="submit" 
             hx-target="body"
-            class="other-info flex hover:text-red-700"
+            class="other-info flex hover:text-amber-700"
         >
-            <sub>[logout]</sub>
-        </div>
-        <div id="openSettingButton" 
+            [logout]
+        </sub>
+        <sub id="openSettingButton" 
             title="open settings" 
-            hx-get="/settings" 
             hx-trigger="click" 
+            hx-get="/settings" 
             hx-target=".open-chat" 
             hx-swap="innerHTML"
             class="other-info flex hover:text-green-700"
         >
-            <sub>[settings]</sub>
-        </div>
+            [settings]
+        </sub>
+        {{ with .OpenTemplate }}
+        <!-- edge cases for: 
+            1. start-in-chat =>
+                close-chat => 
+                open-settings => 
+                close-settings => 
+                opens closed chat 
+            2. start-with-welcome =>
+                create/open-chat => 
+                open-settings =>
+                close-settings => 
+                opens welcome page
+        -->
+        <sub id="closeSettingButton" 
+            title="close settings" 
+            hx-trigger="click" 
+            hx-get="/chat/{{.OpenTemplate.ChatId}}" 
+            hx-target=".open-chat" 
+            hx-swap="innerHTML"
+            class="other-info hidden hover:text-amber-700"
+        >
+            [settings]
+        </sub>
+        {{ else }}
+        <sub id="closeSettingButton" 
+            title="close settings" 
+            hx-trigger="click" 
+            hx-get="/chat/welcome" 
+            hx-target=".open-chat" 
+            hx-swap="innerHTML"
+            class="other-info hidden hover:text-amber-700"
+        >
+            [settings]
+        </sub>
+        {{ end }}
+            
+        <script>
+            // store state to know whether to show settings or page reload
+            document.getElementById('openSettingButton').addEventListener('click', (event) => {
+                document.getElementById('openSettingButton').classList.remove('flex')
+                document.getElementById('openSettingButton').classList.add('hidden')
+                sessionStorage.setItem("settingsPanelOpen", "true");
+                document.getElementById('closeSettingButton').classList.remove('hidden')
+                document.getElementById('closeSettingButton').classList.add('flex')
+                sessionStorage.setItem("settingsPanelClose", "false");
+                console.log("settingsPanelClose", sessionStorage.getItem("settingsPanelClose"))
+                console.log("settingsPanelOpen", sessionStorage.getItem("settingsPanelOpen"))
+            });
+            document.getElementById('closeSettingButton').addEventListener('click', (event) => {
+                document.getElementById('openSettingButton').classList.remove('hidden')
+                document.getElementById('openSettingButton').classList.add('flex')
+                sessionStorage.setItem("settingsPanelOpen", "false");
+                document.getElementById('closeSettingButton').classList.remove('flex')
+                document.getElementById('closeSettingButton').classList.add('hidden')
+                sessionStorage.setItem("settingsPanelClose", "true");
+                console.log("settingsPanelClose", sessionStorage.getItem("settingsPanelClose"))
+                console.log("settingsPanelOpen", sessionStorage.getItem("settingsPanelOpen"))
+            });
+        </script>
     </div>
 
     <div class="add-chat 

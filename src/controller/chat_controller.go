@@ -15,6 +15,27 @@ import (
 	h "go.chat/src/utils/http"
 )
 
+func Welcome(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+	reqId := h.GetReqId(r)
+	log.Printf("<-%s-- OpenChat TRACE returning template\n", reqId)
+	user, err := handler.ReadSession(app, w, r)
+	var welcome template.WelcomeTemplate
+	if user == nil {
+		log.Printf("--%s-> OpenChat INFO user is not authorized, %s\n", h.GetReqId(r), err)
+		welcome = template.WelcomeTemplate{ActiveUser: ""}
+	} else {
+		log.Printf("--%s-> OpenChat INFO user is not authorized, %s\n", h.GetReqId(r), err)
+		welcome = template.WelcomeTemplate{ActiveUser: user.Name}
+	}
+	html, err := welcome.HTML()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("failed to template html, %s", err.Error())))
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(html))
+}
+
 func OpenChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("--%s-> OpenChat\n", reqId)
@@ -34,9 +55,8 @@ func OpenChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> OpenChat, %s\n", reqId, path[2])
 	chatId, err := strconv.Atoi(path[2])
 	if err != nil {
-		log.Printf("<-%s-- OpenChat ERROR id, %s\n", reqId, err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf("Invalid chat id %s", path[2])))
+		log.Printf("<-%s-- OpenChat INFO invalid chat-id, %s\n", reqId, err)
+		Welcome(app, w, r)
 		return
 	}
 	if chatId < 0 {

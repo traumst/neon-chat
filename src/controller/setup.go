@@ -76,6 +76,10 @@ func handleMsgs(app *handler.AppState, allMiddleware []Middleware) {
 }
 
 func handleChat(app *handler.AppState, allMiddleware []Middleware) {
+	http.Handle("/chat/welcome", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			Welcome(app, w, r)
+		}), allMiddleware))
 	http.Handle("/chat/delete", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			DeleteChat(app, w, r)

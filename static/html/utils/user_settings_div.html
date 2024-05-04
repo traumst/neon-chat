@@ -1,19 +1,36 @@
-<div class="default-transition h-full flex flex-col p-2 mb-4 gap-y-8 shadow">
-    <div id="closeSettingButton" 
-        title="close settings" 
-        hx-get="/settings/close" 
-        hx-trigger="click" 
-        hx-target=".open-chat" 
-        hx-swap="innerHTML" 
-        class="flex justify-end shadow">
-        <sub title="close settings" class="hover:text-red-700">[close]</sub>
+<div class="default-transition 
+    h-full flex flex-col 
+    p-2 pb-4">
+    <div class="flex justify-end p-2 shadow">
+        Settings&nbsp;
+        <div id="closeSettingButton" 
+            title="close settings" 
+            hx-get="/settings/close" 
+            hx-trigger="click" 
+            hx-target=".open-chat" 
+            hx-swap="innerHTML" 
+            class="hover:text-amber-700">[close]</div>
+    </div>
+
+    <div class="flex flex-row justify-start p-2 gap-x-1 shadow">
+        <div>
+            last changed
+        </div>
+        <div>
+            [prop]
+        </div>
+        <div>
+            [timestamp]
+        </div>
     </div>
     <!-- additional user settings to consider
             1. alternative auth options
             2. light/dark mode
             3. mute list - per user - per chat
      -->
-    <div id="user-settings" class="flex flex-col shadow-md shadow-zinc-700">
+    <div id="user-settings" class="flex flex-col
+        p-2
+        shadow shadow-zinc-700">
         <div id="user-setting-name" 
             class="flex flex-row justify-between 
                 shadow-lg">
@@ -78,34 +95,5 @@
                 </div>
             </form>
         </div>
-
-        <!-- TODO only submit if confirm matches -->
-        <div aria-disabled="true" id="user-change-auth" class="flex flex-col space-x-4 space-y-4 shadow-lg">
-            <div class="flex flex-col">Change password</label>
-            <form class="flex flex-col p-2">
-                <input type="text" name="username" style="display: none;" autocomplete="username">
-                <div class="flex flex-row justify-between p-2">
-                    <label for="newPass">new password</label>
-                    <input name="newPass" type="password" autocomplete="password"
-                        onkeydown="escFocus(event)"
-                        class="bg-gradient-to-br from-green-800 to-indigo-800
-                            text-gray-400
-                            shadow shadow-green-700
-                            hover:shadow-lg hover:shadow-zinc-500">
-                </div>
-                <div class="flex flex-row justify-between p-2">
-                    <label for="newPassConf">confirm password</label>
-                    <input name="newPassConf" type="password" autocomplete="password"
-                        onkeydown="escFocus(event)"
-                        class="bg-gradient-to-br from-green-800 to-indigo-800
-                            text-gray-400
-                            shadow shadow-green-700
-                            hover:shadow-lg hover:shadow-zinc-500">
-                </div>
-            </form>
-        </div>
-    </div>
-    <div class="flex mt-auto mb-0">
-        last changed [prop] [val] [timestamp]
     </div>
 </div>
