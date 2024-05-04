@@ -5,16 +5,16 @@
     class="chat-message-li default-transition
         flex flex-row justify-between
         p-2
-        m-4
+        m-2
         h-fit
         gap-1
         shadow
         {{ if eq .Author .ActiveUser }}
-            ml-20
+            ml-[17%]
             border-b-4 border-green-700 rounded-lg
             shadow shadow-green-800
         {{ else }}
-            mr-20
+            mr-[17%]
             border-b-4 border-indigo-700 rounded-lg
             shadow shadow-green-800
         {{ end }}
