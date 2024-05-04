@@ -2,8 +2,7 @@
     hx-swap="outerHTML" 
     class="default-transition 
         h-full flex flex-col
-        p-2 pb-4 
-        gap-y-2"
+        p-2 pb-4"
 >
     <div class="chat-header flex flex-row justify-end">
         <div class="open-chat-name flex font-bold">
@@ -22,7 +21,7 @@
                 <input type="hidden" name="chatid" value="{{ .ChatId }}">
                 <div hx-trigger="click" 
                     hx-action="chat-delete-{{ .ChatId }}.submit()"
-                    class="chat-header-delete hover:text-red-700"
+                    class="chat-header-delete hover:text-amber-700"
                 >
                     <sub title="delete chat">[delete]</sub>
                 </div>
@@ -39,7 +38,7 @@
                 <input type="hidden" name="chatid" value="{{ .ChatId }}">
                 <div hx-trigger="click" 
                     hx-action="chat-close-{{ .ChatId }}.submit()"
-                    class="chat-header-close hover:text-red-700">
+                    class="chat-header-close hover:text-amber-700">
                     <sub title="close chat">[close]</sub>
                 </div>
             </form>
@@ -191,7 +190,7 @@
             >
                 <input type="hidden" name="chatid" value="{{ $top.ChatId }}">
                 <input type="hidden" name="userid" value="{{ $user.Id }}">
-                <button type="submit" class="member-delete-button hover:text-red-700">
+                <button type="submit" class="member-delete-button hover:text-amber-700">
                     [{{ $user.Name }}]
                 </button>
             </form>
