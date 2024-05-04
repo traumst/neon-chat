@@ -20,12 +20,16 @@ func (h *HomeTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
 	homeTmpl := template.Must(template.ParseFiles(
 		"static/html/home_page.html",
-		"static/html/welcome_div.html",
-		"static/html/user_settings_div.html",
+		// left panel
+		"static/html/left_panel.html",
+		"static/html/utils/user_settings_div.html",
 		"static/html/nav/login_div.html",
 		"static/html/nav/chat_li.html",
+		// right panel
+		"static/html/welcome_div.html",
 		"static/html/chat/chat_div.html",
-		"static/html/chat/message_li.html"))
+		"static/html/chat/message_li.html",
+	))
 	err := homeTmpl.Execute(&buf, h)
 	if err != nil {
 		return "", err

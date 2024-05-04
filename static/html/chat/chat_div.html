@@ -1,7 +1,9 @@
-<div id="open-chat-{{ .ChatId }}"
-    sse-swap="{{ .ChatCloseEvent }}"
+<div sse-swap="{{ .ChatCloseEvent }}"
     hx-swap="outerHTML" 
-    class="default-transition flex flex-col p-2 pb-4 gap-y-2"
+    class="default-transition 
+        h-full flex flex-col
+        p-2 pb-4 
+        gap-y-2"
 >
     <div class="chat-header flex flex-row justify-end">
         <div class="open-chat-name flex font-bold">
@@ -30,7 +32,7 @@
                 title="close chat {{ .Name }}"
                 hx-post="/chat/close" 
                 hx-trigger="click" 
-                hx-target="#open-chat-{{ .ChatId }}"
+                hx-target=".open-chat"
                 hx-swap="innerHTML" 
                 hx-include="#chat-close-{{ .ChatId }}"
             >
@@ -82,25 +84,6 @@
             </script>
         {{ end }}
     </div>
-    <style>
-        .chat-content::-webkit-scrollbar {
-            width: .37rem;
-        }
-        .chat-content::-webkit-scrollbar-track {
-            background: #4338ca;
-            border-width: 2px;
-            border-color: #3f3f46;
-            border-radius: 4px;
-            box-shadow: #3f3f46;
-        }
-        .chat-content::-webkit-scrollbar-thumb {
-            background: #166534;
-            border-width: 3px;
-            border-color: #3f3f46;
-            border-radius: 8px;
-            box-shadow: #3f3f46;
-        }
-    </style>
     <div class="chat-content flex flex-col p-2 grow overflow-y-auto">
         {{ template "messageHistoryList" . }}
     </div>
@@ -130,7 +113,7 @@
         const lastElement = parent.children[parent.children.length-1];
         lastElement?.scrollIntoView({
             behavior: 'smooth',
-            block: 'start'
+            block: 'end'
         });
     }
     messageListObserver = null;

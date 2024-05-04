@@ -13,7 +13,7 @@ type UserSettingsTemplate struct {
 func (h *UserSettingsTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
 	tmpl := template.Must(template.ParseFiles(
-		"static/html/user_settings_div.html"))
+		"static/html/utils/user_settings_div.html"))
 	err := tmpl.Execute(&buf, h)
 	if err != nil {
 		return "", err

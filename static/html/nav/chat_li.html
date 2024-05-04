@@ -4,9 +4,9 @@
     hx-target="#chat-head-{{ .ChatId }}" 
     hx-swap="innerHTML"
     class="chat-header default-transition
-        flex flex-row h-7 justify-between
+        h-7 flex flex-row justify-between
         items-center
-        px-2
+        px-2 py-5
         shadow-md shadow-indigo-800
         {{ if eq .Owner.Id .User.Id }}
         border-b-2 border-blue-700 rounded-xl

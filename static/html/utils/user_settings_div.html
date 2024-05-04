@@ -29,7 +29,7 @@
             </div>
             <form id="user-updated-name" class="default-transition hidden">
                 Username:&nbsp;<input type="text" name="newName" autocomplete="new-username" 
-                    onfocusout="hideNameEdit()" onkeydown="handleKeyDown(event)"
+                    onfocusout="hideNameEdit()" onkeydown="escFocus(event)"
                     class="bg-gradient-to-br from-green-800 to-indigo-800
                         text-gray-400
                         shadow shadow-green-700
@@ -61,7 +61,7 @@
                 <div class="flex flex-row justify-between p-2">
                     <label for="newPass">new password</label>
                     <input name="newPass" type="password" autocomplete="password"
-                        onkeydown="handleKeyDown(event)"
+                        onkeydown="escFocus(event)"
                         class="bg-gradient-to-br from-green-800 to-indigo-800
                             text-gray-400
                             shadow shadow-green-700
@@ -70,7 +70,7 @@
                 <div class="flex flex-row justify-between p-2">
                     <label for="newPassConf">confirm password</label>
                     <input name="newPassConf" type="password" autocomplete="password"
-                        onkeydown="handleKeyDown(event)"
+                        onkeydown="escFocus(event)"
                         class="bg-gradient-to-br from-green-800 to-indigo-800
                             text-gray-400
                             shadow shadow-green-700
@@ -87,7 +87,7 @@
                 <div class="flex flex-row justify-between p-2">
                     <label for="newPass">new password</label>
                     <input name="newPass" type="password" autocomplete="password"
-                        onkeydown="handleKeyDown(event)"
+                        onkeydown="escFocus(event)"
                         class="bg-gradient-to-br from-green-800 to-indigo-800
                             text-gray-400
                             shadow shadow-green-700
@@ -96,7 +96,7 @@
                 <div class="flex flex-row justify-between p-2">
                     <label for="newPassConf">confirm password</label>
                     <input name="newPassConf" type="password" autocomplete="password"
-                        onkeydown="handleKeyDown(event)"
+                        onkeydown="escFocus(event)"
                         class="bg-gradient-to-br from-green-800 to-indigo-800
                             text-gray-400
                             shadow shadow-green-700
