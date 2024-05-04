@@ -27,7 +27,8 @@
     <div class="active-user default-transition
         flex flex-row justify-end
         p-2
-        shadow">
+        shadow"
+    >
         <div id="actveUserName">
             {{ .ActiveUser }}   
         </div>
@@ -51,7 +52,11 @@
         </div>
     </div>
 
-    <div class="add-chat flex w-full p-2">
+    <div class="add-chat 
+        flex w-full 
+        p-2
+        shadow"
+    >
         <form id="add-chat-form"
             hx-post="/chat" 
             hx-trigger="submit" 
@@ -80,6 +85,9 @@
 
     <div class="chat-list default-transition 
         flex flex-col
+        p-2
+        mb-1
+        shadow
         overflow-x-hidden
         overflow-y-auto"
     >
