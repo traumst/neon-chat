@@ -25,7 +25,7 @@ func chatCreate(conn *Conn, targetChat *app.Chat, author *app.User) error {
 		return err
 	}
 	conn.In <- event.LiveUpdate{
-		Event:    event.ChatCreated,
+		Event:    event.ChatAdd,
 		ChatId:   targetChat.Id,
 		UserId:   author.Id,
 		MsgId:    -1,
@@ -111,7 +111,7 @@ func chatDelete(conn *Conn, chatId int, ownerId uint, authorId uint, targetId ui
 		return fmt.Errorf("chatDelete conn[%s] does not belong to user[%d]", conn.Origin, targetId)
 	}
 	conn.In <- event.LiveUpdate{
-		Event:    event.ChatDeleted,
+		Event:    event.ChatDrop,
 		ChatId:   chatId,
 		UserId:   targetId,
 		MsgId:    -1,

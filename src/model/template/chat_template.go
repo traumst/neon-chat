@@ -6,13 +6,14 @@ import (
 )
 
 type ChatTemplate struct {
-	ChatId          int
-	Name            string
-	User            UserTemplate
-	Viewer          UserTemplate
-	Owner           UserTemplate
-	Users           []UserTemplate
-	Messages        []MessageTemplate
+	ChatId   int
+	Name     string
+	User     UserTemplate
+	Viewer   UserTemplate
+	Owner    UserTemplate
+	Users    []UserTemplate
+	Messages []MessageTemplate
+	//UserChangeEvent string
 	ChatDropEvent   string
 	ChatCloseEvent  string
 	ChatExpelEvent  string

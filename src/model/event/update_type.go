@@ -5,16 +5,16 @@ import "fmt"
 type UpdateType string
 
 const (
-	Ping           UpdateType = "ping"
-	UserChanged    UpdateType = "user-changed"
-	ChatCreated    UpdateType = "chat-add"
-	ChatDeleted    UpdateType = "chat-drop"
-	ChatClose      UpdateType = "chat-close"
-	ChatInvite     UpdateType = "chat-invite"
-	ChatExpel      UpdateType = "chat-expel"
-	ChatLeave      UpdateType = "chat-leave"
-	MessageAdded   UpdateType = "msg-add"
-	MessageDeleted UpdateType = "msg-drop"
+	Ping        UpdateType = "ping"
+	UserChange  UpdateType = "user-changed"
+	ChatAdd     UpdateType = "chat-add"
+	ChatDrop    UpdateType = "chat-drop"
+	ChatClose   UpdateType = "chat-close"
+	ChatInvite  UpdateType = "chat-invite"
+	ChatExpel   UpdateType = "chat-expel"
+	ChatLeave   UpdateType = "chat-leave"
+	MessageAdd  UpdateType = "msg-add"
+	MessageDrop UpdateType = "msg-drop"
 )
 
 func (e UpdateType) FormatEventName(
@@ -23,22 +23,22 @@ func (e UpdateType) FormatEventName(
 	msgId int,
 ) string {
 	switch e {
-	case UserChanged:
-		return fmt.Sprintf("%s-%d", UserChanged, userId)
-	case ChatCreated:
-		return string(ChatCreated)
+	case UserChange:
+		return fmt.Sprintf("%s-%d", UserChange, userId)
+	case ChatAdd:
+		return string(ChatAdd)
 	case ChatExpel:
 		return fmt.Sprintf("%s-%d-user-%d", ChatExpel, chatId, userId)
 	case ChatLeave:
 		return fmt.Sprintf("%s-%d-user-%d", ChatLeave, chatId, userId)
-	case ChatDeleted:
-		return fmt.Sprintf("%s-%d", ChatDeleted, chatId)
+	case ChatDrop:
+		return fmt.Sprintf("%s-%d", ChatDrop, chatId)
 	case ChatClose:
 		return fmt.Sprintf("%s-%d", ChatClose, chatId)
-	case MessageAdded:
-		return fmt.Sprintf("%s-chat-%d", MessageAdded, chatId)
-	case MessageDeleted:
-		return fmt.Sprintf("%s-chat-%d-msg-%d", MessageDeleted, chatId, msgId)
+	case MessageAdd:
+		return fmt.Sprintf("%s-chat-%d", MessageAdd, chatId)
+	case MessageDrop:
+		return fmt.Sprintf("%s-chat-%d-msg-%d", MessageDrop, chatId, msgId)
 	default:
 		panic(fmt.Sprintf("unknown event type[%v]", e))
 	}

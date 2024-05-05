@@ -21,6 +21,6 @@ func (m *Message) Template(viewer *User) *template.MessageTemplate {
 		Author:           m.Author.Name,
 		Text:             m.Text,
 		ActiveUser:       viewer.Name,
-		MessageDropEvent: event.MessageDeleted.FormatEventName(m.ChatId, m.Author.Id, m.Id),
+		MessageDropEvent: event.MessageDrop.FormatEventName(m.ChatId, m.Author.Id, m.Id),
 	}
 }

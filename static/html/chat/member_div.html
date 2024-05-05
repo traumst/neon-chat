@@ -1,23 +1,23 @@
 <div class="member default-transition" 
-    id="chat-drop-{{ .ChatId }}-user-{{ .User.Id }}"
+    id="chat-drop-{{ .ChatId }}-user-{{ .UserId }}"
     sse-swap="{{ .ChatExpelEvent }},{{ .ChatLeaveEvent }}"
-    hx-target="#chat-drop-{{ .ChatId }}-user-{{ .User.Id }}"
+    hx-target="#chat-drop-{{ .ChatId }}-user-{{ .UserId }}"
     hx-swap="innerHTML"
 >
-    <form id="member-delete-{{ .ChatId }}-user-{{ .User.Id }}"
+    <form id="member-delete-{{ .ChatId }}-user-{{ .UserId }}"
         hx-post="/user/expel" 
         hx-trigger="click" 
-        hx-target="#chat-drop-{{ .ChatId }}-user-{{ .User.Id }}"
+        hx-target="#chat-drop-{{ .ChatId }}-user-{{ .UserId }}"
         hx-swap="innerHTML" 
-        hx-include="#member-delete-{{ .ChatId }}-user-{{ .User.Id }}"
+        hx-include="#member-delete-{{ .ChatId }}-user-{{ .UserId }}"
     >
         <input type="hidden" name="chatid" value="{{ .ChatId }}">
-        <input type="hidden" name="userid" value="{{ .User.Id }}">
+        <input type="hidden" name="userid" value="{{ .UserId }}">
         <div class="member-delete-button" 
             hx-trigger="click" 
-            hx-action="member-delete-{{ .ChatId }}-user-{{ .User.Id }}.submit()"
+            hx-action="member-delete-{{ .ChatId }}-user-{{ .UserId }}.submit()"
         >
-            [{{.User.Name}}]
+            [{{.UserName}}]
         </div>
     </form>
 </div>

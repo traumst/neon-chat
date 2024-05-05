@@ -148,10 +148,10 @@ func (c *Chat) Template(user *User) *t.ChatTemplate {
 		Owner:           ownr,
 		Users:           users,
 		Messages:        messages,
-		ChatDropEvent:   e.ChatDeleted.FormatEventName(c.Id, user.Id, -1),
+		ChatDropEvent:   e.ChatDrop.FormatEventName(c.Id, user.Id, -1),
 		ChatCloseEvent:  e.ChatClose.FormatEventName(c.Id, user.Id, -2),
 		ChatExpelEvent:  e.ChatExpel.FormatEventName(c.Id, user.Id, -4),
 		ChatLeaveEvent:  e.ChatLeave.FormatEventName(c.Id, user.Id, -4),
-		MessageAddEvent: e.MessageAdded.FormatEventName(c.Id, user.Id, -3),
+		MessageAddEvent: e.MessageAdd.FormatEventName(c.Id, user.Id, -3),
 	}
 }

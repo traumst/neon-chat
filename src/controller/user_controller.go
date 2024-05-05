@@ -155,7 +155,7 @@ func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 			log.Printf("<-%s-- ExpelUser ERROR cannot distribute chat close, %s\n", reqId, err)
 			return
 		}
-		err = handler.DistributeChat(app, chat, user, expelled, expelled, event.ChatDeleted)
+		err = handler.DistributeChat(app, chat, user, expelled, expelled, event.ChatDrop)
 		if err != nil {
 			log.Printf("<-%s-- ExpelUser ERROR cannot distribute chat deleted, %s\n", reqId, err)
 			return
@@ -236,7 +236,7 @@ func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Printf("--%s-- LeaveChat TRACE distributed chat close", reqId)
-		err = handler.DistributeChat(app, chat, user, user, user, event.ChatDeleted)
+		err = handler.DistributeChat(app, chat, user, user, user, event.ChatDrop)
 		if err != nil {
 			log.Printf("<-%s-- LeaveChat ERROR cannot distribute chat deleted, %s\n", reqId, err)
 			return
@@ -290,7 +290,7 @@ func ChangeUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("user update failed"))
 		return
 	}
-	err = handler.DistributeUserChange(app, user, event.UserChanged)
+	err = handler.DistributeUserChange(app, user, event.UserChange)
 	if err != nil {
 		log.Printf("<-%s-- ChangeUser ERROR failed to distribute user change, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusOK)

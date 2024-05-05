@@ -139,12 +139,12 @@ func (conn *Conn) trySend(up event.LiveUpdate) error {
 		return fmt.Errorf("trySend ERROR writer is nil")
 	}
 	switch up.Event {
-	case event.UserChanged:
+	case event.UserChange:
 		err := flushEvent(&w, up.Event, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to delete chat to user[%d], %s", up.UserId, err)
 		}
-	case event.ChatCreated, event.ChatInvite:
+	case event.ChatAdd, event.ChatInvite:
 		err := flushEvent(&w, up.Event, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to send to user[%d], %s", up.UserId, err)
@@ -164,17 +164,17 @@ func (conn *Conn) trySend(up event.LiveUpdate) error {
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to close chat to user[%d], %s", up.UserId, err)
 		}
-	case event.ChatDeleted:
+	case event.ChatDrop:
 		err := flushEvent(&w, up.Event, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to delete chat to user[%d], %s", up.UserId, err)
 		}
-	case event.MessageAdded:
+	case event.MessageAdd:
 		err := flushEvent(&w, up.Event, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to add message to user[%d], %s", up.UserId, err)
 		}
-	case event.MessageDeleted:
+	case event.MessageDrop:
 		err := flushEvent(&w, up.Event, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to delete message to user[%d], %s", up.UserId, err)
@@ -186,9 +186,6 @@ func (conn *Conn) trySend(up event.LiveUpdate) error {
 }
 
 func flushEvent(w *http.ResponseWriter, evnt event.UpdateType, up event.LiveUpdate) error {
-	if up.ChatId < 0 {
-		panic("ChatId should not be empty")
-	}
 	if up.UserId == 0 {
 		panic("UserId should not be empty")
 	}

@@ -128,7 +128,7 @@ func AddChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		err = handler.DistributeChat(app, openChat, user, user, user, event.ChatCreated)
+		err = handler.DistributeChat(app, openChat, user, user, user, event.ChatAdd)
 		if err != nil {
 			log.Printf("<-%s-- AddChat ERROR cannot distribute chat header, %s\n", reqId, err)
 		}
@@ -242,7 +242,7 @@ func DeleteChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Printf("<-%s-- DeleteChat TRACE distributes user[%d] deletes chat[%d]\n", reqId, user.Id, chat.Id)
-		err = handler.DistributeChat(app, chat, user, nil, user, event.ChatDeleted)
+		err = handler.DistributeChat(app, chat, user, nil, user, event.ChatDrop)
 		if err != nil {
 			log.Printf("<-%s-- DeleteChat ERROR cannot distribute chat deleted, %s\n", reqId, err)
 			return

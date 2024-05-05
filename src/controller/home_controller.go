@@ -80,7 +80,7 @@ func homePage(app *handler.AppState, w http.ResponseWriter, r *http.Request, use
 		ActiveUser:     user.Name,
 		LoadLocal:      app.LoadLocal(),
 		IsAuthorized:   true,
-		ChatAddEvent:   event.ChatCreated.FormatEventName(openChatId, user.Id, -5),
+		ChatAddEvent:   event.ChatAdd.FormatEventName(openChatId, user.Id, -5),
 		ChatCloseEvent: event.ChatClose.FormatEventName(openChatId, user.Id, -6),
 	}
 	html, err := home.HTML()

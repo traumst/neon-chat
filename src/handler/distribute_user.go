@@ -49,14 +49,14 @@ func distributeUpdateOfUser(
 		return fmt.Errorf("user[%d] does not own conn[%v], user[%d] does", targetUser.Id, conn.Origin, conn.User.Id)
 	}
 	switch updateType {
-	case event.UserChanged:
-		return userChanged(conn, subjectUser)
+	case event.UserChange:
+		return userNameChanged(conn, subjectUser)
 	default:
 		return fmt.Errorf("unknown event type[%v]", updateType)
 	}
 }
 
-func userChanged(conn *Conn, subject *app.User) error {
+func userNameChanged(conn *Conn, subject *app.User) error {
 	if subject == nil {
 		return fmt.Errorf("subjectUser is nil for userChanged")
 	}
@@ -64,7 +64,7 @@ func userChanged(conn *Conn, subject *app.User) error {
 	_ = subject.Template()
 	data := "TODO-USER-CHANGED"
 	conn.In <- event.LiveUpdate{
-		Event:    event.UserChanged,
+		Event:    event.UserChange,
 		ChatId:   -2,
 		UserId:   subject.Id,
 		MsgId:    -3,

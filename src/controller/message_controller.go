@@ -74,7 +74,7 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = handler.DistributeMsg(app, chat, author.Id, message, event.MessageAdded)
+	err = handler.DistributeMsg(app, chat, author.Id, message, event.MessageAdd)
 	if err != nil {
 		log.Printf("<-%s-- AddMessage ERROR distribute message, %s\n", h.GetReqId(r), err)
 	}
@@ -137,7 +137,7 @@ func DeleteMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = handler.DistributeMsg(app, chat, author.Id, msg, event.MessageDeleted)
+	err = handler.DistributeMsg(app, chat, author.Id, msg, event.MessageDrop)
 	if err != nil {
 		log.Printf("<-%s-- DeleteMessage ERROR distribute message, %s\n", reqId, err)
 	}

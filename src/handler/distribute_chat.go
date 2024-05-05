@@ -108,13 +108,13 @@ func distributeChatToUser(
 	}
 
 	switch updateType {
-	case event.ChatCreated:
+	case event.ChatAdd:
 		return chatCreate(conn, targetChat, author)
 
 	case event.ChatInvite:
 		return chatInvite(conn, targetChat, author.Id, subjectUser)
 
-	case event.ChatDeleted:
+	case event.ChatDrop:
 		return chatDelete(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser.Id)
 
 	case event.ChatExpel:

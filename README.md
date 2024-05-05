@@ -47,7 +47,7 @@ And the app should be available at http://localhost:8080
 ### GUI
 - user settings page
     1. change avatar
-    2. change name
+    2. change name in progress
     3. change pass
     3. add alternative auth
     4. light/dark mode

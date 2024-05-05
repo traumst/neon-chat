@@ -92,11 +92,11 @@ func distributeMsgToUser(
 	}
 
 	switch updateType {
-	case event.MessageAdded:
+	case event.MessageAdd:
 		msg.Data = data
 		conn.In <- msg
 		return nil
-	case event.MessageDeleted:
+	case event.MessageDrop:
 		msg.Data = "[deletedM]"
 		conn.In <- msg
 		return nil
