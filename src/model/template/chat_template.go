@@ -20,13 +20,11 @@ type ChatTemplate struct {
 	MessageAddEvent string
 }
 
-// for passing multiple args to template, example: {{ $args := .Args .Id .Name }}
-func (c *ChatTemplate) Args(args ...any) []any { return args }
-
 func (c *ChatTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
 	chatTmpl := template.Must(template.ParseFiles(
 		"static/html/chat/chat_div.html",
+		"static/html/chat/member_div.html",
 		"static/html/chat/message_li.html"))
 	err := chatTmpl.Execute(&buf, c)
 	if err != nil {

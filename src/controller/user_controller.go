@@ -74,7 +74,7 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 		defer wg.Done()
 		err := handler.DistributeChat(app, chat, user, invitee, invitee, event.ChatInvite)
 		if err != nil {
-			log.Printf("<-%s-- InviteUser ERROR cannot distribute chat invite, %s\n", reqId, err)
+			log.Printf("<-%s-- InviteUser WARN cannot distribute chat invite, %s\n", reqId, err)
 		}
 	}()
 	go func() {
@@ -82,15 +82,15 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 		template := template.MemberTemplate{
 			ChatId:         chatId,
 			ChatName:       chat.Name,
-			User:           template.UserTemplate{Id: invitee.Id, Name: invitee.Name},
-			Viewer:         template.UserTemplate{Id: chat.Owner.Id, Name: chat.Owner.Name},
-			Owner:          template.UserTemplate{Id: chat.Owner.Id, Name: chat.Owner.Name},
-			ChatExpelEvent: event.ChatExpelEventName.Format(chatId, invitee.Id, -9),
-			ChatLeaveEvent: event.ChatLeaveEventName.Format(chatId, invitee.Id, -9),
+			User:           *invitee.Template(),
+			Viewer:         *user.Template(),
+			Owner:          *chat.Owner.Template(),
+			ChatExpelEvent: event.ChatExpel.FormatEventName(chatId, invitee.Id, -9),
+			ChatLeaveEvent: event.ChatLeave.FormatEventName(chatId, invitee.Id, -10),
 		}
 		html, err := template.ShortHTML()
 		if err != nil {
-			log.Printf("<-%s-- InviteUser ERROR cannot template chat[%d], %s\n", reqId, chatId, err)
+			log.Printf("<-%s-- InviteUser ERROR cannot template user[%d], %s\n", reqId, chatId, err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -264,13 +264,15 @@ func ChangeUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		log.Printf("<-%s-- ChangeUser TRACE auth does not allow %s\n", reqId, r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte("bad verb"))
 		return
 	}
 	log.Printf("--%s-> ChangeUser TRACE check login\n", reqId)
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
-		log.Printf("<-%s-- ChangeUser WARN user, %s\n", h.GetReqId(r), err)
-		RenderHome(app, w, r)
+		log.Printf("<-%s-- ChangeUser WARN unauthenticated, %s\n", h.GetReqId(r), err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("unauthenticated"))
 		return
 	}
 	newName := r.FormValue("username")
@@ -283,9 +285,16 @@ func ChangeUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user.Name = newName
 	err = app.UpdateUser(user)
 	if err != nil {
-		log.Printf("<-%s-- ChangeUser WARN user, %s\n", h.GetReqId(r), err)
+		log.Printf("<-%s-- ChangeUser WARN failed to update user[%d], %s\n", h.GetReqId(r), user.Id, err)
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("user did not change"))
+		w.Write([]byte("user update failed"))
+		return
+	}
+	err = handler.DistributeUserChange(app, user, event.UserChanged)
+	if err != nil {
+		log.Printf("<-%s-- ChangeUser ERROR failed to distribute user change, %s\n", h.GetReqId(r), err)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("[partial]"))
 		return
 	}
 	w.WriteHeader(http.StatusOK)

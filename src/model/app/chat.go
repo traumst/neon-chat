@@ -124,10 +124,22 @@ func (c *Chat) Template(user *User) *t.ChatTemplate {
 	}
 	users := make([]t.UserTemplate, len(c.users))
 	for i, u := range c.users {
-		users[i] = t.UserTemplate{Id: u.Id, Name: u.Name}
+		users[i] = t.UserTemplate{
+			Id:   u.Id,
+			Name: u.Name,
+			//UserChangeEvent: e.UserChanged.FormatEventName(-1, u.Id, -2),
+		}
 	}
-	usr := t.UserTemplate{Id: user.Id, Name: user.Name}
-	ownr := t.UserTemplate{Id: c.Owner.Id, Name: c.Owner.Name}
+	usr := t.UserTemplate{
+		Id:   user.Id,
+		Name: user.Name,
+		//UserChangeEvent: e.UserChanged.FormatEventName(-1, user.Id, -2),
+	}
+	ownr := t.UserTemplate{
+		Id:   c.Owner.Id,
+		Name: c.Owner.Name,
+		//UserChangeEvent: e.UserChanged.FormatEventName(-1, user.Id, -2),
+	}
 	return &t.ChatTemplate{
 		ChatId:          c.Id,
 		Name:            c.Name,
@@ -136,10 +148,10 @@ func (c *Chat) Template(user *User) *t.ChatTemplate {
 		Owner:           ownr,
 		Users:           users,
 		Messages:        messages,
-		ChatDropEvent:   e.ChatDropEventName.Format(c.Id, user.Id, -1),
-		ChatCloseEvent:  e.ChatCloseEventName.Format(c.Id, user.Id, -2),
-		ChatExpelEvent:  e.ChatExpelEventName.Format(c.Id, user.Id, -4),
-		ChatLeaveEvent:  e.ChatLeaveEventName.Format(c.Id, user.Id, -4),
-		MessageAddEvent: e.MessageAddEventName.Format(c.Id, user.Id, -3),
+		ChatDropEvent:   e.ChatDeleted.FormatEventName(c.Id, user.Id, -1),
+		ChatCloseEvent:  e.ChatClose.FormatEventName(c.Id, user.Id, -2),
+		ChatExpelEvent:  e.ChatExpel.FormatEventName(c.Id, user.Id, -4),
+		ChatLeaveEvent:  e.ChatLeave.FormatEventName(c.Id, user.Id, -4),
+		MessageAddEvent: e.MessageAdded.FormatEventName(c.Id, user.Id, -3),
 	}
 }

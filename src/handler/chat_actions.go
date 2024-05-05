@@ -43,7 +43,7 @@ func chatInvite(conn *Conn, targetChat *app.Chat, authorId uint, subject *app.Us
 			authorId, targetChat.Owner.Id, targetChat.Id)
 	}
 	if subject == nil {
-		return fmt.Errorf("subjectUser is nil for chatInvite")
+		return fmt.Errorf("subjectUser is nil for chatCreate")
 	}
 	if authorId == conn.User.Id || conn.User.Id != subject.Id {
 		return fmt.Errorf("chatCreate conn[%s] does not belong to user[%d]", conn.Origin, subject.Id)

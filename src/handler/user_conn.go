@@ -139,40 +139,45 @@ func (conn *Conn) trySend(up event.LiveUpdate) error {
 		return fmt.Errorf("trySend ERROR writer is nil")
 	}
 	switch up.Event {
-	case event.MessageAdded:
-		err := flushEvent(&w, event.MessageAddEventName, up)
+	case event.UserChanged:
+		err := flushEvent(&w, up.Event, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to add message to user[%d], %s", up.UserId, err)
-		}
-	case event.MessageDeleted:
-		err := flushEvent(&w, event.MessageDropEventName, up)
-		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to delete message to user[%d], %s", up.UserId, err)
+			return fmt.Errorf("trySend ERROR failed to delete chat to user[%d], %s", up.UserId, err)
 		}
 	case event.ChatCreated, event.ChatInvite:
-		err := flushEvent(&w, event.ChatAddEventName, up)
+		err := flushEvent(&w, up.Event, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to send to user[%d], %s", up.UserId, err)
 		}
 	case event.ChatExpel:
-		err := flushEvent(&w, event.ChatExpelEventName, up)
+		err := flushEvent(&w, up.Event, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to expel user[%d] from chat[%d], %s", up.UserId, up.ChatId, err)
 		}
 	case event.ChatLeave:
-		err := flushEvent(&w, event.ChatLeaveEventName, up)
+		err := flushEvent(&w, up.Event, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to leave user[%d] from chat[%d], %s", up.UserId, up.ChatId, err)
 		}
 	case event.ChatClose:
-		err := flushEvent(&w, event.ChatCloseEventName, up)
+		err := flushEvent(&w, up.Event, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to close chat to user[%d], %s", up.UserId, err)
 		}
 	case event.ChatDeleted:
-		err := flushEvent(&w, event.ChatDropEventName, up)
+		err := flushEvent(&w, up.Event, up)
 		if err != nil {
 			return fmt.Errorf("trySend ERROR failed to delete chat to user[%d], %s", up.UserId, err)
+		}
+	case event.MessageAdded:
+		err := flushEvent(&w, up.Event, up)
+		if err != nil {
+			return fmt.Errorf("trySend ERROR failed to add message to user[%d], %s", up.UserId, err)
+		}
+	case event.MessageDeleted:
+		err := flushEvent(&w, up.Event, up)
+		if err != nil {
+			return fmt.Errorf("trySend ERROR failed to delete message to user[%d], %s", up.UserId, err)
 		}
 	default:
 		return fmt.Errorf("trySend ERROR unknown update event[%v], update[%s]", up.Event, up.String())
@@ -180,14 +185,14 @@ func (conn *Conn) trySend(up event.LiveUpdate) error {
 	return nil
 }
 
-func flushEvent(w *http.ResponseWriter, evnt event.SSEvent, up event.LiveUpdate) error {
+func flushEvent(w *http.ResponseWriter, evnt event.UpdateType, up event.LiveUpdate) error {
 	if up.ChatId < 0 {
 		panic("ChatId should not be empty")
 	}
 	if up.UserId == 0 {
 		panic("UserId should not be empty")
 	}
-	eventName := evnt.Format(up.ChatId, up.UserId, up.MsgId)
+	eventName := evnt.FormatEventName(up.ChatId, up.UserId, up.MsgId)
 	eventId := utils.RandStringBytes(5)
 	// must escape newlines in SSE
 	data := utils.TrimSpaces(up.Data)
