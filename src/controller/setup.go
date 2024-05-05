@@ -111,6 +111,10 @@ func handleUser(app *handler.AppState, conn *db.DBConn, allMiddleware []Middlewa
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			LeaveChat(app, w, r)
 		}), allMiddleware))
+	http.Handle("/user/change", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ChangeUser(app, w, r)
+		}), allMiddleware))
 }
 
 func handleAuth(app *handler.AppState, conn *db.DBConn, allMiddleware []Middleware) {

@@ -257,3 +257,37 @@ func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	}()
 	wg.Wait()
 }
+
+func ChangeUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+	reqId := h.GetReqId(r)
+	log.Printf("--%s-> ChangeUser\n", reqId)
+	if r.Method != "POST" {
+		log.Printf("<-%s-- ChangeUser TRACE auth does not allow %s\n", reqId, r.Method)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	log.Printf("--%s-> ChangeUser TRACE check login\n", reqId)
+	user, err := handler.ReadSession(app, w, r)
+	if err != nil || user == nil {
+		log.Printf("<-%s-- ChangeUser WARN user, %s\n", h.GetReqId(r), err)
+		RenderHome(app, w, r)
+		return
+	}
+	newName := r.FormValue("username")
+	if newName == "" {
+		log.Printf("<-%s-- ChangeUser TRACE user, %s\n", h.GetReqId(r), err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("user did not change"))
+		return
+	}
+	user.Name = newName
+	err = app.UpdateUser(user)
+	if err != nil {
+		log.Printf("<-%s-- ChangeUser WARN user, %s\n", h.GetReqId(r), err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("user did not change"))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("[ok]"))
+}

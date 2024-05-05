@@ -7,6 +7,7 @@ import (
 
 type UserSettingsTemplate struct {
 	UserId     uint
+	ChatId     int
 	ActiveUser string
 }
 

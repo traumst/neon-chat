@@ -44,13 +44,29 @@
                 Username:&nbsp;{{ .ActiveUser }}
                 <sub class="hover:text-amber-700">[edit]</sub>
             </div>
-            <form id="user-updated-name" class="default-transition hidden">
-                Username:&nbsp;<input type="text" name="newName" autocomplete="new-username" 
-                    onfocusout="hideNameEdit()" onkeydown="escFocus(event)"
+
+            <form id="user-updated-name" 
+                title="change user name from {{ .ActiveUser }}"
+                hx-post="/user/change" 
+                hx-trigger="submit" 
+                hx-swap="beforeend" 
+                hx-include="username"
+                onkeydown="escFocus(event)"
+                class="default-transition hidden"
+            >
+                Username:&nbsp;
+                <input id="new-user-name"
+                    type="text" 
+                    name="username" 
+                    autocomplete="username" 
+                    onsubmit="hideNameEdit()"
+                    onfocusout="hideNameEdit()" 
                     class="bg-gradient-to-br from-green-800 to-indigo-800
                         text-gray-400
                         shadow shadow-green-700
-                        hover:shadow-lg hover:shadow-zinc-500">
+                        hover:shadow-lg hover:shadow-zinc-500"
+                >
+                <button type="submit" class="hidden"></button>
             </form>
             <script>
                 // this makes edit username switch between desplay and edit

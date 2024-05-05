@@ -110,7 +110,7 @@ func (state *AppState) GetUser(userId uint) (*app.User, error) {
 
 	var appUser *app.User
 	var err error
-	log.Printf("∞--------> AppState.GetUser TRACE get user[%d]\n", userId)
+	log.Printf("∞--------> AppState.GetUser TRACE user[%d]\n", userId)
 	for _, user := range state.users {
 		if user.Id == userId {
 			appUser = &user
@@ -120,6 +120,18 @@ func (state *AppState) GetUser(userId uint) (*app.User, error) {
 		appUser, err = state.db.GetUserById(userId)
 	}
 	return appUser, err
+}
+
+func (state *AppState) UpdateUser(user *app.User) error {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.GetUser UpdateUser user[%d]\n", user.Id)
+	err := state.db.UpdateUser(user)
+	if err != nil {
+		return fmt.Errorf("failed to update user [%d]", user.Id)
+	}
+	return nil
 }
 
 func (state *AppState) InviteUser(userId uint, chatId int, invitee *app.User) error {

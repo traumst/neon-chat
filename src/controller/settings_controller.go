@@ -24,8 +24,16 @@ func OpenSettings(app *handler.AppState, w http.ResponseWriter, r *http.Request)
 		w.Write([]byte("User is not authorized"))
 		return
 	}
+	var openChatId int
+	openChat := app.GetOpenChat(user.Id)
+	if openChat != nil {
+		openChatId = openChat.Id
+	} else {
+		openChatId = 0
+	}
 	settings := t.UserSettingsTemplate{
 		UserId:     user.Id,
+		ChatId:     openChatId,
 		ActiveUser: user.Name,
 	}
 	html, err := settings.HTML()
