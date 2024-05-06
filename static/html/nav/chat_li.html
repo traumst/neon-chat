@@ -1,5 +1,5 @@
 <li id="chat-head-{{ .ChatId }}" 
-    title="chat {{ .Name }}"
+    title="chat {{ .ChatName }}"
     sse-swap="{{ .ChatDropEvent }}"
     hx-target="#chat-head-{{ .ChatId }}" 
     hx-swap="innerHTML"
@@ -8,7 +8,7 @@
         items-center
         px-2 py-5
         shadow-md shadow-indigo-800
-        {{ if eq .Owner.Id .User.Id }}
+        {{ if eq .Owner.UserId .User.UserId }}
         border-b-2 border-blue-700 rounded-xl
         {{ else }}
         border-b-2 border-green-700 rounded-xl
@@ -26,14 +26,14 @@
                 overflow-hidden"
         >
             <div class="ticker flex whitespace-nowrap overflow-hidden">
-                <b>{{.Name}}</b>
+                <b>{{.ChatName}}</b>
             </div>
         </div>
-    {{ if eq .Owner.Id .User.Id }}
+    {{ if eq .Owner.UserId .User.UserId }}
         <div>
             <form id="chat-delete-{{ .ChatId }}"
                 class="flex other-info"
-                title="delete chat ${{ .Name }}"
+                title="delete chat ${{ .ChatName }}"
                 hx-post="/chat/delete" 
                 hx-trigger="click" 
                 hx-target="#chat-head-{{ .ChatId }}"
@@ -51,7 +51,7 @@
         </div>
     {{ else if eq .User .Viewer }}
         <form id="chat-leave-{{ .ChatId }}"
-            title="leave chat {{ .Name }}"
+            title="leave chat {{ .ChatName }}"
             hx-post="/user/leave" 
             hx-trigger="click" 
             hx-target="#chat-head-{{ .ChatId }}"

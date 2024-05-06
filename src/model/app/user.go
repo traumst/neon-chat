@@ -1,7 +1,6 @@
 package app
 
 import (
-	"go.chat/src/model/event"
 	"go.chat/src/model/template"
 )
 
@@ -20,10 +19,16 @@ type User struct {
 	Salt string   `db:"salt"`
 }
 
-func (m *User) Template() *template.UserTemplate {
+func (m *User) Template(
+	chatId int,
+	chatOwnerId uint,
+	viewerId uint,
+) *template.UserTemplate {
 	return &template.UserTemplate{
-		Id:              m.Id,
-		Name:            m.Name,
-		UserChangeEvent: event.UserChange.FormatEventName(-15, m.Id, -16),
+		ChatId:      chatId,
+		ChatOwnerId: chatOwnerId,
+		UserId:      m.Id,
+		UserName:    m.Name,
+		ViewerId:    viewerId,
 	}
 }

@@ -6,12 +6,12 @@
 >
     <div class="chat-header flex flex-row justify-end">
         <div class="open-chat-name flex font-bold">
-            {{ .Name }}
+            {{ .ChatName }}
         </div>
         <div class="flex flex-row">
             <form id="chat-delete-{{ .ChatId }}-2"
                 class="flex"
-                title="delete chat ${{ .Name }}"
+                title="delete chat ${{ .ChatName }}"
                 hx-post="/chat/delete" 
                 hx-trigger="click" 
                 hx-target="#chat-head-{{ .ChatId }}"
@@ -28,7 +28,7 @@
             </form>
 
             <form id="chat-close-{{ .ChatId }}"
-                title="close chat {{ .Name }}"
+                title="close chat {{ .ChatName }}"
                 hx-post="/chat/close" 
                 hx-trigger="click" 
                 hx-target=".open-chat"
@@ -51,9 +51,20 @@
         shadow shadow-zinc-800">
         <div class="member-list flex flex-row">
             <span>Members: </span>&nbsp;
-            {{ template "membersList" . }}
+            
+            {{ $top := . }}
+            {{ range $index, $user := .Users }}
+                <div class="member" 
+                    id="chat-{{ $top.ChatId }}-user-{{ $user.UserId }}" 
+                    sse-swap="{{ $top.ChatExpelEvent }},{{ $top.ChatLeaveEvent }}"
+                    hx-target="#chat-{{ $top.ChatId }}-user-{{ $user.UserId }}"
+                    hx-swap="innerHTML"
+                >
+                </div>
+            {{ end }}
+
         </div> 
-        {{ if eq .Owner.Id .User.Id }}
+        {{ if eq .Owner.UserId .User.UserId }}
             <form id="inviteUserToChatForm"
                 method="POST" 
                 hx-target=".member-list" 
@@ -166,37 +177,4 @@
         }
     });
 </script>
-{{ end }}
-
-{{ define "membersList" }}
-{{ $top := . }}
-{{ range $index, $user := .Users }}
-    <div class="member" 
-        id="chat-{{ $top.ChatId }}-user-{{ $user.Id }}" 
-        sse-swap="{{ $top.ChatExpelEvent }},{{ $top.ChatLeaveEvent }}"
-        hx-target="#chat-{{ $top.ChatId }}-user-{{ $user.Id }}"
-        hx-swap="innerHTML"
-    >
-        {{ if eq $top.Viewer.Id $user.Id }}
-            [<b title="this is you">{{ $user.Name }}</b>]
-        {{ else if eq $top.Owner.Id $top.Viewer.Id }}
-            <form id="member-delete-{{ $top.ChatId }}-user-{{ $user.Id }}"
-                title="expel {{ $user.Name }}"
-                hx-post="/user/expel" 
-                hx-trigger="click" 
-                hx-target="#chat-{{ $top.ChatId }}-user-{{ $user.Id }}"
-                hx-swap="innerHTML" 
-                hx-include="#member-delete-{{ $top.ChatId }}-user-{{ $user.Id }}"
-            >
-                <input type="hidden" name="chatid" value="{{ $top.ChatId }}">
-                <input type="hidden" name="userid" value="{{ $user.Id }}">
-                <button type="submit" class="member-delete-button hover:text-amber-700">
-                    [{{ $user.Name }}]
-                </button>
-            </form>
-        {{ else }}
-            [{{ $user.Name }}]
-        {{ end }}
-    </div>
-{{ end }}
 {{ end }}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 
-	e "go.chat/src/model/event"
 	t "go.chat/src/model/template"
 )
 
@@ -114,7 +113,7 @@ func (c *Chat) DropMessage(userId uint, msgId int) (*Message, error) {
 	return msg, c.history.Delete(msg)
 }
 
-func (c *Chat) Template(user *User) *t.ChatTemplate {
+func (c *Chat) Template(user *User, viewer *User) *t.ChatTemplate {
 	var messages []t.MessageTemplate
 	for _, msg := range c.history.GetAll() {
 		if msg == nil {
@@ -125,33 +124,34 @@ func (c *Chat) Template(user *User) *t.ChatTemplate {
 	users := make([]t.UserTemplate, len(c.users))
 	for i, u := range c.users {
 		users[i] = t.UserTemplate{
-			Id:   u.Id,
-			Name: u.Name,
-			//UserChangeEvent: e.UserChanged.FormatEventName(-1, u.Id, -2),
+			ChatId:      c.Id,
+			ChatOwnerId: c.Owner.Id,
+			UserId:      u.Id,
+			UserName:    u.Name,
+			ViewerId:    viewer.Id,
 		}
 	}
 	usr := t.UserTemplate{
-		Id:   user.Id,
-		Name: user.Name,
-		//UserChangeEvent: e.UserChanged.FormatEventName(-1, user.Id, -2),
+		ChatId:      c.Id,
+		ChatOwnerId: c.Owner.Id,
+		UserId:      user.Id,
+		UserName:    user.Name,
+		ViewerId:    viewer.Id,
 	}
 	ownr := t.UserTemplate{
-		Id:   c.Owner.Id,
-		Name: c.Owner.Name,
-		//UserChangeEvent: e.UserChanged.FormatEventName(-1, user.Id, -2),
+		ChatId:      c.Id,
+		ChatOwnerId: c.Owner.Id,
+		UserId:      c.Owner.Id,
+		UserName:    c.Owner.Name,
+		ViewerId:    viewer.Id,
 	}
 	return &t.ChatTemplate{
-		ChatId:          c.Id,
-		Name:            c.Name,
-		User:            usr,
-		Viewer:          usr,
-		Owner:           ownr,
-		Users:           users,
-		Messages:        messages,
-		ChatDropEvent:   e.ChatDrop.FormatEventName(c.Id, user.Id, -1),
-		ChatCloseEvent:  e.ChatClose.FormatEventName(c.Id, user.Id, -2),
-		ChatExpelEvent:  e.ChatExpel.FormatEventName(c.Id, user.Id, -4),
-		ChatLeaveEvent:  e.ChatLeave.FormatEventName(c.Id, user.Id, -4),
-		MessageAddEvent: e.MessageAdd.FormatEventName(c.Id, user.Id, -3),
+		ChatId:   c.Id,
+		ChatName: c.Name,
+		User:     usr,
+		Viewer:   usr,
+		Owner:    ownr,
+		Users:    users,
+		Messages: messages,
 	}
 }

@@ -25,6 +25,8 @@
         function escFocus(event) {
             if (event.key === 'Escape') {
                 event.target.blur();
+            } else {
+                console.log('escFocus key', event.key)
             }
         }
         function togglePanel() {

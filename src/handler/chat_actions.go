@@ -19,7 +19,7 @@ func chatCreate(conn *Conn, targetChat *app.Chat, author *app.User) error {
 	if author.Id != conn.User.Id || conn.User.Id != author.Id {
 		return fmt.Errorf("chatCreate conn[%s] does not belong to user[%d]", conn.Origin, author.Id)
 	}
-	template := targetChat.Template(author)
+	template := targetChat.Template(author, conn.User)
 	data, err := template.ShortHTML()
 	if err != nil {
 		return err
@@ -48,7 +48,7 @@ func chatInvite(conn *Conn, targetChat *app.Chat, authorId uint, subject *app.Us
 	if authorId == conn.User.Id || conn.User.Id != subject.Id {
 		return fmt.Errorf("chatCreate conn[%s] does not belong to user[%d]", conn.Origin, subject.Id)
 	}
-	template := targetChat.Template(subject)
+	template := targetChat.Template(subject, conn.User)
 	data, err := template.ShortHTML()
 	if err != nil {
 		return err

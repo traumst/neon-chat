@@ -28,7 +28,7 @@ func (h *HomeTemplate) HTML() (string, error) {
 		// right panel
 		"static/html/welcome_div.html",
 		"static/html/chat/chat_div.html",
-		"static/html/chat/member_div.html",
+		"static/html/chat/user_div.html",
 		"static/html/chat/message_li.html",
 	))
 	err := homeTmpl.Execute(&buf, h)

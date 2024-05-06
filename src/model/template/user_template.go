@@ -3,19 +3,35 @@ package template
 import (
 	"bytes"
 	"html/template"
+
+	"go.chat/src/model/event"
 )
 
 type UserTemplate struct {
-	Id              uint
-	Name            string
-	UserChangeEvent string
+	ChatId      int
+	ChatOwnerId uint
+	UserId      uint
+	UserName    string
+	ViewerId    uint
 }
 
-func (m *UserTemplate) HTML() (string, error) {
+func (c *UserTemplate) UserChangeEvent() string {
+	return event.UserChange.FormatEventName(-27, c.UserId, -28)
+}
+
+func (c *UserTemplate) ChatExpelEvent() string {
+	return event.ChatExpel.FormatEventName(c.ChatId, c.UserId, -29)
+}
+
+func (c *UserTemplate) ChatLeaveEvent() string {
+	return event.ChatExpel.FormatEventName(c.ChatId, c.UserId, -30)
+}
+
+func (c *UserTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
-	msgTmpl := template.Must(template.ParseFiles(
-		"static/html/chat/user_name.html"))
-	err := msgTmpl.Execute(&buf, m)
+	shortTmpl := template.Must(template.ParseFiles(
+		"static/html/chat/user_div.html"))
+	err := shortTmpl.Execute(&buf, c)
 	if err != nil {
 		return "", err
 	}

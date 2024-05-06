@@ -64,11 +64,11 @@ func homePage(app *handler.AppState, w http.ResponseWriter, r *http.Request, use
 		openChatTemplate = nil
 	} else {
 		log.Printf("--%s-> homePage DEBUG, user[%d] has chat[%d] open\n", h.GetReqId(r), user.Id, openChat.Id)
-		openChatTemplate = openChat.Template(user)
+		openChatTemplate = openChat.Template(user, user)
 	}
 	var chatTemplates []*template.ChatTemplate
 	for _, chat := range app.GetChats(user.Id) {
-		chatTemplates = append(chatTemplates, chat.Template(user))
+		chatTemplates = append(chatTemplates, chat.Template(user, user))
 	}
 	openChatId := -1
 	if openChatTemplate != nil {

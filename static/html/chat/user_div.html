@@ -1,3 +1,13 @@
+
+{{ if eq .ViewerId .UserId }}
+    <b title="this is you">[{{ .UserName }}]</b>
+{{ else if eq .ViewerId .ChatOwnerId }}
+    {{ template "deleteableMember" . }}
+{{ else }}
+    [{{ .UserName }}]
+{{ end }}
+
+{{ define "deleteableMember" }}
 <div class="member default-transition" 
     id="chat-drop-{{ .ChatId }}-user-{{ .UserId }}"
     sse-swap="{{ .ChatExpelEvent }},{{ .ChatLeaveEvent }}"
@@ -21,3 +31,4 @@
         </div>
     </form>
 </div>
+{{ end }}

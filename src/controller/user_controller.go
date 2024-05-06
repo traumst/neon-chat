@@ -79,16 +79,14 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 	}()
 	go func() {
 		defer wg.Done()
-		template := template.MemberTemplate{
-			ChatId:         chatId,
-			ChatName:       chat.Name,
-			User:           *invitee.Template(),
-			Viewer:         *user.Template(),
-			Owner:          *chat.Owner.Template(),
-			ChatExpelEvent: event.ChatExpel.FormatEventName(chatId, invitee.Id, -9),
-			ChatLeaveEvent: event.ChatLeave.FormatEventName(chatId, invitee.Id, -10),
+		template := template.UserTemplate{
+			ChatId:      chatId,
+			ChatOwnerId: chat.Owner.Id,
+			UserId:      invitee.Id,
+			UserName:    invitee.Name,
+			ViewerId:    user.Id,
 		}
-		html, err := template.ShortHTML()
+		html, err := template.HTML()
 		if err != nil {
 			log.Printf("<-%s-- InviteUser ERROR cannot template user[%d], %s\n", reqId, chatId, err)
 			w.WriteHeader(http.StatusInternalServerError)

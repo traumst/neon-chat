@@ -11,7 +11,7 @@ import (
 // empty targetUser means all users in chat
 func DistributeUserChange(
 	state *AppState,
-	//targetUser *app.User, // who to inform, nil for all users
+	//TODO targetUser *app.User, // who to inform, nil for all users
 	subjectUser *app.User, // which user changed, nil for every user in chat
 	updateType event.UpdateType,
 ) error {
@@ -61,8 +61,11 @@ func userNameChanged(conn *Conn, subject *app.User) error {
 		return fmt.Errorf("subjectUser is nil for userChanged")
 	}
 	log.Printf("∞----> userChanged TRACE informing target[%d] about subject[%d] change\n", conn.User.Id, subject.Id)
-	_ = subject.Template()
-	data := "TODO-USER-CHANGED"
+	tmpl := subject.Template(-64, 0, conn.User.Id)
+	data, err := tmpl.HTML()
+	if err != nil {
+		return fmt.Errorf("failed to template user")
+	}
 	conn.In <- event.LiveUpdate{
 		Event:    event.UserChange,
 		ChatId:   -2,

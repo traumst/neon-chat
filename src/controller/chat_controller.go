@@ -74,7 +74,7 @@ func OpenChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		html, err = welcome.HTML()
 	} else {
 		log.Printf("--%s-> OpenChat TRACE html template\n", reqId)
-		html, err = openChat.Template(user).HTML()
+		html, err = openChat.Template(user, user).HTML()
 	}
 	if err != nil {
 		log.Printf("<-%s-- OpenChat ERROR html template, %s\n", reqId, err)
@@ -135,7 +135,7 @@ func AddChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	}()
 	go func() {
 		defer wg.Done()
-		template := openChat.Template(user)
+		template := openChat.Template(user, user)
 		html, err := template.HTML()
 		if err != nil {
 			log.Printf("<--%s-- sendChatContent ERROR cannot template chat[%d], %s", reqId, template.ChatId, err)
