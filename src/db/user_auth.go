@@ -2,9 +2,14 @@ package db
 
 import (
 	"fmt"
-
-	a "go.chat/src/model/app"
 )
+
+type UserAuth struct {
+	Id     uint   `db:"id"`
+	UserId uint   `db:"user_id"`
+	Type   string `db:"type"`
+	Hash   string `db:"hash"`
+}
 
 const SchemaAuth string = `
 	CREATE TABLE IF NOT EXISTS auth (
@@ -15,7 +20,7 @@ const SchemaAuth string = `
 	);
 	CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_user_id_type ON auth(user_id, type, hash);`
 
-func (db *DBConn) AddAuth(auth a.UserAuth) (*a.UserAuth, error) {
+func (db *DBConn) AddAuth(auth UserAuth) (*UserAuth, error) {
 	if !db.IsActive() {
 		return nil, fmt.Errorf("db is not connected")
 	}
@@ -26,7 +31,7 @@ func (db *DBConn) AddAuth(auth a.UserAuth) (*a.UserAuth, error) {
 		return nil, fmt.Errorf("auth already has an id[%d]", auth.Id)
 	} else if auth.UserId == 0 {
 		return nil, fmt.Errorf("auth has no user id")
-	} else if auth.Type == a.AuthTypeUnknown {
+	} else if auth.Type == "" {
 		return nil, fmt.Errorf("auth type is unknown")
 	} else if auth.Hash == "" {
 		return nil, fmt.Errorf("auth has no hash")
@@ -47,17 +52,14 @@ func (db *DBConn) AddAuth(auth a.UserAuth) (*a.UserAuth, error) {
 	return &auth, nil
 }
 
-func (db *DBConn) GetAuth(userid uint, auth a.AuthType, hash string) (*a.UserAuth, error) {
+func (db *DBConn) GetAuth(userid uint, auth string, hash string) (*UserAuth, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	if !db.isConn {
 		return nil, fmt.Errorf("db is not connected")
 	}
-	if auth == a.AuthTypeUnknown {
-		return nil, fmt.Errorf("auth type is unknown")
-	}
 
-	var dbAuth a.UserAuth
+	var dbAuth UserAuth
 	err := db.conn.Get(&dbAuth, `SELECT * FROM auth WHERE user_id = ? AND type = ? AND hash = ?`, userid, auth, hash)
 	if err != nil {
 		return nil, fmt.Errorf("error getting auth: %s", err)

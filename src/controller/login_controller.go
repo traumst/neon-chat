@@ -40,10 +40,6 @@ func Login(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.
 		h.GetReqId(r), u, authType)
 	user, auth, err := handler.Authenticate(db, u, p, authType)
 	if user != nil && auth != nil {
-		err = app.TrackUser(user)
-		if err != nil {
-			log.Printf("--%s-> Login WARN on track user[%d][%s], %s\n", h.GetReqId(r), user.Id, user.Name, err)
-		}
 		h.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
 		http.Redirect(w, r, "/", http.StatusPermanentRedirect)
 		return
@@ -77,10 +73,6 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 	user, auth, err := handler.Authenticate(db, u, p, authType)
 	if user != nil && auth != nil {
 		log.Printf("--%s-> SignUp TRACE signedIn instead of signUp user[%s], %s\n", h.GetReqId(r), u, err)
-		err := app.TrackUser(user)
-		if err != nil {
-			log.Printf("--%s-> SignUp ERROR on track user[%d][%s], %s\n", h.GetReqId(r), user.Id, user.Name, err)
-		}
 		h.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
@@ -106,10 +98,6 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", a.UserTypeFree, u)))
 		return
-	}
-	err = app.TrackUser(user)
-	if err != nil {
-		log.Printf("--%s-> SignUp ERROR on track user[%d][%s], %s\n", h.GetReqId(r), user.Id, user.Name, err)
 	}
 	h.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
 	http.Redirect(w, r, "/", http.StatusFound)

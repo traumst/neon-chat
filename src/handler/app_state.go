@@ -89,13 +89,13 @@ func (state *AppState) TrackUser(user *app.User) error {
 	if user == nil {
 		return fmt.Errorf("user was nil")
 	}
-
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
 	for _, u := range state.users {
 		if u.Id == user.Id {
 			log.Printf("∞--------> AppState.TrackUser TRACE user[%d] already tracked", user.Id)
+			u.Name = user.Name
 			return nil
 		}
 	}
@@ -108,29 +108,29 @@ func (state *AppState) GetUser(userId uint) (*app.User, error) {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
-	var appUser *app.User
-	var err error
 	log.Printf("∞--------> AppState.GetUser TRACE user[%d]\n", userId)
-	for _, user := range state.users {
-		if user.Id == userId {
-			appUser = &user
-		}
+	user, err := state.db.GetUserById(userId)
+	if err != nil {
+		return nil, err
 	}
-	if appUser == nil {
-		appUser, err = state.db.GetUserById(userId)
-	}
-	return appUser, err
+
+	appUser := UserFromDB(*user)
+	state.TrackUser(&appUser)
+	return &appUser, nil
 }
 
-func (state *AppState) UpdateUser(user *app.User) error {
+func (state *AppState) UpdateUser(appUser *app.User) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
-	log.Printf("∞--------> AppState.GetUser UpdateUser user[%d]\n", user.Id)
-	err := state.db.UpdateUser(user)
+	log.Printf("∞--------> AppState.GetUser UpdateUser user[%d]\n", appUser.Id)
+
+	dbUser := UserToDB(*appUser)
+	err := state.db.UpdateUser(dbUser)
 	if err != nil {
-		return fmt.Errorf("failed to update user [%d]", user.Id)
+		return fmt.Errorf("failed to update user [%d]", appUser.Id)
 	}
+	state.TrackUser(appUser)
 	return nil
 }
 
@@ -151,6 +151,13 @@ func (state *AppState) DropUser(userId uint, chatId int, removeId uint) error {
 	defer state.mu.Unlock()
 
 	log.Printf("∞--------> AppState.DropUser TRACE removing user[%d] chat[%d] by user[%d]\n", removeId, chatId, userId)
+	// remove from tracked
+	for i, u := range state.users {
+		if u.Id == removeId {
+			state.users = append(state.users[:i], state.users[i+1:]...)
+			break
+		}
+	}
 	_ = state.chats.CloseChat(removeId, chatId)
 	return state.chats.ExpelUser(userId, chatId, removeId)
 }

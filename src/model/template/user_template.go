@@ -30,7 +30,7 @@ func (c *UserTemplate) ChatLeaveEvent() string {
 func (c *UserTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
 	shortTmpl := template.Must(template.ParseFiles(
-		"static/html/chat/user_div.html"))
+		"static/html/user_div.html"))
 	err := shortTmpl.Execute(&buf, c)
 	if err != nil {
 		return "", err

@@ -13,13 +13,13 @@ const (
 )
 
 type User struct {
-	Id   uint     `db:"id"`
-	Name string   `db:"name"`
-	Type UserType `db:"type"`
-	Salt string   `db:"salt"`
+	Id   uint
+	Name string
+	Type UserType
+	Salt string
 }
 
-func (m *User) Template(
+func (user *User) Template(
 	chatId int,
 	chatOwnerId uint,
 	viewerId uint,
@@ -27,8 +27,8 @@ func (m *User) Template(
 	return &template.UserTemplate{
 		ChatId:      chatId,
 		ChatOwnerId: chatOwnerId,
-		UserId:      m.Id,
-		UserName:    m.Name,
+		UserId:      user.Id,
+		UserName:    user.Name,
 		ViewerId:    viewerId,
 	}
 }

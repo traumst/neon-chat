@@ -16,6 +16,17 @@ type Chat struct {
 	mu      sync.Mutex
 }
 
+type ChatTable struct {
+	Id      uint   `db:"id"`
+	Name    string `db:"name"`
+	OwnerId uint   `db:"ownerId"`
+}
+
+type ChatUsersTable struct {
+	ChatId int  `db:"chatId"`
+	UserId uint `db:"userId"`
+}
+
 func (c *Chat) isOwner(userId uint) bool {
 	return c.Owner.Id == userId
 }

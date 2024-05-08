@@ -41,12 +41,12 @@
                 <sub>[edit]</sub>
             </div>
             <div id="user-current-name" onclick="showNameEdit()">
-                Username:&nbsp;{{ .ActiveUser }}
+                {{ template "user_div.html" . }}
                 <sub class="hover:text-amber-700">[edit]</sub>
             </div>
 
             <form id="user-updated-name" 
-                title="change user name from {{ .ActiveUser }}"
+                title="change user name from {{ .UserName }}"
                 hx-post="/user/change" 
                 hx-trigger="submit" 
                 hx-swap="beforeend" 

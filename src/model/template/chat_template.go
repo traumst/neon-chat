@@ -45,7 +45,7 @@ func (c *ChatTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
 	chatTmpl := template.Must(template.ParseFiles(
 		"static/html/chat/chat_div.html",
-		"static/html/chat/user_div.html",
+		"static/html/user_div.html",
 		"static/html/chat/message_li.html"))
 	err := chatTmpl.Execute(&buf, c)
 	if err != nil {
@@ -62,20 +62,4 @@ func (c *ChatTemplate) ShortHTML() (string, error) {
 		return "", err
 	}
 	return buf.String(), nil
-}
-
-func (c *ChatTemplate) UserTemplate(
-	chatId int,
-	ownerId uint,
-	userId uint,
-	userName string,
-	viewerId uint,
-) UserTemplate {
-	return UserTemplate{
-		ChatId:      chatId,
-		ChatOwnerId: ownerId,
-		UserId:      userId,
-		UserName:    userName,
-		ViewerId:    viewerId,
-	}
 }

@@ -22,6 +22,7 @@ func RenderHome(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 }
 
 func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+	log.Printf("--%s-> homeLogin TRACE IN", h.GetReqId(r))
 	login := template.LoginTemplate{
 		Login: template.AuthForm{
 			Id:    "login",
@@ -45,6 +46,7 @@ func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		ChatAddEvent:   "",
 		ChatCloseEvent: "",
 	}
+	log.Printf("--%s-> homeLogin TRACE templating", h.GetReqId(r))
 	html, err := home.HTML()
 	if err != nil {
 		log.Printf("--%s-> homeLogin ERROR login %s\n", h.GetReqId(r), err)
@@ -57,6 +59,7 @@ func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 }
 
 func homePage(app *handler.AppState, w http.ResponseWriter, r *http.Request, user *app.User) {
+	log.Printf("--%s-> homePage TRACE IN", h.GetReqId(r))
 	var openChatTemplate *template.ChatTemplate
 	openChat := app.GetOpenChat(user.Id)
 	if openChat == nil {

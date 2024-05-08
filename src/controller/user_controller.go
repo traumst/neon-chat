@@ -53,7 +53,8 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 		return
 	}
 	log.Printf("--%s-> InviteUser TRACE inviting[%d] to chat[%d]\n", reqId, invitee.Id, chatId)
-	err = app.InviteUser(user.Id, chatId, invitee)
+	appInvitee := handler.UserFromDB(*invitee)
+	err = app.InviteUser(user.Id, chatId, &appInvitee)
 	if err != nil {
 		log.Printf("<-%s-- InviteUser ERROR invite, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -72,7 +73,7 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		err := handler.DistributeChat(app, chat, user, invitee, invitee, event.ChatInvite)
+		err := handler.DistributeChat(app, chat, user, &appInvitee, &appInvitee, event.ChatInvite)
 		if err != nil {
 			log.Printf("<-%s-- InviteUser WARN cannot distribute chat invite, %s\n", reqId, err)
 		}

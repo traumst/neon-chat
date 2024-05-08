@@ -2,9 +2,14 @@ package db
 
 import (
 	"fmt"
-
-	"go.chat/src/model/app"
 )
+
+type User struct {
+	Id   uint   `db:"id"`
+	Name string `db:"name"`
+	Type string `db:"type"`
+	Salt string `db:"salt"`
+}
 
 const SchemaUser string = `
 	CREATE TABLE IF NOT EXISTS users (
@@ -15,7 +20,7 @@ const SchemaUser string = `
 	);
 	CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name ON users(name);`
 
-func (db *DBConn) AddUser(user *app.User) (*app.User, error) {
+func (db *DBConn) AddUser(user *User) (*User, error) {
 	if !db.IsActive() {
 		return nil, fmt.Errorf("db is not connected")
 	}
@@ -44,7 +49,7 @@ func (db *DBConn) AddUser(user *app.User) (*app.User, error) {
 	return user, nil
 }
 
-func (db *DBConn) UpdateUser(user *app.User) error {
+func (db *DBConn) UpdateUser(user User) error {
 	if !db.IsActive() {
 		return fmt.Errorf("db is not connected")
 	}
@@ -83,7 +88,7 @@ func (db *DBConn) DropUser(userId uint) error {
 	return nil
 }
 
-func (db *DBConn) GetUser(name string) (*app.User, error) {
+func (db *DBConn) GetUser(name string) (*User, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
@@ -96,7 +101,7 @@ func (db *DBConn) GetUser(name string) (*app.User, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	var user app.User
+	var user User
 	err := db.conn.Get(&user, `SELECT * FROM users WHERE name = ?`, name)
 	if err != nil {
 		return nil, fmt.Errorf("user[%s] not found: %s", name, err)
@@ -104,7 +109,7 @@ func (db *DBConn) GetUser(name string) (*app.User, error) {
 	return &user, err
 }
 
-func (db *DBConn) GetUserById(id uint) (*app.User, error) {
+func (db *DBConn) GetUserById(id uint) (*User, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
@@ -117,7 +122,7 @@ func (db *DBConn) GetUserById(id uint) (*app.User, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	var user app.User
+	var user User
 	err := db.conn.Get(&user, `SELECT * FROM users WHERE id = ?`, id)
 	if err != nil {
 		return nil, fmt.Errorf("userId[%d] not found: %s", id, err)

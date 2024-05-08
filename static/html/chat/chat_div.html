@@ -51,18 +51,17 @@
         shadow shadow-zinc-800">
         <div class="member-list flex flex-row">
             <span>Members: </span>&nbsp;
-            
             {{ $top := . }}
             {{ range $index, $user := .Users }}
                 <div class="member" 
                     id="chat-{{ $top.ChatId }}-user-{{ $user.UserId }}" 
-                    sse-swap="{{ $top.ChatExpelEvent }},{{ $top.ChatLeaveEvent }}"
+                    sse-swap="{{ $top.ChatExpelEvent }},{{ $top.ChatLeaveEvent }},{{ $top.UserChangeEvent }}"
                     hx-target="#chat-{{ $top.ChatId }}-user-{{ $user.UserId }}"
                     hx-swap="innerHTML"
                 >
+                    {{ template "user_div.html" $user }}
                 </div>
             {{ end }}
-
         </div> 
         {{ if eq .Owner.UserId .User.UserId }}
             <form id="inviteUserToChatForm"

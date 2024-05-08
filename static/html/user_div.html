@@ -10,7 +10,7 @@
 {{ define "deleteableMember" }}
 <div class="member default-transition" 
     id="chat-drop-{{ .ChatId }}-user-{{ .UserId }}"
-    sse-swap="{{ .ChatExpelEvent }},{{ .ChatLeaveEvent }}"
+    sse-swap="{{ .ChatExpelEvent }},{{ .ChatLeaveEvent }},{{ .UserChangeEvent }}"
     hx-target="#chat-drop-{{ .ChatId }}-user-{{ .UserId }}"
     hx-swap="innerHTML"
 >

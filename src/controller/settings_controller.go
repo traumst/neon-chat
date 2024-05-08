@@ -25,16 +25,21 @@ func OpenSettings(app *handler.AppState, w http.ResponseWriter, r *http.Request)
 		return
 	}
 	var openChatId int
+	var chatOwnerId uint
 	openChat := app.GetOpenChat(user.Id)
 	if openChat != nil {
 		openChatId = openChat.Id
+		chatOwnerId = openChat.Owner.Id
 	} else {
 		openChatId = 0
+		chatOwnerId = 0
 	}
 	settings := t.UserSettingsTemplate{
-		UserId:     user.Id,
-		ChatId:     openChatId,
-		ActiveUser: user.Name,
+		ChatId:      openChatId,
+		ChatOwnerId: chatOwnerId,
+		UserId:      user.Id,
+		UserName:    user.Name,
+		ViewerId:    user.Id,
 	}
 	html, err := settings.HTML()
 	if err != nil {
