@@ -89,13 +89,13 @@ func (state *AppState) TrackUser(user *app.User) error {
 	if user == nil {
 		return fmt.Errorf("user was nil")
 	}
-	state.mu.Lock()
-	defer state.mu.Unlock()
-
 	for _, u := range state.users {
 		if u.Id == user.Id {
-			log.Printf("∞--------> AppState.TrackUser TRACE user[%d] already tracked", user.Id)
+			log.Printf("∞--------> AppState.TrackUser TRACE tracked user[%d] update", user.Id)
 			u.Name = user.Name
+			for _, c := range state.chats.GetChats(user.Id) {
+				c.SyncUser(user)
+			}
 			return nil
 		}
 	}
@@ -113,7 +113,7 @@ func (state *AppState) GetUser(userId uint) (*app.User, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	log.Printf("∞--------> AppState.GetUser TRACE user[%d] found[%s]\n", userId, user.Name)
 	appUser := UserFromDB(*user)
 	state.TrackUser(&appUser)
 	return &appUser, nil
@@ -124,14 +124,12 @@ func (state *AppState) UpdateUser(appUser *app.User) error {
 	defer state.mu.Unlock()
 
 	log.Printf("∞--------> AppState.GetUser UpdateUser user[%d]\n", appUser.Id)
-
 	dbUser := UserToDB(*appUser)
 	err := state.db.UpdateUser(dbUser)
 	if err != nil {
 		return fmt.Errorf("failed to update user [%d]", appUser.Id)
 	}
-	state.TrackUser(appUser)
-	return nil
+	return state.TrackUser(appUser)
 }
 
 func (state *AppState) InviteUser(userId uint, chatId int, invitee *app.User) error {

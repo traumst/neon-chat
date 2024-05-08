@@ -124,7 +124,7 @@ func distributeChatToUser(
 		return chatLeave(conn, targetChat.Id, targetChat.Owner.Id, author.Id, subjectUser.Id)
 
 	case event.ChatClose:
-		return chatClose(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser.Id)
+		return chatClose(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser)
 
 	default:
 		return fmt.Errorf("unknown event type[%v]", updateType)

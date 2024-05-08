@@ -121,16 +121,16 @@ func chatDelete(conn *Conn, chatId int, ownerId uint, authorId uint, targetId ui
 	return nil
 }
 
-func chatClose(conn *Conn, chatId int, ownerId uint, authorId uint, targetId uint) error {
-	log.Printf("∞----> chatClose TRACE user[%d] closed chat[%d] for subject[%d]\n", authorId, chatId, targetId)
-	if authorId != ownerId && authorId != targetId {
+func chatClose(conn *Conn, chatId int, ownerId uint, authorId uint, target *app.User) error {
+	log.Printf("∞----> chatClose TRACE user[%d] closed chat[%d] for subject[%d]\n", authorId, chatId, target.Id)
+	if authorId != ownerId && authorId != target.Id {
 		return fmt.Errorf("author[%d] is not allowed to close chat[%d] for user[%d]",
-			authorId, chatId, targetId)
+			authorId, chatId, target.Id)
 	}
-	if targetId != 0 && conn.User.Id != targetId {
+	if target.Id != 0 && conn.User.Id != target.Id {
 		return fmt.Errorf("chatClose conn[%s] belongs to other user[%d]", conn.Origin, conn.User.Id)
 	}
-	welcome := template.WelcomeTemplate{ActiveUser: conn.User.Name}
+	welcome := template.WelcomeTemplate{User: template.UserTemplate{}}
 	data, err := welcome.HTML()
 	if err != nil {
 		return err
@@ -138,7 +138,7 @@ func chatClose(conn *Conn, chatId int, ownerId uint, authorId uint, targetId uin
 	conn.In <- event.LiveUpdate{
 		Event:    event.ChatClose,
 		ChatId:   chatId,
-		UserId:   targetId,
+		UserId:   target.Id,
 		MsgId:    -1,
 		AuthorId: authorId,
 		Data:     data,

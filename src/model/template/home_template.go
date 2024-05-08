@@ -3,17 +3,33 @@ package template
 import (
 	"bytes"
 	"html/template"
+
+	"go.chat/src/model/event"
 )
 
 type HomeTemplate struct {
-	Chats          []*ChatTemplate
-	OpenTemplate   *ChatTemplate
-	ActiveUser     string
-	LoadLocal      bool
-	ChatAddEvent   string
-	IsAuthorized   bool
-	LoginTemplate  LoginTemplate
-	ChatCloseEvent string
+	Chats         []*ChatTemplate
+	OpenChat      *ChatTemplate
+	User          UserTemplate
+	LoadLocal     bool
+	IsAuthorized  bool
+	LoginTemplate LoginTemplate
+}
+
+func (h *HomeTemplate) ChatAddEvent() string {
+	var openChatId int = -1
+	if h.OpenChat != nil {
+		openChatId = h.OpenChat.ChatId
+	}
+	return event.ChatAdd.FormatEventName(openChatId, h.User.UserId, -5)
+}
+
+func (h *HomeTemplate) ChatCloseEvent() string {
+	var openChatId int = -1
+	if h.OpenChat != nil {
+		openChatId = h.OpenChat.ChatId
+	}
+	return event.ChatClose.FormatEventName(openChatId, h.User.UserId, -6)
 }
 
 func (h *HomeTemplate) HTML() (string, error) {

@@ -29,10 +29,11 @@
         p-2
         shadow"
     >
-        {{ .ActiveUser }}&nbsp;
-        <sub title="log out {{ .ActiveUser }}"
+        {{ template "user_div.html" .User }}&nbsp;
+        <sub id="logoutButton" 
+            title="log out {{ .User.UserName }}"
+            hx-trigger="click" 
             hx-post="/logout" 
-            hx-trigger="submit" 
             hx-target="body"
             class="other-info flex hover:text-amber-700"
         >

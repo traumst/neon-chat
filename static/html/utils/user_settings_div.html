@@ -46,21 +46,21 @@
             </div>
 
             <form id="user-updated-name" 
-                title="change user name from {{ .UserName }}"
+                title="change user name"
                 hx-post="/user/change" 
                 hx-trigger="submit" 
                 hx-swap="beforeend" 
                 hx-include="#new-user-name"
+                onsubmit="hideNameEdit()"
+                onfocusout="hideNameEdit()" 
                 onkeydown="escFocus(event)"
                 class="default-transition hidden"
             >
-                Username:&nbsp;
+                <label for="new-user-name">Username:</label>
                 <input id="new-user-name"
+                    name="new-user-name" 
                     type="text" 
-                    name="username" 
                     autocomplete="username" 
-                    onsubmit="hideNameEdit()"
-                    onfocusout="hideNameEdit()" 
                     class="bg-gradient-to-br from-green-800 to-indigo-800
                         text-gray-400
                         shadow shadow-green-700

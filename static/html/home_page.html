@@ -172,7 +172,7 @@
         shadow shadow-zinc-900">
         <div class="open-chat default-transition h-screen overflow-y-auto overflow-x-hidden">
             {{ if .IsAuthorized }}
-                {{ with .OpenTemplate }}
+                {{ with .OpenChat }}
                     {{ template "chat_div.html" . }}
                 {{ else }}
                     {{ template "welcome_div.html" . }}

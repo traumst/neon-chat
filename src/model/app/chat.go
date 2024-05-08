@@ -16,16 +16,16 @@ type Chat struct {
 	mu      sync.Mutex
 }
 
-type ChatTable struct {
-	Id      uint   `db:"id"`
-	Name    string `db:"name"`
-	OwnerId uint   `db:"ownerId"`
-}
+// type ChatTable struct {
+// 	Id      uint   `db:"id"`
+// 	Name    string `db:"name"`
+// 	OwnerId uint   `db:"ownerId"`
+// }
 
-type ChatUsersTable struct {
-	ChatId int  `db:"chatId"`
-	UserId uint `db:"userId"`
-}
+// type ChatUsersTable struct {
+// 	ChatId int  `db:"chatId"`
+// 	UserId uint `db:"userId"`
+// }
 
 func (c *Chat) isOwner(userId uint) bool {
 	return c.Owner.Id == userId
@@ -59,6 +59,18 @@ func (c *Chat) AddUser(ownerId uint, user *User) error {
 	}
 	c.users = append(c.users, user)
 	return nil
+}
+
+func (c *Chat) SyncUser(user *User) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for _, u := range c.users {
+		if u.Id == user.Id {
+			u.Name = user.Name
+			return nil
+		}
+	}
+	return fmt.Errorf("user[%d] is not in chat[%d]", user.Id, c.Id)
 }
 
 func (c *Chat) GetUsers(userId uint) ([]*User, error) {

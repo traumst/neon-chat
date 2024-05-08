@@ -6,7 +6,6 @@ import (
 
 	"go.chat/src/handler"
 	"go.chat/src/model/app"
-	"go.chat/src/model/event"
 	"go.chat/src/model/template"
 	h "go.chat/src/utils/http"
 )
@@ -37,14 +36,12 @@ func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		LoadLocal: app.LoadLocal(),
 	}
 	home := template.HomeTemplate{
-		Chats:          nil,
-		OpenTemplate:   nil,
-		ActiveUser:     "User",
-		LoadLocal:      app.LoadLocal(),
-		IsAuthorized:   false,
-		LoginTemplate:  login,
-		ChatAddEvent:   "",
-		ChatCloseEvent: "",
+		Chats:         nil,
+		OpenChat:      nil,
+		User:          template.UserTemplate{UserName: "anon"},
+		LoadLocal:     app.LoadLocal(),
+		IsAuthorized:  false,
+		LoginTemplate: login,
 	}
 	log.Printf("--%s-> homeLogin TRACE templating", h.GetReqId(r))
 	html, err := home.HTML()
@@ -73,18 +70,18 @@ func homePage(app *handler.AppState, w http.ResponseWriter, r *http.Request, use
 	for _, chat := range app.GetChats(user.Id) {
 		chatTemplates = append(chatTemplates, chat.Template(user, user))
 	}
-	openChatId := -1
+	var openChatId int = -1
+	var openChatOwnerId uint = 0
 	if openChatTemplate != nil {
 		openChatId = openChat.Id
+		openChatOwnerId = openChat.Owner.Id
 	}
 	home := template.HomeTemplate{
-		Chats:          chatTemplates,
-		OpenTemplate:   openChatTemplate,
-		ActiveUser:     user.Name,
-		LoadLocal:      app.LoadLocal(),
-		IsAuthorized:   true,
-		ChatAddEvent:   event.ChatAdd.FormatEventName(openChatId, user.Id, -5),
-		ChatCloseEvent: event.ChatClose.FormatEventName(openChatId, user.Id, -6),
+		Chats:        chatTemplates,
+		OpenChat:     openChatTemplate,
+		User:         *user.Template(openChatId, openChatOwnerId, user.Id),
+		LoadLocal:    app.LoadLocal(),
+		IsAuthorized: true,
 	}
 	html, err := home.HTML()
 	if err != nil {

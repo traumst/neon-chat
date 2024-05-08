@@ -1,34 +1,29 @@
-
-{{ if eq .ViewerId .UserId }}
-    <b title="this is you">[{{ .UserName }}]</b>
-{{ else if eq .ViewerId .ChatOwnerId }}
-    {{ template "deleteableMember" . }}
-{{ else }}
-    [{{ .UserName }}]
-{{ end }}
-
-{{ define "deleteableMember" }}
 <div class="member default-transition" 
     id="chat-drop-{{ .ChatId }}-user-{{ .UserId }}"
     sse-swap="{{ .ChatExpelEvent }},{{ .ChatLeaveEvent }},{{ .UserChangeEvent }}"
     hx-target="#chat-drop-{{ .ChatId }}-user-{{ .UserId }}"
     hx-swap="innerHTML"
 >
-    <form id="member-delete-{{ .ChatId }}-user-{{ .UserId }}"
-        hx-post="/user/expel" 
-        hx-trigger="click" 
-        hx-target="#chat-drop-{{ .ChatId }}-user-{{ .UserId }}"
-        hx-swap="innerHTML" 
-        hx-include="#member-delete-{{ .ChatId }}-user-{{ .UserId }}"
-    >
-        <input type="hidden" name="chatid" value="{{ .ChatId }}">
-        <input type="hidden" name="userid" value="{{ .UserId }}">
-        <div class="member-delete-button" 
+    {{ if eq .ViewerId .UserId }}
+        <b title="this is you">[{{ .UserName }}]</b>
+    {{ else if eq .ViewerId .ChatOwnerId }}
+        <form id="member-delete-{{ .ChatId }}-user-{{ .UserId }}"
+            hx-post="/user/expel" 
             hx-trigger="click" 
-            hx-action="member-delete-{{ .ChatId }}-user-{{ .UserId }}.submit()"
+            hx-target="#chat-drop-{{ .ChatId }}-user-{{ .UserId }}"
+            hx-swap="innerHTML" 
+            hx-include="#member-delete-{{ .ChatId }}-user-{{ .UserId }}"
         >
-            [{{.UserName}}]
-        </div>
-    </form>
+            <input type="hidden" name="chatid" value="{{ .ChatId }}">
+            <input type="hidden" name="userid" value="{{ .UserId }}">
+            <div class="member-delete-button" 
+                hx-trigger="click" 
+                hx-action="member-delete-{{ .ChatId }}-user-{{ .UserId }}.submit()"
+            >
+                [{{.UserName}}]
+            </div>
+        </form>
+    {{ else }}
+        [{{ .UserName }}]
+    {{ end }}
 </div>
-{{ end }}

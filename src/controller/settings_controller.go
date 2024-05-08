@@ -73,7 +73,7 @@ func CloseSettings(app *handler.AppState, w http.ResponseWriter, r *http.Request
 	if openChat != nil {
 		html, err = openChat.Template(user, user).HTML()
 	} else {
-		welcome := t.WelcomeTemplate{ActiveUser: user.Name}
+		welcome := t.WelcomeTemplate{User: *user.Template(-1, 0, 0)}
 		html, err = welcome.HTML()
 	}
 	if err != nil {

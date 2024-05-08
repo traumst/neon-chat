@@ -274,7 +274,7 @@ func ChangeUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("unauthenticated"))
 		return
 	}
-	newName := r.FormValue("username")
+	newName := r.FormValue("new-user-name")
 	if newName == "" {
 		log.Printf("<-%s-- ChangeUser TRACE user, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusBadRequest)

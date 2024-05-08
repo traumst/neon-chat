@@ -21,16 +21,17 @@ func Welcome(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	var welcome template.WelcomeTemplate
 	if user == nil {
-		log.Printf("--%s-> OpenChat INFO user is not authorized, %s\n", h.GetReqId(r), err)
-		welcome = template.WelcomeTemplate{ActiveUser: ""}
+		log.Printf("--%s-> OpenChat TRACE user is not authorized, %s\n", h.GetReqId(r), err)
+		welcome = template.WelcomeTemplate{User: *user.Template(-1, 0, 0)}
 	} else {
-		log.Printf("--%s-> OpenChat INFO user is not authorized, %s\n", h.GetReqId(r), err)
-		welcome = template.WelcomeTemplate{ActiveUser: user.Name}
+		log.Printf("--%s-> OpenChat TRACE user is authorized, %s\n", h.GetReqId(r), err)
+		welcome = template.WelcomeTemplate{User: *user.Template(-1, 0, 0)}
 	}
 	html, err := welcome.HTML()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("failed to template html, %s", err.Error())))
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
@@ -70,7 +71,7 @@ func OpenChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	openChat, err := app.OpenChat(user.Id, chatId)
 	if err != nil {
 		log.Printf("<-%s-- OpenChat ERROR chat, %s\n", reqId, err)
-		welcome := template.WelcomeTemplate{ActiveUser: user.Name}
+		welcome := template.WelcomeTemplate{User: *user.Template(-1, 0, 0)}
 		html, err = welcome.HTML()
 	} else {
 		log.Printf("--%s-> OpenChat TRACE html template\n", reqId)
@@ -180,7 +181,7 @@ func CloseChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		log.Printf("<-%s-- CloseChat ERROR close chat[%d] for user[%d], %s\n",
 			reqId, chatId, user.Id, err)
 	}
-	welcome := template.WelcomeTemplate{ActiveUser: user.Name}
+	welcome := template.WelcomeTemplate{User: *user.Template(-1, 0, 0)}
 	html, err := welcome.HTML()
 	if err != nil {
 		log.Printf("<-%s-- CloseChat ERROR cannot template welcome page, %s\n", reqId, err)

@@ -43,6 +43,7 @@ func ReadSession(
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("<-%s-- ReadSession TRACE OUT\n", h.GetReqId(r))
 	return user, err
 }
 
