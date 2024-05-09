@@ -27,45 +27,41 @@ ok      go.chat/src/handler     (cached)
 ok      go.chat/src/model/app   (cached)
 Starting server...
 2024/05/01 00:07:58 Application is starting...
-2024/05/01 00:07:58     setting up logger...
-2024/05/01 00:07:58     parsing config...
-2024/05/01 00:07:58     parsed config: {LoadLocal:false,Port:8080,Sqlite:chat.db}
-2024/05/01 00:07:58     connecting db...
-2024/05/01 00:07:58   opening db file [chat.db] [24576]
-2024/05/01 00:07:58     init app state...
-2024/05/01 00:07:58     init controllers...
+...
 2024/05/01 00:07:58 Starting server at port [8080]
 ```
 And the app should be available at http://localhost:8080
+
+## Right now
+- user avatar
+    * update user - add avatarId FK
+    * create avatars table
+        - id
+        - userId
+        - title
+        - size < limit
+        - blob
+- user settings page
+    * change avatar
+    * reset password - email
 
 ## TODOs
 
 ### Known bugs
 - last open session is the only session a user can have
-- member_div is not the same as memberDiv on chat_div
 
-### GUI
-- user settings page
-    1. change avatar
-    2. change name in progress
-    3. change pass
-    3. add alternative auth
-    4. light/dark mode
-    5. mute list - per user - per chat
-- top controls
-    1. local time now iso
-    2. local session expiration iso
-    3. settings link
-- bottom controls
-    1. status 🟢🟡🔴
-    2. light/dark mode switch
-    3. mute user
+### Persistence
+- message store
+- cache instead of map
 
-### Extend functionality
-- @users in chat
-- @messages in chat
-- messages in chat
-- *web call*
+### Message Broadcasting: 
+- track user deltas: chats, messages
+- only serve deltas
+- buffer for unstable connection/s
+
+### Testing
+- extend unit tests
+- add integration tests
 
 ### Moderation
 - Add ability for users to mute/report other users
@@ -78,9 +74,10 @@ And the app should be available at http://localhost:8080
 - google auth
 - *2FA / MFA*
 
-### Persistence
-- message store
-- cache instead of map
+### Extend functionality
+- @users in chat
+- @messages in chat
+- *web call*
 
 ### User Notifications
 - setting on/off
@@ -89,25 +86,37 @@ And the app should be available at http://localhost:8080
 - new msg in chat
 
 ### Search
-- fuzzy name matching methods
-    - https://www.sqlite.org/lang_corefunc.html#soundex
-    - word embeding - %VALUE%
+- fuzzy name matching methods:
     - common key [C530, V500] - fast - mostly latin
+        - https://www.sqlite.org/lang_corefunc.html#soundex
+    - word embeding - %VALUE%
     - edit distance [cindy-cindi=1] - only latin - in-memory
     - statistical similarity - slow
 - search chats by: 
-    1. chat name
-    2. invited user name
-    3. message content
+    - chat name
+    - invited user name
+    - message content
 - search messages by:
-    1. content
-    2. author
+    - content
+    - author
 
-### Message Broadcasting: 
-- track user deltas: chats, messages
-- only serve deltas
-- buffer for unstable connection/s
-- test overload of a conn channel
+### GUI
+- user settings page
+    * add alternative auth
+    * light/dark mode
+    * mute list - per user - per chat
+- top controls
+    * local time now iso
+    * local session expiration iso
+    * settings link
+- bottom controls
+    * status 🟢🟡🔴
+    * light/dark mode switch
+    * mute user
+- collapsible sub menus
+    * active user - logout, setting
+    * open chat - close, delete
+    * chat members
 
 ## Later
 
