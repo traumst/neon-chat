@@ -53,7 +53,7 @@ func main() {
 	app.Init(db, handler.AppConfig{LoadLocal: config.LoadLocal})
 
 	log.Println("	init controllers...")
-	controller.Setup(app, db, config.LoadLocal)
+	controller.Setup(app, db)
 
 	log.Printf("Starting server at port [%d]\n", config.Port)
 	runtineErr := http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil)

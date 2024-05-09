@@ -1,0 +1,90 @@
+<div class="default-transition 
+    h-full flex flex-col 
+    p-2 pb-4">
+    <div class="flex flex-row justify-end p-2 shadow">
+        <div>
+            Settings&nbsp;
+        </div>
+        <div id="closeSettingButton" 
+            title="close settings" 
+            hx-get="/settings/close" 
+            hx-trigger="click" 
+            hx-target=".open-chat" 
+            hx-swap="innerHTML" 
+            class="hover:text-amber-700">[close]</div>
+    </div>
+
+    <div class="flex flex-row justify-start p-2 gap-x-1 shadow">
+        <div>
+            last changed
+        </div>
+        <div>
+            [prop]
+        </div>
+        <div>
+            [timestamp]
+        </div>
+    </div>
+    <div id="user-settings" class="flex flex-col
+        p-2
+        shadow shadow-zinc-700">
+        <div id="user-setting-profile" 
+            class="flex flex-row p-2 shadow-lg">
+            <div id="user-setting-avatar" class="flex flex-row hover:fill-amber-700">
+                Avatar:&nbsp;
+                <!-- TODO avatar placeholder -->
+                <img class="w-[2em] h-[2em]" src="icon/scarab-bnw.svg">
+                <sub>[edit]</sub>
+            </div>
+
+            <div id="user-setting-name" class="flex flex-row ml-auto">
+                <div id="user-current-name" class="flex flex-row"
+                    onclick="showNameEdit()"
+                >
+                    {{ template "user_div.html" . }}
+                    <sub class="hover:text-amber-700">[edit]</sub>
+                </div>
+                <div id="user-updated-name" class="hidden">
+                    <form  title="change user name"
+                        hx-post="/user/change" 
+                        hx-trigger="submit" 
+                        hx-swap="beforeend" 
+                        hx-include="#new-user-name"
+                        onsubmit="hideNameEdit()"
+                        onfocusout="hideNameEdit()" 
+                        onkeydown="escFocus(event)"
+                    >
+                        <input id="new-user-name"
+                            name="new-user-name" 
+                            placeholder="new_user_name"
+                            type="text" 
+                            autocomplete="username" 
+                            class="justify-center text-center rounded-md 
+                                bg-gradient-to-br from-green-800 to-indigo-800
+                                text-gray-400
+                                shadow shadow-green-700
+                                hover:shadow-lg hover:shadow-zinc-500"
+                        >
+                        <button type="submit" class="hidden"></button>
+                    </form>
+                </div>
+                <script>
+                    // this makes edit username switch between desplay and edit
+                    function showNameEdit() {
+                        const name = document.querySelector('#user-current-name');
+                        name.classList.add('hidden');
+                        const newName = document.querySelector('#user-updated-name');
+                        newName.classList.remove('hidden');
+                        newName.querySelector('input').focus();
+                    }
+                    function hideNameEdit() {
+                        const name = document.querySelector('#user-current-name');
+                        name.classList.remove('hidden');
+                        const newName = document.querySelector('#user-updated-name');
+                        newName.classList.add('hidden');
+                    }
+                </script>
+            </div>
+        </div>
+    </div>
+</div>

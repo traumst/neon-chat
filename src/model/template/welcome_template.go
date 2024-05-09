@@ -6,7 +6,7 @@ import (
 )
 
 type WelcomeTemplate struct {
-	ActiveUser string
+	User UserTemplate
 }
 
 func (w *WelcomeTemplate) HTML() (string, error) {

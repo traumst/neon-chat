@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"go.chat/src/model/app"
-	"go.chat/src/utils"
+	h "go.chat/src/utils/http"
 )
 
 func TestChannels(t *testing.T) {
@@ -107,7 +107,7 @@ func TestGet(t *testing.T) {
 	t.Logf("TestGet started")
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	reqId := "test-req-id"
-	utils.SetReqId(r, &reqId)
+	h.SetReqId(r, &reqId)
 	w := httptest.NewRecorder()
 	uc := UserConn{}
 	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeFree)}
@@ -139,7 +139,7 @@ func TestDrop(t *testing.T) {
 	t.Logf("TestDrop started")
 	r, err := http.NewRequest("GET", "/some-route", nil)
 	reqId := "test-req-id"
-	utils.SetReqId(r, &reqId)
+	h.SetReqId(r, &reqId)
 	if err != nil {
 		t.Fatal(err)
 	}

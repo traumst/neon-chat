@@ -12,10 +12,11 @@ import (
 	"go.chat/src/model/event"
 	"go.chat/src/model/template"
 	"go.chat/src/utils"
+	h "go.chat/src/utils/http"
 )
 
 func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r *http.Request) {
-	reqId := utils.GetReqId(r)
+	reqId := h.GetReqId(r)
 	log.Printf("--%s-> InviteUser\n", reqId)
 	if r.Method != "POST" {
 		log.Printf("<-%s-- InviteUser TRACE auth does not allow %s\n", reqId, r.Method)
@@ -24,8 +25,9 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 	}
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
-		log.Printf("--%s-> InviteUser WARN user, %s\n", utils.GetReqId(r), err)
-		RenderHome(app, w, r)
+		log.Printf("--%s-> InviteUser WARN user, %s\n", h.GetReqId(r), err)
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Unauthorized"))
 		return
 	}
 	chatId, err := strconv.Atoi(r.FormValue("chatId"))
@@ -38,6 +40,11 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 	inviteeName := r.FormValue("invitee")
 	inviteeName = utils.TrimSpaces(inviteeName)
 	inviteeName = utils.TrimSpecial(inviteeName)
+	if inviteeName == "" || len(inviteeName) < 4 {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Bad invitee name"))
+		return
+	}
 	invitee, err := conn.GetUser(inviteeName)
 	if err != nil || invitee == nil {
 		log.Printf("<-%s-- InviteUser ERROR invitee not found, %s\n", reqId, err)
@@ -46,7 +53,8 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 		return
 	}
 	log.Printf("--%s-> InviteUser TRACE inviting[%d] to chat[%d]\n", reqId, invitee.Id, chatId)
-	err = app.InviteUser(user.Id, chatId, invitee)
+	appInvitee := handler.UserFromDB(*invitee)
+	err = app.InviteUser(user.Id, chatId, &appInvitee)
 	if err != nil {
 		log.Printf("<-%s-- InviteUser ERROR invite, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -65,24 +73,23 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		err := handler.DistributeChat(app, chat, user, invitee, invitee, event.ChatInvite)
+		err := handler.DistributeChat(app, chat, user, &appInvitee, &appInvitee, event.ChatInvite)
 		if err != nil {
-			log.Printf("<-%s-- InviteUser ERROR cannot distribute chat invite, %s\n", reqId, err)
+			log.Printf("<-%s-- InviteUser WARN cannot distribute chat invite, %s\n", reqId, err)
 		}
 	}()
 	go func() {
 		defer wg.Done()
-		template := template.MemberTemplate{
-			ChatId:         chatId,
-			ChatName:       chat.Name,
-			User:           template.UserTemplate{Id: invitee.Id, Name: invitee.Name},
-			Viewer:         template.UserTemplate{Id: chat.Owner.Id, Name: chat.Owner.Name},
-			Owner:          template.UserTemplate{Id: chat.Owner.Id, Name: chat.Owner.Name},
-			ChatExpelEvent: event.ChatExpelEventName.Format(chatId, invitee.Id, -9),
+		template := template.UserTemplate{
+			ChatId:      chatId,
+			ChatOwnerId: chat.Owner.Id,
+			UserId:      invitee.Id,
+			UserName:    invitee.Name,
+			ViewerId:    user.Id,
 		}
-		html, err := template.ShortHTML()
+		html, err := template.HTML()
 		if err != nil {
-			log.Printf("<-%s-- InviteUser ERROR cannot template chat[%d], %s\n", reqId, chatId, err)
+			log.Printf("<-%s-- InviteUser ERROR cannot template user[%d], %s\n", reqId, chatId, err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -96,7 +103,7 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 }
 
 func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	reqId := utils.GetReqId(r)
+	reqId := h.GetReqId(r)
 	log.Printf("--%s-> ExpelUser\n", reqId)
 	if r.Method != "POST" {
 		log.Printf("<-%s-- ExpelUser TRACE auth does not allow %s\n", reqId, r.Method)
@@ -105,7 +112,7 @@ func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
-		log.Printf("--%s-> ExpelUser WARN user, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> ExpelUser WARN user, %s\n", h.GetReqId(r), err)
 		RenderHome(app, w, r)
 		return
 	}
@@ -147,7 +154,7 @@ func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 			log.Printf("<-%s-- ExpelUser ERROR cannot distribute chat close, %s\n", reqId, err)
 			return
 		}
-		err = handler.DistributeChat(app, chat, user, expelled, expelled, event.ChatDeleted)
+		err = handler.DistributeChat(app, chat, user, expelled, expelled, event.ChatDrop)
 		if err != nil {
 			log.Printf("<-%s-- ExpelUser ERROR cannot distribute chat deleted, %s\n", reqId, err)
 			return
@@ -162,7 +169,7 @@ func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		defer wg.Done()
 		log.Printf("<-%s-- ExpelUser TRACE user[%d] removed[%d] from chat[%d]\n", reqId, user.Id, expelled.Id, chat.Id)
 		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte(fmt.Sprintf("expelled <s>%s</s>", expelled.Name)))
+		w.Write([]byte(fmt.Sprintf("~<s>%s</s>~", expelled.Name)))
 	}()
 	wg.Wait()
 
@@ -176,7 +183,7 @@ func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 }
 
 func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	reqId := utils.GetReqId(r)
+	reqId := h.GetReqId(r)
 	log.Printf("--%s-> LeaveChat\n", reqId)
 	if r.Method != "POST" {
 		log.Printf("<-%s-- LeaveChat TRACE auth does not allow %s\n", reqId, r.Method)
@@ -186,7 +193,7 @@ func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> LeaveChat TRACE check login\n", reqId)
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
-		log.Printf("--%s-> LeaveChat WARN user, %s\n", utils.GetReqId(r), err)
+		log.Printf("--%s-> LeaveChat WARN user, %s\n", h.GetReqId(r), err)
 		RenderHome(app, w, r)
 		return
 	}
@@ -210,26 +217,36 @@ func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = app.DropUser(user.Id, chat.Id, user.Id)
+	if err != nil {
+		log.Printf("<-%s-- LeaveChat out ERROR dropUser, %s\n", reqId, err)
+	} else {
+		log.Printf("<-%s-- LeaveChat out TRACE chat[%d] removed[%d]\n", reqId, chatId, user.Id)
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
 		log.Printf("--%s-∞ LeaveChat TRACE distributing user[%d] left chat[%d]\n", reqId, user.Id, chat.Id)
-		err := handler.DistributeChat(app, chat, user, user, nil, event.ChatClose)
+		err := handler.DistributeChat(app, chat, user, user, user, event.ChatClose)
 		if err != nil {
 			log.Printf("<-%s-- LeaveChat ERROR cannot distribute chat close, %s\n", reqId, err)
 			return
 		}
-		err = handler.DistributeChat(app, chat, user, user, nil, event.ChatDeleted)
+		log.Printf("--%s-- LeaveChat TRACE distributed chat close", reqId)
+		err = handler.DistributeChat(app, chat, user, user, user, event.ChatDrop)
 		if err != nil {
 			log.Printf("<-%s-- LeaveChat ERROR cannot distribute chat deleted, %s\n", reqId, err)
 			return
 		}
-		err = handler.DistributeChat(app, chat, user, nil, user, event.ChatExpel)
+		log.Printf("--%s-- LeaveChat TRACE distributed chat deleted", reqId)
+		err = handler.DistributeChat(app, chat, user, nil, user, event.ChatLeave)
 		if err != nil {
 			log.Printf("<-%s-- LeaveChat ERROR cannot distribute chat user drop, %s\n", reqId, err)
 			return
 		}
+		log.Printf("--%s-- LeaveChat TRACE distributed chat leave", reqId)
 	}()
 	go func() {
 		defer wg.Done()
@@ -238,11 +255,47 @@ func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("[LEFT_U]"))
 	}()
 	wg.Wait()
+}
 
-	err = app.DropUser(user.Id, chat.Id, user.Id)
-	if err != nil {
-		log.Printf("<-%s-- LeaveChat out ERROR dropUser, %s\n", reqId, err)
-	} else {
-		log.Printf("<-%s-- LeaveChat out TRACE chat[%d] removed[%d]\n", reqId, chatId, user.Id)
+func ChangeUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+	reqId := h.GetReqId(r)
+	log.Printf("--%s-> ChangeUser\n", reqId)
+	if r.Method != "POST" {
+		log.Printf("<-%s-- ChangeUser TRACE auth does not allow %s\n", reqId, r.Method)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte("bad verb"))
+		return
 	}
+	log.Printf("--%s-> ChangeUser TRACE check login\n", reqId)
+	user, err := handler.ReadSession(app, w, r)
+	if err != nil || user == nil {
+		log.Printf("<-%s-- ChangeUser WARN unauthenticated, %s\n", h.GetReqId(r), err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("unauthenticated"))
+		return
+	}
+	newName := r.FormValue("new-user-name")
+	if newName == "" {
+		log.Printf("<-%s-- ChangeUser TRACE user, %s\n", h.GetReqId(r), err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("user did not change"))
+		return
+	}
+	user.Name = newName
+	err = app.UpdateUser(user)
+	if err != nil {
+		log.Printf("<-%s-- ChangeUser WARN failed to update user[%d], %s\n", h.GetReqId(r), user.Id, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("user update failed"))
+		return
+	}
+	err = handler.DistributeUserChange(app, user, event.UserChange)
+	if err != nil {
+		log.Printf("<-%s-- ChangeUser ERROR failed to distribute user change, %s\n", h.GetReqId(r), err)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("[partial]"))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("[ok]"))
 }

@@ -2,18 +2,19 @@
     sse-swap="{{ .MessageDropEvent }}"
     hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
     hx-swap="innerHTML" 
-    class="chat-message-li 
+    class="chat-message-li default-transition
         flex flex-row justify-between
         p-2
+        m-2
         h-fit
         gap-1
         shadow
         {{ if eq .Author .ActiveUser }}
-            ml-20
+            ml-[17%]
             border-b-4 border-green-700 rounded-lg
             shadow shadow-green-800
         {{ else }}
-            mr-20
+            mr-[17%]
             border-b-4 border-indigo-700 rounded-lg
             shadow shadow-green-800
         {{ end }}
@@ -37,9 +38,9 @@
             <input type="hidden" name="chatid" value="{{ .ChatId }}">
             <div hx-trigger="click" 
                 hx-action="chat-message-delete-{{ .MsgId }}.submit()"
-                class="chat-message-delete hover:text-red-700"
+                class="chat-message-delete hover:text-amber-700"
             >
-                <sub>[delete]</sub>
+                <sub title="delete message">[delete]</sub>
             </div>
         </form>
     {{ end }}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 
-	e "go.chat/src/model/event"
 	t "go.chat/src/model/template"
 )
 
@@ -16,6 +15,17 @@ type Chat struct {
 	history MessageStore
 	mu      sync.Mutex
 }
+
+// type ChatTable struct {
+// 	Id      uint   `db:"id"`
+// 	Name    string `db:"name"`
+// 	OwnerId uint   `db:"ownerId"`
+// }
+
+// type ChatUsersTable struct {
+// 	ChatId int  `db:"chatId"`
+// 	UserId uint `db:"userId"`
+// }
 
 func (c *Chat) isOwner(userId uint) bool {
 	return c.Owner.Id == userId
@@ -44,8 +54,23 @@ func (c *Chat) AddUser(ownerId uint, user *User) error {
 	if !c.isOwner(ownerId) {
 		return fmt.Errorf("only the owner can invite users")
 	}
+	if c.isUserInChat(user.Id) {
+		return fmt.Errorf("user already in chat")
+	}
 	c.users = append(c.users, user)
 	return nil
+}
+
+func (c *Chat) SyncUser(user *User) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for _, u := range c.users {
+		if u.Id == user.Id {
+			u.Name = user.Name
+			return nil
+		}
+	}
+	return fmt.Errorf("user[%d] is not in chat[%d]", user.Id, c.Id)
 }
 
 func (c *Chat) GetUsers(userId uint) ([]*User, error) {
@@ -111,7 +136,7 @@ func (c *Chat) DropMessage(userId uint, msgId int) (*Message, error) {
 	return msg, c.history.Delete(msg)
 }
 
-func (c *Chat) Template(user *User) *t.ChatTemplate {
+func (c *Chat) Template(user *User, viewer *User) *t.ChatTemplate {
 	var messages []t.MessageTemplate
 	for _, msg := range c.history.GetAll() {
 		if msg == nil {
@@ -121,21 +146,35 @@ func (c *Chat) Template(user *User) *t.ChatTemplate {
 	}
 	users := make([]t.UserTemplate, len(c.users))
 	for i, u := range c.users {
-		users[i] = t.UserTemplate{Id: u.Id, Name: u.Name}
+		users[i] = t.UserTemplate{
+			ChatId:      c.Id,
+			ChatOwnerId: c.Owner.Id,
+			UserId:      u.Id,
+			UserName:    u.Name,
+			ViewerId:    viewer.Id,
+		}
 	}
-	usr := t.UserTemplate{Id: user.Id, Name: user.Name}
-	ownr := t.UserTemplate{Id: c.Owner.Id, Name: c.Owner.Name}
+	usr := t.UserTemplate{
+		ChatId:      c.Id,
+		ChatOwnerId: c.Owner.Id,
+		UserId:      user.Id,
+		UserName:    user.Name,
+		ViewerId:    viewer.Id,
+	}
+	ownr := t.UserTemplate{
+		ChatId:      c.Id,
+		ChatOwnerId: c.Owner.Id,
+		UserId:      c.Owner.Id,
+		UserName:    c.Owner.Name,
+		ViewerId:    viewer.Id,
+	}
 	return &t.ChatTemplate{
-		ChatId:          c.Id,
-		Name:            c.Name,
-		User:            usr,
-		Viewer:          usr,
-		Owner:           ownr,
-		Users:           users,
-		Messages:        messages,
-		ChatDropEvent:   e.ChatDropEventName.Format(c.Id, user.Id, -1),
-		ChatCloseEvent:  e.ChatCloseEventName.Format(c.Id, user.Id, -2),
-		ChatExpelEvent:  e.ChatExpelEventName.Format(c.Id, user.Id, -4),
-		MessageAddEvent: e.MessageAddEventName.Format(c.Id, user.Id, -3),
+		ChatId:   c.Id,
+		ChatName: c.Name,
+		User:     usr,
+		Viewer:   usr,
+		Owner:    ownr,
+		Users:    users,
+		Messages: messages,
 	}
 }
