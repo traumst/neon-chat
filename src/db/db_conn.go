@@ -42,7 +42,7 @@ func (db *DBConn) Close() {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	db.conn.Close() // TODO can panic I bet
+	db.conn.Close()
 }
 
 func (db *DBConn) IsActive() bool {

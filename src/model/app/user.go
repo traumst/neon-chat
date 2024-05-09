@@ -1,5 +1,9 @@
 package app
 
+import (
+	"go.chat/src/model/template"
+)
+
 type UserType string
 
 // TODO add flags/permissions mapping
@@ -9,8 +13,22 @@ const (
 )
 
 type User struct {
-	Id   uint     `db:"id"`
-	Name string   `db:"name"`
-	Type UserType `db:"type"`
-	Salt string   `db:"salt"`
+	Id   uint
+	Name string
+	Type UserType
+	Salt string
+}
+
+func (user *User) Template(
+	chatId int,
+	chatOwnerId uint,
+	viewerId uint,
+) *template.UserTemplate {
+	return &template.UserTemplate{
+		ChatId:      chatId,
+		ChatOwnerId: chatOwnerId,
+		UserId:      user.Id,
+		UserName:    user.Name,
+		ViewerId:    viewerId,
+	}
 }

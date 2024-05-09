@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"go.chat/src/model/app"
-	"go.chat/src/utils"
+	h "go.chat/src/utils/http"
 )
 
 var app1 = &ApplicationState
@@ -36,7 +36,7 @@ func TestGetConn(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	reqId := "test-req-id"
-	utils.SetReqId(r, &reqId)
+	h.SetReqId(r, &reqId)
 	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeFree)}
 
 	conn := app1.ReplaceConn(w, *r, &user)

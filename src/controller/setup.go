@@ -7,7 +7,7 @@ import (
 	"go.chat/src/handler"
 )
 
-func Setup(app *handler.AppState, conn *db.DBConn, loadLocal bool) {
+func Setup(app *handler.AppState, conn *db.DBConn) {
 	// loaded in reverse order
 	allMiddleware := []Middleware{LoggerMiddleware, ReqIdMiddleware}
 
@@ -15,27 +15,8 @@ func Setup(app *handler.AppState, conn *db.DBConn, loadLocal bool) {
 	handleUser(app, conn, allMiddleware)
 	handleChat(app, allMiddleware)
 	handleMsgs(app, allMiddleware)
-
-	// static files
-	minMiddleware := []Middleware{ReqIdMiddleware}
-	http.Handle("/favicon.ico", ChainMiddleware(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			FavIcon(w, r)
-		}), minMiddleware))
-	http.Handle("/icon/", ChainMiddleware(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ServeFile(w, r)
-		}), minMiddleware))
-	if loadLocal {
-		http.Handle("/script/", ChainMiddleware(
-			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				ServeFile(w, r)
-			}), minMiddleware))
-		http.Handle("/css/", ChainMiddleware(
-			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				ServeFile(w, r)
-			}), minMiddleware))
-	}
+	handleSettings(app, allMiddleware)
+	handleStaticFiles()
 
 	// live updates
 	http.Handle("/poll", ChainMiddleware(
@@ -47,6 +28,39 @@ func Setup(app *handler.AppState, conn *db.DBConn, loadLocal bool) {
 	http.Handle("/", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			RenderHome(app, w, r)
+		}), allMiddleware))
+}
+
+func handleStaticFiles() {
+	// loaded in reverse order
+	minMiddleware := []Middleware{ReqIdMiddleware}
+
+	http.Handle("/favicon.ico", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			FavIcon(w, r)
+		}), minMiddleware))
+	http.Handle("/icon/", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ServeFile(w, r)
+		}), minMiddleware))
+	http.Handle("/script/", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ServeFile(w, r)
+		}), minMiddleware))
+	http.Handle("/css/", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ServeFile(w, r)
+		}), minMiddleware))
+}
+
+func handleSettings(app *handler.AppState, allMiddleware []Middleware) {
+	http.Handle("/settings", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			OpenSettings(app, w, r)
+		}), allMiddleware))
+	http.Handle("/settings/close", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			CloseSettings(app, w, r)
 		}), allMiddleware))
 }
 
@@ -62,6 +76,10 @@ func handleMsgs(app *handler.AppState, allMiddleware []Middleware) {
 }
 
 func handleChat(app *handler.AppState, allMiddleware []Middleware) {
+	http.Handle("/chat/welcome", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			Welcome(app, w, r)
+		}), allMiddleware))
 	http.Handle("/chat/delete", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			DeleteChat(app, w, r)
@@ -92,6 +110,10 @@ func handleUser(app *handler.AppState, conn *db.DBConn, allMiddleware []Middlewa
 	http.Handle("/user/leave", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			LeaveChat(app, w, r)
+		}), allMiddleware))
+	http.Handle("/user/change", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ChangeUser(app, w, r)
 		}), allMiddleware))
 }
 

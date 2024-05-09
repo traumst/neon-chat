@@ -1,0 +1,144 @@
+
+<div class="flex flex-col h-screen">
+    <script>
+        function scrollToFirstChild(parent) {
+            const firstElement = parent.children[0];
+            firstElement?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+        chatHeaderObserver = null;
+        chatHeaderObserver = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
+                if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                    scrollToFirstChild(mutation.target);
+                }
+            });
+        });
+        chatHeaders = null;
+        chatHeaders = document.querySelector(".chat-headers");
+        if (chatHeaders) {
+            chatHeaderObserverOptions = null;
+            chatHeaderObserverOptions = { childList: true, subtree: true, characterData: true };
+            chatHeaderObserver.observe(chatHeaders, chatHeaderObserverOptions);
+        }
+    </script>
+    <div class="active-user default-transition
+        flex flex-row justify-end
+        p-2
+        shadow"
+    >
+        {{ template "user_div.html" .User }}&nbsp;
+        <sub id="logoutButton" 
+            title="log out {{ .User.UserName }}"
+            hx-trigger="click" 
+            hx-post="/logout" 
+            hx-target="body"
+            class="other-info flex hover:text-amber-700"
+        >
+            [logout]
+        </sub>
+        <!-- repeated clicks here should cycle between open/close settings -->
+        <sub id="openSettingButton" 
+            title="open settings" 
+            hx-trigger="click" 
+            hx-get="/settings" 
+            hx-target=".open-chat" 
+            hx-swap="innerHTML"
+            class="other-info flex hover:text-green-700"
+        >
+            [settings]
+        </sub>
+    </div>
+
+    <div class="add-chat 
+        flex w-full 
+        p-2
+        shadow"
+    >
+        <form id="add-chat-form"
+            hx-post="/chat" 
+            hx-trigger="submit" 
+            hx-target=".open-chat" 
+            hx-swap="innerHTML"
+            class="w-full border-2 rounded border-emerald-400">
+        <input id="newChatName" type="text" name="chatName" placeholder="new chat name" title="enter to send"
+            class="w-full justify-center text-center rounded-md
+                bg-gradient-to-br from-green-800 to-indigo-800
+                text-gray-400
+                shadow shadow-zinc-700
+                hover:shadow-lg hover:shadow-zinc-500">
+        <button type="submit" class="hidden">
+            Create Chat
+        </button>
+        </form>
+        <script>
+            document.body.addEventListener('htmx:afterSwap', event => {
+                const newChatName = document.getElementById('newChatName');
+                if (newChatName) {
+                    newChatName.value = '';
+                }
+            });
+        </script>
+    </div>
+
+    <div class="chat-list default-transition 
+        flex flex-col
+        p-2
+        mb-1
+        shadow
+        overflow-x-hidden
+        overflow-y-auto"
+    >
+        <ul sse-swap="{{ .ChatAddEvent }}" 
+            hx-swap="afterbegin" 
+            class="chat-headers default-transition flex flex-col"
+        > 
+        {{ with $chats := .ReverseChats }}
+            {{ range $index, $chat := $chats }} 
+                {{ template "chat_li.html" $chat }}
+            {{ end }}
+        {{ else }}
+            <li id="noChats" 
+                sse-swap="{{ .ChatAddEvent }}" 
+                hx-swap="delete" 
+                target="#noChats" 
+                class="h-7 flex flex-grow-0 px-2 py-4"
+            >
+                No chats yet
+            </li>
+        {{ end }}
+        </ul>
+        <script>
+        function scrollToFirstChild(parent) {
+            const firstElement = parent.children[0];
+            firstElement?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+        chatHeaderObserver = null;
+        chatHeaderObserver = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
+                if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                    scrollToFirstChild(mutation.target);
+                }
+            });
+        });
+        chatHeaders = null;
+        chatHeaders = document.querySelector(".chat-headers");
+        if (chatHeaders) {
+            chatHeaderObserverOptions = null;
+            chatHeaderObserverOptions = { childList: true, subtree: true, characterData: true };
+            chatHeaderObserver.observe(chatHeaders, chatHeaderObserverOptions);
+        }
+        scrollToFirstChild(chatHeaders);
+        </script>
+    </div>
+<!-- <div id="left-panel-toggle">
+    <button onclick="togglePanel()" 
+        class="default-transition mt-auto">
+    </button>
+</div> -->
+</div>

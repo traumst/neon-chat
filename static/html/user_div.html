@@ -1,0 +1,27 @@
+<div id="chat-{{ .ChatId }}-user-{{ .UserId }}" 
+    sse-swap="{{ .ChatExpelEvent }},{{ .ChatLeaveEvent }},{{ .UserChangeEvent }}"
+    hx-swap="outerHTML"
+    class="member default-transition"
+>
+    {{ if eq .ViewerId .UserId }}
+        <div title="this is you">[{{ .UserName }}]</div>
+    {{ else if eq .ViewerId .ChatOwnerId }}
+        <form id="member-delete-{{ .ChatId }}-user-{{ .UserId }}"
+            hx-trigger="click" 
+            hx-include="#member-delete-{{ .ChatId }}-user-{{ .UserId }}"
+            hx-post="/user/expel" 
+            hx-swap="none" 
+        >
+            <input type="hidden" name="chatid" value="{{ .ChatId }}" />
+            <input type="hidden" name="userid" value="{{ .UserId }}" />
+            <div class="member-delete-button hover:text-amber-700" 
+                hx-trigger="click" 
+                hx-action="member-delete-{{ .ChatId }}-user-{{ .UserId }}.submit()"
+            >
+                [{{.UserName}}]
+            </div>
+        </form>
+    {{ else }}
+        [{{ .UserName }}]
+    {{ end }}
+</div>
