@@ -58,6 +58,8 @@ func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 func homePage(app *handler.AppState, w http.ResponseWriter, r *http.Request, user *app.User) {
 	log.Printf("--%s-> homePage TRACE IN", h.GetReqId(r))
 	var openChatTemplate *template.ChatTemplate
+	var openChatId int = -1
+	var openChatOwnerId uint = 0
 	openChat := app.GetOpenChat(user.Id)
 	if openChat == nil {
 		log.Printf("--%s-> homePage DEBUG, user[%d] has no open chat\n", h.GetReqId(r), user.Id)
@@ -65,16 +67,12 @@ func homePage(app *handler.AppState, w http.ResponseWriter, r *http.Request, use
 	} else {
 		log.Printf("--%s-> homePage DEBUG, user[%d] has chat[%d] open\n", h.GetReqId(r), user.Id, openChat.Id)
 		openChatTemplate = openChat.Template(user, user)
+		openChatId = openChat.Id
+		openChatOwnerId = openChat.Owner.Id
 	}
 	var chatTemplates []*template.ChatTemplate
 	for _, chat := range app.GetChats(user.Id) {
 		chatTemplates = append(chatTemplates, chat.Template(user, user))
-	}
-	var openChatId int = -1
-	var openChatOwnerId uint = 0
-	if openChatTemplate != nil {
-		openChatId = openChat.Id
-		openChatOwnerId = openChat.Owner.Id
 	}
 	home := template.HomeTemplate{
 		Chats:        chatTemplates,

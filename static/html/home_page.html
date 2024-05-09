@@ -26,7 +26,14 @@
             if (event.key === 'Escape') {
                 event.target.blur();
             } else {
-                console.log('escFocus key', event.key)
+                //console.log('escFocus key', event.key)
+            }
+        }
+        function enterSubmit(event) {
+            if (event.key === 'Enter') {
+                event.target.submit();
+            } else {
+                //console.log('enterSubmit key', event.key)
             }
         }
         function togglePanel() {

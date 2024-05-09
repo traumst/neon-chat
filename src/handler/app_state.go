@@ -127,7 +127,7 @@ func (state *AppState) UpdateUser(appUser *app.User) error {
 	dbUser := UserToDB(*appUser)
 	err := state.db.UpdateUser(dbUser)
 	if err != nil {
-		return fmt.Errorf("failed to update user [%d]", appUser.Id)
+		return fmt.Errorf("failed to update user [%d], %s", appUser.Id, err.Error())
 	}
 	return state.TrackUser(appUser)
 }
