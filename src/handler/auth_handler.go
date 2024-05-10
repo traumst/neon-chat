@@ -57,20 +57,20 @@ func Authenticate(
 		return nil, nil, fmt.Errorf("missing mandatory args user[%s], authType[%s]", username, authType)
 	}
 	user, err := db.GetUser(username)
-	appUser := UserFromDB(*user)
 	if err != nil || user == nil || user.Id == 0 || len(user.Salt) == 0 {
 		log.Printf("-----> Authenticate TRACE user[%s] not found, %s\n", username, err)
 		return nil, nil, fmt.Errorf("user[%s] not found, %s", username, err)
 	}
-	hash, err := utils.HashPassword(pass, user.Salt)
+	appUser := UserFromDB(*user)
+	hash, err := utils.HashPassword(pass, appUser.Salt)
 	if err != nil {
-		log.Printf("-----> Authenticate TRACE failed on hashing[%s] pass for user[%s], %s", hash, user.Name, err)
-		return &appUser, nil, fmt.Errorf("failed on hashing pass for user[%s], %s", user.Name, err)
+		log.Printf("-----> Authenticate TRACE failed on hashing[%s] pass for user[%s], %s", hash, appUser.Name, err)
+		return &appUser, nil, fmt.Errorf("failed on hashing pass for user[%s], %s", appUser.Name, err)
 	}
-	log.Printf("-----> Authenticate TRACE user[%d] auth[%s] hash[%s]\n", user.Id, authType, hash)
-	auth, err := db.GetAuth(user.Id, string(authType), hash)
+	log.Printf("-----> Authenticate TRACE user[%d] auth[%s] hash[%s]\n", appUser.Id, authType, hash)
+	auth, err := db.GetAuth(appUser.Id, string(authType), hash)
 	if err != nil {
-		return &appUser, nil, fmt.Errorf("no auth for user[%s] hash[%s], %s", user.Name, hash, err)
+		return &appUser, nil, fmt.Errorf("no auth for user[%s] hash[%s], %s", appUser.Name, hash, err)
 	}
 	appAuth := AuthFromDB(*auth)
 	return &appUser, &appAuth, nil
