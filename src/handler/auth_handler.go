@@ -53,11 +53,11 @@ func Authenticate(
 	pass string,
 	authType a.AuthType,
 ) (*a.User, *a.UserAuth, error) {
-	if db == nil || len(username) == 0 || len(pass) == 0 {
+	if db == nil || len(username) <= 0 || len(pass) <= 0 {
 		return nil, nil, fmt.Errorf("missing mandatory args user[%s], authType[%s]", username, authType)
 	}
-	user, err := db.GetUser(username)
-	if err != nil || user == nil || user.Id == 0 || len(user.Salt) == 0 {
+	user, err := db.SearchUser(username)
+	if err != nil || user == nil || user.Id <= 0 || len(user.Salt) <= 0 {
 		log.Printf("-----> Authenticate TRACE user[%s] not found, %s\n", username, err)
 		return nil, nil, fmt.Errorf("user[%s] not found, %s", username, err)
 	}
@@ -126,7 +126,7 @@ func createUser(db *d.DBConn, user *a.User) (*a.User, error) {
 	if err != nil || created == nil {
 		return nil, fmt.Errorf("failed to add user[%v], %s", created, err)
 	}
-	if created.Id == 0 {
+	if created.Id <= 0 {
 		return nil, fmt.Errorf("user[%s] was not created", created.Name)
 	}
 	appUser := UserFromDB(*created)
@@ -169,7 +169,7 @@ func createAuth(db *d.DBConn, user *a.User, pass string, authType a.AuthType) (*
 	if err != nil || dbAuth == nil {
 		return nil, fmt.Errorf("fail to add auth to user[%d][%s], %s", user.Id, user.Name, err)
 	}
-	if dbAuth.Id == 0 {
+	if dbAuth.Id <= 0 {
 		return nil, fmt.Errorf("user[%d][%s] auth was not created", user.Id, user.Name)
 	}
 	appAuth := AuthFromDB(*dbAuth)

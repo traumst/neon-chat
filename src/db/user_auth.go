@@ -16,7 +16,8 @@ const SchemaAuth string = `
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
 		user_id INTEGER,
 		type TEXT,
-		hash TEXT
+		hash TEXT,
+		FOREIGN KEY(user_id) REFERENCES users(id)
 	);
 	CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_user_id_type ON auth(user_id, type, hash);`
 
@@ -29,7 +30,7 @@ func (db *DBConn) AddAuth(auth UserAuth) (*UserAuth, error) {
 	defer db.mu.Unlock()
 	if auth.Id != 0 {
 		return nil, fmt.Errorf("auth already has an id[%d]", auth.Id)
-	} else if auth.UserId == 0 {
+	} else if auth.UserId <= 0 {
 		return nil, fmt.Errorf("auth has no user id")
 	} else if auth.Type == "" {
 		return nil, fmt.Errorf("auth type is unknown")

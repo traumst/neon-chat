@@ -30,7 +30,7 @@ func SetSseHeaders(w *http.ResponseWriter) {
 func ParseUrlArgs(r *http.Request) map[string]string {
 	args := make(map[string]string)
 	for k, v := range r.URL.Query() {
-		if len(v) == 0 {
+		if len(v) <= 0 {
 			args[k] = v[0]
 		}
 	}

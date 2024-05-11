@@ -109,7 +109,7 @@ func (state *AppState) GetUser(userId uint) (*app.User, error) {
 	defer state.mu.Unlock()
 
 	log.Printf("∞--------> AppState.GetUser TRACE user[%d]\n", userId)
-	user, err := state.db.GetUserById(userId)
+	user, err := state.db.GetUser(userId)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func (state *AppState) UpdateUser(appUser *app.User) error {
 
 	log.Printf("∞--------> AppState.GetUser UpdateUser user[%d]\n", appUser.Id)
 	dbUser := UserToDB(*appUser)
-	err := state.db.UpdateUser(dbUser)
+	err := state.db.UpdateName(dbUser)
 	if err != nil {
 		return fmt.Errorf("failed to update user [%d], %s", appUser.Id, err.Error())
 	}

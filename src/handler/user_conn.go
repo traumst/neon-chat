@@ -57,7 +57,7 @@ func (uc UserConn) Get(userId uint) (*Conn, error) {
 	mu.Lock()
 	defer mu.Unlock()
 	conns := uc.userConns(userId)
-	if len(conns) == 0 {
+	if len(conns) <= 0 {
 		return nil, fmt.Errorf("user[%d] not connected", userId)
 	}
 
@@ -84,7 +84,7 @@ func (uc *UserConn) Drop(c *Conn) error {
 		return fmt.Errorf("attempt to drop NIL connection")
 	}
 
-	if uc == nil || len(*uc) == 0 {
+	if uc == nil || len(*uc) <= 0 {
 		return fmt.Errorf("no connections to drop")
 	}
 
@@ -100,7 +100,7 @@ func (uc *UserConn) Drop(c *Conn) error {
 
 func (uc *UserConn) userConns(userId uint) []*Conn {
 	conns := make([]*Conn, 0)
-	if uc == nil || len(*uc) == 0 {
+	if uc == nil || len(*uc) <= 0 {
 		return conns
 	}
 	for _, conn := range *uc {
@@ -132,7 +132,7 @@ func (conn *Conn) SendUpdates(up event.LiveUpdate, pollingUserId uint) {
 
 func (conn *Conn) trySend(up event.LiveUpdate) error {
 	w := conn.Writer
-	if up.UserId == 0 {
+	if up.UserId <= 0 {
 		return fmt.Errorf("trySend ERROR user is empty, user[%d], msg[%s]", up.UserId, up.Data)
 	}
 	if w == nil {
@@ -186,7 +186,7 @@ func (conn *Conn) trySend(up event.LiveUpdate) error {
 }
 
 func flushEvent(w *http.ResponseWriter, evnt event.UpdateType, up event.LiveUpdate) error {
-	if up.UserId == 0 {
+	if up.UserId <= 0 {
 		panic("UserId should not be empty")
 	}
 	eventName := evnt.FormatEventName(up.ChatId, up.UserId, up.MsgId)
