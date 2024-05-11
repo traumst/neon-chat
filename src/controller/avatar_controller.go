@@ -49,6 +49,10 @@ func AddAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		http.Error(w, "failed to load input file", http.StatusBadRequest)
+		return
+	}
 	fileType := http.DetectContentType(fileBytes)
 	if fileType != "image/svg+xml" {
 		http.Error(w, "file type is not supported: "+fileType, http.StatusBadRequest)
@@ -67,6 +71,36 @@ func AddAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	avatar.Id = saved.Id
+	tmpl := avatar.Template(user)
+	html, err := tmpl.HTML()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("failed to template avatar[%d]", avatar.Id), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(html))
+}
+
+func GetAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+	reqId := h.GetReqId(r)
+	log.Printf("--%s-> GetAvatar\n", reqId)
+	if r.Method != "GET" {
+		log.Printf("<-%s-- GetAvatar TRACE auth does not allow %s\n", reqId, r.Method)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte("Only GET method is allowed"))
+		return
+	}
+	user, err := handler.ReadSession(app, w, r)
+	if user == nil {
+		log.Printf("--%s-> GetAvatar INFO user is not authorized, %s\n", h.GetReqId(r), err)
+		RenderHome(app, w, r)
+		return
+	}
+	avatar, err := app.GetAvatar(user.Id)
+	if err != nil {
+		http.Error(w, "avatar not found", http.StatusNotFound)
+		return
+	}
 	tmpl := avatar.Template(user)
 	html, err := tmpl.HTML()
 	if err != nil {

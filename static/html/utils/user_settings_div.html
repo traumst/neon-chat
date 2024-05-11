@@ -30,7 +30,11 @@
         shadow shadow-zinc-700">
         <div id="user-setting-profile" 
             class="flex flex-row p-2 shadow-lg">
-            <div id="user-setting-avatar" class="flex flex-row hover:fill-amber-700">
+            <div id="user-setting-avatar" 
+                hx-get="/avatar"
+                hx-trigger="load"
+                hx-swap="none"
+                class="flex flex-row hover:fill-amber-700">
                 Avatar:&nbsp;
                 <!-- TODO avatar placeholder -->
                 <img class="w-[2em] h-[2em]" src="icon/scarab-bnw.svg">
