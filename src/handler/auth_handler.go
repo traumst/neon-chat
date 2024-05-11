@@ -21,7 +21,7 @@ func ReadSession(
 	cookie, err := h.GetSessionCookie(r)
 	log.Printf("--%s-> ReadSession TRACE session cookie[%v], err[%s]\n", h.GetReqId(r), cookie, err)
 	if err != nil {
-		h.ClearSessionCookie(w)
+		h.ClearSessionCookie(w, 0)
 		return nil, fmt.Errorf("failed to read session cookie, %s", err)
 	}
 	var user *a.User
@@ -32,7 +32,7 @@ func ReadSession(
 		defer wg.Done()
 		user, err = app.GetUser(cookie.UserId)
 		if user == nil {
-			h.ClearSessionCookie(w)
+			h.ClearSessionCookie(w, 0)
 			err = fmt.Errorf("failed to get user from cookie[%v]", cookie)
 		} else {
 			log.Printf("--%s-> ReadSession TRACE session user[%d][%s], err[%s]\n", h.GetReqId(r),

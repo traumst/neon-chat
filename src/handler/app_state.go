@@ -218,3 +218,11 @@ func (state *AppState) DeleteChat(userId uint, chat *app.Chat) error {
 	_ = state.chats.CloseChat(userId, chat.Id)
 	return state.chats.DeleteChat(userId, chat)
 }
+
+func (state *AppState) AddAvatar(userId uint, avatar *app.UserAvatar) (*db.UserAvatar, error) {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.AddAvatar TRACE user[%d], avatar[%s]\n", userId, avatar.Title)
+	return state.db.AddAvatar(userId, avatar.Title, avatar.Image, avatar.Mime)
+}
