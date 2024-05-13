@@ -106,7 +106,13 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 
 func Logout(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> Logout TRACE \n", h.GetReqId(r))
-	h.ClearSessionCookie(w)
+	user, err := handler.ReadSession(app, w, r)
+	if user == nil {
+		log.Printf("--%s-> Logout INFO user is not authorized, %s\n", h.GetReqId(r), err)
+		RenderHome(app, w, r)
+		return
+	}
+	h.ClearSessionCookie(w, user.Id)
 	http.Header.Add(w.Header(), "HX-Refresh", "true")
 	w.WriteHeader(http.StatusOK)
 }

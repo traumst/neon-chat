@@ -14,6 +14,7 @@ type HomeTemplate struct {
 	LoadLocal     bool
 	IsAuthorized  bool
 	LoginTemplate LoginTemplate
+	Avatar        *AvatarTemplate
 }
 
 func (h *HomeTemplate) ChatAddEvent() string {
@@ -38,6 +39,7 @@ func (h *HomeTemplate) HTML() (string, error) {
 		"static/html/home_page.html",
 		// left panel
 		"static/html/left_panel.html",
+		"static/html/avatar_div.html",
 		"static/html/utils/user_settings_div.html",
 		"static/html/nav/login_div.html",
 		"static/html/nav/chat_li.html",
