@@ -1,0 +1,12 @@
+{{ if . }}
+    <img id="user-{{ .UserId }}-avatar-{{ .Id }}" 
+        title="{{ .Title }}, {{ .Size }}" 
+        src="data:{{ .Mime }};base64,{{ .Base64 }}"
+        class="user-avatar w-[2em] h-[2em]"
+    >
+{{ else }}
+    <img title="default anon avatar"  
+        src="icon/scarab-bnw.svg" 
+        class="user-avatar-default w-[2em] h-[2em]"
+    >
+{{ end }}

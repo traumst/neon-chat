@@ -76,7 +76,7 @@ func EnvRead() (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read .env file from [%s]: %v", envFileRootPath, err)
 	}
-	if n == 0 {
+	if n <= 0 {
 		return nil, fmt.Errorf("empty .env file")
 	}
 
@@ -113,7 +113,7 @@ func EnvRead() (*Config, error) {
 		}
 	}
 
-	if envConf.Port == 0 {
+	if envConf.Port <= 0 {
 		return nil, fmt.Errorf("PORT is required")
 	}
 

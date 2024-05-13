@@ -21,7 +21,7 @@ func DistributeMsg(
 	if err != nil || users == nil {
 		return fmt.Errorf("DistributeMsg: get users, chat[%d], %s", chat.Id, err)
 	}
-	if len(users) == 0 {
+	if len(users) <= 0 {
 		return fmt.Errorf("DistributeMsg: chatUsers are empty, chat[%d], %s", chat.Id, err)
 	}
 

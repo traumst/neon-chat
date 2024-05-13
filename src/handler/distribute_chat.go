@@ -39,7 +39,7 @@ func DistributeChat(
 	if err != nil {
 		return fmt.Errorf("fail to get users from chat[%d], %s", chat.Id, err)
 	}
-	if len(targetUsers) == 0 {
+	if len(targetUsers) <= 0 {
 		return fmt.Errorf("chatUsers are empty in chat[%d], %s", chat.Id, err)
 	}
 

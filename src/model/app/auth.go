@@ -9,7 +9,7 @@ const (
 	AuthTypeSSO     AuthType = "sso"
 )
 
-type UserAuth struct {
+type Auth struct {
 	Id     uint     `db:"id"`
 	UserId uint     `db:"user_id"`
 	Type   AuthType `db:"type"`

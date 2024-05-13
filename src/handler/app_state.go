@@ -8,6 +8,7 @@ import (
 
 	"go.chat/src/db"
 	"go.chat/src/model/app"
+	"go.chat/src/utils"
 	h "go.chat/src/utils/http"
 )
 
@@ -85,6 +86,7 @@ func (state *AppState) DropConn(conn *Conn) error {
 }
 
 // USER
+// TODO untrack
 func (state *AppState) TrackUser(user *app.User) error {
 	if user == nil {
 		return fmt.Errorf("user was nil")
@@ -109,7 +111,7 @@ func (state *AppState) GetUser(userId uint) (*app.User, error) {
 	defer state.mu.Unlock()
 
 	log.Printf("∞--------> AppState.GetUser TRACE user[%d]\n", userId)
-	user, err := state.db.GetUserById(userId)
+	user, err := state.db.GetUser(userId)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +127,7 @@ func (state *AppState) UpdateUser(appUser *app.User) error {
 
 	log.Printf("∞--------> AppState.GetUser UpdateUser user[%d]\n", appUser.Id)
 	dbUser := UserToDB(*appUser)
-	err := state.db.UpdateUser(dbUser)
+	err := state.db.UpdateName(dbUser)
 	if err != nil {
 		return fmt.Errorf("failed to update user [%d], %s", appUser.Id, err.Error())
 	}
@@ -217,4 +219,42 @@ func (state *AppState) DeleteChat(userId uint, chat *app.Chat) error {
 	log.Printf("∞--------> AppState.DeleteChat TRACE get chats for user[%d]\n", userId)
 	_ = state.chats.CloseChat(userId, chat.Id)
 	return state.chats.DeleteChat(userId, chat)
+}
+
+func (state *AppState) AddAvatar(userId uint, avatar *app.Avatar) (*app.Avatar, error) {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.AddAvatar TRACE user[%d], avatar[%s]\n", userId, avatar.Title)
+	dbAvatar, err := state.db.AddAvatar(userId, avatar.Title, avatar.Image, avatar.Mime)
+	if err != nil {
+		return nil, fmt.Errorf("avatar not added: %s", err)
+	}
+	return &app.Avatar{
+		Id:     dbAvatar.Id,
+		UserId: dbAvatar.UserId,
+		Title:  dbAvatar.Title,
+		Size:   fmt.Sprintf("%dKB", dbAvatar.Size/utils.KB),
+		Image:  dbAvatar.Image,
+		Mime:   dbAvatar.Mime,
+	}, nil
+}
+
+func (state *AppState) GetAvatar(userId uint) (*app.Avatar, error) {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("∞--------> AppState.GetAvatar TRACE user[%d]\n", userId)
+	dbAvatar, err := state.db.GetAvatar(userId)
+	if err != nil {
+		return nil, fmt.Errorf("avatar not found: %s", err)
+	}
+	return &app.Avatar{
+		Id:     dbAvatar.Id,
+		UserId: dbAvatar.UserId,
+		Title:  dbAvatar.Title,
+		Size:   fmt.Sprintf("%dKB", dbAvatar.Size/utils.KB),
+		Image:  dbAvatar.Image,
+		Mime:   dbAvatar.Mime,
+	}, nil
 }

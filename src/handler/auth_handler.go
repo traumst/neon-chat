@@ -21,7 +21,7 @@ func ReadSession(
 	cookie, err := h.GetSessionCookie(r)
 	log.Printf("--%s-> ReadSession TRACE session cookie[%v], err[%s]\n", h.GetReqId(r), cookie, err)
 	if err != nil {
-		h.ClearSessionCookie(w)
+		h.ClearSessionCookie(w, 0)
 		return nil, fmt.Errorf("failed to read session cookie, %s", err)
 	}
 	var user *a.User
@@ -32,7 +32,7 @@ func ReadSession(
 		defer wg.Done()
 		user, err = app.GetUser(cookie.UserId)
 		if user == nil {
-			h.ClearSessionCookie(w)
+			h.ClearSessionCookie(w, 0)
 			err = fmt.Errorf("failed to get user from cookie[%v]", cookie)
 		} else {
 			log.Printf("--%s-> ReadSession TRACE session user[%d][%s], err[%s]\n", h.GetReqId(r),
@@ -52,25 +52,25 @@ func Authenticate(
 	username string,
 	pass string,
 	authType a.AuthType,
-) (*a.User, *a.UserAuth, error) {
-	if db == nil || len(username) == 0 || len(pass) == 0 {
+) (*a.User, *a.Auth, error) {
+	if db == nil || len(username) <= 0 || len(pass) <= 0 {
 		return nil, nil, fmt.Errorf("missing mandatory args user[%s], authType[%s]", username, authType)
 	}
-	user, err := db.GetUser(username)
-	appUser := UserFromDB(*user)
-	if err != nil || user == nil || user.Id == 0 || len(user.Salt) == 0 {
+	user, err := db.SearchUser(username)
+	if err != nil || user == nil || user.Id <= 0 || len(user.Salt) <= 0 {
 		log.Printf("-----> Authenticate TRACE user[%s] not found, %s\n", username, err)
 		return nil, nil, fmt.Errorf("user[%s] not found, %s", username, err)
 	}
-	hash, err := utils.HashPassword(pass, user.Salt)
+	appUser := UserFromDB(*user)
+	hash, err := utils.HashPassword(pass, appUser.Salt)
 	if err != nil {
-		log.Printf("-----> Authenticate TRACE failed on hashing[%s] pass for user[%s], %s", hash, user.Name, err)
-		return &appUser, nil, fmt.Errorf("failed on hashing pass for user[%s], %s", user.Name, err)
+		log.Printf("-----> Authenticate TRACE failed on hashing[%s] pass for user[%s], %s", hash, appUser.Name, err)
+		return &appUser, nil, fmt.Errorf("failed on hashing pass for user[%s], %s", appUser.Name, err)
 	}
-	log.Printf("-----> Authenticate TRACE user[%d] auth[%s] hash[%s]\n", user.Id, authType, hash)
-	auth, err := db.GetAuth(user.Id, string(authType), hash)
+	log.Printf("-----> Authenticate TRACE user[%d] auth[%s] hash[%s]\n", appUser.Id, authType, hash)
+	auth, err := db.GetAuth(appUser.Id, string(authType), hash)
 	if err != nil {
-		return &appUser, nil, fmt.Errorf("no auth for user[%s] hash[%s], %s", user.Name, hash, err)
+		return &appUser, nil, fmt.Errorf("no auth for user[%s] hash[%s], %s", appUser.Name, hash, err)
 	}
 	appAuth := AuthFromDB(*auth)
 	return &appUser, &appAuth, nil
@@ -83,7 +83,7 @@ func Register(
 	u *a.User,
 	pass string,
 	authType a.AuthType,
-) (*a.User, *a.UserAuth, error) {
+) (*a.User, *a.Auth, error) {
 	log.Printf("-----> Register TRACE IN user\n")
 	if db == nil || u == nil {
 		return nil, nil, fmt.Errorf("missing mandatory args user[%v] db[%v]", u, db)
@@ -126,7 +126,7 @@ func createUser(db *d.DBConn, user *a.User) (*a.User, error) {
 	if err != nil || created == nil {
 		return nil, fmt.Errorf("failed to add user[%v], %s", created, err)
 	}
-	if created.Id == 0 {
+	if created.Id <= 0 {
 		return nil, fmt.Errorf("user[%s] was not created", created.Name)
 	}
 	appUser := UserFromDB(*created)
@@ -146,14 +146,14 @@ func deleteUser(db *d.DBConn, user *a.User) error {
 	return nil
 }
 
-func createAuth(db *d.DBConn, user *a.User, pass string, authType a.AuthType) (*a.UserAuth, error) {
+func createAuth(db *d.DBConn, user *a.User, pass string, authType a.AuthType) (*a.Auth, error) {
 	log.Printf("-----> createAuth TRACE IN user[%v] auth[%s]\n", user, authType)
 	hash, err := utils.HashPassword(pass, user.Salt)
 	if err != nil {
 		return nil, fmt.Errorf("error hashing pass, %s", err)
 	}
 	log.Printf("-----> createAuth TRACE adding user[%d] auth[%s] hash[%s]\n", user.Id, authType, hash)
-	dbAuth := &d.UserAuth{
+	dbAuth := &d.Auth{
 		Id:     0,
 		UserId: user.Id,
 		Type:   string(authType),
@@ -169,7 +169,7 @@ func createAuth(db *d.DBConn, user *a.User, pass string, authType a.AuthType) (*
 	if err != nil || dbAuth == nil {
 		return nil, fmt.Errorf("fail to add auth to user[%d][%s], %s", user.Id, user.Name, err)
 	}
-	if dbAuth.Id == 0 {
+	if dbAuth.Id <= 0 {
 		return nil, fmt.Errorf("user[%d][%s] auth was not created", user.Id, user.Name)
 	}
 	appAuth := AuthFromDB(*dbAuth)

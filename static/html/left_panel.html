@@ -25,11 +25,13 @@
         }
     </script>
     <div class="active-user default-transition
-        flex flex-row justify-end
+        flex flex-row justify-between
         p-2
         shadow"
     >
-        {{ template "user_div.html" .User }}&nbsp;
+        {{ template "avatar_div.html" .Avatar }}
+        {{ template "user_div.html" .User }}
+        &nbsp;
         <sub id="logoutButton" 
             title="log out {{ .User.UserName }}"
             hx-trigger="click" 

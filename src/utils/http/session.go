@@ -12,15 +12,13 @@ import (
 	"go.chat/src/utils"
 )
 
-type Session struct {
-	UserId   uint
-	UserType app.UserType
-	AuthType app.AuthType
-}
+var sessions map[uint]Session = map[uint]Session{}
 
-func (s Session) String() string {
-	cookie := fmt.Sprintf("%d:%s:%s:%s", s.UserId, s.UserType, utils.RandStringBytes(9), s.AuthType)
-	return base64.StdEncoding.EncodeToString([]byte(cookie))
+type Session struct {
+	UserId     uint
+	UserType   app.UserType
+	AuthType   app.AuthType
+	Expiration time.Time
 }
 
 func GetSessionCookie(r *http.Request) (*Session, error) {
@@ -28,16 +26,30 @@ func GetSessionCookie(r *http.Request) (*Session, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return fromString(cookie.Value)
+	session, err := FromString(cookie.Value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse session[%s], %s", cookie.Value, err.Error())
+	}
+	cached, ok := sessions[session.UserId]
+	if !ok {
+		return &cached, fmt.Errorf("user has no cached session")
+	} else if cached.UserId != session.UserId {
+		return &cached, fmt.Errorf("user id mismatch")
+	} else if cached.Expiration.Before(time.Now()) {
+		delete(sessions, session.UserId)
+		return &cached, fmt.Errorf("session expired")
+	}
+	return &cached, nil
 }
 
-func SetSessionCookie(w http.ResponseWriter, user *app.User, auth *app.UserAuth, expiration time.Time) {
+func SetSessionCookie(w http.ResponseWriter, user *app.User, auth *app.Auth, expiration time.Time) {
 	cookie := Session{
-		UserId:   user.Id,
-		UserType: user.Type,
-		AuthType: auth.Type,
+		UserId:     user.Id,
+		UserType:   user.Type,
+		AuthType:   auth.Type,
+		Expiration: expiration,
 	}
+	sessions[user.Id] = cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:    utils.SessionCookie,
 		Value:   cookie.String(),
@@ -45,7 +57,8 @@ func SetSessionCookie(w http.ResponseWriter, user *app.User, auth *app.UserAuth,
 	})
 }
 
-func ClearSessionCookie(w http.ResponseWriter) {
+func ClearSessionCookie(w http.ResponseWriter, userId uint) {
+	delete(sessions, userId)
 	http.SetCookie(w, &http.Cookie{
 		Name:    utils.SessionCookie,
 		Value:   "",
@@ -53,7 +66,12 @@ func ClearSessionCookie(w http.ResponseWriter) {
 	})
 }
 
-func fromString(s string) (*Session, error) {
+func (s Session) String() string {
+	cookie := fmt.Sprintf("%d:%s:%s:%s", s.UserId, s.UserType, utils.RandStringBytes(9), s.AuthType)
+	return base64.StdEncoding.EncodeToString([]byte(cookie))
+}
+
+func FromString(s string) (*Session, error) {
 	decoded, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
 		return nil, fmt.Errorf("invalid session, %s", err)

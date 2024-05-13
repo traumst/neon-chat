@@ -21,21 +21,22 @@ const SchemaUser string = `
 	CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name ON users(name);`
 
 func (db *DBConn) AddUser(user *User) (*User, error) {
-	if !db.IsActive() {
-		return nil, fmt.Errorf("db is not connected")
-	}
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
 	if user.Id != 0 {
 		return nil, fmt.Errorf("user already has an id[%d]", user.Id)
 	} else if user.Name == "" {
 		return nil, fmt.Errorf("user has no name")
 	} else if user.Type == "" {
 		return nil, fmt.Errorf("user has no type")
-	} else if len(user.Salt) == 0 {
+	} else if len(user.Salt) <= 0 {
 		return nil, fmt.Errorf("user has no salt")
 	}
+	if !db.IsActive() {
+		return nil, fmt.Errorf("db is not connected")
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
 	result, err := db.conn.Exec(`INSERT INTO users (name, type, salt) VALUES (?, ?, ?)`,
 		user.Name, user.Type, user.Salt[:])
 	if err != nil {
@@ -49,16 +50,17 @@ func (db *DBConn) AddUser(user *User) (*User, error) {
 	return user, nil
 }
 
-func (db *DBConn) UpdateUser(user User) error {
+func (db *DBConn) UpdateName(user User) error {
+	if user.Id <= 0 {
+		return fmt.Errorf("invalid user id[%d]", user.Id)
+	}
 	if !db.IsActive() {
 		return fmt.Errorf("db is not connected")
 	}
+
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	if user.Id == 0 {
-		return fmt.Errorf("has no id[%d]", user.Id)
-	}
 	result, err := db.conn.Exec(`UPDATE users SET name = ? WHERE id = ?;`,
 		user.Name, user.Id)
 	if err != nil {
@@ -75,12 +77,13 @@ func (db *DBConn) DropUser(userId uint) error {
 	if !db.IsActive() {
 		return fmt.Errorf("db is not connected")
 	}
+	if userId <= 0 {
+		return fmt.Errorf("user does not have an id[%d]", userId)
+	}
+
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	if userId == 0 {
-		return fmt.Errorf("user does not have an id[%d]", userId)
-	}
 	_, err := db.conn.Exec(`DELETE FROM users where id = ?`, userId)
 	if err != nil {
 		return fmt.Errorf("error deleting user: %s", err.Error())
@@ -88,7 +91,7 @@ func (db *DBConn) DropUser(userId uint) error {
 	return nil
 }
 
-func (db *DBConn) GetUser(name string) (*User, error) {
+func (db *DBConn) SearchUser(name string) (*User, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
@@ -98,6 +101,7 @@ func (db *DBConn) GetUser(name string) (*User, error) {
 	if name == "" {
 		return nil, fmt.Errorf("name was not provided")
 	}
+
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
@@ -109,16 +113,17 @@ func (db *DBConn) GetUser(name string) (*User, error) {
 	return &user, err
 }
 
-func (db *DBConn) GetUserById(id uint) (*User, error) {
+func (db *DBConn) GetUser(id uint) (*User, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
 	if !db.isConn || !db.isInit {
 		return nil, fmt.Errorf("db is not connected")
 	}
-	if id == 0 {
+	if id <= 0 {
 		return nil, fmt.Errorf("id was 0")
 	}
+
 	db.mu.Lock()
 	defer db.mu.Unlock()
 

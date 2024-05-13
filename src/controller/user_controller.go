@@ -45,7 +45,7 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 		w.Write([]byte("Bad invitee name"))
 		return
 	}
-	invitee, err := conn.GetUser(inviteeName)
+	invitee, err := conn.SearchUser(inviteeName)
 	if err != nil || invitee == nil {
 		log.Printf("<-%s-- InviteUser ERROR invitee not found, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)

@@ -11,6 +11,7 @@ func Setup(app *handler.AppState, conn *db.DBConn) {
 	// loaded in reverse order
 	allMiddleware := []Middleware{LoggerMiddleware, ReqIdMiddleware}
 
+	handleAvatar(app, allMiddleware)
 	handleAuth(app, conn, allMiddleware)
 	handleUser(app, conn, allMiddleware)
 	handleChat(app, allMiddleware)
@@ -129,5 +130,16 @@ func handleAuth(app *handler.AppState, conn *db.DBConn, allMiddleware []Middlewa
 	http.Handle("/logout", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			Logout(app, w, r)
+		}), allMiddleware))
+}
+
+func handleAvatar(app *handler.AppState, allMiddleware []Middleware) {
+	http.Handle("/avatar/add", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			AddAvatar(app, w, r)
+		}), allMiddleware))
+	http.Handle("/avatar", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			GetAvatar(app, w, r)
 		}), allMiddleware))
 }

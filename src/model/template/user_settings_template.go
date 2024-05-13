@@ -13,6 +13,7 @@ type UserSettingsTemplate struct {
 	UserId      uint
 	UserName    string
 	ViewerId    uint
+	Avatar      *AvatarTemplate
 }
 
 func (c *UserSettingsTemplate) UserChangeEvent() string {
@@ -31,7 +32,8 @@ func (h *UserSettingsTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
 	tmpl := template.Must(template.ParseFiles(
 		"static/html/utils/user_settings_div.html",
-		"static/html/user_div.html"))
+		"static/html/user_div.html",
+		"static/html/avatar_div.html"))
 	err := tmpl.Execute(&buf, h)
 	if err != nil {
 		return "", err

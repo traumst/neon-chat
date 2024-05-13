@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-type UserAuth struct {
+type Auth struct {
 	Id     uint   `db:"id"`
 	UserId uint   `db:"user_id"`
 	Type   string `db:"type"`
@@ -16,11 +16,12 @@ const SchemaAuth string = `
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
 		user_id INTEGER,
 		type TEXT,
-		hash TEXT
+		hash TEXT,
+		FOREIGN KEY(user_id) REFERENCES users(id)
 	);
 	CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_user_id_type ON auth(user_id, type, hash);`
 
-func (db *DBConn) AddAuth(auth UserAuth) (*UserAuth, error) {
+func (db *DBConn) AddAuth(auth Auth) (*Auth, error) {
 	if !db.IsActive() {
 		return nil, fmt.Errorf("db is not connected")
 	}
@@ -29,7 +30,7 @@ func (db *DBConn) AddAuth(auth UserAuth) (*UserAuth, error) {
 	defer db.mu.Unlock()
 	if auth.Id != 0 {
 		return nil, fmt.Errorf("auth already has an id[%d]", auth.Id)
-	} else if auth.UserId == 0 {
+	} else if auth.UserId <= 0 {
 		return nil, fmt.Errorf("auth has no user id")
 	} else if auth.Type == "" {
 		return nil, fmt.Errorf("auth type is unknown")
@@ -52,14 +53,14 @@ func (db *DBConn) AddAuth(auth UserAuth) (*UserAuth, error) {
 	return &auth, nil
 }
 
-func (db *DBConn) GetAuth(userid uint, auth string, hash string) (*UserAuth, error) {
+func (db *DBConn) GetAuth(userid uint, auth string, hash string) (*Auth, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	if !db.isConn {
 		return nil, fmt.Errorf("db is not connected")
 	}
 
-	var dbAuth UserAuth
+	var dbAuth Auth
 	err := db.conn.Get(&dbAuth, `SELECT * FROM auth WHERE user_id = ? AND type = ? AND hash = ?`, userid, auth, hash)
 	if err != nil {
 		return nil, fmt.Errorf("error getting auth: %s", err)

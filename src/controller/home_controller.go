@@ -42,6 +42,7 @@ func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		LoadLocal:     app.LoadLocal(),
 		IsAuthorized:  false,
 		LoginTemplate: login,
+		Avatar:        nil,
 	}
 	log.Printf("--%s-> homeLogin TRACE templating", h.GetReqId(r))
 	html, err := home.HTML()
@@ -74,12 +75,17 @@ func homePage(app *handler.AppState, w http.ResponseWriter, r *http.Request, use
 	for _, chat := range app.GetChats(user.Id) {
 		chatTemplates = append(chatTemplates, chat.Template(user, user))
 	}
+	var avatarTmpl *template.AvatarTemplate
+	if avatar, err := app.GetAvatar(user.Id); avatar != nil && err == nil {
+		avatarTmpl = avatar.Template(user)
+	}
 	home := template.HomeTemplate{
 		Chats:        chatTemplates,
 		OpenChat:     openChatTemplate,
 		User:         *user.Template(openChatId, openChatOwnerId, user.Id),
 		LoadLocal:    app.LoadLocal(),
 		IsAuthorized: true,
+		Avatar:       avatarTmpl,
 	}
 	html, err := home.HTML()
 	if err != nil {
