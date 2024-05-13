@@ -68,26 +68,7 @@ func (db *DBConn) AddAvatar(userId uint, title string, image []byte, mime string
 	return &avatar, nil
 }
 
-func (db *DBConn) GetAvatar(id int) (*UserAvatar, error) {
-	if !db.isConn {
-		return nil, fmt.Errorf("db is not connected")
-	}
-	if id <= 0 {
-		return nil, fmt.Errorf("invalid avatarId[%d]", id)
-	}
-
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	var avatar UserAvatar
-	err := db.conn.Get(&avatar, `SELECT * FROM avatars WHERE id = ?`, id)
-	if err != nil {
-		return nil, fmt.Errorf("error getting avatar[%d]: %s", id, err)
-	}
-	return &avatar, nil
-}
-
-func (db *DBConn) GetAvatars(userId uint) ([]*UserAvatar, error) {
+func (db *DBConn) GetAvatar(userId uint) (*UserAvatar, error) {
 	if !db.isConn {
 		return nil, fmt.Errorf("db is not connected")
 	}
@@ -98,12 +79,12 @@ func (db *DBConn) GetAvatars(userId uint) ([]*UserAvatar, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	avatars := make([]*UserAvatar, 0)
-	err := db.conn.Select(&avatars, `SELECT * FROM avatars WHERE user_id = ?`, userId)
+	var avatar UserAvatar
+	err := db.conn.Get(&avatar, `SELECT * FROM avatars WHERE user_id = ?`, userId)
 	if err != nil {
-		return nil, fmt.Errorf("error getting avatars for user[%d]: %s", userId, err)
+		return nil, fmt.Errorf("error getting avatar for user[%d]: %s", userId, err)
 	}
-	return avatars, nil
+	return &avatar, nil
 }
 
 func (db *DBConn) DropAvatar(id int) error {

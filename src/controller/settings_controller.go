@@ -34,12 +34,17 @@ func OpenSettings(app *handler.AppState, w http.ResponseWriter, r *http.Request)
 		openChatId = 0
 		chatOwnerId = 0
 	}
+	var avatarTmpl *t.AvatarTemplate
+	if avatar, _ := app.GetAvatar(user.Id); avatar != nil {
+		avatarTmpl = avatar.Template(user)
+	}
 	settings := t.UserSettingsTemplate{
 		ChatId:      openChatId,
 		ChatOwnerId: chatOwnerId,
 		UserId:      user.Id,
 		UserName:    user.Name,
 		ViewerId:    user.Id,
+		Avatar:      avatarTmpl,
 	}
 	html, err := settings.HTML()
 	if err != nil {

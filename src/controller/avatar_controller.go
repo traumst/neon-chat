@@ -15,34 +15,46 @@ import (
 
 const MaxUploadSize int64 = 10 * utils.KB
 
+var allowedImageFormats = []string{
+	"image/svg+xml",
+	"image/jpeg",
+	"image/gif",
+}
+
 func AddAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
-	log.Printf("--%s-> OpenChat\n", reqId)
+	log.Printf("--%s-> AddAvatar\n", reqId)
 	if r.Method != "POST" {
-		log.Printf("<-%s-- OpenChat TRACE auth does not allow %s\n", reqId, r.Method)
+		log.Printf("<-%s-- AddAvatar TRACE auth does not allow %s\n", reqId, r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("Only GET method is allowed"))
 		return
 	}
 	user, err := handler.ReadSession(app, w, r)
 	if user == nil {
-		log.Printf("--%s-> OpenChat INFO user is not authorized, %s\n", h.GetReqId(r), err)
+		log.Printf("--%s-> AddAvatar INFO user is not authorized, %s\n", h.GetReqId(r), err)
 		RenderHome(app, w, r)
 		return
 	}
 	err = r.ParseMultipartForm(MaxUploadSize)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("file is too big, limit is %dKB", MaxUploadSize), http.StatusBadRequest)
+		log.Printf("<-%s-- AddAvatar ERROR multipart failed, %s\n", reqId, err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid multipart input"))
 		return
 	}
 	file, info, err := r.FormFile("avatar")
 	if err != nil {
-		http.Error(w, "Invalid file", http.StatusBadRequest)
+		log.Printf("<-%s-- AddAvatar ERROR reading input file failed, %s\n", reqId, err.Error())
+		log.Printf("<-%s-- AddAvatar TRACE reading input file failed, %+v\n", reqId, info.Filename)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid input"))
 		return
 	}
 	defer file.Close()
 	if info.Size > MaxUploadSize {
-		http.Error(w, "file is too large, limit is "+strconv.Itoa(int(MaxUploadSize))+"KB", http.StatusBadRequest)
+		http.Error(w, "file too large "+strconv.Itoa(int(info.Size))+
+			", limit is "+strconv.Itoa(int(MaxUploadSize)), http.StatusBadRequest)
 		return
 	} else if info.Filename == "" {
 		http.Error(w, "file lacks name", http.StatusBadRequest)
@@ -98,7 +110,8 @@ func GetAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 	avatar, err := app.GetAvatar(user.Id)
 	if err != nil {
-		http.Error(w, "avatar not found", http.StatusNotFound)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(""))
 		return
 	}
 	tmpl := avatar.Template(user)

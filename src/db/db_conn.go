@@ -17,22 +17,27 @@ type DBConn struct {
 	isInit bool
 }
 
+//const migraitonsFolder string = "./migrations"
+
 func ConnectDB(dbPath string) (*DBConn, error) {
-	if fi, err := os.Stat(dbPath); os.IsNotExist(err) {
+	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
 		file, err := os.Create(dbPath)
 		if err != nil {
 			return nil, fmt.Errorf("error creating db file: %s", err)
 		}
 		file.Close()
+		log.Printf("  db file created [%s]", dbPath)
 	} else {
-		log.Printf("  opening db file [%s] [%d]", fi.Name(), fi.Size())
+		log.Printf("  db file exists [%s]", dbPath)
 	}
 
+	log.Printf("  db connects to [%s]", dbPath)
 	conn, err := sqlx.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("error opening db: %s", err)
 	}
 
+	log.Printf("  db connection established with connections[%d]", conn.Stats().MaxOpenConnections)
 	db := DBConn{conn: conn, isConn: true, isInit: false}
 	err = db.init()
 	return &db, err
@@ -53,9 +58,6 @@ func (db *DBConn) IsActive() bool {
 }
 
 func (db *DBConn) init() error {
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
 	if !db.isConn {
 		return fmt.Errorf("DBConn is not connected")
 	}
@@ -64,10 +66,59 @@ func (db *DBConn) init() error {
 		return fmt.Errorf("DBConn is already initialized")
 	}
 
-	schema := fmt.Sprintf("%s\n%s", SchemaUser, SchemaAuth)
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	log.Println("  initiating db schema")
+	schema := fmt.Sprintf("%s\n%s\n%s", SchemaUser, SchemaAuth, SchemaUserAvatar)
 	_, err := db.conn.Exec(schema)
-	if err == nil {
-		db.isInit = true
+	if err != nil {
+		return err
 	}
+
+	//err = applyMigrations(db)
+	// if err == nil {
+	// 	db.isInit = true
+	// }
+	db.isInit = true
 	return err
 }
+
+// func applyMigrations(db *DBConn) error {
+// 	log.Printf("applyMigrations TRACE IN")
+// 	// TODO load "latest" subset
+// 	files, err := utils.GetFilenamesIn(migraitonsFolder)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to list migrations[%s], %s", migraitonsFolder, err.Error())
+// 	}
+// 	// TODO execute in batches
+// 	for _, filename := range files {
+// 		log.Printf("	applyMigrations TRACE now on [%s]", filename)
+// 		path := strings.Split(filename, ".")
+// 		if len(path) != 2 {
+// 			return fmt.Errorf("migration title[%s] is not *.sql", filename)
+// 		}
+// 		title := path[0]
+// 		if title == "" {
+// 			log.Printf("	applyMigrations WARN blank title [%s]", filename)
+// 			continue
+// 		}
+// 		if ext := path[1]; ext != "sql" {
+// 			log.Printf("	applyMigrations TRACE skip non-sql [%s]", filename)
+// 			continue
+// 		}
+// 		bytes, err := os.ReadFile(migraitonsFolder + "/" + title)
+// 		if err != nil {
+// 			return fmt.Errorf("failed to read migration file content[%s]", title)
+// 		}
+// 		if _, err = db.conn.Exec(string(bytes[:])); err != nil {
+// 			return fmt.Errorf("failed to apply migration[%s]", title)
+// 		}
+// 		migration, err := db.AddMigration(&Migration{Title: title})
+// 		if err != nil || migration.Id < 1 {
+// 			return fmt.Errorf("failed to apply migraiton[%s], %s", title, err)
+// 		}
+// 	}
+// 	log.Printf("applyMigrations TRACE OUT")
+// 	return nil
+// }
