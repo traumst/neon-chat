@@ -74,15 +74,15 @@ func AddAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to load input file", http.StatusBadRequest)
 		return
 	}
-	fileType := http.DetectContentType(fileBytes)
-	if !isAllowedImageFormat(fileType) {
-		http.Error(w, "file type is not supported: "+fileType, http.StatusBadRequest)
+	mime := http.DetectContentType(fileBytes)
+	if !isAllowedImageFormat(mime) {
+		http.Error(w, "file type is not supported: "+mime, http.StatusBadRequest)
 		return
 	}
 	avatar := a.Avatar{
 		UserId: user.Id,
 		Title:  info.Filename,
-		Mime:   fileType,
+		Mime:   mime,
 		Size:   fmt.Sprintf("%dKB", info.Size/utils.KB),
 		Image:  fileBytes,
 	}
