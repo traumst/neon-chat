@@ -30,17 +30,19 @@ func GetSessionCookie(r *http.Request) (*Session, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse session[%s], %s", cookie.Value, err.Error())
 	}
-	cached := sessions[session.UserId]
-	if cached.UserId <= 0 || cached.UserId != session.UserId {
-		return nil, fmt.Errorf("bad userId")
+	cached, ok := sessions[session.UserId]
+	if !ok {
+		return &cached, fmt.Errorf("user has no cached session")
+	} else if cached.UserId != session.UserId {
+		return &cached, fmt.Errorf("user id mismatch")
 	} else if cached.Expiration.Before(time.Now()) {
 		delete(sessions, session.UserId)
-		return nil, fmt.Errorf("session expired")
+		return &cached, fmt.Errorf("session expired")
 	}
 	return &cached, nil
 }
 
-func SetSessionCookie(w http.ResponseWriter, user *app.User, auth *app.UserAuth, expiration time.Time) {
+func SetSessionCookie(w http.ResponseWriter, user *app.User, auth *app.Auth, expiration time.Time) {
 	cookie := Session{
 		UserId:     user.Id,
 		UserType:   user.Type,

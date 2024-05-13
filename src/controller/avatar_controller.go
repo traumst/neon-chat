@@ -70,7 +70,7 @@ func AddAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "file type is not supported: "+fileType, http.StatusBadRequest)
 		return
 	}
-	avatar := a.UserAvatar{
+	avatar := a.Avatar{
 		UserId: user.Id,
 		Title:  info.Filename,
 		Mime:   fileType,

@@ -52,7 +52,7 @@ func Authenticate(
 	username string,
 	pass string,
 	authType a.AuthType,
-) (*a.User, *a.UserAuth, error) {
+) (*a.User, *a.Auth, error) {
 	if db == nil || len(username) <= 0 || len(pass) <= 0 {
 		return nil, nil, fmt.Errorf("missing mandatory args user[%s], authType[%s]", username, authType)
 	}
@@ -83,7 +83,7 @@ func Register(
 	u *a.User,
 	pass string,
 	authType a.AuthType,
-) (*a.User, *a.UserAuth, error) {
+) (*a.User, *a.Auth, error) {
 	log.Printf("-----> Register TRACE IN user\n")
 	if db == nil || u == nil {
 		return nil, nil, fmt.Errorf("missing mandatory args user[%v] db[%v]", u, db)
@@ -146,14 +146,14 @@ func deleteUser(db *d.DBConn, user *a.User) error {
 	return nil
 }
 
-func createAuth(db *d.DBConn, user *a.User, pass string, authType a.AuthType) (*a.UserAuth, error) {
+func createAuth(db *d.DBConn, user *a.User, pass string, authType a.AuthType) (*a.Auth, error) {
 	log.Printf("-----> createAuth TRACE IN user[%v] auth[%s]\n", user, authType)
 	hash, err := utils.HashPassword(pass, user.Salt)
 	if err != nil {
 		return nil, fmt.Errorf("error hashing pass, %s", err)
 	}
 	log.Printf("-----> createAuth TRACE adding user[%d] auth[%s] hash[%s]\n", user.Id, authType, hash)
-	dbAuth := &d.UserAuth{
+	dbAuth := &d.Auth{
 		Id:     0,
 		UserId: user.Id,
 		Type:   string(authType),

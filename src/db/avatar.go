@@ -6,7 +6,7 @@ import (
 	"go.chat/src/utils"
 )
 
-type UserAvatar struct {
+type Avatar struct {
 	Id     int    `db:"id"`
 	UserId uint   `db:"user_id"`
 	Title  string `db:"title"`
@@ -15,7 +15,7 @@ type UserAvatar struct {
 	Mime   string `db:"mime"`
 }
 
-const SchemaUserAvatar string = `
+const SchemaAvatar string = `
 	CREATE TABLE IF NOT EXISTS avatars (
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
 		user_id INTEGER,
@@ -27,7 +27,7 @@ const SchemaUserAvatar string = `
 	);
 	CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name ON users(name);`
 
-func (db *DBConn) AddAvatar(userId uint, title string, image []byte, mime string) (*UserAvatar, error) {
+func (db *DBConn) AddAvatar(userId uint, title string, image []byte, mime string) (*Avatar, error) {
 	if userId <= 0 {
 		return nil, fmt.Errorf("avatar must have user id")
 	}
@@ -57,7 +57,7 @@ func (db *DBConn) AddAvatar(userId uint, title string, image []byte, mime string
 	if err != nil {
 		return nil, fmt.Errorf("error getting last insert avatarId: %s", err)
 	}
-	avatar := UserAvatar{
+	avatar := Avatar{
 		Id:     int(lastId),
 		UserId: userId,
 		Title:  title,
@@ -68,7 +68,7 @@ func (db *DBConn) AddAvatar(userId uint, title string, image []byte, mime string
 	return &avatar, nil
 }
 
-func (db *DBConn) GetAvatar(userId uint) (*UserAvatar, error) {
+func (db *DBConn) GetAvatar(userId uint) (*Avatar, error) {
 	if !db.isConn {
 		return nil, fmt.Errorf("db is not connected")
 	}
@@ -79,7 +79,7 @@ func (db *DBConn) GetAvatar(userId uint) (*UserAvatar, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	var avatar UserAvatar
+	var avatar Avatar
 	err := db.conn.Get(&avatar, `SELECT * FROM avatars WHERE user_id = ?`, userId)
 	if err != nil {
 		return nil, fmt.Errorf("error getting avatar for user[%d]: %s", userId, err)

@@ -23,8 +23,8 @@ func UserFromDB(user db.User) app.User {
 	}
 }
 
-func AuthToDB(auth app.UserAuth) db.UserAuth {
-	return db.UserAuth{
+func AuthToDB(auth app.Auth) db.Auth {
+	return db.Auth{
 		Id:     auth.Id,
 		UserId: auth.UserId,
 		Type:   string(auth.Type),
@@ -32,8 +32,8 @@ func AuthToDB(auth app.UserAuth) db.UserAuth {
 	}
 }
 
-func AuthFromDB(auth db.UserAuth) app.UserAuth {
-	return app.UserAuth{
+func AuthFromDB(auth db.Auth) app.Auth {
+	return app.Auth{
 		Id:     auth.Id,
 		UserId: auth.UserId,
 		Type:   app.AuthType(auth.Type),

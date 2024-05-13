@@ -6,7 +6,7 @@ import (
 	t "go.chat/src/model/template"
 )
 
-type UserAvatar struct {
+type Avatar struct {
 	Id     int
 	UserId uint
 	Title  string
@@ -15,11 +15,11 @@ type UserAvatar struct {
 	Mime   string
 }
 
-func (avatar *UserAvatar) Base64() string {
+func (avatar *Avatar) Base64() string {
 	return base64.StdEncoding.EncodeToString(avatar.Image)
 }
 
-func (a *UserAvatar) Template(viewer *User) *t.AvatarTemplate {
+func (a *Avatar) Template(viewer *User) *t.AvatarTemplate {
 	return &t.AvatarTemplate{
 		Id:     a.Id,
 		Title:  a.Title,

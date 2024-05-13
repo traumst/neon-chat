@@ -70,7 +70,7 @@ func (db *DBConn) init() error {
 	defer db.mu.Unlock()
 
 	log.Println("  initiating db schema")
-	schema := fmt.Sprintf("%s\n%s\n%s", SchemaUser, SchemaAuth, SchemaUserAvatar)
+	schema := fmt.Sprintf("%s\n%s\n%s", SchemaUser, SchemaAuth, SchemaAvatar)
 	_, err := db.conn.Exec(schema)
 	if err != nil {
 		return err

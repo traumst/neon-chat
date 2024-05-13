@@ -221,7 +221,7 @@ func (state *AppState) DeleteChat(userId uint, chat *app.Chat) error {
 	return state.chats.DeleteChat(userId, chat)
 }
 
-func (state *AppState) AddAvatar(userId uint, avatar *app.UserAvatar) (*app.UserAvatar, error) {
+func (state *AppState) AddAvatar(userId uint, avatar *app.Avatar) (*app.Avatar, error) {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
@@ -230,7 +230,7 @@ func (state *AppState) AddAvatar(userId uint, avatar *app.UserAvatar) (*app.User
 	if err != nil {
 		return nil, fmt.Errorf("avatar not added: %s", err)
 	}
-	return &app.UserAvatar{
+	return &app.Avatar{
 		Id:     dbAvatar.Id,
 		UserId: dbAvatar.UserId,
 		Title:  dbAvatar.Title,
@@ -240,7 +240,7 @@ func (state *AppState) AddAvatar(userId uint, avatar *app.UserAvatar) (*app.User
 	}, nil
 }
 
-func (state *AppState) GetAvatar(userId uint) (*app.UserAvatar, error) {
+func (state *AppState) GetAvatar(userId uint) (*app.Avatar, error) {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
@@ -249,7 +249,7 @@ func (state *AppState) GetAvatar(userId uint) (*app.UserAvatar, error) {
 	if err != nil {
 		return nil, fmt.Errorf("avatar not found: %s", err)
 	}
-	return &app.UserAvatar{
+	return &app.Avatar{
 		Id:     dbAvatar.Id,
 		UserId: dbAvatar.UserId,
 		Title:  dbAvatar.Title,
