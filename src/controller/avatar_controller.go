@@ -21,6 +21,15 @@ var allowedImageFormats = []string{
 	"image/gif",
 }
 
+func isAllowedImageFormat(mime string) bool {
+	for _, allowed := range allowedImageFormats {
+		if allowed == mime {
+			return true
+		}
+	}
+	return false
+}
+
 func AddAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("--%s-> AddAvatar\n", reqId)
@@ -66,7 +75,7 @@ func AddAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fileType := http.DetectContentType(fileBytes)
-	if fileType != "image/svg+xml" {
+	if !isAllowedImageFormat(fileType) {
 		http.Error(w, "file type is not supported: "+fileType, http.StatusBadRequest)
 		return
 	}
@@ -79,6 +88,7 @@ func AddAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 	saved, err := app.AddAvatar(user.Id, &avatar)
 	if err != nil {
+		log.Printf("controller.AddAvatar ERROR failed to save avatar[%s], %s", info.Filename, err.Error())
 		http.Error(w, fmt.Sprintf("failed to save avatar[%s]", info.Filename), http.StatusBadRequest)
 		return
 	}
@@ -86,6 +96,7 @@ func AddAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	tmpl := avatar.Template(user)
 	html, err := tmpl.HTML()
 	if err != nil {
+		log.Printf("controller.AddAvatar ERROR failed to template avatar[%s], %s", info.Filename, err.Error())
 		http.Error(w, fmt.Sprintf("failed to template avatar[%d]", avatar.Id), http.StatusBadRequest)
 		return
 	}

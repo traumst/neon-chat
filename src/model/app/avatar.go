@@ -1,8 +1,6 @@
 package app
 
 import (
-	"encoding/base64"
-
 	t "go.chat/src/model/template"
 )
 
@@ -13,10 +11,6 @@ type Avatar struct {
 	Size   string
 	Image  []byte
 	Mime   string
-}
-
-func (avatar *Avatar) Base64() string {
-	return base64.StdEncoding.EncodeToString(avatar.Image)
 }
 
 func (a *Avatar) Template(viewer *User) *t.AvatarTemplate {

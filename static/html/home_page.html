@@ -10,16 +10,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap">
     {{ if .LoadLocal }}
-        <!-- Need to update version before uncommenting -->
         <script src="/script/htmx.min.1.9.12.js"></script>
         <script src="/script/htmx.sse.1.9.12.js"></script>
-        <!-- Need to build tailwind to minimize it -->
+        <!-- Need to build tailwind to minimize it and apply custom styles -->
         <script src="/script/tailwindcss.3.4.3.js"></script>
         <link href="/css/tailwind.css" rel="stylesheet">
     {{ else }}
         <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.12/htmx.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.12/ext/sse.min.js"></script>
         <script src="https://cdn.tailwindcss.com/3.4.3"></script>
+        <link href="/css/tailwind.css" rel="stylesheet">
     {{ end }}
     <script>
         function escFocus(event) {
@@ -78,7 +78,7 @@
         body {
             font: inherit;
             font-size: .8rem;
-            font-family: 'JetBrains Mono', sans-serif; /* Using Google Fonts example */
+            font-family: 'JetBrains Mono', sans-serif;
         }
         @keyframes fadeInFromLeft {
             0% {
@@ -98,7 +98,7 @@
             }
         }
         .default-transition {
-            animation: fadeInFromLeft .37s ease forwards;
+            animation: fadeInFromLeft .17s ease forwards;
         }
         .left-panel.closed {
             width: 9%;

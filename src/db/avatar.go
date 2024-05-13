@@ -37,7 +37,7 @@ func (db *DBConn) AddAvatar(userId uint, title string, image []byte, mime string
 	if size <= 0 {
 		return nil, fmt.Errorf("avatar requires an image")
 	}
-	limit := size / (10 * utils.KB)
+	limit := 10 * utils.KB
 	if size > limit {
 		return nil, fmt.Errorf("avatar image size[%d] is over limit[%d]", size, limit)
 	}

@@ -36,12 +36,8 @@
                     onclick="showAvatarEdit()" 
                     class="flex flex-row"
                 >
-                    {{ with .Avatar }}
-                        {{ template "avatar_div.html" .Avatar }}
-                    {{ else }}
-                        <img id="user-setting-avatar-default" src="icon/scarab-bnw.svg" class="w-[2em] h-[2em]">
-                        <sub class="hover:text-amber-700">[edit]</sub>
-                    {{ end }}
+                    {{ template "avatar_div.html" .Avatar }}
+                    <sub class="hover:text-amber-700">[edit]</sub>
                 </div>
                 <form id="user-setting-avatar-select" 
                     hx-encoding="multipart/form-data" 
