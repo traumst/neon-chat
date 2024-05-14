@@ -16,12 +16,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
 INSERT INTO users 
 SELECT id, 
     name, 
+    concat(name, '@email.ok'), 
     type, 
-    salt, 
-    CASE WHEN email='' 
-        THEN NULL 
-        ELSE email 
-    END
+    salt
 FROM _users_old;
 
 DROP TABLE _users_old;
