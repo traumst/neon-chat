@@ -5,20 +5,27 @@ import (
 )
 
 type User struct {
-	Id   uint   `db:"id"`
-	Name string `db:"name"`
-	Type string `db:"type"`
-	Salt string `db:"salt"`
+	Id    uint   `db:"id"`
+	Name  string `db:"name"`
+	Email string `db:"email"`
+	Type  string `db:"type"`
+	Salt  string `db:"salt"`
 }
 
-const SchemaUser string = `
+const UserSchema string = `
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
 		name TEXT, 
+		email TEXT,
 		type TEXT,
 		salt INTEGER
 	);
-	CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name ON users(name);`
+	CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name ON users(name);
+	CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);`
+
+func (db *DBConn) UserTableExists() bool {
+	return db.TableExists("users")
+}
 
 func (db *DBConn) AddUser(user *User) (*User, error) {
 	if user.Id != 0 {

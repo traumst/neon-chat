@@ -1,33 +1,97 @@
 package db
 
-import "fmt"
+import (
+	"database/sql"
+	"fmt"
+	"log"
+	"os"
+	"strings"
+	"time"
+
+	"go.chat/src/utils"
+)
 
 type Migration struct {
-	Id    uint   `db:"id"`
-	Title string `db:"title"`
+	Id    uint      `db:"id"`
+	Title string    `db:"title"`
+	Stamp time.Time `db:"stamp"`
 }
 
-const SchemaMigration string = `
+const MigrationSchema string = `
 	CREATE TABLE IF NOT EXISTS _migrations (
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
 		title TEXT,
+		stamp DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 	CREATE UNIQUE INDEX IF NOT EXISTS idx_applied_migration ON _migrations(title);`
 
-func (db *DBConn) AddMigration(migration *Migration) (*Migration, error) {
-	if migration.Id != 0 {
-		return nil, fmt.Errorf("migration already has an id[%d]", migration.Id)
-	} else if migration.Title == "" {
-		return nil, fmt.Errorf("migration has no name")
-	}
-	if !db.IsActive() {
-		return nil, fmt.Errorf("db is not connected")
+func (db *DBConn) MigrationsTableExists() bool {
+	return db.TableExists("_migrations")
+}
+
+func (db *DBConn) ApplyMigrations() error {
+	log.Printf("applyMigrations TRACE IN")
+	utils.LS()
+	// TODO load "latest" subset
+	files, err := utils.GetFilenamesIn(migraitonsFolder)
+	if err != nil {
+		return fmt.Errorf("DBConn.ApplyMigrations failed to list migrations[%s], %s", migraitonsFolder, err.Error())
 	}
 
-	go db.mu.Lock()
+	for _, filename := range files {
+		err := applyMigration(db, filename)
+		if err != nil {
+			log.Printf("DBConn.ApplyMigrations fail while applying migrations, %s", err)
+			return fmt.Errorf("fail to apply migration[%s]", filename)
+		}
+	}
+	log.Printf("applyMigrations TRACE OUT")
+	return nil
+}
+
+func applyMigration(db *DBConn, filename string) error {
+	log.Printf("applyMigration TRACE now on [%s]", filename)
+	path := strings.Split(filename, ".")
+	if len(path) != 2 {
+		return fmt.Errorf("migration title[%s] is not *.sql", filename)
+	}
+	title := path[0]
+	if title == "" {
+		log.Printf("applyMigration WARN blank title [%s]", filename)
+		return nil
+	}
+	if ext := path[1]; ext != "sql" {
+		log.Printf("applyMigration TRACE skip non-sql [%s]", title)
+		return nil
+	}
+	log.Printf("applyMigration TRACE check if already applied [%s]", title)
+	isApplied, err := isMigrationApplied(db, title)
+	if err == nil && isApplied {
+		return nil
+	}
+	log.Printf("applyMigration TRACE reading [%s]", title)
+	bytes, err := os.ReadFile(migraitonsFolder + "/" + filename)
+	if err != nil {
+		return fmt.Errorf("failed to read migration file content[%s]", title)
+	}
+	log.Printf("applyMigration TRACE storing migration [%s]", title)
+	migration, err := addMigration(db, string(bytes[:]), title)
+	if err != nil || migration.Id < 1 {
+		return fmt.Errorf("failed to apply migration[%s], %s", title, err)
+	}
+	log.Printf("applyMigration TRACE applied[%d][%s]", migration.Id, migration.Title)
+	return nil
+}
+
+func addMigration(db *DBConn, migrate string, title string) (*Migration, error) {
+	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	result, err := db.conn.Exec(`INSERT INTO _migrations (title) VALUES (?)`, migration.Title)
+	log.Printf("applyMigration TRACE executing [%s]", title)
+	if _, err := db.conn.Exec(migrate); err != nil {
+		return nil, fmt.Errorf("failed to add migration[%s], %s", title, err.Error())
+	}
+	result, err := db.conn.Exec(`INSERT INTO _migrations (title) VALUES (?)`, title)
 	if err != nil {
 		return nil, fmt.Errorf("error adding migration: %s", err)
 	}
@@ -35,35 +99,30 @@ func (db *DBConn) AddMigration(migration *Migration) (*Migration, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error getting last insert id: %s", err)
 	}
-	migration.Id = uint(lastId)
-	return migration, nil
+	migration := Migration{
+		Id:    uint(lastId),
+		Title: title,
+	}
+	return &migration, nil
 }
 
-func (db *DBConn) GetMigrations(titles []string) ([]*Migration, error) {
-	if titles == nil {
-		return nil, fmt.Errorf("migration titles are nil")
-	} else if len(titles) <= 0 {
-		return nil, fmt.Errorf("migration titles are empty")
-	}
-	if !db.IsActive() {
-		return nil, fmt.Errorf("db is not connected")
+func isMigrationApplied(db *DBConn, title string) (bool, error) {
+	if title == "" {
+		return false, fmt.Errorf("migration title is empty")
 	}
 
-	go db.mu.Lock()
+	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	titlesString := ""
-	for i, title := range titles {
-		if i == 0 {
-			titlesString += title
+	var migration Migration
+	err := db.conn.Get(&migration, `SELECT * FROM _migrations WHERE title=?`, title)
+	if err != nil {
+		log.Printf("applyMigration WARN error selecting migration[%s], %s", title, err)
+		if err == sql.ErrNoRows {
+			return false, nil
 		} else {
-			titlesString += "," + title
+			return false, fmt.Errorf("error getting migrations: %s", err)
 		}
 	}
-	migrations := make([]*Migration, 0)
-	err := db.conn.Select(&migrations, `SELECT * FROM _migrations WHERE title in (?)`, titlesString)
-	if err != nil {
-		return nil, fmt.Errorf("error getting migrations: %s", err)
-	}
-	return migrations, nil
+	return migration.Id > 0, nil
 }

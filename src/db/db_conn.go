@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/jmoiron/sqlx"
@@ -17,7 +18,7 @@ type DBConn struct {
 	isInit bool
 }
 
-//const migraitonsFolder string = "./migrations"
+const migraitonsFolder string = "./src/db/migrations"
 
 func ConnectDB(dbPath string) (*DBConn, error) {
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
@@ -66,59 +67,83 @@ func (db *DBConn) init() error {
 		return fmt.Errorf("DBConn is already initialized")
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	log.Println("  initiating db schema")
-	schema := fmt.Sprintf("%s\n%s\n%s", SchemaUser, SchemaAuth, SchemaAvatar)
-	_, err := db.conn.Exec(schema)
+	var shouldMigrate bool
+	var err error
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		db.mu.Lock()
+		defer db.mu.Unlock()
+		shouldMigrate, err = db.createSchema()
+		if err != nil {
+			log.Printf("DBConn.init ERROR failed to create schema, %s", err)
+			err = fmt.Errorf("failed to create schema")
+		}
+	}()
+	wg.Wait()
 	if err != nil {
 		return err
 	}
 
-	//err = applyMigrations(db)
-	// if err == nil {
-	// 	db.isInit = true
-	// }
+	if shouldMigrate {
+		err = db.ApplyMigrations()
+		if err != nil {
+			log.Printf("DBConn.init ERROR failed to apply migrations, %s", err)
+			return fmt.Errorf("failed to apply migrations")
+		}
+	}
+
 	db.isInit = true
-	return err
+	return nil
 }
 
-// func applyMigrations(db *DBConn) error {
-// 	log.Printf("applyMigrations TRACE IN")
-// 	// TODO load "latest" subset
-// 	files, err := utils.GetFilenamesIn(migraitonsFolder)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to list migrations[%s], %s", migraitonsFolder, err.Error())
-// 	}
-// 	// TODO execute in batches
-// 	for _, filename := range files {
-// 		log.Printf("	applyMigrations TRACE now on [%s]", filename)
-// 		path := strings.Split(filename, ".")
-// 		if len(path) != 2 {
-// 			return fmt.Errorf("migration title[%s] is not *.sql", filename)
-// 		}
-// 		title := path[0]
-// 		if title == "" {
-// 			log.Printf("	applyMigrations WARN blank title [%s]", filename)
-// 			continue
-// 		}
-// 		if ext := path[1]; ext != "sql" {
-// 			log.Printf("	applyMigrations TRACE skip non-sql [%s]", filename)
-// 			continue
-// 		}
-// 		bytes, err := os.ReadFile(migraitonsFolder + "/" + title)
-// 		if err != nil {
-// 			return fmt.Errorf("failed to read migration file content[%s]", title)
-// 		}
-// 		if _, err = db.conn.Exec(string(bytes[:])); err != nil {
-// 			return fmt.Errorf("failed to apply migration[%s]", title)
-// 		}
-// 		migration, err := db.AddMigration(&Migration{Title: title})
-// 		if err != nil || migration.Id < 1 {
-// 			return fmt.Errorf("failed to apply migraiton[%s], %s", title, err)
-// 		}
-// 	}
-// 	log.Printf("applyMigrations TRACE OUT")
-// 	return nil
-// }
+func (db *DBConn) createSchema() (shouldMigrate bool, err error) {
+	log.Println("createSchema TRACE in")
+	schema := ""
+
+	if db.UserTableExists() {
+		log.Println("createSchema TRACE user table exists")
+		shouldMigrate = true
+	} else {
+		log.Println("createSchema TRACE user table will be created")
+		schema += UserSchema + "\n"
+	}
+
+	if db.AuthTableExists() {
+		log.Println("createSchema TRACE auth table exists")
+		shouldMigrate = true
+	} else {
+		log.Println("createSchema TRACE auth table will be created")
+		schema += AuthSchema + "\n"
+	}
+
+	if db.AvatarTableExists() {
+		log.Println("createSchema TRACE avatar table exists")
+		shouldMigrate = true
+	} else {
+		log.Println("createSchema TRACE avatar table will be created")
+		schema += AvatarSchema + "\n"
+	}
+
+	if db.MigrationsTableExists() {
+		log.Println("createSchema TRACE migration table exists")
+		// TODO meta-migrate, ie migrations migration
+	} else {
+		log.Println("createSchema TRACE migration table will be created")
+		schema += MigrationSchema + "\n"
+	}
+
+	if schema == "" {
+		log.Println("createSchema TRACE no tables to create")
+		return true, nil
+	}
+
+	_, err = db.conn.Exec(strings.TrimRight(schema, "\n"))
+	if err != nil {
+		log.Printf("createSchema ERROR failed to create schema, %s", err.Error())
+		err = fmt.Errorf("failed to create schema")
+	}
+
+	return shouldMigrate, err
+}

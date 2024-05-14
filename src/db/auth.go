@@ -11,7 +11,7 @@ type Auth struct {
 	Hash   string `db:"hash"`
 }
 
-const SchemaAuth string = `
+const AuthSchema string = `
 	CREATE TABLE IF NOT EXISTS auth (
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
 		user_id INTEGER,
@@ -20,6 +20,10 @@ const SchemaAuth string = `
 		FOREIGN KEY(user_id) REFERENCES users(id)
 	);
 	CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_user_id_type ON auth(user_id, type, hash);`
+
+func (db *DBConn) AuthTableExists() bool {
+	return db.TableExists("auth")
+}
 
 func (db *DBConn) AddAuth(auth Auth) (*Auth, error) {
 	if !db.IsActive() {
