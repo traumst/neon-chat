@@ -33,17 +33,10 @@ Starting server...
 And the app should be available at http://localhost:8080
 
 ## Right now
-- user avatar
-    * update user - add avatarId FK
-    * create avatars table
-        - id
-        - userId
-        - title
-        - size < limit
-        - blob
-- user settings page
-    * change avatar
-    * reset password - email
+- add email to user
+- add migration pipeline
+- pass reset
+- email verification
 
 ## TODOs
 
