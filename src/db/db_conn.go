@@ -26,18 +26,18 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 			return nil, fmt.Errorf("error creating db file: %s", err)
 		}
 		file.Close()
-		log.Printf("  db file created [%s]", dbPath)
+		log.Printf("db file created [%s]", dbPath)
 	} else {
-		log.Printf("  db file exists [%s]", dbPath)
+		log.Printf("db file exists [%s]", dbPath)
 	}
 
-	log.Printf("  db connects to [%s]", dbPath)
+	log.Printf("db connects to [%s]", dbPath)
 	conn, err := sqlx.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("error opening db: %s", err)
 	}
 
-	log.Printf("  db connection established with connections[%d]", conn.Stats().MaxOpenConnections)
+	log.Printf("db connection established with connections[%d]", conn.Stats().MaxOpenConnections)
 	db := DBConn{conn: conn, isConn: true, isInit: false}
 	err = db.init()
 	return &db, err

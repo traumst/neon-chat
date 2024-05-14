@@ -18,7 +18,7 @@ import (
 func main() {
 	log.Println("Application is starting...")
 	// init log
-	log.Println("	setting up logger...")
+	log.Println("setting up logger...")
 	now := time.Now()
 	timestamp := now.Format(time.RFC3339)
 	date := strings.Split(timestamp, "T")[0]
@@ -32,7 +32,7 @@ func main() {
 	log.SetOutput(multi)
 
 	// parse args
-	log.Println("	parsing config...")
+	log.Println("parsing config...")
 	//config, err := utils.ArgsRead()
 	config, err := utils.EnvRead()
 	if err != nil {
@@ -42,17 +42,17 @@ func main() {
 	}
 	log.Printf("\tparsed config: %s\n", config)
 
-	log.Println("	connecting db...")
+	log.Println("connecting db...")
 	db, err := db.ConnectDB(config.Sqlite)
 	if err != nil {
 		log.Fatalf("Error opening db at [%s]: %s", config.Sqlite, err)
 	}
 
-	log.Println("	init app state...")
+	log.Println("init app state...")
 	app := &handler.ApplicationState
 	app.Init(db, handler.AppConfig{LoadLocal: config.LoadLocal})
 
-	log.Println("	init controllers...")
+	log.Println("init controllers...")
 	controller.Setup(app, db)
 
 	log.Printf("Starting server at port [%d]\n", config.Port)

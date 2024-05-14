@@ -109,7 +109,7 @@ func EnvRead() (*Config, error) {
 		case "SQLITE":
 			envConf.Sqlite = kv[1]
 		default:
-			log.Printf("	unknown env [%s]=[%s]\n", kv[0], kv[1])
+			log.Printf("unknown env [%s]=[%s]\n", kv[0], kv[1])
 		}
 	}
 
