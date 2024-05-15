@@ -44,7 +44,7 @@ func (h *HomeTemplate) HTML() (string, error) {
 		"static/html/nav/auth_div.html",
 		"static/html/nav/chat_li.html",
 		// right panel
-		"static/html/welcome_div.html",
+		"static/html/chat/welcome_div.html",
 		"static/html/chat/chat_div.html",
 		"static/html/user_div.html",
 		"static/html/chat/message_li.html",

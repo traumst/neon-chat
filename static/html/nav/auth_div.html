@@ -1,20 +1,22 @@
 <div id="auth" class="flex flex-col p-2 gap-y-4 justify-around">
     <div id="{{ .Login.Id }}" class="flex
-    text-center
-    rounded-md
-    bg-gradient-to-br from-green-800 to-indigo-800
-    text-gray-400
-    shadow shadow-zinc-700
-    hover:shadow-lg hover:shadow-zinc-500">
+        text-center
+        rounded-md
+        bg-gradient-to-br from-green-800 to-indigo-800
+        text-gray-400
+        shadow shadow-zinc-700
+        hover:shadow-lg hover:shadow-zinc-500"
+    >
         {{ template "authForm" .Login }}
     </div>
     <div id="{{ .Signup.Id }}" class="flex
-    text-center
-    rounded-md
-    bg-gradient-to-br from-green-800 to-indigo-800
-    text-gray-400
-    shadow shadow-zinc-700
-    hover:shadow-lg hover:shadow-zinc-500">
+        text-center
+        rounded-md
+        bg-gradient-to-br from-green-800 to-indigo-800
+        text-gray-400
+        shadow shadow-zinc-700
+        hover:shadow-lg hover:shadow-zinc-500"
+    >
         {{ template "authForm" .Signup }}
     </div>
 </div>
@@ -28,7 +30,7 @@
         }
     }
     window.onload = function() {
-        document.querySelector('#login form').addEventListener('submit', function(event) {
+        document.querySelector('#{{ .Login.Id }} form').addEventListener('submit', function(event) {
             event.preventDefault();
             const formData = new FormData(event.target);
             console.log('login data', formData)
@@ -36,10 +38,9 @@
                 .then(handleAuthResponse)
                 .catch(error => {
                     console.error("login error", error);
-
                 });
         });
-        document.querySelector('#signup form').addEventListener('submit', function(event) {
+        document.querySelector('#{{ .Signup.Id }} form').addEventListener('submit', function(event) {
             event.preventDefault();
             const formData = new FormData(event.target);
             console.log('signup data', formData)
