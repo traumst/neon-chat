@@ -13,7 +13,7 @@ type HomeTemplate struct {
 	User          UserTemplate
 	LoadLocal     bool
 	IsAuthorized  bool
-	LoginTemplate LoginTemplate
+	LoginTemplate AuthTemplate
 	Avatar        *AvatarTemplate
 }
 
@@ -41,7 +41,7 @@ func (h *HomeTemplate) HTML() (string, error) {
 		"static/html/left_panel.html",
 		"static/html/avatar_div.html",
 		"static/html/utils/user_settings_div.html",
-		"static/html/nav/login_div.html",
+		"static/html/nav/auth_div.html",
 		"static/html/nav/chat_li.html",
 		// right panel
 		"static/html/welcome_div.html",

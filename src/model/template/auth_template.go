@@ -11,14 +11,14 @@ type AuthForm struct {
 	Title string
 }
 
-type LoginTemplate struct {
+type AuthTemplate struct {
 	Login     AuthForm
 	Signup    AuthForm
 	LoadLocal bool
 }
 
-func (lt *LoginTemplate) HTML() (string, error) {
-	template := template.Must(template.ParseFiles("static/html/nav/login_div.html"))
+func (lt *AuthTemplate) HTML() (string, error) {
+	template := template.Must(template.ParseFiles("static/html/nav/auth_div.html"))
 	var buf bytes.Buffer
 	err := template.Execute(&buf, lt)
 	if err != nil {

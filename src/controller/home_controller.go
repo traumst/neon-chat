@@ -22,7 +22,7 @@ func RenderHome(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 
 func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("--%s-> homeLogin TRACE IN", h.GetReqId(r))
-	login := template.LoginTemplate{
+	login := template.AuthTemplate{
 		Login: template.AuthForm{
 			Id:    "login",
 			Label: "Login",
