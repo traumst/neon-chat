@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 
 	"go.chat/src/utils"
@@ -89,6 +90,29 @@ func (db *DBConn) GetAvatar(userId uint) (*Avatar, error) {
 		return nil, fmt.Errorf("error getting avatar for user[%d]: %s", userId, err)
 	}
 	return &avatar, nil
+}
+
+func (db *DBConn) GetAvatars(userId uint) ([]*Avatar, error) {
+	if !db.isConn {
+		return nil, fmt.Errorf("db is not connected")
+	}
+	if userId <= 0 {
+		return nil, fmt.Errorf("invalid userId[%d]", userId)
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	avatars := make([]*Avatar, 0)
+	err := db.conn.Select(&avatars, `SELECT * FROM avatars WHERE user_id = ?`, userId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return avatars, nil
+		} else {
+			return nil, fmt.Errorf("error getting avatar for user[%d]: %s", userId, err)
+		}
+	}
+	return avatars, nil
 }
 
 func (db *DBConn) DropAvatar(id int) error {

@@ -25,13 +25,16 @@
         }
     </script>
     <div class="active-user default-transition
-        flex flex-row justify-between
+        flex flex-row justify-end
         p-2
         shadow"
     >
-        {{ template "avatar_div.html" .Avatar }}
-        {{ template "user_div.html" .User }}
-        &nbsp;
+        <div sse-swap="{{ .AvatarChangeEvent }}" hx-swap="innerHTML">
+            {{ template "avatar_div.html" .Avatar }}
+        </div>
+        <div>
+            {{ template "user_div.html" .User }}
+        </div>
         <sub id="logoutButton" 
             title="log out {{ .User.UserName }}"
             hx-trigger="click" 

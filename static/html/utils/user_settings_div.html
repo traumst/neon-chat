@@ -31,18 +31,20 @@
         <div id="user-setting-profile" 
             class="flex flex-row p-2 shadow-lg">
             <div id="user-setting-avatar" class="flex flex-row mr-auto">
-                <!-- TODO avatar placeholder -->
                 <div id="user-setting-avatar-image" 
                     onclick="showAvatarEdit()" 
                     class="flex flex-row"
                 >
-                    {{ template "avatar_div.html" .Avatar }}
+                    <div id="settings-avatar-display">
+                        {{ template "avatar_div.html" .Avatar }}
+                    </div>
                     <sub class="hover:text-amber-700">[edit]</sub>
                 </div>
                 <form id="user-setting-avatar-select" 
                     hx-encoding="multipart/form-data" 
-                    hx-post='/avatar/add'
-                    hx-swap="outerHTML" 
+                    hx-post="/avatar/add"
+                    hx-target="#settings-avatar-display"
+                    hx-swap="innerHTML" 
                     hx-trigger="change"
                     hx-include="[name='avatar']"
                     onkeydown="escFocus(event)"
@@ -59,11 +61,6 @@
                     >
                     <progress id='progress' value='0' max='100'></progress>
                 </form>
-                <script>
-                    htmx.on('#form', 'htmx:xhr:progress', function(evt) {
-                      htmx.find('#progress').setAttribute('value', evt.detail.loaded/evt.detail.total * 100)
-                    });
-                </script>
                 <script>
                     // this makes edit avatar switch between desplay and edit
                     function showAvatarEdit() {

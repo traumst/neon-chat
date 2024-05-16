@@ -258,3 +258,37 @@ func (state *AppState) GetAvatar(userId uint) (*app.Avatar, error) {
 		Mime:   dbAvatar.Mime,
 	}, nil
 }
+
+func (state *AppState) GetAvatars(userId uint) ([]*app.Avatar, error) {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("AppState.GetAvatar TRACE user[%d]\n", userId)
+	dbAvatars, err := state.db.GetAvatars(userId)
+	if err != nil {
+		return nil, fmt.Errorf("avatar not found: %s", err)
+	}
+	avatars := make([]*app.Avatar, len(dbAvatars))
+	for _, dbAvatar := range dbAvatars {
+		avatars = append(avatars, &app.Avatar{
+			Id:     dbAvatar.Id,
+			UserId: dbAvatar.UserId,
+			Title:  dbAvatar.Title,
+			Size:   fmt.Sprintf("%dKB", dbAvatar.Size/utils.KB),
+			Image:  dbAvatar.Image,
+			Mime:   dbAvatar.Mime,
+		})
+	}
+	return avatars, nil
+}
+
+func (state *AppState) DropAvatar(avatar *app.Avatar) error {
+	if avatar == nil {
+		return fmt.Errorf("cannot drop nil avatar")
+	}
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("AppState.DropAvatar TRACE drops avatar[%d]\n", avatar.Id)
+	return state.db.DropAvatar(avatar.Id)
+}

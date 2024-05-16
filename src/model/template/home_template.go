@@ -33,6 +33,10 @@ func (h *HomeTemplate) ChatCloseEvent() string {
 	return event.ChatClose.FormatEventName(openChatId, h.User.UserId, -6)
 }
 
+func (h *HomeTemplate) AvatarChangeEvent() string {
+	return event.AvatarChange.FormatEventName(0, h.User.UserId, -5)
+}
+
 func (h *HomeTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
 	homeTmpl := template.Must(template.ParseFiles(

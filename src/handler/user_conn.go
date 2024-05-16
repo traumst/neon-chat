@@ -142,7 +142,12 @@ func (conn *Conn) trySend(up event.LiveUpdate) error {
 	case event.UserChange:
 		err := flushEvent(&w, up.Event, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to delete chat to user[%d], %s", up.UserId, err)
+			return fmt.Errorf("Conn.trySend ERROR failed to delete chat to user[%d], %s", up.UserId, err)
+		}
+	case event.AvatarChange:
+		err := flushEvent(&w, up.Event, up)
+		if err != nil {
+			return fmt.Errorf("Conn.trySend ERROR failed to update avatar to user[%d], %s", up.UserId, err)
 		}
 	case event.ChatAdd, event.ChatInvite:
 		err := flushEvent(&w, up.Event, up)
