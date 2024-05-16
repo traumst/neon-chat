@@ -151,6 +151,7 @@ func (c *Chat) Template(user *User, viewer *User) *t.ChatTemplate {
 			ChatOwnerId: c.Owner.Id,
 			UserId:      u.Id,
 			UserName:    u.Name,
+			UserEmail:   u.Email,
 			ViewerId:    viewer.Id,
 		}
 	}

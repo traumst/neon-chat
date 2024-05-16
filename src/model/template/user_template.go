@@ -12,6 +12,7 @@ type UserTemplate struct {
 	ChatOwnerId uint
 	UserId      uint
 	UserName    string
+	UserEmail   string
 	ViewerId    uint
 }
 

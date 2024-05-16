@@ -127,6 +127,10 @@ func handleAuth(app *handler.AppState, conn *db.DBConn, allMiddleware []Middlewa
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			SignUp(app, conn, w, r)
 		}), allMiddleware))
+	http.Handle("/confirm-email", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ConfirmEmail(app, conn, w, r)
+		}), allMiddleware))
 	http.Handle("/logout", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			Logout(app, w, r)

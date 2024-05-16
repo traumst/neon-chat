@@ -9,6 +9,7 @@ import (
 	"go.chat/src/db"
 	"go.chat/src/handler"
 	a "go.chat/src/model/app"
+	t "go.chat/src/model/template"
 	"go.chat/src/utils"
 	h "go.chat/src/utils/http"
 )
@@ -100,8 +101,24 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 		return
 	}
 	h.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
-	http.Redirect(w, r, "/", http.StatusFound)
-	log.Printf("--%s-> SignUp TRACE OUT\n", h.GetReqId(r))
+	//http.Redirect(w, r, "/", http.StatusFound)
+	// TODO return "please confirm"
+	result := t.EmailConfirmTemplate{
+		SourceEmail: "FROM_EMAIL",
+		UserEmail:   user.Name,
+		UserName:    u,
+		Expire:      time.Now().Format(time.RFC3339),
+	}
+	html, err := result.HTML()
+	if err != nil {
+		log.Printf("[%s] SignUp ERROR templating result html[%v], %s\n", h.GetReqId(r), result, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to template response"))
+	} else {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(html))
+	}
+	log.Printf("[%s] SignUp TRACE OUT\n", h.GetReqId(r))
 }
 
 func Logout(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
@@ -115,4 +132,8 @@ func Logout(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	h.ClearSessionCookie(w, user.Id)
 	http.Header.Add(w.Header(), "HX-Refresh", "true")
 	w.WriteHeader(http.StatusOK)
+}
+
+func ConfirmEmail(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
+	panic("TODO I'm not ready!")
 }

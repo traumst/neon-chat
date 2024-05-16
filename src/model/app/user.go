@@ -13,10 +13,11 @@ const (
 )
 
 type User struct {
-	Id   uint
-	Name string
-	Type UserType
-	Salt string
+	Id    uint
+	Name  string
+	Email string
+	Type  UserType
+	Salt  string
 }
 
 func (user *User) Template(
@@ -29,6 +30,7 @@ func (user *User) Template(
 		ChatOwnerId: chatOwnerId,
 		UserId:      user.Id,
 		UserName:    user.Name,
+		UserEmail:   user.Email,
 		ViewerId:    viewerId,
 	}
 }
