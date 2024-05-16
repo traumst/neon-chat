@@ -10,7 +10,7 @@ import (
 )
 
 func chatCreate(conn *Conn, targetChat *app.Chat, author *app.User) error {
-	log.Printf("∞----> chatCreate TRACE author[%d] created chat[%d]\n",
+	log.Printf("chatCreate TRACE author[%d] created chat[%d]\n",
 		author.Id, targetChat.Id)
 	if author.Id != targetChat.Owner.Id {
 		return fmt.Errorf("author[%d] is not owner[%d] of chat[%d]",
@@ -36,7 +36,7 @@ func chatCreate(conn *Conn, targetChat *app.Chat, author *app.User) error {
 }
 
 func chatInvite(conn *Conn, targetChat *app.Chat, authorId uint, subject *app.User) error {
-	log.Printf("∞----> chatCreate TRACE author[%d] invited subject[%d] to chat[%d], target[%d]\n",
+	log.Printf("chatCreate TRACE author[%d] invited subject[%d] to chat[%d], target[%d]\n",
 		authorId, subject.Id, targetChat.Id, conn.User.Id)
 	if authorId != targetChat.Owner.Id {
 		return fmt.Errorf("author[%d] is not owner[%d] of chat[%d]",
@@ -65,7 +65,7 @@ func chatInvite(conn *Conn, targetChat *app.Chat, authorId uint, subject *app.Us
 }
 
 func chatExpel(conn *Conn, chatId int, ownerId uint, authorId uint, subjectId uint) error {
-	log.Printf("∞----> chatExpel TRACE to user[%d] about author[%d] dropped subject[%d] from chat[%d]\n",
+	log.Printf("chatExpel TRACE to user[%d] about author[%d] dropped subject[%d] from chat[%d]\n",
 		conn.User.Id, authorId, subjectId, chatId)
 	if authorId != ownerId && authorId != subjectId {
 		return fmt.Errorf("author[%d] is not allowed to expel user[%d] from chat[%d]",
@@ -83,7 +83,7 @@ func chatExpel(conn *Conn, chatId int, ownerId uint, authorId uint, subjectId ui
 }
 
 func chatLeave(conn *Conn, chatId int, ownerId uint, authorId uint, subjectId uint) error {
-	log.Printf("∞----> chatLeave TRACE to user[%d] about author[%d] dropped subject[%d] from chat[%d]\n",
+	log.Printf("chatLeave TRACE to user[%d] about author[%d] dropped subject[%d] from chat[%d]\n",
 		conn.User.Id, authorId, subjectId, chatId)
 	if authorId == ownerId || authorId != subjectId {
 		return fmt.Errorf("author[%d] is not allowed to leave chat[%d] for user[%d]",
@@ -101,7 +101,7 @@ func chatLeave(conn *Conn, chatId int, ownerId uint, authorId uint, subjectId ui
 }
 
 func chatDelete(conn *Conn, chatId int, ownerId uint, authorId uint, targetId uint) error {
-	log.Printf("∞----> chatDelete TRACE deleted chat[%d] for subject[%d], target[%d]\n",
+	log.Printf("chatDelete TRACE deleted chat[%d] for subject[%d], target[%d]\n",
 		chatId, targetId, conn.User.Id)
 	if authorId != ownerId && authorId != targetId {
 		return fmt.Errorf("author[%d] is not owner[%d] of chat[%d]",
@@ -122,7 +122,7 @@ func chatDelete(conn *Conn, chatId int, ownerId uint, authorId uint, targetId ui
 }
 
 func chatClose(conn *Conn, chatId int, ownerId uint, authorId uint, target *app.User) error {
-	log.Printf("∞----> chatClose TRACE user[%d] closed chat[%d] for subject[%d]\n", authorId, chatId, target.Id)
+	log.Printf("chatClose TRACE user[%d] closed chat[%d] for subject[%d]\n", authorId, chatId, target.Id)
 	if authorId != ownerId && authorId != target.Id {
 		return fmt.Errorf("author[%d] is not allowed to close chat[%d] for user[%d]",
 			authorId, chatId, target.Id)

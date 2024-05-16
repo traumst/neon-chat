@@ -29,13 +29,13 @@ func DistributeMsg(
 	var errors []string
 	for _, user := range users {
 		if user.Id == authorId {
-			log.Printf("∞----> DistributeMsg TRACE new message is not sent to author[%d]\n", user.Id)
+			log.Printf("DistributeMsg TRACE new message is not sent to author[%d]\n", user.Id)
 			continue
 		}
 		wg.Add(1)
 		go func(user app.User, msg app.Message) {
 			defer wg.Done()
-			log.Printf("∞----> DistributeMsg TRACE new message will be sent to user[%d]\n", user.Id)
+			log.Printf("DistributeMsg TRACE new message will be sent to user[%d]\n", user.Id)
 			data, err := msg.Template(&user).HTML()
 			if err != nil {
 				errors = append(errors, err.Error())
@@ -65,21 +65,21 @@ func distributeMsgToUser(
 	updateType event.UpdateType,
 	data string,
 ) error {
-	log.Printf("∞----> distributeMsgToUser TRACE user[%d] chat[%d] event[%v]\n", userId, chatId, updateType)
+	log.Printf("distributeMsgToUser TRACE user[%d] chat[%d] event[%v]\n", userId, chatId, updateType)
 	openChat := state.GetOpenChat(userId)
 	if openChat == nil {
-		log.Printf("<----- distributeMsgToUser INFO user[%d] has no open chat to distribute", userId)
+		log.Printf("distributeMsgToUser INFO user[%d] has no open chat to distribute", userId)
 		return nil
 	}
 	if openChat.Id != chatId {
-		log.Printf("<----- distributeMsgToUser INFO user[%d] has open chat[%d] different from message chat[%d]",
+		log.Printf("distributeMsgToUser INFO user[%d] has open chat[%d] different from message chat[%d]",
 			userId, openChat.Id, chatId)
 		return nil
 	}
 
 	conn, err := state.GetConn(userId)
 	if err != nil {
-		log.Printf("<----- distributeMsgToUser INFO user[%d] not connected, err:%s", userId, err.Error())
+		log.Printf("distributeMsgToUser INFO user[%d] not connected, err:%s", userId, err.Error())
 		return nil
 	}
 

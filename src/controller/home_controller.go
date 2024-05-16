@@ -11,7 +11,7 @@ import (
 )
 
 func RenderHome(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> RenderHome", h.GetReqId(r))
+	log.Printf("[%s] RenderHome", h.GetReqId(r))
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		homeLogin(app, w, r)
@@ -21,7 +21,8 @@ func RenderHome(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 }
 
 func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	log.Printf("--%s-> homeLogin TRACE IN", h.GetReqId(r))
+	log.Printf("[%s] homeLogin TRACE IN", h.GetReqId(r))
+	// TODO this is stupid
 	login := template.AuthTemplate{
 		Login: template.AuthForm{
 			Id:    "login",
@@ -44,10 +45,10 @@ func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		LoginTemplate: login,
 		Avatar:        nil,
 	}
-	log.Printf("--%s-> homeLogin TRACE templating", h.GetReqId(r))
+	log.Printf("[%s] homeLogin TRACE templating", h.GetReqId(r))
 	html, err := home.HTML()
 	if err != nil {
-		log.Printf("--%s-> homeLogin ERROR login %s\n", h.GetReqId(r), err)
+		log.Printf("[%s] homeLogin ERROR login %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to render home login"))
 		return
@@ -57,16 +58,16 @@ func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 }
 
 func homePage(app *handler.AppState, w http.ResponseWriter, r *http.Request, user *app.User) {
-	log.Printf("--%s-> homePage TRACE IN", h.GetReqId(r))
+	log.Printf("[%s] homePage TRACE IN", h.GetReqId(r))
 	var openChatTemplate *template.ChatTemplate
 	var openChatId int = -1
 	var openChatOwnerId uint = 0
 	openChat := app.GetOpenChat(user.Id)
 	if openChat == nil {
-		log.Printf("--%s-> homePage DEBUG, user[%d] has no open chat\n", h.GetReqId(r), user.Id)
+		log.Printf("[%s] homePage DEBUG, user[%d] has no open chat\n", h.GetReqId(r), user.Id)
 		openChatTemplate = nil
 	} else {
-		log.Printf("--%s-> homePage DEBUG, user[%d] has chat[%d] open\n", h.GetReqId(r), user.Id, openChat.Id)
+		log.Printf("[%s] homePage DEBUG, user[%d] has chat[%d] open\n", h.GetReqId(r), user.Id, openChat.Id)
 		openChatTemplate = openChat.Template(user, user)
 		openChatId = openChat.Id
 		openChatOwnerId = openChat.Owner.Id
@@ -89,12 +90,12 @@ func homePage(app *handler.AppState, w http.ResponseWriter, r *http.Request, use
 	}
 	html, err := home.HTML()
 	if err != nil {
-		log.Printf("--%s-> homePage ERROR, %s\n", h.GetReqId(r), err)
+		log.Printf("[%s] homePage ERROR, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to render home page"))
 		return
 	}
-	log.Printf("--%s-> homePage TRACE, user[%d] gets content\n", h.GetReqId(r), user.Id)
+	log.Printf("[%s] homePage TRACE, user[%d] gets content\n", h.GetReqId(r), user.Id)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }

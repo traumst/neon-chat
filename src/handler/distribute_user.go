@@ -60,7 +60,7 @@ func userNameChanged(conn *Conn, subject *app.User) error {
 	if subject == nil {
 		return fmt.Errorf("subjectUser is nil for userChanged")
 	}
-	log.Printf("∞----> userChanged TRACE informing target[%d] about subject[%d] change\n", conn.User.Id, subject.Id)
+	log.Printf("userChanged TRACE informing target[%d] about subject[%d] change\n", conn.User.Id, subject.Id)
 	tmpl := subject.Template(-64, 0, conn.User.Id)
 	data, err := tmpl.HTML()
 	if err != nil {

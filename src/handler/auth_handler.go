@@ -17,9 +17,9 @@ func ReadSession(
 	w http.ResponseWriter,
 	r *http.Request,
 ) (*a.User, error) {
-	log.Printf("--%s-> ReadSession TRACE IN\n", h.GetReqId(r))
+	log.Printf("[%s] ReadSession TRACE IN\n", h.GetReqId(r))
 	cookie, err := h.GetSessionCookie(r)
-	log.Printf("--%s-> ReadSession TRACE session cookie[%v], err[%s]\n", h.GetReqId(r), cookie, err)
+	log.Printf("[%s] ReadSession TRACE session cookie[%v], err[%s]\n", h.GetReqId(r), cookie, err)
 	if err != nil {
 		h.ClearSessionCookie(w, 0)
 		return nil, fmt.Errorf("failed to read session cookie, %s", err)
@@ -35,7 +35,7 @@ func ReadSession(
 			h.ClearSessionCookie(w, 0)
 			err = fmt.Errorf("failed to get user from cookie[%v]", cookie)
 		} else {
-			log.Printf("--%s-> ReadSession TRACE session user[%d][%s], err[%s]\n", h.GetReqId(r),
+			log.Printf("[%s] ReadSession TRACE session user[%d][%s], err[%s]\n", h.GetReqId(r),
 				user.Id, user.Name, err)
 		}
 	}()
@@ -43,7 +43,7 @@ func ReadSession(
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("<-%s-- ReadSession TRACE OUT\n", h.GetReqId(r))
+	log.Printf("[%s] ReadSession TRACE OUT\n", h.GetReqId(r))
 	return user, err
 }
 
@@ -58,16 +58,16 @@ func Authenticate(
 	}
 	user, err := db.SearchUser(username)
 	if err != nil || user == nil || user.Id <= 0 || len(user.Salt) <= 0 {
-		log.Printf("-----> Authenticate TRACE user[%s] not found, %s\n", username, err)
+		log.Printf("Authenticate TRACE user[%s] not found, %s\n", username, err)
 		return nil, nil, fmt.Errorf("user[%s] not found, %s", username, err)
 	}
 	appUser := UserFromDB(*user)
 	hash, err := utils.HashPassword(pass, appUser.Salt)
 	if err != nil {
-		log.Printf("-----> Authenticate TRACE failed on hashing[%s] pass for user[%s], %s", hash, appUser.Name, err)
+		log.Printf("Authenticate TRACE failed on hashing[%s] pass for user[%s], %s", hash, appUser.Name, err)
 		return &appUser, nil, fmt.Errorf("failed on hashing pass for user[%s], %s", appUser.Name, err)
 	}
-	log.Printf("-----> Authenticate TRACE user[%d] auth[%s] hash[%s]\n", appUser.Id, authType, hash)
+	log.Printf("Authenticate TRACE user[%d] auth[%s] hash[%s]\n", appUser.Id, authType, hash)
 	auth, err := db.GetAuth(appUser.Id, string(authType), hash)
 	if err != nil {
 		return &appUser, nil, fmt.Errorf("no auth for user[%s] hash[%s], %s", appUser.Name, hash, err)
@@ -84,7 +84,7 @@ func Register(
 	pass string,
 	authType a.AuthType,
 ) (*a.User, *a.Auth, error) {
-	log.Printf("-----> Register TRACE IN user\n")
+	log.Printf("Register TRACE IN user\n")
 	if db == nil || u == nil {
 		return nil, nil, fmt.Errorf("missing mandatory args user[%v] db[%v]", u, db)
 	}
@@ -100,7 +100,7 @@ func Register(
 		if err != nil || user == nil {
 			return nil, nil, fmt.Errorf("failed to create user[%v], %s", u, err)
 		} else {
-			log.Printf("-----> Register TRACE user[%s] created\n", user.Name)
+			log.Printf("Register TRACE user[%s] created\n", user.Name)
 		}
 	}
 	auth, err := createAuth(db, user, pass, authType)
@@ -111,16 +111,16 @@ func Register(
 
 		return nil, nil, fmt.Errorf("failed to create auth[%s] for user[%v], %s", authType, user, err)
 	}
-	log.Printf("-----> Register TRACE user[%v] auth[%v] created\n", user, auth)
+	log.Printf("Register TRACE user[%v] auth[%v] created\n", user, auth)
 	return user, auth, nil
 }
 
 func createUser(db *d.DBConn, user *a.User) (*a.User, error) {
 	if user.Id != 0 && user.Salt != "" {
-		log.Printf("-----> createUser TRACE completing user[%s] signup\n", user.Name)
+		log.Printf("createUser TRACE completing user[%s] signup\n", user.Name)
 		return user, nil
 	}
-	log.Printf("-----> createUser TRACE creating user[%s]\n", user.Name)
+	log.Printf("createUser TRACE creating user[%s]\n", user.Name)
 	dbUser := UserToDB(*user)
 	created, err := db.AddUser(&dbUser)
 	if err != nil || created == nil {
@@ -135,10 +135,10 @@ func createUser(db *d.DBConn, user *a.User) (*a.User, error) {
 
 func deleteUser(db *d.DBConn, user *a.User) error {
 	if user.Id < 1 {
-		log.Printf("-----> deleteUser TRACE completing user[%s] signup\n", user.Name)
+		log.Printf("deleteUser TRACE completing user[%s] signup\n", user.Name)
 		return nil
 	}
-	log.Printf("-----> deleteUser TRACE creating user[%s]\n", user.Name)
+	log.Printf("deleteUser TRACE creating user[%s]\n", user.Name)
 	err := db.DropUser(user.Id)
 	if err != nil {
 		return fmt.Errorf("failed to delete, %s", err)
@@ -147,12 +147,12 @@ func deleteUser(db *d.DBConn, user *a.User) error {
 }
 
 func createAuth(db *d.DBConn, user *a.User, pass string, authType a.AuthType) (*a.Auth, error) {
-	log.Printf("-----> createAuth TRACE IN user[%v] auth[%s]\n", user, authType)
+	log.Printf("createAuth TRACE IN user[%v] auth[%s]\n", user, authType)
 	hash, err := utils.HashPassword(pass, user.Salt)
 	if err != nil {
 		return nil, fmt.Errorf("error hashing pass, %s", err)
 	}
-	log.Printf("-----> createAuth TRACE adding user[%d] auth[%s] hash[%s]\n", user.Id, authType, hash)
+	log.Printf("createAuth TRACE adding user[%d] auth[%s] hash[%s]\n", user.Id, authType, hash)
 	dbAuth := &d.Auth{
 		Id:     0,
 		UserId: user.Id,
