@@ -5,14 +5,14 @@ import (
 	"html/template"
 )
 
-type EmailConfirmTemplate struct {
+type EmailSentTemplate struct {
 	SourceEmail string
 	UserEmail   string
 	UserName    string
 	Expire      string
 }
 
-func (w *EmailConfirmTemplate) HTML() (string, error) {
+func (w *EmailSentTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
 	welcomeTmpl := template.Must(template.ParseFiles("static/html/chat/email_confirm_div.html"))
 	err := welcomeTmpl.Execute(&buf, w)

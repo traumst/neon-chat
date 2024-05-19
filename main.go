@@ -50,7 +50,15 @@ func main() {
 
 	log.Println("init app state...")
 	app := &handler.ApplicationState
-	app.Init(db, handler.AppConfig{LoadLocal: config.LoadLocal})
+	app.Init(db, handler.AppConfig{
+		LoadLocal: config.LoadLocal,
+		Smtp: handler.SmtpConfig{
+			User: config.Smtp.User,
+			Pass: config.Smtp.Pass,
+			Host: config.Smtp.Host,
+			Port: config.Smtp.Port,
+		},
+	})
 
 	log.Println("init controllers...")
 	controller.Setup(app, db)

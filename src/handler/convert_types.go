@@ -7,19 +7,23 @@ import (
 
 func UserToDB(user app.User) db.User {
 	return db.User{
-		Id:   user.Id,
-		Name: user.Name,
-		Type: string(user.Type),
-		Salt: user.Salt,
+		Id:     user.Id,
+		Name:   user.Name,
+		Email:  user.Email,
+		Type:   string(user.Type),
+		Status: string(user.Status),
+		Salt:   user.Salt,
 	}
 }
 
 func UserFromDB(user db.User) app.User {
 	return app.User{
-		Id:   user.Id,
-		Name: user.Name,
-		Type: app.UserType(user.Type),
-		Salt: user.Salt,
+		Id:     user.Id,
+		Name:   user.Name,
+		Email:  user.Email,
+		Type:   app.UserType(user.Type),
+		Status: app.UserStatus(user.Status),
+		Salt:   user.Salt,
 	}
 }
 

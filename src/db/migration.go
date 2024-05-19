@@ -17,13 +17,13 @@ type Migration struct {
 	Stamp time.Time `db:"stamp"`
 }
 
-const MigrationSchema string = `
+const MigrationSchema = `
 	CREATE TABLE IF NOT EXISTS _migrations (
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
 		title TEXT,
 		stamp DATETIME DEFAULT CURRENT_TIMESTAMP
-	);
-	CREATE UNIQUE INDEX IF NOT EXISTS idx_applied_migration ON _migrations(title);`
+	);`
+const MigrationIndex = `CREATE UNIQUE INDEX IF NOT EXISTS idx_applied_migration ON _migrations(title);`
 
 func (db *DBConn) MigrationsTableExists() bool {
 	return db.TableExists("_migrations")

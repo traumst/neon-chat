@@ -167,7 +167,7 @@
             {{ if .IsAuthorized }}
                 {{ template "left_panel.html" . }}
             {{ else }}
-                {{ template "auth_div.html" .LoginTemplate }}
+                {{ template "auth_div.html" . }}
             {{ end }}
         </div>
     </div>

@@ -9,7 +9,6 @@ import (
 	"go.chat/src/db"
 	"go.chat/src/handler"
 	a "go.chat/src/model/app"
-	t "go.chat/src/model/template"
 	"go.chat/src/utils"
 	h "go.chat/src/utils/http"
 )
@@ -25,31 +24,57 @@ func Login(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.
 		w.Write([]byte("action not allowed"))
 		return
 	}
-	u := r.FormValue("login-user")
-	u = utils.TrimSpaces(u)
-	u = utils.TrimSpecial(u)
-	p := r.FormValue("login-pass")
-	p = utils.TrimSpaces(p)
-	p = utils.TrimSpecial(p)
-	if u == "" || p == "" || len(u) < 4 || len(p) < 4 {
-		log.Printf("[%s] Login TRACE empty user[%s]", h.GetReqId(r), u)
+	loginUser := utils.Trim(r.FormValue("login-user"))
+	loginPass := utils.Trim(r.FormValue("login-pass"))
+	if loginUser == "" || loginPass == "" || len(loginUser) < 4 || len(loginPass) < 4 {
+		log.Printf("[%s] Login TRACE empty user[%s]", h.GetReqId(r), loginUser)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("bad login credentials"))
 		return
 	}
 	log.Printf("[%s] Login TRACE authentication check for user[%s] auth[%s]\n",
-		h.GetReqId(r), u, authType)
-	user, auth, err := handler.Authenticate(db, u, p, authType)
-	if user != nil && auth != nil {
-		h.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
-		http.Redirect(w, r, "/", http.StatusPermanentRedirect)
+		h.GetReqId(r), loginUser, authType)
+	user, auth, err := handler.Authenticate(db, loginUser, loginPass, authType)
+	if err != nil {
+		log.Printf("[%s] Login ERROR unauth user[%s], %s\n", h.GetReqId(r), loginUser, err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("authentication failed"))
 		return
 	}
+	if user == nil {
+		log.Printf("[%s] Login ERROR unknown user[%s]\n", h.GetReqId(r), loginUser)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("unknown user"))
+		return
+	} else if user.Status != a.UserStatusActive {
+		log.Printf("[%s] Login ERROR inactive user[%d] status[%s]\n", h.GetReqId(r), user.Id, user.Status)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("inactive user"))
+		return
+	}
+	if auth == nil {
+		log.Printf("[%s] Login ERROR user password mismatched [%s]\n", h.GetReqId(r), loginUser)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("user password mismatched"))
+		return
+	}
+	cookie := h.SetSessionCookie(w, user, auth)
+	log.Printf("[%s] Login TRACE user[%d] authenticated until [%s]\n",
+		h.GetReqId(r), user.Id, cookie.Expire.Format(time.RFC1123Z))
+	http.Redirect(w, r, "/", http.StatusPermanentRedirect)
+}
 
-	log.Printf("[%s] Login ERROR on authenticate[%s], %s\n", h.GetReqId(r), u, err)
-	w.WriteHeader(http.StatusBadRequest)
-	w.Write([]byte(fmt.Sprintf("Credentials not found for [%s:%s]", authType, u)))
-	log.Printf("[%s] Login TRACE OUT\n", h.GetReqId(r))
+func Logout(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+	log.Printf("[%s] Logout TRACE \n", h.GetReqId(r))
+	user, err := handler.ReadSession(app, w, r)
+	if user == nil {
+		log.Printf("[%s] Logout INFO user is not authorized, %s\n", h.GetReqId(r), err.Error())
+		RenderHome(app, w, r)
+		return
+	}
+	h.ClearSessionCookie(w, user.Id)
+	http.Header.Add(w.Header(), "HX-Refresh", "true")
+	w.WriteHeader(http.StatusOK)
 }
 
 func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
@@ -59,81 +84,80 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 		w.Write([]byte("This shouldn't happen"))
 		return
 	}
-	u := r.FormValue("signup-user")
-	u = utils.TrimSpaces(u)
-	u = utils.TrimSpecial(u)
-	p := r.FormValue("signup-pass")
-	p = utils.TrimSpaces(p)
-	p = utils.TrimSpecial(p)
-	log.Printf("[%s] SignUp TRACE authentication check for user[%s] auth[%s]\n", h.GetReqId(r), u, authType)
-	if u == "" || p == "" || len(u) < 4 || len(p) < 4 {
+	signupUser := utils.Trim(r.FormValue("signup-user"))
+	signupEmail := utils.Trim(r.FormValue("signup-email"))
+	signupPass := utils.Trim(r.FormValue("signup-pass"))
+	log.Printf("[%s] SignUp TRACE authentication check for user[%s] auth[%s]\n", h.GetReqId(r), signupUser, authType)
+	if signupUser == "" || signupEmail == "" || signupPass == "" || len(signupUser) < 4 || len(signupEmail) < 4 || len(signupPass) < 4 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("bad signup credentials"))
 		return
 	}
-	user, auth, err := handler.Authenticate(db, u, p, authType)
-	if user != nil && auth != nil {
-		log.Printf("[%s] SignUp TRACE signedIn instead of signUp user[%s], %s\n", h.GetReqId(r), u, err)
-		h.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
+	user, auth, _ := handler.Authenticate(db, signupUser, signupPass, authType)
+	if user != nil && user.Status == a.UserStatusActive && auth != nil {
+		log.Printf("[%s] SignUp TRACE signedIn instead of signUp user[%s]\n", h.GetReqId(r), signupUser)
+		h.SetSessionCookie(w, user, auth)
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 	if user != nil {
-		log.Printf("[%s] SignUp ERROR name[%s] already taken by user[%d], %s\n",
-			h.GetReqId(r), u, user.Id, err)
+		log.Printf("[%s] SignUp ERROR name[%s] already taken by user[%d] in status[%s]\n",
+			h.GetReqId(r), signupUser, user.Id, user.Status)
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Failed to register, [%s] is already taken"))
+		w.Write([]byte("username is already taken"))
 		return
 	}
-
-	log.Printf("[%s] SignUp TRACE register new user[%s], %s\n", h.GetReqId(r), u, err)
-	salt := utils.GenerateSalt(u, string(a.UserTypeFree))
+	if !handler.IsEmailValid(signupEmail) {
+		log.Printf("[%s] SignUp ERROR invalid email[%s]\n", h.GetReqId(r), signupEmail)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid email"))
+		return
+	}
+	log.Printf("[%s] SignUp TRACE register new user[%s]\n", h.GetReqId(r), signupUser)
+	salt := utils.GenerateSalt(signupUser, string(a.UserTypeFree))
 	user = &a.User{
-		Name: u,
-		Type: a.UserTypeFree,
-		Salt: salt,
+		Id:     0,
+		Name:   signupUser,
+		Email:  signupEmail,
+		Type:   a.UserTypeFree,
+		Status: a.UserStatusPending,
+		Salt:   salt,
 	}
-	user, auth, err = handler.Register(db, user, p, authType)
-	if err != nil || user == nil || auth == nil {
-		log.Printf("[%s] SignUp ERROR on register user[%v], %s\n", h.GetReqId(r), user, err)
+	user, auth, err := handler.Register(db, user, signupPass, authType)
+	if err != nil {
+		log.Printf("[%s] SignUp ERROR on register user[%v], %s\n", h.GetReqId(r), user, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", a.UserTypeFree, u)))
+		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", a.UserTypeFree, signupUser)))
+		return
+	} else if user == nil || auth == nil {
+		log.Printf("[%s] SignUp ERROR to register user[%v]\n", h.GetReqId(r), user)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", a.UserTypeFree, signupUser)))
 		return
 	}
-	h.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
-	//http.Redirect(w, r, "/", http.StatusFound)
-	// TODO return "please confirm"
-	result := t.EmailConfirmTemplate{
-		SourceEmail: "FROM_EMAIL",
-		UserEmail:   user.Name,
-		UserName:    u,
-		Expire:      time.Now().Format(time.RFC3339),
-	}
-	html, err := result.HTML()
+	sentEmail, err := handler.IssueReservationToken(app, db, user)
 	if err != nil {
-		log.Printf("[%s] SignUp ERROR templating result html[%v], %s\n", h.GetReqId(r), result, err)
+		log.Printf("[%s] SignUp ERROR failed to issue reservation token to email[%s], %s\n",
+			h.GetReqId(r), user.Email, err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to issue reservation token"))
+		return
+	}
+	html, err := sentEmail.HTML()
+	if err != nil {
+		log.Printf("[%s] SignUp ERROR templating result html[%v], %s\n", h.GetReqId(r), sentEmail, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to template response"))
-	} else {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(html))
-	}
-	log.Printf("[%s] SignUp TRACE OUT\n", h.GetReqId(r))
-}
-
-func Logout(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	log.Printf("[%s] Logout TRACE \n", h.GetReqId(r))
-	user, err := handler.ReadSession(app, w, r)
-	if user == nil {
-		log.Printf("[%s] Logout INFO user is not authorized, %s\n", h.GetReqId(r), err)
-		RenderHome(app, w, r)
 		return
 	}
-	h.ClearSessionCookie(w, user.Id)
-	http.Header.Add(w.Header(), "HX-Refresh", "true")
+	log.Printf("[%s] SignUp TRACE OUT\n", h.GetReqId(r))
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(html))
 }
 
 func ConfirmEmail(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	panic("TODO I'm not ready!")
+
+	// TODO only set on confirm
+	// h.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
 }

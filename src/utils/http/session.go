@@ -15,10 +15,10 @@ import (
 var sessions map[uint]Session = map[uint]Session{}
 
 type Session struct {
-	UserId     uint
-	UserType   app.UserType
-	AuthType   app.AuthType
-	Expiration time.Time
+	UserId   uint
+	UserType app.UserType
+	AuthType app.AuthType
+	Expire   time.Time
 }
 
 func GetSessionCookie(r *http.Request) (*Session, error) {
@@ -35,26 +35,29 @@ func GetSessionCookie(r *http.Request) (*Session, error) {
 		return &cached, fmt.Errorf("user has no cached session")
 	} else if cached.UserId != session.UserId {
 		return &cached, fmt.Errorf("user id mismatch")
-	} else if cached.Expiration.Before(time.Now()) {
+	} else if cached.Expire.Before(time.Now()) {
 		delete(sessions, session.UserId)
 		return &cached, fmt.Errorf("session expired")
 	}
 	return &cached, nil
 }
 
-func SetSessionCookie(w http.ResponseWriter, user *app.User, auth *app.Auth, expiration time.Time) {
-	cookie := Session{
-		UserId:     user.Id,
-		UserType:   user.Type,
-		AuthType:   auth.Type,
-		Expiration: expiration,
+func SetSessionCookie(w http.ResponseWriter, user *app.User, auth *app.Auth) Session {
+	expiration := time.Now().Add(8 * time.Hour)
+	session := Session{
+		UserId:   user.Id,
+		UserType: user.Type,
+		AuthType: auth.Type,
+		Expire:   expiration,
 	}
-	sessions[user.Id] = cookie
+	sessions[user.Id] = session
+	cookie := session.String()
 	http.SetCookie(w, &http.Cookie{
 		Name:    utils.SessionCookie,
-		Value:   cookie.String(),
+		Value:   cookie,
 		Expires: expiration,
 	})
+	return session
 }
 
 func ClearSessionCookie(w http.ResponseWriter, userId uint) {

@@ -5,23 +5,24 @@ import (
 )
 
 type User struct {
-	Id    uint   `db:"id"`
-	Name  string `db:"name"`
-	Email string `db:"email"`
-	Type  string `db:"type"`
-	Salt  string `db:"salt"`
+	Id     uint   `db:"id"`
+	Name   string `db:"name"`
+	Email  string `db:"email"`
+	Type   string `db:"type"`
+	Status string `db:"status"`
+	Salt   string `db:"salt"`
 }
 
 const UserSchema string = `
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
-		name TEXT, 
-		email TEXT,
+		name TEXT UNIQUE, 
+		email TEXT UNIQUE,
 		type TEXT,
+		status TEXT,
 		salt INTEGER
-	);
-	CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name ON users(name);
-	CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);`
+	);`
+const UserIndex string = `CREATE UNIQUE INDEX IF NOT EXISTS idx_user_status ON users(status);`
 
 func (db *DBConn) UserTableExists() bool {
 	return db.TableExists("users")
@@ -44,8 +45,8 @@ func (db *DBConn) AddUser(user *User) (*User, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	result, err := db.conn.Exec(`INSERT INTO users (name, type, salt) VALUES (?, ?, ?)`,
-		user.Name, user.Type, user.Salt[:])
+	result, err := db.conn.Exec(`INSERT INTO users (name, type, status, salt) VALUES (?, ?, ?, ?)`,
+		user.Name, user.Type, user.Status, user.Salt[:])
 	if err != nil {
 		return nil, fmt.Errorf("error adding user: %s", err)
 	}

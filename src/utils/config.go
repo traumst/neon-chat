@@ -9,10 +9,18 @@ import (
 	"strings"
 )
 
+type SmtpConfig struct {
+	User string
+	Pass string
+	Host string
+	Port string
+}
+
 type Config struct {
 	Port      int
 	LoadLocal bool
 	Sqlite    string
+	Smtp      SmtpConfig
 }
 
 func (a *Config) String() string {
@@ -25,43 +33,6 @@ func Help() string {
 		* find .env.template
 		* copy it to .env
 		* set desired values`
-}
-
-func ArgsRead() (*Config, error) {
-	if len(os.Args) < 2 {
-		return nil, fmt.Errorf("no arguments provided")
-	}
-
-	argName := ""
-	args := &Config{}
-	err := error(nil)
-	for _, arg := range os.Args[1:] {
-		if err != nil {
-			break
-		}
-		if strings.HasPrefix(arg, "-") {
-			argName = arg
-			continue
-		}
-		switch argName {
-		case "-p", "--port":
-			args.Port, err = strconv.Atoi(arg)
-			if err == nil && args.Port > 0 {
-				continue
-			}
-			err = fmt.Errorf("invalid --port value [%s], %v", arg, err)
-		case "-h", "--help":
-			err = fmt.Errorf("help requested")
-		default:
-			err = fmt.Errorf("unknown argument: %s", argName)
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return args, nil
 }
 
 func EnvRead() (*Config, error) {
@@ -89,7 +60,7 @@ func EnvRead() (*Config, error) {
 		return nil, fmt.Errorf("failed to create scanner")
 	}
 
-	envConf := Config{}
+	envConf := Config{Smtp: SmtpConfig{}}
 	for scanner.Scan() {
 		line := scanner.Text()
 		kv := strings.Split(line, "=")
@@ -108,8 +79,16 @@ func EnvRead() (*Config, error) {
 			envConf.LoadLocal = strings.ToLower(kv[1]) == "true"
 		case "SQLITE":
 			envConf.Sqlite = kv[1]
+		case "SMTP_USER":
+			envConf.Smtp.User = kv[1]
+		case "SMTP_PASS":
+			envConf.Smtp.Pass = kv[1]
+		case "SMTP_HOST":
+			envConf.Smtp.Host = kv[1]
+		case "SMTP_PORT":
+			envConf.Smtp.Port = kv[1]
 		default:
-			log.Printf("unknown env [%s]=[%s]\n", kv[0], kv[1])
+			log.Printf("unknown env config [%s]\n", line)
 		}
 	}
 

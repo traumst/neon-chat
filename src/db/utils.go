@@ -24,12 +24,3 @@ func (db *DBConn) TableExists(tableName string) bool {
 	}
 	return table == tableName
 }
-
-func (db *DBConn) IndexExists(tableName string, name string) bool {
-	if name == "" {
-		panic("check if index exist - empty name")
-	}
-	var idxName string
-	db.conn.Get(idxName, "SELECT name FROM sqlite_master WHERE type='index' and name=?;", name)
-	return idxName == name
-}

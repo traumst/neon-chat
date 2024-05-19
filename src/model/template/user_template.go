@@ -13,7 +13,8 @@ type UserTemplate struct {
 	UserId      uint
 	UserName    string
 	UserEmail   string
-	ViewerId    uint
+	//UserStatus  string
+	ViewerId uint
 }
 
 func (c *UserTemplate) UserChangeEvent() string {

@@ -15,32 +15,44 @@ import (
 var ApplicationState AppState
 
 type AppState struct {
-	mu        sync.Mutex
-	isInit    bool
-	db        *db.DBConn
-	chats     app.ChatList
-	userConn  UserConn
-	users     []app.User
-	loadLocal bool
+	mu       sync.Mutex
+	isInit   bool
+	db       *db.DBConn
+	chats    app.ChatList
+	userConn UserConn
+	users    []app.User
+	config   AppConfig
 }
 
 type AppConfig struct {
 	LoadLocal bool
+	Smtp      SmtpConfig
+}
+
+type SmtpConfig struct {
+	User string
+	Pass string
+	Host string
+	Port string
 }
 
 func (state *AppState) Init(db *db.DBConn, config AppConfig) {
 	ApplicationState = AppState{
-		isInit:    true,
-		db:        db,
-		chats:     app.ChatList{},
-		userConn:  make(UserConn, 0),
-		users:     make([]app.User, 0),
-		loadLocal: config.LoadLocal,
+		isInit:   true,
+		db:       db,
+		chats:    app.ChatList{},
+		userConn: make(UserConn, 0),
+		users:    make([]app.User, 0),
+		config:   config,
 	}
 }
 
 func (state *AppState) LoadLocal() bool {
-	return state.loadLocal
+	return state.config.LoadLocal
+}
+
+func (state *AppState) SmtpConfig() SmtpConfig {
+	return state.config.Smtp
 }
 
 // CONN

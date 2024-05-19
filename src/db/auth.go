@@ -18,8 +18,8 @@ const AuthSchema string = `
 		type TEXT,
 		hash TEXT,
 		FOREIGN KEY(user_id) REFERENCES users(id)
-	);
-	CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_user_id_type ON auth(user_id, type, hash);`
+	);`
+const AuthIndex string = `CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_user_id_type ON auth(user_id, type, hash);`
 
 func (db *DBConn) AuthTableExists() bool {
 	return db.TableExists("auth")

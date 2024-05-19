@@ -7,13 +7,13 @@ import (
 	"go.chat/src/handler"
 )
 
-func Setup(app *handler.AppState, conn *db.DBConn) {
+func Setup(app *handler.AppState, db *db.DBConn) {
 	// loaded in reverse order
 	allMiddleware := []Middleware{LoggerMiddleware, ReqIdMiddleware}
 
 	handleAvatar(app, allMiddleware)
-	handleAuth(app, conn, allMiddleware)
-	handleUser(app, conn, allMiddleware)
+	handleAuth(app, db, allMiddleware)
+	handleUser(app, db, allMiddleware)
 	handleChat(app, allMiddleware)
 	handleMsgs(app, allMiddleware)
 	handleSettings(app, allMiddleware)
@@ -37,6 +37,10 @@ func handleStaticFiles() {
 	minMiddleware := []Middleware{ReqIdMiddleware}
 
 	http.Handle("/favicon.ico", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			FavIcon(w, r)
+		}), minMiddleware))
+	http.Handle("/favicon.svg", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			FavIcon(w, r)
 		}), minMiddleware))
@@ -99,10 +103,10 @@ func handleChat(app *handler.AppState, allMiddleware []Middleware) {
 		}), allMiddleware))
 }
 
-func handleUser(app *handler.AppState, conn *db.DBConn, allMiddleware []Middleware) {
+func handleUser(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/user/invite", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			InviteUser(app, conn, w, r)
+			InviteUser(app, db, w, r)
 		}), allMiddleware))
 	http.Handle("/user/expel", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -118,18 +122,18 @@ func handleUser(app *handler.AppState, conn *db.DBConn, allMiddleware []Middlewa
 		}), allMiddleware))
 }
 
-func handleAuth(app *handler.AppState, conn *db.DBConn, allMiddleware []Middleware) {
+func handleAuth(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/login", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			Login(app, conn, w, r)
+			Login(app, db, w, r)
 		}), allMiddleware))
 	http.Handle("/signup", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			SignUp(app, conn, w, r)
+			SignUp(app, db, w, r)
 		}), allMiddleware))
-	http.Handle("/confirm-email", ChainMiddleware(
+	http.Handle("/signup-confirm", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ConfirmEmail(app, conn, w, r)
+			ConfirmEmail(app, db, w, r)
 		}), allMiddleware))
 	http.Handle("/logout", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

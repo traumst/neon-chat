@@ -16,7 +16,7 @@ type Avatar struct {
 	Mime   string `db:"mime"`
 }
 
-const AvatarSchema string = `
+const AvatarSchema = `
 	CREATE TABLE IF NOT EXISTS avatars (
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
 		user_id INTEGER,
@@ -25,8 +25,8 @@ const AvatarSchema string = `
 		image BLOB,
 		mime TEXT,
 		FOREIGN KEY(user_id) REFERENCES users(id)
-	);
-	CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name ON users(name);`
+	);`
+const AvatarIndex = `CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name ON users(name);`
 
 func (db *DBConn) AvatarTableExists() bool {
 	return db.TableExists("avatars")

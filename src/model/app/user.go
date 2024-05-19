@@ -4,20 +4,29 @@ import (
 	"go.chat/src/model/template"
 )
 
-type UserType string
-
 // TODO add flags/permissions mapping
+
+type UserType string
 
 const (
 	UserTypeFree UserType = "user-type-free"
 )
 
+type UserStatus string
+
+const (
+	UserStatusPending UserStatus = "pending"
+	UserStatusActive  UserStatus = "active"
+	UserStatusSuspend UserStatus = "suspend"
+)
+
 type User struct {
-	Id    uint
-	Name  string
-	Email string
-	Type  UserType
-	Salt  string
+	Id     uint
+	Name   string
+	Email  string
+	Type   UserType
+	Status UserStatus
+	Salt   string
 }
 
 func (user *User) Template(
@@ -31,6 +40,7 @@ func (user *User) Template(
 		UserId:      user.Id,
 		UserName:    user.Name,
 		UserEmail:   user.Email,
-		ViewerId:    viewerId,
+		//UserStatus:  string(user.Status),
+		ViewerId: viewerId,
 	}
 }

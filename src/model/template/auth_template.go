@@ -5,17 +5,7 @@ import (
 	"html/template"
 )
 
-type AuthForm struct {
-	Id    string
-	Label string
-	Title string
-}
-
-type AuthTemplate struct {
-	Login     AuthForm
-	Signup    AuthForm
-	LoadLocal bool
-}
+type AuthTemplate struct{}
 
 func (lt *AuthTemplate) HTML() (string, error) {
 	template := template.Must(template.ParseFiles("static/html/nav/auth_div.html"))

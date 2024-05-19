@@ -22,20 +22,7 @@ func RenderHome(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 
 func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] homeLogin TRACE IN", h.GetReqId(r))
-	// TODO this is stupid
-	login := template.AuthTemplate{
-		Login: template.AuthForm{
-			Id:    "login",
-			Label: "Login",
-			Title: "Login",
-		},
-		Signup: template.AuthForm{
-			Id:    "signup",
-			Label: "Signup",
-			Title: "Signup",
-		},
-		LoadLocal: app.LoadLocal(),
-	}
+	login := template.AuthTemplate{}
 	home := template.HomeTemplate{
 		Chats:         nil,
 		OpenChat:      nil,
