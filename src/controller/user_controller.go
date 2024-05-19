@@ -283,7 +283,7 @@ func ChangeUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.Name = newName
-	err = app.UpdateUser(user)
+	err = app.UpdateUserName(user)
 	if err != nil {
 		log.Printf("[%s] ChangeUser WARN failed to update user[%d], %s\n", h.GetReqId(r), user.Id, err)
 		w.WriteHeader(http.StatusInternalServerError)

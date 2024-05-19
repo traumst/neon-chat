@@ -125,7 +125,7 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 	}
 	user, auth, err := handler.Register(db, user, signupPass, authType)
 	if err != nil {
-		log.Printf("[%s] SignUp ERROR on register user[%v], %s\n", h.GetReqId(r), user, err.Error())
+		log.Printf("[%s] SignUp ERROR on register user[%s][%s], %s\n", h.GetReqId(r), signupUser, signupEmail, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", a.UserTypeFree, signupUser)))
 		return
@@ -135,6 +135,7 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", a.UserTypeFree, signupUser)))
 		return
 	}
+	log.Printf("[%s] SignUp TRACE issuing reservation to [%s]\n", h.GetReqId(r), signupEmail)
 	sentEmail, err := handler.IssueReservationToken(app, db, user)
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR failed to issue reservation token to email[%s], %s\n",
@@ -156,8 +157,67 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 }
 
 func ConfirmEmail(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
-	panic("TODO I'm not ready!")
-
-	// TODO only set on confirm
-	// h.SetSessionCookie(w, user, auth, time.Now().Add(8*time.Hour))
+	log.Printf("[%s] ConfirmEmail TRACE IN\n", h.GetReqId(r))
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte("This shouldn't happen"))
+		return
+	}
+	signupToken := r.URL.Query().Get("token")
+	if signupToken == "" {
+		log.Printf("[%s] ConfirmEmail ERROR missing token\n", h.GetReqId(r))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("missing token"))
+		return
+	}
+	reserve, err := db.GetReservation(signupToken)
+	if err != nil {
+		log.Printf("[%s] ConfirmEmail ERROR error reading reservation, %s\n", h.GetReqId(r), err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("missing token"))
+		return
+	} else if reserve == nil {
+		log.Printf("[%s] ConfirmEmail WARN reservation not found\n", h.GetReqId(r))
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("not found"))
+		return
+	} else if reserve.Expire.Before(time.Now()) {
+		log.Printf("[%s] ConfirmEmail WARN reservation[%d] expired\n", h.GetReqId(r), reserve.Id)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("token expired"))
+		return
+	} else if reserve.UserId <= 0 {
+		log.Printf("[%s] ConfirmEmail WARN reservation[%d] corrupted, userId[%d]\n", h.GetReqId(r), reserve.Id, reserve.UserId)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("corrupted token"))
+		return
+	}
+	user, err := db.GetUser(reserve.UserId)
+	if err != nil {
+		log.Printf("[%s] ConfirmEmail ERROR retrieving user[%d], %s\n", h.GetReqId(r), reserve.UserId, err.Error())
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("corrupted token"))
+		return
+	} else if user == nil {
+		log.Printf("[%s] ConfirmEmail ERROR user[%d] not found\n", h.GetReqId(r), reserve.UserId)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("user not found"))
+		return
+	}
+	appUser := handler.UserFromDB(*user)
+	if appUser.Status != a.UserStatusPending {
+		log.Printf("[%s] ConfirmEmail ERROR user[%d] status[%s] is not pending\n", h.GetReqId(r), user.Id, user.Status)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid user status"))
+		return
+	}
+	err = db.UpdateUserStatus(appUser.Id, string(a.UserStatusActive))
+	if err != nil {
+		log.Printf("[%s] ConfirmEmail ERROR failed to update user[%d] status\n", h.GetReqId(r), appUser.Id)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to update user status"))
+		return
+	}
+	// TODO inform user on success, ask to login
+	RenderHome(app, w, r)
 }

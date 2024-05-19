@@ -22,7 +22,7 @@ const UserSchema string = `
 		status TEXT,
 		salt INTEGER
 	);`
-const UserIndex string = `CREATE UNIQUE INDEX IF NOT EXISTS idx_user_status ON users(status);`
+const UserIndex string = `CREATE INDEX IF NOT EXISTS idx_user_status ON users(status);`
 
 func (db *DBConn) UserTableExists() bool {
 	return db.TableExists("users")
@@ -33,8 +33,12 @@ func (db *DBConn) AddUser(user *User) (*User, error) {
 		return nil, fmt.Errorf("user already has an id[%d]", user.Id)
 	} else if user.Name == "" {
 		return nil, fmt.Errorf("user has no name")
+	} else if user.Email == "" {
+		return nil, fmt.Errorf("user has no email")
 	} else if user.Type == "" {
 		return nil, fmt.Errorf("user has no type")
+	} else if user.Status == "" {
+		return nil, fmt.Errorf("user has no status")
 	} else if len(user.Salt) <= 0 {
 		return nil, fmt.Errorf("user has no salt")
 	}
@@ -45,8 +49,8 @@ func (db *DBConn) AddUser(user *User) (*User, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	result, err := db.conn.Exec(`INSERT INTO users (name, type, status, salt) VALUES (?, ?, ?, ?)`,
-		user.Name, user.Type, user.Status, user.Salt[:])
+	result, err := db.conn.Exec(`INSERT INTO users (name, email, type, status, salt) VALUES (?, ?, ?, ?, ?)`,
+		user.Name, user.Email, user.Type, user.Status, user.Salt[:])
 	if err != nil {
 		return nil, fmt.Errorf("error adding user: %s", err)
 	}
@@ -56,29 +60,6 @@ func (db *DBConn) AddUser(user *User) (*User, error) {
 	}
 	user.Id = uint(lastId)
 	return user, nil
-}
-
-func (db *DBConn) UpdateName(user User) error {
-	if user.Id <= 0 {
-		return fmt.Errorf("invalid user id[%d]", user.Id)
-	}
-	if !db.IsActive() {
-		return fmt.Errorf("db is not connected")
-	}
-
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	result, err := db.conn.Exec(`UPDATE users SET name = ? WHERE id = ?;`,
-		user.Name, user.Id)
-	if err != nil {
-		return fmt.Errorf("error adding user: %s", err)
-	}
-	count, err := result.RowsAffected()
-	if err != nil || count != 1 {
-		return fmt.Errorf("error estimating affected rows: %s", err)
-	}
-	return nil
 }
 
 func (db *DBConn) DropUser(userId uint) error {
@@ -141,4 +122,48 @@ func (db *DBConn) GetUser(id uint) (*User, error) {
 		return nil, fmt.Errorf("userId[%d] not found: %s", id, err)
 	}
 	return &user, err
+}
+
+func (db *DBConn) UpdateUserName(userId uint, userName string) error {
+	if userId <= 0 {
+		return fmt.Errorf("invalid user id[%d]", userId)
+	}
+	if !db.IsActive() {
+		return fmt.Errorf("db is not connected")
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	result, err := db.conn.Exec(`UPDATE users SET name = ? WHERE id = ?;`, userName, userId)
+	if err != nil {
+		return fmt.Errorf("error updating user name: %s", err)
+	}
+	count, err := result.RowsAffected()
+	if err != nil || count != 1 {
+		return fmt.Errorf("error estimating affected rows: %s", err)
+	}
+	return nil
+}
+
+func (db *DBConn) UpdateUserStatus(userId uint, userStatus string) error {
+	if userId <= 0 {
+		return fmt.Errorf("invalid user id[%d]", userId)
+	}
+	if !db.IsActive() {
+		return fmt.Errorf("db is not connected")
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	result, err := db.conn.Exec(`UPDATE users SET status = ? WHERE id = ?;`, userStatus, userId)
+	if err != nil {
+		return fmt.Errorf("error updating user status: %s", err)
+	}
+	count, err := result.RowsAffected()
+	if err != nil || count != 1 {
+		return fmt.Errorf("error estimating affected rows: %s", err)
+	}
+	return nil
 }

@@ -17,13 +17,11 @@ const ReservationSchema = `
 	CREATE TABLE IF NOT EXISTS reservations (
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
 		user_id INTEGER UNIQUE,
-		token TEXT NOT NULL,
+		token TEXT NOT NULL UNIQUE,
 		expire DATETIME NOT NULL,
 		FOREIGN KEY(user_id) REFERENCES users(id)
 	);`
-const ReservationIndex = `
-	CREATE UNIQUE INDEX IF NOT EXISTS idx_reserve_user_id ON reservations(user_id);
-	CREATE INDEX IF NOT EXISTS idx_reserve_expire ON reservations(expire);`
+const ReservationIndex = `CREATE INDEX IF NOT EXISTS idx_reserve_expire ON reservations(expire);`
 
 func (db *DBConn) ReservationTableExists() bool {
 	return db.TableExists("reservations")
@@ -46,7 +44,10 @@ func (db *DBConn) AddReservation(reserve Reservation) (*Reservation, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	result, err := db.conn.Exec(`INSERT INTO reservations (user_id, token, expire) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET token = excluded.token, expire = excluded.expire;`,
+	result, err := db.conn.Exec(`INSERT INTO reservations (user_id, token, expire) VALUES (?, ?, ?) 
+		ON CONFLICT(user_id) DO UPDATE 
+			SET token = excluded.token, 
+				expire = excluded.expire;`,
 		reserve.UserId, reserve.Token, reserve.Expire)
 	if err != nil {
 		return nil, fmt.Errorf("error adding reserve: %s", err.Error())
@@ -61,19 +62,19 @@ func (db *DBConn) AddReservation(reserve Reservation) (*Reservation, error) {
 	return &reserve, nil
 }
 
-func (db *DBConn) GetReservation(userId uint) (*Reservation, error) {
+func (db *DBConn) GetReservation(token string) (*Reservation, error) {
 	if !db.IsActive() {
 		return nil, fmt.Errorf("db is not connected")
 	}
-	if userId <= 0 {
-		return nil, fmt.Errorf("invalid userId")
+	if token == "" {
+		return nil, fmt.Errorf("invalid token")
 	}
 
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
 	reserve := Reservation{}
-	err := db.conn.Get(&reserve, `SELECT * FROM reservations WHERE user_id=?`, userId)
+	err := db.conn.Get(&reserve, `SELECT * FROM reservations WHERE token=?`, token)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

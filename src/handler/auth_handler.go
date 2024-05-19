@@ -74,7 +74,7 @@ func Authenticate(
 		return &appUser, nil, fmt.Errorf("failed hashing pass for user[%d], %s", appUser.Id, err)
 	}
 	log.Printf("Authenticate TRACE user[%d] auth[%s] hash[%s]\n", appUser.Id, authType, hash)
-	auth, err := db.GetAuth(appUser.Id, string(authType), hash)
+	auth, err := db.GetAuth(string(authType), hash)
 	if err != nil {
 		return &appUser, nil, fmt.Errorf("no auth for user[%d] hash[%s], %s", appUser.Id, hash, err)
 	}
@@ -115,7 +115,7 @@ func Register(
 
 		return nil, nil, fmt.Errorf("failed to create auth[%s] for user[%v], %s", authType, user, err)
 	}
-	log.Printf("Register TRACE user[%v] auth[%v] created\n", user, auth)
+	log.Printf("Register TRACE user[%d] auth[%v] created\n", user.Id, auth)
 	return user, auth, nil
 }
 
@@ -174,7 +174,7 @@ func deleteUser(db *d.DBConn, user *a.User) error {
 }
 
 func createAuth(db *d.DBConn, user *a.User, pass string, authType a.AuthType) (*a.Auth, error) {
-	log.Printf("createAuth TRACE IN user[%v] auth[%s]\n", user, authType)
+	log.Printf("createAuth TRACE IN user[%d] auth[%s]\n", user.Id, authType)
 	hash, err := utils.HashPassword(pass, user.Salt)
 	if err != nil {
 		return nil, fmt.Errorf("error hashing pass, %s", err)

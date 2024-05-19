@@ -133,13 +133,13 @@ func (state *AppState) GetUser(userId uint) (*app.User, error) {
 	return &appUser, nil
 }
 
-func (state *AppState) UpdateUser(appUser *app.User) error {
+func (state *AppState) UpdateUserName(appUser *app.User) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
 	log.Printf("AppState.GetUser UpdateUser user[%d]\n", appUser.Id)
 	dbUser := UserToDB(*appUser)
-	err := state.db.UpdateName(dbUser)
+	err := state.db.UpdateUserName(dbUser.Id, dbUser.Name)
 	if err != nil {
 		return fmt.Errorf("failed to update user [%d], %s", appUser.Id, err.Error())
 	}
