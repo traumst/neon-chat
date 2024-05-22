@@ -187,6 +187,9 @@
             {{ else }}
                 {{ template "welcome_div.html" . }}
             {{ end }}
+            {{ with .InformUser }}
+                {{ template "verification_sent.html" . }}
+            {{ end }}
         </div>
     </div>
     <script>

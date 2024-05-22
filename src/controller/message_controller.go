@@ -8,6 +8,7 @@ import (
 	"go.chat/src/handler"
 	a "go.chat/src/model/app"
 	"go.chat/src/model/event"
+	"go.chat/src/model/template"
 	"go.chat/src/utils"
 	h "go.chat/src/utils/http"
 )
@@ -22,7 +23,11 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 	author, err := handler.ReadSession(app, w, r)
 	if err != nil || author == nil {
-		RenderHome(app, w, r)
+		RenderHome(app, w, r, &template.InformUserMessage{
+			Header: "User is not authenticated",
+			Body:   "Your session has probably expired",
+			Footer: "Reload the page and try again",
+		})
 		return
 	}
 	log.Printf("[%s] AddMessage TRACE parsing input\n", h.GetReqId(r))
@@ -89,7 +94,11 @@ func DeleteMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request
 	log.Printf("[%s] DeleteMessage\n", reqId)
 	author, err := handler.ReadSession(app, w, r)
 	if err != nil || author == nil {
-		RenderHome(app, w, r)
+		RenderHome(app, w, r, &template.InformUserMessage{
+			Header: "User is not authenticated",
+			Body:   "Your session has probably expired",
+			Footer: "Reload the page and try again",
+		})
 		return
 	}
 	if r.Method != "POST" {

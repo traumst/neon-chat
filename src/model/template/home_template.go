@@ -7,12 +7,19 @@ import (
 	"go.chat/src/model/event"
 )
 
+type InformUserMessage struct {
+	Header string
+	Body   string
+	Footer string
+}
+
 type HomeTemplate struct {
 	Chats         []*ChatTemplate
 	OpenChat      *ChatTemplate
 	User          UserTemplate
 	LoadLocal     bool
 	IsAuthorized  bool
+	InformUser    *InformUserMessage
 	LoginTemplate AuthTemplate
 	Avatar        *AvatarTemplate
 }
@@ -43,11 +50,12 @@ func (h *HomeTemplate) HTML() (string, error) {
 		"static/html/home_page.html",
 		// left panel
 		"static/html/left_panel.html",
+		"static/html/inform/verification_sent.html",
 		"static/html/avatar_div.html",
-		"static/html/utils/user_settings_div.html",
 		"static/html/nav/auth_div.html",
 		"static/html/nav/chat_li.html",
 		// right panel
+		"static/html/utils/user_settings_div.html",
 		"static/html/chat/welcome_div.html",
 		"static/html/chat/chat_div.html",
 		"static/html/user_div.html",

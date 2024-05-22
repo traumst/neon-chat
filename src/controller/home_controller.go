@@ -10,13 +10,18 @@ import (
 	h "go.chat/src/utils/http"
 )
 
-func RenderHome(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-	log.Printf("[%s] RenderHome", h.GetReqId(r))
+func RenderHome(
+	app *handler.AppState,
+	w http.ResponseWriter,
+	r *http.Request,
+	info *template.InformUserMessage,
+) {
+	log.Printf("[%s] RenderHomeExtra", h.GetReqId(r))
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		homeLogin(app, w, r)
 	} else {
-		homePage(app, w, r, user)
+		homePage(app, w, r, user, info)
 	}
 }
 
@@ -29,6 +34,7 @@ func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		User:          template.UserTemplate{UserName: "anon"},
 		LoadLocal:     app.LoadLocal(),
 		IsAuthorized:  false,
+		InformUser:    nil,
 		LoginTemplate: login,
 		Avatar:        nil,
 	}
@@ -44,7 +50,13 @@ func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(html))
 }
 
-func homePage(app *handler.AppState, w http.ResponseWriter, r *http.Request, user *app.User) {
+func homePage(
+	app *handler.AppState,
+	w http.ResponseWriter,
+	r *http.Request,
+	user *app.User,
+	info *template.InformUserMessage,
+) {
 	log.Printf("[%s] homePage TRACE IN", h.GetReqId(r))
 	var openChatTemplate *template.ChatTemplate
 	var openChatId int = -1
@@ -68,12 +80,14 @@ func homePage(app *handler.AppState, w http.ResponseWriter, r *http.Request, use
 		avatarTmpl = avatar.Template(user)
 	}
 	home := template.HomeTemplate{
-		Chats:        chatTemplates,
-		OpenChat:     openChatTemplate,
-		User:         *user.Template(openChatId, openChatOwnerId, user.Id),
-		LoadLocal:    app.LoadLocal(),
-		IsAuthorized: true,
-		Avatar:       avatarTmpl,
+		Chats:         chatTemplates,
+		OpenChat:      openChatTemplate,
+		User:          *user.Template(openChatId, openChatOwnerId, user.Id),
+		LoadLocal:     app.LoadLocal(),
+		IsAuthorized:  true,
+		InformUser:    info,
+		LoginTemplate: template.AuthTemplate{},
+		Avatar:        avatarTmpl,
 	}
 	html, err := home.HTML()
 	if err != nil {

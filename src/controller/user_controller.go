@@ -114,7 +114,11 @@ func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] ExpelUser WARN user, %s\n", h.GetReqId(r), err)
-		RenderHome(app, w, r)
+		RenderHome(app, w, r, &template.InformUserMessage{
+			Header: "User is not authenticated",
+			Body:   "Your session has probably expired",
+			Footer: "Reload the page and try again",
+		})
 		return
 	}
 	chatId, err := strconv.Atoi(r.FormValue("chatid"))
@@ -195,7 +199,11 @@ func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] LeaveChat WARN user, %s\n", h.GetReqId(r), err)
-		RenderHome(app, w, r)
+		RenderHome(app, w, r, &template.InformUserMessage{
+			Header: "User is not authenticated",
+			Body:   "Your session has probably expired",
+			Footer: "Reload the page and try again",
+		})
 		return
 	}
 	chatId, err := strconv.Atoi(r.FormValue("chatid"))

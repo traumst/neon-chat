@@ -28,7 +28,7 @@ func Setup(app *handler.AppState, db *db.DBConn) {
 	// home, default
 	http.Handle("/", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			RenderHome(app, w, r)
+			RenderHome(app, w, r, nil)
 		}), allMiddleware))
 }
 

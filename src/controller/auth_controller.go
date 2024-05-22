@@ -9,6 +9,7 @@ import (
 	"go.chat/src/db"
 	"go.chat/src/handler"
 	a "go.chat/src/model/app"
+	"go.chat/src/model/template"
 	"go.chat/src/utils"
 	h "go.chat/src/utils/http"
 )
@@ -69,7 +70,7 @@ func Logout(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	if user == nil {
 		log.Printf("[%s] Logout INFO user is not authorized, %s\n", h.GetReqId(r), err.Error())
-		RenderHome(app, w, r)
+		RenderHome(app, w, r, nil)
 		return
 	}
 	h.ClearSessionCookie(w, user.Id)
@@ -88,7 +89,8 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 	signupEmail := utils.Trim(r.FormValue("signup-email"))
 	signupPass := utils.Trim(r.FormValue("signup-pass"))
 	log.Printf("[%s] SignUp TRACE authentication check for user[%s] auth[%s]\n", h.GetReqId(r), signupUser, authType)
-	if signupUser == "" || signupEmail == "" || signupPass == "" || len(signupUser) < 4 || len(signupEmail) < 4 || len(signupPass) < 4 {
+	if signupUser == "" || signupEmail == "" || signupPass == "" ||
+		len(signupUser) < 4 || len(signupEmail) < 4 || len(signupPass) < 4 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("bad signup credentials"))
 		return
@@ -101,7 +103,7 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 		return
 	}
 	if user != nil {
-		log.Printf("[%s] SignUp ERROR name[%s] already taken by user[%d] in status[%s]\n",
+		log.Printf("[%s] SignUp ERROR there is already name[%s] taken by user[%d] in status[%s]\n",
 			h.GetReqId(r), signupUser, user.Id, user.Status)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("username is already taken"))
@@ -135,6 +137,12 @@ func SignUp(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http
 		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", a.UserTypeFree, signupUser)))
 		return
 	}
+	defer func() {
+		// TODO delete user and auth
+		// if r := recover(); r != nil {
+		// 	app.DeleteUser(user.Id)
+		// }
+	}()
 	log.Printf("[%s] SignUp TRACE issuing reservation to [%s]\n", h.GetReqId(r), signupEmail)
 	sentEmail, err := handler.IssueReservationToken(app, db, user)
 	if err != nil {
@@ -218,6 +226,9 @@ func ConfirmEmail(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r
 		w.Write([]byte("failed to update user status"))
 		return
 	}
-	// TODO inform user on success, ask to login
-	RenderHome(app, w, r)
+	RenderHome(app, w, r, &template.InformUserMessage{
+		Header: "Congrats! " + appUser.Email + " is confirmed",
+		Body:   "Your user name is " + appUser.Name + " until you decide to change it",
+		Footer: "Please, login using your signup credentials",
+	})
 }

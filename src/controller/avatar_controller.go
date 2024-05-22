@@ -10,6 +10,7 @@ import (
 	"go.chat/src/handler"
 	a "go.chat/src/model/app"
 	"go.chat/src/model/event"
+	"go.chat/src/model/template"
 	"go.chat/src/utils"
 	h "go.chat/src/utils/http"
 )
@@ -44,7 +45,11 @@ func AddAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	if user == nil {
 		log.Printf("[%s] AddAvatar INFO user is not authorized, %s\n", h.GetReqId(r), err)
-		RenderHome(app, w, r)
+		RenderHome(app, w, r, &template.InformUserMessage{
+			Header: "User is not authenticated",
+			Body:   "Your session has probably expired",
+			Footer: "Reload the page and try again",
+		})
 		return
 	}
 	err = r.ParseMultipartForm(MaxUploadSize)
@@ -139,7 +144,11 @@ func GetAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	if user == nil {
 		log.Printf("[%s] GetAvatar INFO user is not authorized, %s\n", h.GetReqId(r), err)
-		RenderHome(app, w, r)
+		RenderHome(app, w, r, &template.InformUserMessage{
+			Header: "User is not authenticated",
+			Body:   "Your session has probably expired",
+			Footer: "Reload the page and try again",
+		})
 		return
 	}
 	avatar, err := app.GetAvatar(user.Id)
