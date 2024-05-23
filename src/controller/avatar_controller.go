@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"go.chat/src/db"
 	"go.chat/src/handler"
 	a "go.chat/src/model/app"
 	"go.chat/src/model/event"
@@ -33,7 +34,7 @@ func isAllowedImageFormat(mime string) bool {
 	return false
 }
 
-func AddAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+func AddAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] AddAvatar\n", reqId)
 	if r.Method != "POST" {
@@ -45,7 +46,7 @@ func AddAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	if user == nil {
 		log.Printf("[%s] AddAvatar INFO user is not authorized, %s\n", h.GetReqId(r), err)
-		RenderHome(app, w, r, &template.InformUserMessage{
+		RenderHome(app, db, w, r, &template.InformUserMessage{
 			Header: "User is not authenticated",
 			Body:   "Your session has probably expired",
 			Footer: "Reload the page and try again",
@@ -86,37 +87,29 @@ func AddAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "file type is not supported: "+mime, http.StatusBadRequest)
 		return
 	}
-	oldAvatars, err := app.GetAvatars(user.Id)
+	oldAvatars, err := db.GetAvatars(user.Id)
 	if err != nil {
 		http.Error(w, "file type is not supported: "+mime, http.StatusBadRequest)
 		return
 	}
-	if oldAvatars == nil {
-		oldAvatars = make([]*a.Avatar, 0)
-	}
-	avatar := a.Avatar{
-		UserId: user.Id,
-		Title:  info.Filename,
-		Mime:   mime,
-		Size:   fmt.Sprintf("%dKB", info.Size/utils.KB),
-		Image:  fileBytes,
-	}
-	saved, err := app.AddAvatar(user.Id, &avatar)
+	saved, err := db.AddAvatar(user.Id, info.Filename, fileBytes, mime)
 	if err != nil {
 		log.Printf("controller.AddAvatar ERROR failed to save avatar[%s], %s", info.Filename, err.Error())
 		http.Error(w, fmt.Sprintf("failed to save avatar[%s]", info.Filename), http.StatusBadRequest)
 		return
 	}
-	for _, old := range oldAvatars {
-		if old == nil { // TODO where does it come from?
-			continue
-		}
-		err := app.DropAvatar(old)
-		if err != nil {
-			log.Printf("controller.AddAvatar ERROR failed to drop old avatar[%v]", old)
+	if len(oldAvatars) > 0 {
+		for _, old := range oldAvatars {
+			if old == nil {
+				continue
+			}
+			err := db.DropAvatar(old.Id)
+			if err != nil {
+				log.Printf("controller.AddAvatar ERROR failed to drop old avatar[%v]", old)
+			}
 		}
 	}
-	avatar.Id = saved.Id
+	avatar := handler.AvatarFromDB(*saved)
 	tmpl := avatar.Template(user)
 	html, err := tmpl.HTML()
 	if err != nil {
@@ -132,7 +125,7 @@ func AddAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(html))
 }
 
-func GetAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+func GetAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] GetAvatar\n", reqId)
 	if r.Method != "GET" {
@@ -144,18 +137,26 @@ func GetAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	if user == nil {
 		log.Printf("[%s] GetAvatar INFO user is not authorized, %s\n", h.GetReqId(r), err)
-		RenderHome(app, w, r, &template.InformUserMessage{
+		RenderHome(app, db, w, r, &template.InformUserMessage{
 			Header: "User is not authenticated",
 			Body:   "Your session has probably expired",
 			Footer: "Reload the page and try again",
 		})
 		return
 	}
-	avatar, err := app.GetAvatar(user.Id)
+	dbAvatar, err := db.GetAvatar(user.Id)
 	if err != nil {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(""))
 		return
+	}
+	avatar := &a.Avatar{
+		Id:     dbAvatar.Id,
+		UserId: dbAvatar.UserId,
+		Title:  dbAvatar.Title,
+		Size:   fmt.Sprintf("%dKB", dbAvatar.Size/utils.KB),
+		Image:  dbAvatar.Image,
+		Mime:   dbAvatar.Mime,
 	}
 	tmpl := avatar.Template(user)
 	html, err := tmpl.HTML()

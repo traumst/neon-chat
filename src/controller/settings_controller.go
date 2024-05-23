@@ -4,12 +4,13 @@ import (
 	"log"
 	"net/http"
 
+	"go.chat/src/db"
 	"go.chat/src/handler"
 	t "go.chat/src/model/template"
 	h "go.chat/src/utils/http"
 )
 
-func OpenSettings(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+func OpenSettings(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] OpenSettings\n", reqId)
 	if r.Method != "GET" {
@@ -35,8 +36,9 @@ func OpenSettings(app *handler.AppState, w http.ResponseWriter, r *http.Request)
 		chatOwnerId = 0
 	}
 	var avatarTmpl *t.AvatarTemplate
-	if avatar, _ := app.GetAvatar(user.Id); avatar != nil {
-		avatarTmpl = avatar.Template(user)
+	if avatar, _ := db.GetAvatar(user.Id); avatar != nil {
+		appAvatar := handler.AvatarFromDB(*avatar)
+		avatarTmpl = appAvatar.Template(user)
 	}
 	settings := t.UserSettingsTemplate{
 		ChatId:      openChatId,

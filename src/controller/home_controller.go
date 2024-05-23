@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"go.chat/src/db"
 	"go.chat/src/handler"
 	"go.chat/src/model/app"
 	"go.chat/src/model/template"
@@ -12,6 +13,7 @@ import (
 
 func RenderHome(
 	app *handler.AppState,
+	db *db.DBConn,
 	w http.ResponseWriter,
 	r *http.Request,
 	info *template.InformUserMessage,
@@ -21,7 +23,7 @@ func RenderHome(
 	if err != nil || user == nil {
 		homeLogin(app, w, r)
 	} else {
-		homePage(app, w, r, user, info)
+		homePage(app, db, w, r, user, info)
 	}
 }
 
@@ -52,6 +54,7 @@ func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 
 func homePage(
 	app *handler.AppState,
+	db *db.DBConn,
 	w http.ResponseWriter,
 	r *http.Request,
 	user *app.User,
@@ -76,7 +79,8 @@ func homePage(
 		chatTemplates = append(chatTemplates, chat.Template(user, user))
 	}
 	var avatarTmpl *template.AvatarTemplate
-	if avatar, err := app.GetAvatar(user.Id); avatar != nil && err == nil {
+	if dbAvatar, err := db.GetAvatar(user.Id); dbAvatar != nil && err == nil {
+		avatar := handler.AvatarFromDB(*dbAvatar)
 		avatarTmpl = avatar.Template(user)
 	}
 	home := template.HomeTemplate{

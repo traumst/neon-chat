@@ -1,6 +1,6 @@
 <p>Welcome, {{ .UserName }}!</p>
-<p>Here is <a href="/signup-confirm{{ .TokenValue }}">your email verification link</a></p>
+<p>Here is <a href="/signup-confirm?token={{ .Token }}">your email verification link</a></p>
 <p>Reservation expires at {{ .TokenExpire }}</p>
 <br>
 <p>If the link above does not work, just copy paste the link directly:</p>
-<pre>/signup-confirm{{ .TokenValue }}"</pre>
+<pre>/signup-confirm?token={{ .Token }}"</pre>

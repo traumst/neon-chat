@@ -12,7 +12,7 @@ const (
 	GB   = 1024 * MB
 )
 
-func Size(bytes int64) string {
+func SizeEncode(bytes int64) string {
 	log.Printf("formatting size: %#v", bytes)
 	switch {
 	case bytes < KB:
@@ -22,6 +22,25 @@ func Size(bytes int64) string {
 	case bytes < GB:
 		return fmt.Sprintf("%dMB", bytes/MB)
 	default:
-		panic(fmt.Sprintf("size is over 1GB: %#v", bytes))
+		panic(fmt.Sprintf("size is over 1GB: [%d]", bytes))
+	}
+}
+
+func SizeDecode(str string) int64 {
+	var bytes int64
+	var unit string
+	_, err := fmt.Sscanf(str, "%d%s", &bytes, &unit)
+	if err != nil {
+		panic(fmt.Errorf("failed decoding [%s], %s", str, err.Error()))
+	}
+	switch unit {
+	case "Bytes":
+		return bytes
+	case "KB":
+		return bytes * KB
+	case "MB":
+		return bytes * MB
+	default:
+		panic(fmt.Sprintf("size is over 1GB: [%s]", str))
 	}
 }

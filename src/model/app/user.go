@@ -5,13 +5,13 @@ import (
 )
 
 // TODO add flags/permissions mapping
-
 type UserType string
 
 const (
-	UserTypeFree UserType = "user-type-free"
+	UserTypeFree UserType = "free"
 )
 
+// TODO allow user ban / suspend
 type UserStatus string
 
 const (

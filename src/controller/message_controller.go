@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"go.chat/src/db"
 	"go.chat/src/handler"
 	a "go.chat/src/model/app"
 	"go.chat/src/model/event"
@@ -13,7 +14,7 @@ import (
 	h "go.chat/src/utils/http"
 )
 
-func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+func AddMessage(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] AddMessage TRACE\n", h.GetReqId(r))
 	if r.Method != "POST" {
 		log.Printf("[%s] AddMessage ERROR request method\n", h.GetReqId(r))
@@ -23,7 +24,7 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	}
 	author, err := handler.ReadSession(app, w, r)
 	if err != nil || author == nil {
-		RenderHome(app, w, r, &template.InformUserMessage{
+		RenderHome(app, db, w, r, &template.InformUserMessage{
 			Header: "User is not authenticated",
 			Body:   "Your session has probably expired",
 			Footer: "Reload the page and try again",
@@ -89,12 +90,12 @@ func AddMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(html))
 }
 
-func DeleteMessage(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+func DeleteMessage(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] DeleteMessage\n", reqId)
 	author, err := handler.ReadSession(app, w, r)
 	if err != nil || author == nil {
-		RenderHome(app, w, r, &template.InformUserMessage{
+		RenderHome(app, db, w, r, &template.InformUserMessage{
 			Header: "User is not authenticated",
 			Body:   "Your session has probably expired",
 			Footer: "Reload the page and try again",

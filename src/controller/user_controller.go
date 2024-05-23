@@ -103,7 +103,7 @@ func InviteUser(app *handler.AppState, conn *db.DBConn, w http.ResponseWriter, r
 		reqId, invitee.Id, chatId, user.Id)
 }
 
-func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+func ExpelUser(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] ExpelUser\n", reqId)
 	if r.Method != "POST" {
@@ -114,7 +114,7 @@ func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] ExpelUser WARN user, %s\n", h.GetReqId(r), err)
-		RenderHome(app, w, r, &template.InformUserMessage{
+		RenderHome(app, db, w, r, &template.InformUserMessage{
 			Header: "User is not authenticated",
 			Body:   "Your session has probably expired",
 			Footer: "Reload the page and try again",
@@ -187,7 +187,7 @@ func ExpelUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] ExpelUser TRACE chat[%d] owner[%d] removed[%d]\n", reqId, chatId, user.Id, expelled.Id)
 }
 
-func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+func LeaveChat(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] LeaveChat\n", reqId)
 	if r.Method != "POST" {
@@ -199,7 +199,7 @@ func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] LeaveChat WARN user, %s\n", h.GetReqId(r), err)
-		RenderHome(app, w, r, &template.InformUserMessage{
+		RenderHome(app, db, w, r, &template.InformUserMessage{
 			Header: "User is not authenticated",
 			Body:   "Your session has probably expired",
 			Footer: "Reload the page and try again",
@@ -266,7 +266,7 @@ func LeaveChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	wg.Wait()
 }
 
-func ChangeUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+func ChangeUser(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] ChangeUser\n", reqId)
 	if r.Method != "POST" {
@@ -290,8 +290,7 @@ func ChangeUser(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("user did not change"))
 		return
 	}
-	user.Name = newName
-	err = app.UpdateUserName(user)
+	err = db.UpdateUserName(user.Id, newName)
 	if err != nil {
 		log.Printf("[%s] ChangeUser WARN failed to update user[%d], %s\n", h.GetReqId(r), user.Id, err)
 		w.WriteHeader(http.StatusInternalServerError)

@@ -39,21 +39,26 @@ func IssueReservationToken(
 		Token:       reserve.Token,
 		TokenExpire: reserve.Expire.Format(time.RFC3339),
 	}
-	err = sendSignupCompletionEmail(tmpl)
+	err = sendSignupCompletionEmail(tmpl, emailConfig.User, emailConfig.Pass)
 	if err != nil {
-		log.Printf("IssueReservationToken ERROR sending to email[%s], %s\n", user.Email, err.Error())
+		log.Printf("IssueReservationToken ERROR sending email from [%s] to [%s], %s\n",
+			emailConfig.User, user.Email, err.Error())
 		return nil, fmt.Errorf("failed to send email to[%s]", user.Email)
 	}
 	return &tmpl, nil
 }
 
-func sendSignupCompletionEmail(tmpl template.VerifyEmailTemplate) error {
+func sendSignupCompletionEmail(
+	tmpl template.VerifyEmailTemplate,
+	source string,
+	pass string,
+) error {
 	subject := "User sing up confirmation"
 	body, err := tmpl.Email()
 	if err != nil {
 		return err
 	}
-	err = sendEmail(tmpl.SourceEmail, tmpl.UserEmail, Email{
+	err = sendEmail(source, pass, Email{
 		sender:    tmpl.SourceEmail,
 		receivers: []string{tmpl.UserEmail},
 		subject:   subject,
