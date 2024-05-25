@@ -64,7 +64,8 @@ func Login(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.R
 	cookie := h.SetSessionCookie(w, user, auth)
 	log.Printf("[%s] Login TRACE user[%d] authenticated until [%s]\n",
 		h.GetReqId(r), user.Id, cookie.Expire.Format(time.RFC1123Z))
-	http.Redirect(w, r, "/", http.StatusPermanentRedirect)
+	http.Header.Add(w.Header(), "HX-Refresh", "true")
+	w.WriteHeader(http.StatusOK)
 }
 
 func Logout(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
@@ -188,6 +189,7 @@ func ConfirmEmail(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r 
 		w.Write([]byte("missing token"))
 		return
 	}
+
 	reserve, err := db.GetReservation(signupToken)
 	if err != nil {
 		log.Printf("[%s] ConfirmEmail ERROR error reading reservation, %s\n", h.GetReqId(r), err.Error())
@@ -210,6 +212,7 @@ func ConfirmEmail(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r 
 		w.Write([]byte("corrupted token"))
 		return
 	}
+
 	user, err := app.GetUser(reserve.UserId)
 	if err != nil {
 		dbUser, err := db.GetUser(reserve.UserId)
@@ -237,6 +240,7 @@ func ConfirmEmail(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r 
 		w.Write([]byte("invalid user status"))
 		return
 	}
+
 	err = db.UpdateUserStatus(user.Id, string(a.UserStatusActive))
 	if err != nil {
 		log.Printf("[%s] ConfirmEmail ERROR failed to update user[%d] status\n", h.GetReqId(r), user.Id)
@@ -244,6 +248,7 @@ func ConfirmEmail(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r 
 		w.Write([]byte("failed to update user status"))
 		return
 	}
+
 	RenderLogin(w, r, &template.InfoMessage{
 		Header: "Congrats! " + user.Email + " is confirmed",
 		Body:   "Your user name is " + user.Name + " until you decide to change it",

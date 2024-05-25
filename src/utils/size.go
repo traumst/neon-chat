@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"log"
 )
 
 const (
@@ -13,7 +12,6 @@ const (
 )
 
 func SizeEncode(bytes int64) string {
-	log.Printf("formatting size: %#v", bytes)
 	switch {
 	case bytes < KB:
 		return fmt.Sprintf("%dBytes", bytes)
@@ -26,12 +24,12 @@ func SizeEncode(bytes int64) string {
 	}
 }
 
-func SizeDecode(str string) int64 {
+func SizeDecode(size string) int64 {
 	var bytes int64
 	var unit string
-	_, err := fmt.Sscanf(str, "%d%s", &bytes, &unit)
+	_, err := fmt.Sscanf(size, "%d%s", &bytes, &unit)
 	if err != nil {
-		panic(fmt.Errorf("failed decoding [%s], %s", str, err.Error()))
+		panic(fmt.Errorf("failed decoding size[%s], %s", size, err.Error()))
 	}
 	switch unit {
 	case "Bytes":
@@ -41,6 +39,6 @@ func SizeDecode(str string) int64 {
 	case "MB":
 		return bytes * MB
 	default:
-		panic(fmt.Sprintf("size is over 1GB: [%s]", str))
+		panic(fmt.Sprintf("size is over 1GB: [%s]", size))
 	}
 }

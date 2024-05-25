@@ -24,8 +24,8 @@
 {{ define "loginForm" }}
 <form hx-post="/login" 
     hx-include="[name='login-user'],[name='login-pass']"
-    hx-swap="innerHTML"
     hx-target="body"
+    hx-swap="outerHTML"
     class="flex flex-col w-full p-4 gap-y-4 shadow-lg rounded-lg"
 >
     <label for="login-user">
