@@ -3,25 +3,41 @@ package template
 import (
 	"bytes"
 	"html/template"
+	"log"
 
 	"go.chat/src/model/event"
 )
 
-type InformUserMessage struct {
+type InfoMessage struct {
 	Header string
 	Body   string
 	Footer string
 }
 
 type HomeTemplate struct {
+	IsAuthorized  bool
+	Avatar        *AvatarTemplate
+	User          UserTemplate
 	Chats         []*ChatTemplate
 	OpenChat      *ChatTemplate
-	User          UserTemplate
-	LoadLocal     bool
-	IsAuthorized  bool
-	InformUser    *InformUserMessage
+	Info          *InfoMessage
 	LoginTemplate AuthTemplate
-	Avatar        *AvatarTemplate
+}
+
+func (h *HomeTemplate) InformUser() string {
+	if h.Info == nil {
+		return ""
+	}
+	// TODO generic info message
+	tmpl := template.Must(template.ParseFiles(
+		"static/html/inform/verification_sent.html"))
+	var buf bytes.Buffer
+	err := tmpl.Execute(&buf, h.Info)
+	if err != nil {
+		log.Printf("failed to template an html, %s", err.Error())
+		return "ERROR_INFORM_USER"
+	}
+	return buf.String()
 }
 
 func (h *HomeTemplate) ChatAddEvent() string {
@@ -45,7 +61,6 @@ func (h *HomeTemplate) AvatarChangeEvent() string {
 }
 
 func (h *HomeTemplate) HTML() (string, error) {
-	var buf bytes.Buffer
 	homeTmpl := template.Must(template.ParseFiles(
 		"static/html/home_page.html",
 		// left panel
@@ -61,6 +76,7 @@ func (h *HomeTemplate) HTML() (string, error) {
 		"static/html/user_div.html",
 		"static/html/chat/message_li.html",
 	))
+	var buf bytes.Buffer
 	err := homeTmpl.Execute(&buf, h)
 	if err != nil {
 		return "", err

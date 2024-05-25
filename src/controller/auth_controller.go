@@ -14,8 +14,10 @@ import (
 	h "go.chat/src/utils/http"
 )
 
+// TODO support other types
 const (
-	authType = a.AuthTypeLocal
+	LocalUserType = a.UserTypeLocal
+	LocalAuthType = a.AuthTypeLocal
 )
 
 func Login(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
@@ -34,8 +36,8 @@ func Login(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.R
 		return
 	}
 	log.Printf("[%s] Login TRACE authentication check for user[%s] auth[%s]\n",
-		h.GetReqId(r), loginUser, authType)
-	user, auth, err := handler.Authenticate(db, loginUser, loginPass, authType)
+		h.GetReqId(r), loginUser, LocalAuthType)
+	user, auth, err := handler.Authenticate(db, loginUser, loginPass, LocalAuthType)
 	if err != nil {
 		log.Printf("[%s] Login ERROR unauth user[%s], %s\n", h.GetReqId(r), loginUser, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
@@ -70,7 +72,7 @@ func Logout(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	user, err := handler.ReadSession(app, w, r)
 	if user == nil {
 		log.Printf("[%s] Logout INFO user is not authorized, %s\n", h.GetReqId(r), err.Error())
-		RenderHome(app, nil, w, r, nil)
+		RenderLogin(w, r, nil)
 		return
 	}
 	h.ClearSessionCookie(w, user.Id)
@@ -89,14 +91,15 @@ func SignUp(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.
 	signupUser := utils.Trim(r.FormValue("signup-user"))
 	signupEmail := utils.Trim(r.FormValue("signup-email"))
 	signupPass := utils.Trim(r.FormValue("signup-pass"))
-	log.Printf("[%s] SignUp TRACE authentication check for user[%s] auth[%s]\n", h.GetReqId(r), signupUser, authType)
+	log.Printf("[%s] SignUp TRACE authentication check for user[%s] auth[%s]\n",
+		h.GetReqId(r), signupUser, LocalAuthType)
 	if signupUser == "" || signupEmail == "" || signupPass == "" ||
 		len(signupUser) < 4 || len(signupEmail) < 4 || len(signupPass) < 4 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("bad signup credentials"))
 		return
 	}
-	user, auth, _ := handler.Authenticate(db, signupUser, signupPass, authType)
+	user, auth, _ := handler.Authenticate(db, signupUser, signupPass, LocalAuthType)
 	if user != nil && user.Status == a.UserStatusActive && auth != nil {
 		log.Printf("[%s] SignUp TRACE signedIn instead of signUp user[%s]\n", h.GetReqId(r), signupUser)
 		h.SetSessionCookie(w, user, auth)
@@ -117,33 +120,31 @@ func SignUp(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.
 		return
 	}
 	log.Printf("[%s] SignUp TRACE register new user[%s]\n", h.GetReqId(r), signupUser)
-	salt := utils.GenerateSalt(signupUser, string(a.UserTypeFree))
+	salt := utils.GenerateSalt(signupUser, string(LocalUserType))
 	user = &a.User{
 		Id:     0,
 		Name:   signupUser,
 		Email:  signupEmail,
-		Type:   a.UserTypeFree,
+		Type:   LocalUserType,
 		Status: a.UserStatusPending,
 		Salt:   salt,
 	}
-	//app.AddAvatar()
-
-	user, auth, err := handler.Register(db, user, signupPass, authType)
+	user, auth, err := handler.Register(db, user, signupPass, LocalAuthType)
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR on register user[%s][%s], %s\n", h.GetReqId(r), signupUser, signupEmail, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", a.UserTypeFree, signupUser)))
+		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", LocalUserType, signupUser)))
 		return
 	} else if user == nil || auth == nil {
 		log.Printf("[%s] SignUp ERROR to register user[%v]\n", h.GetReqId(r), user)
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", a.UserTypeFree, signupUser)))
+		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", LocalUserType, signupUser)))
 		return
 	}
 	defer func() {
 		// TODO delete user and auth
 		// if r := recover(); r != nil {
-		// 	app.DeleteUser(user.Id)
+		// 	handler.DeleteUser()
 		// }
 	}()
 	log.Printf("[%s] SignUp TRACE issuing reservation to [%s]\n", h.GetReqId(r), user.Email)
@@ -155,6 +156,12 @@ func SignUp(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.
 		w.Write([]byte("failed to issue reservation token"))
 		return
 	}
+	defer func() {
+		// TODO delete reservation token
+		// if r := recover(); r != nil {
+		// 	handler.DeleteReservation()
+		// }
+	}()
 	html, err := sentEmail.HTML()
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR templating result html[%v], %s\n", h.GetReqId(r), sentEmail, err.Error())
@@ -237,7 +244,7 @@ func ConfirmEmail(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r 
 		w.Write([]byte("failed to update user status"))
 		return
 	}
-	RenderHome(app, db, w, r, &template.InformUserMessage{
+	RenderLogin(w, r, &template.InfoMessage{
 		Header: "Congrats! " + user.Email + " is confirmed",
 		Body:   "Your user name is " + user.Name + " until you decide to change it",
 		Footer: "Please, login using your signup credentials",

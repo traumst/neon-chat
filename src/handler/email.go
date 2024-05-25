@@ -2,50 +2,17 @@ package handler
 
 import (
 	"fmt"
-	"log"
 	"net/mail"
 	"net/smtp"
 	"strings"
 	"time"
 
-	"go.chat/src/db"
-	a "go.chat/src/model/app"
 	"go.chat/src/model/template"
-	"go.chat/src/utils"
 )
 
 func IsEmailValid(address string) bool {
 	_, err := mail.ParseAddress(address)
 	return err == nil
-}
-
-func IssueReservationToken(
-	app *AppState,
-	db *db.DBConn,
-	user *a.User,
-) (*template.VerifyEmailTemplate, error) {
-	token := utils.RandStringBytes(16)
-	expire := time.Now().Add(1 * time.Hour)
-	reserve, err := Reserve(db, user, token, expire)
-	if err != nil {
-		log.Printf("IssueReservationToken ERROR reserving[%s], %s\n", user.Email, err.Error())
-		return nil, fmt.Errorf("")
-	}
-	emailConfig := app.SmtpConfig()
-	tmpl := template.VerifyEmailTemplate{
-		SourceEmail: emailConfig.User,
-		UserEmail:   user.Email,
-		UserName:    user.Name,
-		Token:       reserve.Token,
-		TokenExpire: reserve.Expire.Format(time.RFC3339),
-	}
-	err = sendSignupCompletionEmail(tmpl, emailConfig.User, emailConfig.Pass)
-	if err != nil {
-		log.Printf("IssueReservationToken ERROR sending email from [%s] to [%s], %s\n",
-			emailConfig.User, user.Email, err.Error())
-		return nil, fmt.Errorf("failed to send email to[%s]", user.Email)
-	}
-	return &tmpl, nil
 }
 
 func sendSignupCompletionEmail(

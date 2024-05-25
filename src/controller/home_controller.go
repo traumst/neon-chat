@@ -11,32 +11,19 @@ import (
 	h "go.chat/src/utils/http"
 )
 
-func RenderHome(
-	app *handler.AppState,
-	db *db.DBConn,
+func RenderLogin(
 	w http.ResponseWriter,
 	r *http.Request,
-	info *template.InformUserMessage,
+	info *template.InfoMessage,
 ) {
-	log.Printf("[%s] RenderHomeExtra", h.GetReqId(r))
-	user, err := handler.ReadSession(app, w, r)
-	if err != nil || user == nil {
-		homeLogin(app, w, r)
-	} else {
-		homePage(app, db, w, r, user, info)
-	}
-}
-
-func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] homeLogin TRACE IN", h.GetReqId(r))
 	login := template.AuthTemplate{}
 	home := template.HomeTemplate{
 		Chats:         nil,
 		OpenChat:      nil,
 		User:          template.UserTemplate{UserName: "anon"},
-		LoadLocal:     app.LoadLocal(),
 		IsAuthorized:  false,
-		InformUser:    nil,
+		Info:          info,
 		LoginTemplate: login,
 		Avatar:        nil,
 	}
@@ -52,14 +39,21 @@ func homeLogin(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(html))
 }
 
-func homePage(
+func RenderHome(
 	app *handler.AppState,
 	db *db.DBConn,
 	w http.ResponseWriter,
 	r *http.Request,
 	user *app.User,
-	info *template.InformUserMessage,
+	info *template.InfoMessage,
 ) {
+	if app == nil {
+		panic("app is nil")
+	} else if db == nil {
+		panic("db is nil")
+	} else if user == nil {
+		panic("user is nil")
+	}
 	log.Printf("[%s] homePage TRACE IN", h.GetReqId(r))
 	var openChatTemplate *template.ChatTemplate
 	var openChatId int = -1
@@ -87,9 +81,8 @@ func homePage(
 		Chats:         chatTemplates,
 		OpenChat:      openChatTemplate,
 		User:          *user.Template(openChatId, openChatOwnerId, user.Id),
-		LoadLocal:     app.LoadLocal(),
 		IsAuthorized:  true,
-		InformUser:    info,
+		Info:          info,
 		LoginTemplate: template.AuthTemplate{},
 		Avatar:        avatarTmpl,
 	}

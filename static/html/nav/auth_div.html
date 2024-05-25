@@ -20,41 +20,14 @@
         {{ template "signupForm" }}
     </div>
 </div>
-<script>
-    async function handleAuthResponse(response) {
-        if (response.ok) {
-            window.location.href = '/';
-        } else {
-            const data = await response.text()
-            alert(`Login failed: ${response.statusText} ${response.status}\nError message: ${data}`);
-        }
-    }
-    window.onload = function() {
-        document.querySelector('#user-login-box form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            console.log('login data', formData)
-            fetch('/login', { method: 'POST', body: formData })
-                .then(handleAuthResponse)
-                .catch(error => {
-                    console.error("login error", error);
-                });
-        });
-        document.querySelector('#user-signup-box form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            console.log('signup data', formData)
-            fetch('/signup', { method: 'PUT', body: formData })
-                .then(handleAuthResponse)
-                .catch(error => {
-                    console.error("signup error", error);
-                });
-        });
-    };
-</script>
 
 {{ define "loginForm" }}
-<form class="flex flex-col w-full p-4 gap-y-4 shadow-lg rounded-lg">
+<form hx-post="/login" 
+    hx-include="[name='login-user'],[name='login-pass']"
+    hx-swap="innerHTML"
+    hx-target="body"
+    class="flex flex-col w-full p-4 gap-y-4 shadow-lg rounded-lg"
+>
     <label for="login-user">
         User: <input type="text" name="login-user" placeholder="username"
             autocomplete="current-username"
@@ -82,7 +55,12 @@
 {{ end }}
 
 {{ define "signupForm" }}
-<form class="flex flex-col w-full p-4 gap-y-4 shadow-lg rounded-lg">
+<form hx-put="/signup" 
+    hx-include="[name='signup-user'],[name='signup-email'],[name='signup-pass']"
+    hx-swap="innerHTML"
+    hx-target=".open-chat"
+    class="flex flex-col w-full p-4 gap-y-4 shadow-lg rounded-lg"
+>
     <label for="signup-user">
         User: <input type="text" name="signup-user" placeholder="username"
             autocomplete="current-username"

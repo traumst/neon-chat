@@ -177,7 +177,11 @@
         w-2/3 
         border-2 border-zinc-700 rounded-lg
         shadow shadow-zinc-900">
-        <div class="open-chat default-transition h-screen overflow-y-auto overflow-x-hidden">
+        <div class="open-chat default-transition h-screen 
+            overflow-y-auto overflow-x-hidden
+            m-2"
+        >
+            {{ .InformUser }}
             {{ if .IsAuthorized }}
                 {{ with .OpenChat }}
                     {{ template "chat_div.html" . }}
@@ -186,9 +190,6 @@
                 {{ end }}
             {{ else }}
                 {{ template "welcome_div.html" . }}
-            {{ end }}
-            {{ with .InformUser }}
-                {{ template "verification_sent.html" . }}
             {{ end }}
         </div>
     </div>

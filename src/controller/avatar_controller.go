@@ -46,7 +46,7 @@ func AddAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *h
 	user, err := handler.ReadSession(app, w, r)
 	if user == nil {
 		log.Printf("[%s] AddAvatar INFO user is not authorized, %s\n", h.GetReqId(r), err)
-		RenderHome(app, db, w, r, &template.InformUserMessage{
+		RenderLogin(w, r, &template.InfoMessage{
 			Header: "User is not authenticated",
 			Body:   "Your session has probably expired",
 			Footer: "Reload the page and try again",
@@ -137,7 +137,7 @@ func GetAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *h
 	user, err := handler.ReadSession(app, w, r)
 	if user == nil {
 		log.Printf("[%s] GetAvatar INFO user is not authorized, %s\n", h.GetReqId(r), err)
-		RenderHome(app, db, w, r, &template.InformUserMessage{
+		RenderLogin(w, r, &template.InfoMessage{
 			Header: "User is not authenticated",
 			Body:   "Your session has probably expired",
 			Footer: "Reload the page and try again",

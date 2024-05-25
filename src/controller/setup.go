@@ -1,10 +1,12 @@
 package controller
 
 import (
+	"log"
 	"net/http"
 
 	"go.chat/src/db"
 	"go.chat/src/handler"
+	h "go.chat/src/utils/http"
 )
 
 func Setup(app *handler.AppState, db *db.DBConn) {
@@ -28,7 +30,13 @@ func Setup(app *handler.AppState, db *db.DBConn) {
 	// home, default
 	http.Handle("/", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			RenderHome(app, db, w, r, nil)
+			user, err := handler.ReadSession(app, w, r)
+			if err != nil || user == nil {
+				log.Printf("[%s] PollUpdates WARN user, %s\n", h.GetReqId(r), err)
+				RenderLogin(w, r, nil)
+				return
+			}
+			RenderHome(app, db, w, r, user, nil)
 		}), allMiddleware))
 }
 

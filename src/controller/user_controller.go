@@ -114,7 +114,7 @@ func ExpelUser(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *h
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] ExpelUser WARN user, %s\n", h.GetReqId(r), err)
-		RenderHome(app, db, w, r, &template.InformUserMessage{
+		RenderLogin(w, r, &template.InfoMessage{
 			Header: "User is not authenticated",
 			Body:   "Your session has probably expired",
 			Footer: "Reload the page and try again",
@@ -199,7 +199,7 @@ func LeaveChat(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *h
 	user, err := handler.ReadSession(app, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] LeaveChat WARN user, %s\n", h.GetReqId(r), err)
-		RenderHome(app, db, w, r, &template.InformUserMessage{
+		RenderLogin(w, r, &template.InfoMessage{
 			Header: "User is not authenticated",
 			Body:   "Your session has probably expired",
 			Footer: "Reload the page and try again",

@@ -24,7 +24,7 @@ func AddMessage(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *
 	}
 	author, err := handler.ReadSession(app, w, r)
 	if err != nil || author == nil {
-		RenderHome(app, db, w, r, &template.InformUserMessage{
+		RenderLogin(w, r, &template.InfoMessage{
 			Header: "User is not authenticated",
 			Body:   "Your session has probably expired",
 			Footer: "Reload the page and try again",
@@ -95,7 +95,7 @@ func DeleteMessage(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, 
 	log.Printf("[%s] DeleteMessage\n", reqId)
 	author, err := handler.ReadSession(app, w, r)
 	if err != nil || author == nil {
-		RenderHome(app, db, w, r, &template.InformUserMessage{
+		RenderLogin(w, r, &template.InfoMessage{
 			Header: "User is not authenticated",
 			Body:   "Your session has probably expired",
 			Footer: "Reload the page and try again",
