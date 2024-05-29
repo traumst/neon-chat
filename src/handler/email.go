@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"go.chat/src/model/template"
+	"go.chat/src/model/template/email"
 )
 
 func IsEmailValid(address string) bool {
@@ -16,7 +16,7 @@ func IsEmailValid(address string) bool {
 }
 
 func sendSignupCompletionEmail(
-	tmpl template.VerifyEmailTemplate,
+	tmpl email.VerifyEmailTemplate,
 	source string,
 	pass string,
 ) error {

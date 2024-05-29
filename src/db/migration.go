@@ -117,7 +117,6 @@ func isMigrationApplied(db *DBConn, title string) (bool, error) {
 	var migration Migration
 	err := db.conn.Get(&migration, `SELECT * FROM _migrations WHERE title=?`, title)
 	if err != nil {
-		log.Printf("applyMigration WARN error selecting migration[%s], %s", title, err)
 		if err == sql.ErrNoRows {
 			return false, nil
 		} else {

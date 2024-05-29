@@ -11,7 +11,6 @@ import (
 	"go.chat/src/handler"
 	a "go.chat/src/model/app"
 	"go.chat/src/model/event"
-	"go.chat/src/model/template"
 	"go.chat/src/utils"
 	h "go.chat/src/utils/http"
 )
@@ -43,14 +42,15 @@ func AddAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *h
 		w.Write([]byte("Only GET method is allowed"))
 		return
 	}
-	user, err := handler.ReadSession(app, w, r)
+	user, err := handler.ReadSession(app, db, w, r)
 	if user == nil {
 		log.Printf("[%s] AddAvatar INFO user is not authorized, %s\n", h.GetReqId(r), err)
-		RenderLogin(w, r, &template.InfoMessage{
-			Header: "User is not authenticated",
-			Body:   "Your session has probably expired",
-			Footer: "Reload the page and try again",
-		})
+		// &template.InfoMessage{
+		// 	Header: "User is not authenticated",
+		// 	Body:   "Your session has probably expired",
+		// 	Footer: "Reload the page and try again",
+		// }
+		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 	err = r.ParseMultipartForm(MaxUploadSize)
@@ -134,14 +134,16 @@ func GetAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *h
 		w.Write([]byte("Only GET method is allowed"))
 		return
 	}
-	user, err := handler.ReadSession(app, w, r)
+	user, err := handler.ReadSession(app, db, w, r)
 	if user == nil {
 		log.Printf("[%s] GetAvatar INFO user is not authorized, %s\n", h.GetReqId(r), err)
-		RenderLogin(w, r, &template.InfoMessage{
-			Header: "User is not authenticated",
-			Body:   "Your session has probably expired",
-			Footer: "Reload the page and try again",
-		})
+		// &template.InfoMessage{
+		// 	Header: "User is not authenticated",
+		// 	Body:   "Your session has probably expired",
+		// 	Footer: "Reload the page and try again",
+		// }
+
+		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 	dbAvatar, err := db.GetAvatar(user.Id)

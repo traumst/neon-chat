@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"go.chat/src/db"
+	d "go.chat/src/db"
 	"go.chat/src/handler"
 	"go.chat/src/model/event"
 	"go.chat/src/model/template"
@@ -16,10 +16,10 @@ import (
 	h "go.chat/src/utils/http"
 )
 
-func Welcome(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+func Welcome(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] OpenChat TRACE returning template\n", reqId)
-	user, err := handler.ReadSession(app, w, r)
+	user, err := handler.ReadSession(app, db, w, r)
 	var welcome template.WelcomeTemplate
 	if user == nil {
 		log.Printf("[%s] OpenChat TRACE user is not authorized, %s\n", h.GetReqId(r), err)
@@ -38,7 +38,7 @@ func Welcome(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(html))
 }
 
-func OpenChat(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
+func OpenChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] OpenChat\n", reqId)
 	if r.Method != "GET" {
@@ -47,14 +47,15 @@ func OpenChat(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *ht
 		w.Write([]byte("Only GET method is allowed"))
 		return
 	}
-	user, err := handler.ReadSession(app, w, r)
+	user, err := handler.ReadSession(app, db, w, r)
 	if user == nil {
 		log.Printf("[%s] OpenChat INFO user is not authorized, %s\n", h.GetReqId(r), err)
-		RenderLogin(w, r, &template.InfoMessage{
-			Header: "User is not authenticated",
-			Body:   "Your session has probably expired",
-			Footer: "Reload the page and try again",
-		})
+		// &template.InfoMessage{
+		// 	Header: "User is not authenticated",
+		// 	Body:   "Your session has probably expired",
+		// 	Footer: "Reload the page and try again",
+		// }
+		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 	path := strings.Split(r.URL.Path, "/")
@@ -62,7 +63,7 @@ func OpenChat(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *ht
 	chatId, err := strconv.Atoi(path[2])
 	if err != nil {
 		log.Printf("[%s] OpenChat INFO invalid chat-id, %s\n", reqId, err)
-		Welcome(app, w, r)
+		Welcome(app, db, w, r)
 		return
 	}
 	if chatId < 0 {
@@ -93,7 +94,7 @@ func OpenChat(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *ht
 	w.Write([]byte(html))
 }
 
-func AddChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+func AddChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] AddChat\n", reqId)
 	if r.Method != "POST" {
@@ -102,7 +103,7 @@ func AddChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("action not allowed"))
 		return
 	}
-	user, err := handler.ReadSession(app, w, r)
+	user, err := handler.ReadSession(app, db, w, r)
 	if user == nil {
 		log.Printf("[%s] AddChat INFO user is not authorized, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -156,21 +157,23 @@ func AddChat(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
 	wg.Wait()
 }
 
-func CloseChat(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
+func CloseChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] CloseChat\n", reqId)
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	user, err := handler.ReadSession(app, w, r)
+	user, err := handler.ReadSession(app, db, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] CloseChat WARN user, %s\n", h.GetReqId(r), err)
-		RenderLogin(w, r, &template.InfoMessage{
-			Header: "User is not authenticated",
-			Body:   "Your session has probably expired",
-			Footer: "Reload the page and try again",
-		})
+		// &template.InfoMessage{
+		// 	Header: "User is not authenticated",
+		// 	Body:   "Your session has probably expired",
+		// 	Footer: "Reload the page and try again",
+		// }
+
+		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 	chatIdStr := r.PostFormValue("chatid")
@@ -202,21 +205,23 @@ func CloseChat(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *h
 	w.Write([]byte(html))
 }
 
-func DeleteChat(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
+func DeleteChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] DeleteChat TRACE\n", reqId)
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	user, err := handler.ReadSession(app, w, r)
+	user, err := handler.ReadSession(app, db, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] DeleteChat WARN user, %s\n", h.GetReqId(r), err)
-		RenderLogin(w, r, &template.InfoMessage{
-			Header: "User is not authenticated",
-			Body:   "Your session has probably expired",
-			Footer: "Reload the page and try again",
-		})
+		// &template.InfoMessage{
+		// 	Header: "User is not authenticated",
+		// 	Body:   "Your session has probably expired",
+		// 	Footer: "Reload the page and try again",
+		// }
+
+		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 	chatId := r.PostFormValue("chatid")

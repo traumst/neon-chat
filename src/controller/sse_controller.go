@@ -5,17 +5,18 @@ import (
 	"net/http"
 	"sync"
 
+	d "go.chat/src/db"
 	"go.chat/src/handler"
 	h "go.chat/src/utils/http"
 )
 
-func PollUpdates(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+func PollUpdates(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		log.Printf("[%s] PollUpdates TRACE does not provide %s\n", h.GetReqId(r), r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	user, err := handler.ReadSession(app, w, r)
+	user, err := handler.ReadSession(app, db, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] PollUpdates WARN user, %s\n", h.GetReqId(r), err)
 		return

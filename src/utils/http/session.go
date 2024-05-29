@@ -26,7 +26,7 @@ func GetSessionCookie(r *http.Request) (*Session, error) {
 	if err != nil {
 		return nil, err
 	}
-	session, err := FromString(cookie.Value)
+	session, err := Decode(cookie.Value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse session[%s], %s", cookie.Value, err.Error())
 	}
@@ -51,7 +51,7 @@ func SetSessionCookie(w http.ResponseWriter, user *app.User, auth *app.Auth) Ses
 		Expire:   expiration,
 	}
 	sessions[user.Id] = session
-	cookie := session.String()
+	cookie := session.Encode()
 	http.SetCookie(w, &http.Cookie{
 		Name:    utils.SessionCookie,
 		Value:   cookie,
@@ -69,12 +69,12 @@ func ClearSessionCookie(w http.ResponseWriter, userId uint) {
 	})
 }
 
-func (s Session) String() string {
+func (s Session) Encode() string {
 	cookie := fmt.Sprintf("%d:%s:%s:%s", s.UserId, s.UserType, utils.RandStringBytes(9), s.AuthType)
 	return base64.StdEncoding.EncodeToString([]byte(cookie))
 }
 
-func FromString(s string) (*Session, error) {
+func Decode(s string) (*Session, error) {
 	decoded, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
 		return nil, fmt.Errorf("invalid session, %s", err)

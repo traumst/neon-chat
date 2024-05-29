@@ -24,19 +24,19 @@ func Setup(app *handler.AppState, db *db.DBConn) {
 	// live updates
 	http.Handle("/poll", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			PollUpdates(app, w, r)
+			PollUpdates(app, db, w, r)
 		}), allMiddleware))
 
 	// home, default
 	http.Handle("/", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			user, err := handler.ReadSession(app, w, r)
+			user, err := handler.ReadSession(app, db, w, r)
 			if err != nil || user == nil {
-				log.Printf("[%s] PollUpdates WARN user, %s\n", h.GetReqId(r), err)
-				RenderLogin(w, r, nil)
+				log.Printf("[%s] home INFO session, %s\n", h.GetReqId(r), err)
+				RenderLogin(w, r)
 				return
 			}
-			RenderHome(app, db, w, r, user, nil)
+			RenderHome(app, db, w, r, user)
 		}), allMiddleware))
 }
 
@@ -73,7 +73,7 @@ func handleSettings(app *handler.AppState, db *db.DBConn, allMiddleware []Middle
 		}), allMiddleware))
 	http.Handle("/settings/close", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			CloseSettings(app, w, r)
+			CloseSettings(app, db, w, r)
 		}), allMiddleware))
 }
 
@@ -91,7 +91,7 @@ func handleMsgs(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware
 func handleChat(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/chat/welcome", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			Welcome(app, w, r)
+			Welcome(app, db, w, r)
 		}), allMiddleware))
 	http.Handle("/chat/delete", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -107,7 +107,7 @@ func handleChat(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware
 		}), allMiddleware))
 	http.Handle("/chat", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			AddChat(app, w, r)
+			AddChat(app, db, w, r)
 		}), allMiddleware))
 }
 
@@ -145,7 +145,7 @@ func handleAuth(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware
 		}), allMiddleware))
 	http.Handle("/logout", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			Logout(app, w, r)
+			Logout(app, db, w, r)
 		}), allMiddleware))
 }
 

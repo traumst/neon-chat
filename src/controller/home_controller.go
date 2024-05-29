@@ -14,7 +14,6 @@ import (
 func RenderLogin(
 	w http.ResponseWriter,
 	r *http.Request,
-	info *template.InfoMessage,
 ) {
 	log.Printf("[%s] homeLogin TRACE IN", h.GetReqId(r))
 	login := template.AuthTemplate{}
@@ -23,7 +22,6 @@ func RenderLogin(
 		OpenChat:      nil,
 		User:          template.UserTemplate{UserName: "anon"},
 		IsAuthorized:  false,
-		Info:          info,
 		LoginTemplate: login,
 		Avatar:        nil,
 	}
@@ -45,7 +43,6 @@ func RenderHome(
 	w http.ResponseWriter,
 	r *http.Request,
 	user *app.User,
-	info *template.InfoMessage,
 ) {
 	if app == nil {
 		panic("app is nil")
@@ -82,7 +79,6 @@ func RenderHome(
 		OpenChat:      openChatTemplate,
 		User:          *user.Template(openChatId, openChatOwnerId, user.Id),
 		IsAuthorized:  true,
-		Info:          info,
 		LoginTemplate: template.AuthTemplate{},
 		Avatar:        avatarTmpl,
 	}

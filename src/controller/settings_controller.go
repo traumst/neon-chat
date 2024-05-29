@@ -4,13 +4,13 @@ import (
 	"log"
 	"net/http"
 
-	"go.chat/src/db"
+	d "go.chat/src/db"
 	"go.chat/src/handler"
 	t "go.chat/src/model/template"
 	h "go.chat/src/utils/http"
 )
 
-func OpenSettings(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
+func OpenSettings(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] OpenSettings\n", reqId)
 	if r.Method != "GET" {
@@ -18,7 +18,7 @@ func OpenSettings(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	user, err := handler.ReadSession(app, w, r)
+	user, err := handler.ReadSession(app, db, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] OpenSettings WARN user, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -59,7 +59,7 @@ func OpenSettings(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r
 	w.Write([]byte(html))
 }
 
-func CloseSettings(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+func CloseSettings(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] CloseSettings\n", reqId)
 	if r.Method != "GET" {
@@ -68,7 +68,7 @@ func CloseSettings(app *handler.AppState, w http.ResponseWriter, r *http.Request
 		w.Write([]byte("User is unauthorized"))
 		return
 	}
-	user, err := handler.ReadSession(app, w, r)
+	user, err := handler.ReadSession(app, db, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] CloseSettings WARN user, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusMethodNotAllowed)

@@ -96,7 +96,7 @@
         overflow-x-hidden
         overflow-y-auto"
     >
-        <ul sse-swap="{{ .ChatAddEvent }}" 
+        <ul sse-swap="{{ .ChatAddEvent }}, {{ .ChatInviteEvent }}" 
             hx-swap="afterbegin" 
             class="chat-headers default-transition flex flex-col"
         > 
@@ -106,7 +106,7 @@
             {{ end }}
         {{ else }}
             <li id="noChats" 
-                sse-swap="{{ .ChatAddEvent }}" 
+                sse-swap="{{ .ChatAddEvent }}, {{ .ChatInviteEvent }}" 
                 hx-swap="delete" 
                 target="#noChats" 
                 class="h-7 flex flex-grow-0 px-2 py-4"

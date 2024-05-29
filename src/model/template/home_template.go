@@ -3,16 +3,9 @@ package template
 import (
 	"bytes"
 	"html/template"
-	"log"
 
 	"go.chat/src/model/event"
 )
-
-type InfoMessage struct {
-	Header string
-	Body   string
-	Footer string
-}
 
 type HomeTemplate struct {
 	IsAuthorized  bool
@@ -20,24 +13,7 @@ type HomeTemplate struct {
 	User          UserTemplate
 	Chats         []*ChatTemplate
 	OpenChat      *ChatTemplate
-	Info          *InfoMessage
 	LoginTemplate AuthTemplate
-}
-
-func (h *HomeTemplate) InformUser() string {
-	if h.Info == nil {
-		return ""
-	}
-	// TODO generic info message
-	tmpl := template.Must(template.ParseFiles(
-		"static/html/inform/verification_sent.html"))
-	var buf bytes.Buffer
-	err := tmpl.Execute(&buf, h.Info)
-	if err != nil {
-		log.Printf("failed to template an html, %s", err.Error())
-		return "ERROR_INFORM_USER"
-	}
-	return buf.String()
 }
 
 func (h *HomeTemplate) ChatAddEvent() string {
@@ -46,6 +22,10 @@ func (h *HomeTemplate) ChatAddEvent() string {
 		openChatId = h.OpenChat.ChatId
 	}
 	return event.ChatAdd.FormatEventName(openChatId, h.User.UserId, -5)
+}
+
+func (h *HomeTemplate) ChatInviteEvent() string {
+	return string(event.ChatInvite)
 }
 
 func (h *HomeTemplate) ChatCloseEvent() string {
@@ -65,7 +45,6 @@ func (h *HomeTemplate) HTML() (string, error) {
 		"static/html/home_page.html",
 		// left panel
 		"static/html/left_panel.html",
-		"static/html/inform/verification_sent.html",
 		"static/html/avatar_div.html",
 		"static/html/nav/auth_div.html",
 		"static/html/nav/chat_li.html",

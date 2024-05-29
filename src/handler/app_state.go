@@ -13,12 +13,12 @@ import (
 
 var ApplicationState AppState
 
+// TODO track users
 type AppState struct {
 	mu       sync.Mutex
 	isInit   bool
 	chats    app.ChatList
 	userConn UserConn
-	users    []app.User
 	config   AppConfig
 }
 
@@ -39,7 +39,6 @@ func (state *AppState) Init(db *db.DBConn, config AppConfig) {
 		isInit:   true,
 		chats:    app.ChatList{},
 		userConn: make(UserConn, 0),
-		users:    make([]app.User, 0),
 		config:   config,
 	}
 }
@@ -95,52 +94,6 @@ func (state *AppState) DropConn(conn *Conn) error {
 }
 
 // USER
-func (state *AppState) TrackUser(user *app.User) error {
-	if user == nil {
-		return fmt.Errorf("user was nil")
-	}
-	for _, u := range state.users {
-		if u.Id == user.Id {
-			log.Printf("AppState.TrackUser TRACE tracked user[%d] update", user.Id)
-			u.Name = user.Name
-			for _, c := range state.chats.GetChats(user.Id) {
-				c.SyncUser(user)
-			}
-			return nil
-		}
-	}
-	log.Printf("AppState.TrackUser TRACE will track user[%d]\n", user.Id)
-	state.users = append(state.users, *user)
-	return nil
-}
-
-// TODO untrack
-func (state *AppState) UntrackUser(userId uint) error {
-	return fmt.Errorf("TODO IMPLEMENT")
-}
-
-func (state *AppState) GetUser(userId uint) (*app.User, error) {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-
-	log.Printf("AppState.GetUser TRACE user[%d]\n", userId)
-	var user *app.User
-	for _, u := range state.users {
-		if u.Id == userId {
-			user = &u
-			break
-		}
-	}
-	// user, err := state.db.GetUser(userId)
-	// appUser := UserFromDB(user)
-	if user == nil {
-		return nil, fmt.Errorf("user not found")
-	}
-	log.Printf("AppState.GetUser TRACE user[%d] found[%s]\n", userId, user.Name)
-	state.TrackUser(user)
-	return user, nil
-}
-
 func (state *AppState) InviteUser(userId uint, chatId int, invitee *app.User) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
@@ -157,12 +110,6 @@ func (state *AppState) DropUser(userId uint, chatId int, removeId uint) error {
 	defer state.mu.Unlock()
 
 	log.Printf("AppState.DropUser TRACE removing user[%d] chat[%d] by user[%d]\n", removeId, chatId, userId)
-	for i, u := range state.users {
-		if u.Id == removeId {
-			state.users = append(state.users[:i], state.users[i+1:]...)
-			break
-		}
-	}
 	_ = state.chats.CloseChat(removeId, chatId)
 	return state.chats.ExpelUser(userId, chatId, removeId)
 }

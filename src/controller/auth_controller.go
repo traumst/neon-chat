@@ -9,7 +9,6 @@ import (
 	d "go.chat/src/db"
 	"go.chat/src/handler"
 	a "go.chat/src/model/app"
-	"go.chat/src/model/template"
 	"go.chat/src/utils"
 	h "go.chat/src/utils/http"
 )
@@ -68,16 +67,15 @@ func Login(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusOK)
 }
 
-func Logout(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
+func Logout(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] Logout TRACE \n", h.GetReqId(r))
-	user, err := handler.ReadSession(app, w, r)
+	user, err := handler.ReadSession(app, db, w, r)
 	if user == nil {
 		log.Printf("[%s] Logout INFO user is not authorized, %s\n", h.GetReqId(r), err.Error())
-		RenderLogin(w, r, nil)
+		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 	h.ClearSessionCookie(w, user.Id)
-	app.UntrackUser(user.Id)
 	http.Header.Add(w.Header(), "HX-Refresh", "true")
 	w.WriteHeader(http.StatusOK)
 }
@@ -213,27 +211,14 @@ func ConfirmEmail(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r 
 		return
 	}
 
-	user, err := app.GetUser(reserve.UserId)
+	dbUser, err := db.GetUser(reserve.UserId)
 	if err != nil {
-		dbUser, err := db.GetUser(reserve.UserId)
-		if err != nil {
-			log.Printf("[%s] ConfirmEmail ERROR retrieving user[%d], %s\n", h.GetReqId(r), reserve.UserId, err.Error())
-			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte("corrupted token"))
-			return
-		}
-		tmp := handler.UserFromDB(*dbUser)
-		user = &tmp
-		err = app.TrackUser(user)
-		if err != nil {
-			log.Printf("[%s] ConfirmEmail ERROR tracking user[%d], %s\n", h.GetReqId(r), user.Id, err.Error())
-		}
-	} else if user == nil {
-		log.Printf("[%s] ConfirmEmail ERROR user[%d] not found\n", h.GetReqId(r), reserve.UserId)
+		log.Printf("[%s] ConfirmEmail ERROR retrieving user[%d], %s\n", h.GetReqId(r), reserve.UserId, err.Error())
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("user not found"))
+		w.Write([]byte("corrupted token"))
 		return
 	}
+	user := handler.UserFromDB(*dbUser)
 	if user.Status != a.UserStatusPending {
 		log.Printf("[%s] ConfirmEmail ERROR user[%d] status[%s] is not pending\n", h.GetReqId(r), user.Id, user.Status)
 		w.WriteHeader(http.StatusBadRequest)
@@ -248,10 +233,10 @@ func ConfirmEmail(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r 
 		w.Write([]byte("failed to update user status"))
 		return
 	}
-
-	RenderLogin(w, r, &template.InfoMessage{
-		Header: "Congrats! " + user.Email + " is confirmed",
-		Body:   "Your user name is " + user.Name + " until you decide to change it",
-		Footer: "Please, login using your signup credentials",
-	})
+	// &template.InfoMessage{
+	// 	Header: "Congrats! " + user.Email + " is confirmed",
+	// 	Body:   "Your user name is " + user.Name + " until you decide to change it",
+	// 	Footer: "Please, login using your signup credentials",
+	// }
+	http.Redirect(w, r, "/", http.StatusFound)
 }

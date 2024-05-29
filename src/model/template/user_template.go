@@ -26,13 +26,12 @@ func (c *UserTemplate) ChatExpelEvent() string {
 }
 
 func (c *UserTemplate) ChatLeaveEvent() string {
-	return event.ChatExpel.FormatEventName(c.ChatId, c.UserId, -30)
+	return event.ChatLeave.FormatEventName(c.ChatId, c.UserId, -30)
 }
 
 func (c *UserTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
-	shortTmpl := template.Must(template.ParseFiles(
-		"static/html/user_div.html"))
+	shortTmpl := template.Must(template.ParseFiles("static/html/user_div.html"))
 	err := shortTmpl.Execute(&buf, c)
 	if err != nil {
 		return "", err

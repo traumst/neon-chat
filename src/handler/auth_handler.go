@@ -9,13 +9,14 @@ import (
 
 	d "go.chat/src/db"
 	a "go.chat/src/model/app"
-	"go.chat/src/model/template"
+	"go.chat/src/model/template/email"
 	"go.chat/src/utils"
 	h "go.chat/src/utils/http"
 )
 
 func ReadSession(
 	app *AppState,
+	db *d.DBConn,
 	w http.ResponseWriter,
 	r *http.Request,
 ) (*a.User, error) {
@@ -26,19 +27,20 @@ func ReadSession(
 		h.ClearSessionCookie(w, 0)
 		return nil, fmt.Errorf("failed to read session cookie, %s", err)
 	}
-	var user *a.User
+	var user a.User
 	err = nil
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		user, err = app.GetUser(cookie.UserId)
-		if user == nil {
+		dbUser, err1 := db.GetUser(cookie.UserId)
+		if err1 != nil {
 			h.ClearSessionCookie(w, 0)
-			err = fmt.Errorf("failed to get user from cookie[%v]", cookie)
+			err = fmt.Errorf("failed to get user[%d] from cookie[%v], %s", cookie.UserId, cookie, err1.Error())
 		} else {
 			log.Printf("[%s] ReadSession TRACE session user[%d][%s], err[%s]\n", h.GetReqId(r),
-				user.Id, user.Name, err)
+				dbUser.Id, dbUser.Name, err1)
+			user = UserFromDB(*dbUser)
 		}
 	}()
 	wg.Wait()
@@ -46,7 +48,7 @@ func ReadSession(
 		return nil, err
 	}
 	log.Printf("[%s] ReadSession TRACE OUT\n", h.GetReqId(r))
-	return user, err
+	return &user, err
 }
 
 func Authenticate(
@@ -124,7 +126,7 @@ func IssueReservationToken(
 	app *AppState,
 	db *d.DBConn,
 	user *a.User,
-) (*template.VerifyEmailTemplate, error) {
+) (*email.VerifyEmailTemplate, error) {
 	token := utils.RandStringBytes(16)
 	expire := time.Now().Add(1 * time.Hour)
 	reserve, err := reserve(db, user, token, expire)
@@ -133,7 +135,7 @@ func IssueReservationToken(
 		return nil, fmt.Errorf("")
 	}
 	emailConfig := app.SmtpConfig()
-	tmpl := template.VerifyEmailTemplate{
+	tmpl := email.VerifyEmailTemplate{
 		SourceEmail: emailConfig.User,
 		UserEmail:   user.Email,
 		UserName:    user.Name,
