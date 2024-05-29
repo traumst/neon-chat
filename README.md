@@ -33,10 +33,7 @@ Starting server...
 And the app should be available at http://localhost:8080
 
 ## Right now
-- add email to user
-- add migration pipeline
-- pass reset
-- email verification
+bugs and refactor
 
 ## TODOs
 
