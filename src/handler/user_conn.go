@@ -38,7 +38,7 @@ func (uc *UserConn) IsConn(userId uint) (bool, *Conn) {
 func (uc *UserConn) Add(user *app.User, origin string, w http.ResponseWriter, r http.Request) *Conn {
 	mu.Lock()
 	defer mu.Unlock()
-	log.Printf("∞---%s---> UserConn.Add TRACE user[%d] added from conn[%s]\n", h.GetReqId(&r), user.Id, origin)
+	log.Printf("[%s] UserConn.Add TRACE user[%d] added from conn[%s]\n", h.GetReqId(&r), user.Id, origin)
 	id := len(*uc)
 	newConn := Conn{
 		Id:     id,
@@ -61,7 +61,7 @@ func (uc UserConn) Get(userId uint) (*Conn, error) {
 		return nil, fmt.Errorf("user[%d] not connected", userId)
 	}
 
-	log.Printf("∞--------> UserConn.Get TRACE user[%d] has %d conns[%v]\n", userId, len(conns), conns)
+	log.Printf("UserConn.Get TRACE user[%d] has %d conns[%v]\n", userId, len(conns), conns)
 
 	var conn *Conn
 	for _, conn = range conns {
@@ -73,7 +73,7 @@ func (uc UserConn) Get(userId uint) (*Conn, error) {
 	if conn == nil {
 		return nil, fmt.Errorf("user[%d] has no active conneciton", userId)
 	}
-	log.Printf("∞--------> UserConn.Get TRACE user[%d] served on conn[%v]\n", userId, conn.Origin)
+	log.Printf("UserConn.Get TRACE user[%d] served on conn[%v]\n", userId, conn.Origin)
 	return conn, nil
 }
 
@@ -113,74 +113,79 @@ func (uc *UserConn) userConns(userId uint) []*Conn {
 }
 
 func (conn *Conn) SendUpdates(up event.LiveUpdate, pollingUserId uint) {
-	log.Printf("∞--%s--> APP.sendUpdates TRACE IN user[%d], input[%s]\n", conn.Origin, pollingUserId, up.String())
+	log.Printf("[%s] Conn.SendUpdates TRACE IN user[%d], input[%s]\n", conn.Origin, pollingUserId, up.String())
 	origin := conn.Origin
 	if conn.User.Id != pollingUserId {
-		log.Printf("<--%s--∞ APP.sendUpdates WARN user[%v] is does not own conn[%v]\n", origin, pollingUserId, conn)
+		log.Printf("[%s] Conn.SendUpdates WARN user[%v] is does not own conn[%v]\n", origin, pollingUserId, conn)
 		return
 	}
 	err := conn.trySend(up)
 	if err != nil {
+		log.Printf("[%s] Conn.SendUpdates ERROR failed to send update to user[%d], err[%s]\n",
+			origin, pollingUserId, err)
 		up.Error = fmt.Errorf("ERROR SENDING TO: %d", pollingUserId)
 		//conn.Out <- up
-		log.Printf("<--%s--∞ APP.sendUpdates ERROR failed to send update to user[%d], err[%s]\n",
-			origin, pollingUserId, err)
 		return
 	}
-	log.Printf("<--%s--∞ APP.sendUpdates TRACE OUT user[%d]\n", origin, pollingUserId)
+	log.Printf("[%s] Conn.SendUpdates TRACE OUT user[%d]\n", origin, pollingUserId)
 }
 
 func (conn *Conn) trySend(up event.LiveUpdate) error {
 	w := conn.Writer
 	if up.UserId <= 0 {
-		return fmt.Errorf("trySend ERROR user is empty, user[%d], msg[%s]", up.UserId, up.Data)
+		return fmt.Errorf("Conn.trySend ERROR user is empty, user[%d], msg[%s]", up.UserId, up.Data)
 	}
 	if w == nil {
-		return fmt.Errorf("trySend ERROR writer is nil")
+		return fmt.Errorf("Conn.trySend ERROR writer is nil")
 	}
 	switch up.Event {
 	case event.UserChange:
 		err := flushEvent(&w, up.Event, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to delete chat to user[%d], %s", up.UserId, err)
+			return fmt.Errorf("Conn.trySend ERROR failed to delete chat to user[%d], %s", up.UserId, err)
+		}
+	case event.AvatarChange:
+		err := flushEvent(&w, up.Event, up)
+		if err != nil {
+			return fmt.Errorf("Conn.trySend ERROR failed to update avatar to user[%d], %s", up.UserId, err)
 		}
 	case event.ChatAdd, event.ChatInvite:
 		err := flushEvent(&w, up.Event, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to send to user[%d], %s", up.UserId, err)
+			return fmt.Errorf("Conn.trySend ERROR failed to send to user[%d], %s", up.UserId, err)
 		}
 	case event.ChatExpel:
 		err := flushEvent(&w, up.Event, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to expel user[%d] from chat[%d], %s", up.UserId, up.ChatId, err)
+			return fmt.Errorf("Conn.trySend ERROR failed to expel user[%d] from chat[%d], %s", up.UserId, up.ChatId, err)
 		}
 	case event.ChatLeave:
 		err := flushEvent(&w, up.Event, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to leave user[%d] from chat[%d], %s", up.UserId, up.ChatId, err)
+			return fmt.Errorf("Conn.trySend ERROR failed to leave user[%d] from chat[%d], %s", up.UserId, up.ChatId, err)
 		}
 	case event.ChatClose:
 		err := flushEvent(&w, up.Event, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to close chat to user[%d], %s", up.UserId, err)
+			return fmt.Errorf("Conn.trySend ERROR failed to close chat to user[%d], %s", up.UserId, err)
 		}
 	case event.ChatDrop:
 		err := flushEvent(&w, up.Event, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to delete chat to user[%d], %s", up.UserId, err)
+			return fmt.Errorf("Conn.trySend ERROR failed to delete chat to user[%d], %s", up.UserId, err)
 		}
 	case event.MessageAdd:
 		err := flushEvent(&w, up.Event, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to add message to user[%d], %s", up.UserId, err)
+			return fmt.Errorf("Conn.trySend ERROR failed to add message to user[%d], %s", up.UserId, err)
 		}
 	case event.MessageDrop:
 		err := flushEvent(&w, up.Event, up)
 		if err != nil {
-			return fmt.Errorf("trySend ERROR failed to delete message to user[%d], %s", up.UserId, err)
+			return fmt.Errorf("Conn.trySend ERROR failed to delete message to user[%d], %s", up.UserId, err)
 		}
 	default:
-		return fmt.Errorf("trySend ERROR unknown update event[%v], update[%s]", up.Event, up.String())
+		return fmt.Errorf("Conn.trySend ERROR unknown update event[%v], update[%s]", up.Event, up.String())
 	}
 	return nil
 }

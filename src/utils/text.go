@@ -2,6 +2,13 @@ package utils
 
 import "strings"
 
+// applies all other trims
+func Trim(s string) string {
+	s = TrimSpaces(s)
+	s = TrimSpecial(s)
+	return s
+}
+
 // replaces \s\s, \t and \n to single \s
 func TrimSpaces(s string) string {
 	if len(s) <= 0 {

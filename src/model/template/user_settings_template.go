@@ -25,7 +25,7 @@ func (c *UserSettingsTemplate) ChatExpelEvent() string {
 }
 
 func (c *UserSettingsTemplate) ChatLeaveEvent() string {
-	return event.ChatExpel.FormatEventName(c.ChatId, c.UserId, -30)
+	return event.ChatLeave.FormatEventName(c.ChatId, c.UserId, -30)
 }
 
 func (h *UserSettingsTemplate) HTML() (string, error) {

@@ -1,0 +1,24 @@
+<div class="flex flex-col 
+    border-2 border-zinc-700 rounded-lg
+    shadow shadow-zinc-900
+    default-transition"
+>
+    <div class="m-2">
+        Great!
+    </div>
+    <div class="m-2">
+        Your username {{ .UserName }} is reserved until {{ .TokenExpire }}.
+    </div>
+    <div class="m-2">
+        <p>We've sent a verification from {{ .SourceEmail }} to the provided email {{ .UserEmail }} 
+        containing a link like</p>
+        <pre>http://localhost:8080/signup-confirm?token=BLABLABLABLABLA</pre>
+        <p>Please, follow the link in the email to complete user signup and keep your username!</p>
+    </div>
+    <div class="m-2">
+        <p>
+            It may take a few minutes for verification email to arrive.
+            See you soon, {{ .UserName }}!
+        </p>
+    </div>
+</div>

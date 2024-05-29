@@ -1,34 +1,42 @@
 package controller
 
 import (
+	"log"
 	"net/http"
 
 	"go.chat/src/db"
 	"go.chat/src/handler"
+	h "go.chat/src/utils/http"
 )
 
-func Setup(app *handler.AppState, conn *db.DBConn) {
+func Setup(app *handler.AppState, db *db.DBConn) {
 	// loaded in reverse order
 	allMiddleware := []Middleware{LoggerMiddleware, ReqIdMiddleware}
 
-	handleAvatar(app, allMiddleware)
-	handleAuth(app, conn, allMiddleware)
-	handleUser(app, conn, allMiddleware)
-	handleChat(app, allMiddleware)
-	handleMsgs(app, allMiddleware)
-	handleSettings(app, allMiddleware)
+	handleAvatar(app, db, allMiddleware)
+	handleAuth(app, db, allMiddleware)
+	handleUser(app, db, allMiddleware)
+	handleChat(app, db, allMiddleware)
+	handleMsgs(app, db, allMiddleware)
+	handleSettings(app, db, allMiddleware)
 	handleStaticFiles()
 
 	// live updates
 	http.Handle("/poll", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			PollUpdates(app, w, r)
+			PollUpdates(app, db, w, r)
 		}), allMiddleware))
 
 	// home, default
 	http.Handle("/", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			RenderHome(app, w, r)
+			user, err := handler.ReadSession(app, db, w, r)
+			if err != nil || user == nil {
+				log.Printf("[%s] home INFO session, %s\n", h.GetReqId(r), err)
+				RenderLogin(w, r)
+				return
+			}
+			RenderHome(app, db, w, r, user)
 		}), allMiddleware))
 }
 
@@ -37,6 +45,10 @@ func handleStaticFiles() {
 	minMiddleware := []Middleware{ReqIdMiddleware}
 
 	http.Handle("/favicon.ico", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			FavIcon(w, r)
+		}), minMiddleware))
+	http.Handle("/favicon.svg", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			FavIcon(w, r)
 		}), minMiddleware))
@@ -54,92 +66,96 @@ func handleStaticFiles() {
 		}), minMiddleware))
 }
 
-func handleSettings(app *handler.AppState, allMiddleware []Middleware) {
+func handleSettings(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/settings", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			OpenSettings(app, w, r)
+			OpenSettings(app, db, w, r)
 		}), allMiddleware))
 	http.Handle("/settings/close", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			CloseSettings(app, w, r)
+			CloseSettings(app, db, w, r)
 		}), allMiddleware))
 }
 
-func handleMsgs(app *handler.AppState, allMiddleware []Middleware) {
+func handleMsgs(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/message/delete", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			DeleteMessage(app, w, r)
+			DeleteMessage(app, db, w, r)
 		}), allMiddleware))
 	http.Handle("/message", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			AddMessage(app, w, r)
+			AddMessage(app, db, w, r)
 		}), allMiddleware))
 }
 
-func handleChat(app *handler.AppState, allMiddleware []Middleware) {
+func handleChat(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/chat/welcome", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			Welcome(app, w, r)
+			Welcome(app, db, w, r)
 		}), allMiddleware))
 	http.Handle("/chat/delete", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			DeleteChat(app, w, r)
+			DeleteChat(app, db, w, r)
 		}), allMiddleware))
 	http.Handle("/chat/close", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			CloseChat(app, w, r)
+			CloseChat(app, db, w, r)
 		}), allMiddleware))
 	http.Handle("/chat/", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			OpenChat(app, w, r)
+			OpenChat(app, db, w, r)
 		}), allMiddleware))
 	http.Handle("/chat", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			AddChat(app, w, r)
+			AddChat(app, db, w, r)
 		}), allMiddleware))
 }
 
-func handleUser(app *handler.AppState, conn *db.DBConn, allMiddleware []Middleware) {
+func handleUser(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/user/invite", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			InviteUser(app, conn, w, r)
+			InviteUser(app, db, w, r)
 		}), allMiddleware))
 	http.Handle("/user/expel", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ExpelUser(app, w, r)
+			ExpelUser(app, db, w, r)
 		}), allMiddleware))
 	http.Handle("/user/leave", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			LeaveChat(app, w, r)
+			LeaveChat(app, db, w, r)
 		}), allMiddleware))
 	http.Handle("/user/change", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ChangeUser(app, w, r)
+			ChangeUser(app, db, w, r)
 		}), allMiddleware))
 }
 
-func handleAuth(app *handler.AppState, conn *db.DBConn, allMiddleware []Middleware) {
+func handleAuth(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/login", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			Login(app, conn, w, r)
+			Login(app, db, w, r)
 		}), allMiddleware))
 	http.Handle("/signup", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			SignUp(app, conn, w, r)
+			SignUp(app, db, w, r)
+		}), allMiddleware))
+	http.Handle("/signup-confirm", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ConfirmEmail(app, db, w, r)
 		}), allMiddleware))
 	http.Handle("/logout", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			Logout(app, w, r)
+			Logout(app, db, w, r)
 		}), allMiddleware))
 }
 
-func handleAvatar(app *handler.AppState, allMiddleware []Middleware) {
+func handleAvatar(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/avatar/add", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			AddAvatar(app, w, r)
+			AddAvatar(app, db, w, r)
 		}), allMiddleware))
 	http.Handle("/avatar", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			GetAvatar(app, w, r)
+			GetAvatar(app, db, w, r)
 		}), allMiddleware))
 }

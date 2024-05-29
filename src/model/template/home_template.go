@@ -8,13 +8,12 @@ import (
 )
 
 type HomeTemplate struct {
+	IsAuthorized  bool
+	Avatar        *AvatarTemplate
+	User          UserTemplate
 	Chats         []*ChatTemplate
 	OpenChat      *ChatTemplate
-	User          UserTemplate
-	LoadLocal     bool
-	IsAuthorized  bool
-	LoginTemplate LoginTemplate
-	Avatar        *AvatarTemplate
+	LoginTemplate AuthTemplate
 }
 
 func (h *HomeTemplate) ChatAddEvent() string {
@@ -25,6 +24,10 @@ func (h *HomeTemplate) ChatAddEvent() string {
 	return event.ChatAdd.FormatEventName(openChatId, h.User.UserId, -5)
 }
 
+func (h *HomeTemplate) ChatInviteEvent() string {
+	return string(event.ChatInvite)
+}
+
 func (h *HomeTemplate) ChatCloseEvent() string {
 	var openChatId int = -1
 	if h.OpenChat != nil {
@@ -33,22 +36,26 @@ func (h *HomeTemplate) ChatCloseEvent() string {
 	return event.ChatClose.FormatEventName(openChatId, h.User.UserId, -6)
 }
 
+func (h *HomeTemplate) AvatarChangeEvent() string {
+	return event.AvatarChange.FormatEventName(0, h.User.UserId, -5)
+}
+
 func (h *HomeTemplate) HTML() (string, error) {
-	var buf bytes.Buffer
 	homeTmpl := template.Must(template.ParseFiles(
 		"static/html/home_page.html",
 		// left panel
 		"static/html/left_panel.html",
 		"static/html/avatar_div.html",
-		"static/html/utils/user_settings_div.html",
-		"static/html/nav/login_div.html",
+		"static/html/nav/auth_div.html",
 		"static/html/nav/chat_li.html",
 		// right panel
-		"static/html/welcome_div.html",
+		"static/html/utils/user_settings_div.html",
+		"static/html/chat/welcome_div.html",
 		"static/html/chat/chat_div.html",
 		"static/html/user_div.html",
 		"static/html/chat/message_li.html",
 	))
+	var buf bytes.Buffer
 	err := homeTmpl.Execute(&buf, h)
 	if err != nil {
 		return "", err

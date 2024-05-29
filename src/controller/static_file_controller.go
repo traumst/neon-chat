@@ -14,7 +14,7 @@ func FavIcon(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServeFile(w http.ResponseWriter, r *http.Request) {
-	//log.Printf("--%s-> ServeFile TRACE serving [%s]\n", utils.GetReqId(r), r.URL.Path)
+	log.Printf("[%s] ServeFile TRACE requested [%s]\n", h.GetReqId(r), r.URL.Path)
 	pathParts := strings.Split(r.URL.Path, "/")
 	fileName := pathParts[len(pathParts)-1]
 	ext := strings.Split(fileName, ".")
@@ -36,12 +36,12 @@ func ServeFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if filePath == "" {
-		log.Printf("<-%s-- ServeFile ERROR serving [%s]\n", h.GetReqId(r), r.URL.Path)
+		log.Printf("[%s] ServeFile ERROR serving [%s]\n", h.GetReqId(r), r.URL.Path)
 		w.Write([]byte("invalid path"))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	//log.Printf("<-%s-- ServeFile TRACE serving [%s]\n", utils.GetReqId(r), filePath)
+	log.Printf("[%s] ServeFile TRACE served [%s]\n", h.GetReqId(r), filePath)
 	http.ServeFile(w, r, filePath)
 }

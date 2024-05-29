@@ -9,5 +9,6 @@ static/css/*
 log/*
 .DS_Store
 *.db
+*.db-journal
 .env
 go.chat

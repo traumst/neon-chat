@@ -8,11 +8,11 @@ import (
 	"go.chat/src/model/event"
 )
 
-// empty targetUser means all users in chat
-func DistributeUserChange(
+func DistributeAvatarChange(
 	state *AppState,
 	//TODO targetUser *app.User, // who to inform, nil for all users
 	subjectUser *app.User, // which user changed, nil for every user in chat
+	avatar *app.Avatar,
 	updateType event.UpdateType,
 ) error {
 	if subjectUser == nil {
@@ -20,18 +20,20 @@ func DistributeUserChange(
 	}
 	// TODO distribute to users with common chats
 	targetUser := subjectUser
-	err := distributeUpdateOfUser(
+	err := distributeUpdateOfAvatar(
 		state,
 		targetUser,
 		subjectUser,
+		avatar,
 		updateType)
 	return err
 }
 
-func distributeUpdateOfUser(
+func distributeUpdateOfAvatar(
 	state *AppState,
 	targetUser *app.User,
 	subjectUser *app.User,
+	avatar *app.Avatar,
 	updateType event.UpdateType,
 ) (err error) {
 	defer func() {
@@ -49,25 +51,26 @@ func distributeUpdateOfUser(
 		return fmt.Errorf("user[%d] does not own conn[%v], user[%d] does", targetUser.Id, conn.Origin, conn.User.Id)
 	}
 	switch updateType {
-	case event.UserChange:
-		return userNameChanged(conn, subjectUser)
+	case event.AvatarChange:
+		return avatarChanged(conn, subjectUser, avatar)
 	default:
 		return fmt.Errorf("unknown event type[%v]", updateType)
 	}
 }
 
-func userNameChanged(conn *Conn, subject *app.User) error {
-	if subject == nil {
-		return fmt.Errorf("subjectUser is nil for userChanged")
+func avatarChanged(conn *Conn, subject *app.User, avatar *app.Avatar) error {
+	if subject == nil || avatar == nil {
+		return fmt.Errorf("arguments were nil, user[%v], avatar[%v]", subject, avatar)
 	}
-	log.Printf("userChanged TRACE informing target[%d] about subject[%d] change\n", conn.User.Id, subject.Id)
-	tmpl := subject.Template(-64, 0, conn.User.Id)
+	log.Printf("avatarChanged TRACE informing target[%d] about subject[%d] new avatar[%d]\n",
+		conn.User.Id, subject.Id, avatar.Id)
+	tmpl := avatar.Template(subject)
 	data, err := tmpl.HTML()
 	if err != nil {
 		return fmt.Errorf("failed to template user")
 	}
 	conn.In <- event.LiveUpdate{
-		Event:    event.UserChange,
+		Event:    event.AvatarChange,
 		ChatId:   -2,
 		UserId:   subject.Id,
 		MsgId:    -3,

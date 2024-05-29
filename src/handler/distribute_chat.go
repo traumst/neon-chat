@@ -56,7 +56,7 @@ func distributeToUsers(
 ) error {
 	var errors []string
 	for _, targetUser := range targetUsers {
-		log.Printf("∞----> distributeToUsers TRACE event[%v] about subject[%v] will be sent to user[%v] in chat[%v]\n",
+		log.Printf("distributeToUsers TRACE event[%v] about subject[%v] will be sent to user[%v] in chat[%v]\n",
 			updateType, subjectUser, targetUser, chat)
 		err := distributeChatToUser(
 			state,

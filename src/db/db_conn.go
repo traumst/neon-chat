@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/jmoiron/sqlx"
@@ -17,7 +18,7 @@ type DBConn struct {
 	isInit bool
 }
 
-//const migraitonsFolder string = "./migrations"
+const migraitonsFolder string = "./src/db/migrations"
 
 func ConnectDB(dbPath string) (*DBConn, error) {
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
@@ -26,18 +27,18 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 			return nil, fmt.Errorf("error creating db file: %s", err)
 		}
 		file.Close()
-		log.Printf("  db file created [%s]", dbPath)
+		log.Printf("db file created [%s]", dbPath)
 	} else {
-		log.Printf("  db file exists [%s]", dbPath)
+		log.Printf("db file exists [%s]", dbPath)
 	}
 
-	log.Printf("  db connects to [%s]", dbPath)
+	log.Printf("db connects to [%s]", dbPath)
 	conn, err := sqlx.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("error opening db: %s", err)
 	}
 
-	log.Printf("  db connection established with connections[%d]", conn.Stats().MaxOpenConnections)
+	log.Printf("db connection established with connections[%d]", conn.Stats().MaxOpenConnections)
 	db := DBConn{conn: conn, isConn: true, isInit: false}
 	err = db.init()
 	return &db, err
@@ -61,64 +62,106 @@ func (db *DBConn) init() error {
 	if !db.isConn {
 		return fmt.Errorf("DBConn is not connected")
 	}
-
 	if db.isInit {
 		return fmt.Errorf("DBConn is already initialized")
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	log.Println("  initiating db schema")
-	schema := fmt.Sprintf("%s\n%s\n%s", SchemaUser, SchemaAuth, SchemaAvatar)
-	_, err := db.conn.Exec(schema)
+	shouldMigrate, err := db.createTables()
 	if err != nil {
-		return err
+		log.Printf("DBConn.init ERROR failed to create schema, %s", err)
+		return fmt.Errorf("failed to create schema")
+	}
+	if shouldMigrate {
+		err = db.ApplyMigrations()
+		if err != nil {
+			log.Printf("DBConn.init ERROR failed to apply migrations, %s", err)
+			return fmt.Errorf("failed to apply migrations")
+		}
+	}
+	err = db.createIndex()
+	if err != nil {
+		log.Printf("DBConn.init ERROR failed to create schema, %s", err)
+		return fmt.Errorf("failed to create schema")
 	}
 
-	//err = applyMigrations(db)
-	// if err == nil {
-	// 	db.isInit = true
-	// }
 	db.isInit = true
-	return err
+	return nil
 }
 
-// func applyMigrations(db *DBConn) error {
-// 	log.Printf("applyMigrations TRACE IN")
-// 	// TODO load "latest" subset
-// 	files, err := utils.GetFilenamesIn(migraitonsFolder)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to list migrations[%s], %s", migraitonsFolder, err.Error())
-// 	}
-// 	// TODO execute in batches
-// 	for _, filename := range files {
-// 		log.Printf("	applyMigrations TRACE now on [%s]", filename)
-// 		path := strings.Split(filename, ".")
-// 		if len(path) != 2 {
-// 			return fmt.Errorf("migration title[%s] is not *.sql", filename)
-// 		}
-// 		title := path[0]
-// 		if title == "" {
-// 			log.Printf("	applyMigrations WARN blank title [%s]", filename)
-// 			continue
-// 		}
-// 		if ext := path[1]; ext != "sql" {
-// 			log.Printf("	applyMigrations TRACE skip non-sql [%s]", filename)
-// 			continue
-// 		}
-// 		bytes, err := os.ReadFile(migraitonsFolder + "/" + title)
-// 		if err != nil {
-// 			return fmt.Errorf("failed to read migration file content[%s]", title)
-// 		}
-// 		if _, err = db.conn.Exec(string(bytes[:])); err != nil {
-// 			return fmt.Errorf("failed to apply migration[%s]", title)
-// 		}
-// 		migration, err := db.AddMigration(&Migration{Title: title})
-// 		if err != nil || migration.Id < 1 {
-// 			return fmt.Errorf("failed to apply migraiton[%s], %s", title, err)
-// 		}
-// 	}
-// 	log.Printf("applyMigrations TRACE OUT")
-// 	return nil
-// }
+func (db *DBConn) createIndex() (err error) {
+	indecies := MigrationIndex + UserIndex + AuthIndex + AvatarSchema + ReservationIndex
+	if indecies == "" {
+		log.Println("createIndex TRACE no indexes to create")
+		return nil
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	_, err = db.conn.Exec(strings.TrimRight(indecies, "\n"))
+	if err != nil {
+		log.Printf("createSchema ERROR failed to create indexes, %s", err.Error())
+		return fmt.Errorf("failed to create indexes")
+	}
+	return nil
+}
+
+func (db *DBConn) createTables() (shouldMigrate bool, err error) {
+	schema, shouldMigrate := db.concatSchema()
+	if schema == "" {
+		log.Println("createTables TRACE no tables to create")
+		return true, nil
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	_, err = db.conn.Exec(strings.TrimRight(schema, "\n"))
+	if err != nil {
+		log.Printf("createTables ERROR failed to create schema, %s", err.Error())
+		err = fmt.Errorf("failed to create schema")
+	}
+	return shouldMigrate, err
+}
+
+func (db *DBConn) concatSchema() (schema string, shouldMigrate bool) {
+	if db.MigrationsTableExists() {
+		log.Println("concatSchema TRACE migration table exists")
+		// TODO meta-migrate, ie migrations migration
+	} else {
+		log.Println("concatSchema TRACE migration table will be created")
+		schema += MigrationSchema + "\n"
+	}
+
+	if db.UserTableExists() {
+		log.Println("concatSchema TRACE user table exists")
+		shouldMigrate = true
+	} else {
+		log.Println("concatSchema TRACE user table will be created")
+		schema += UserSchema + "\n"
+	}
+
+	if db.AuthTableExists() {
+		log.Println("concatSchema TRACE auth table exists")
+		shouldMigrate = true
+	} else {
+		log.Println("concatSchema TRACE auth table will be created")
+		schema += AuthSchema + "\n"
+	}
+
+	if db.AvatarTableExists() {
+		log.Println("concatSchema TRACE avatar table exists")
+		shouldMigrate = true
+	} else {
+		log.Println("concatSchema TRACE avatar table will be created")
+		schema += AvatarSchema + "\n"
+	}
+
+	if db.ReservationTableExists() {
+		log.Println("concatSchema TRACE reservation table exists")
+		shouldMigrate = true
+	} else {
+		log.Println("concatSchema TRACE reservation table will be created")
+		schema += ReservationSchema + "\n"
+	}
+
+	return schema, shouldMigrate
+}
