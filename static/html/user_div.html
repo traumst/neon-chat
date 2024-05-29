@@ -7,6 +7,7 @@
         <div title="this is you">[{{ .UserName }}]</div>
     {{ else if eq .ViewerId .ChatOwnerId }}
         <form id="member-delete-{{ .ChatId }}-user-{{ .UserId }}"
+            title="member in chat"
             hx-trigger="click" 
             hx-include="#member-delete-{{ .ChatId }}-user-{{ .UserId }}"
             hx-post="/user/expel" 

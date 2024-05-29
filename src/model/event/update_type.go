@@ -5,8 +5,9 @@ import "fmt"
 type UpdateType string
 
 const (
-	Ping       UpdateType = "ping"
-	UserChange UpdateType = "user-changed"
+	Ping         UpdateType = "ping"
+	UserChange   UpdateType = "user-changed"
+	AvatarChange UpdateType = "avatar-changed"
 
 	ChatAdd   UpdateType = "chat-add"
 	ChatDrop  UpdateType = "chat-drop"
@@ -28,6 +29,8 @@ func (e UpdateType) FormatEventName(
 	switch e {
 	case UserChange:
 		return fmt.Sprintf("%s-%d", UserChange, userId)
+	case AvatarChange:
+		return fmt.Sprintf("%s-%d", AvatarChange, userId)
 
 	case ChatAdd:
 		return string(ChatAdd)

@@ -14,7 +14,7 @@ func TestAddConn(t *testing.T) {
 	t.Logf("TestAddConn started")
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/some-route", nil)
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeFree)}
+	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeLocal)}
 
 	conn1 := app1.ReplaceConn(w, *r, &user)
 	if conn1 == nil {
@@ -37,7 +37,7 @@ func TestGetConn(t *testing.T) {
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	reqId := "test-req-id"
 	h.SetReqId(r, &reqId)
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeFree)}
+	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeLocal)}
 
 	conn := app1.ReplaceConn(w, *r, &user)
 	if conn == nil {

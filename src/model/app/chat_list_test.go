@@ -18,13 +18,13 @@ func TestInit(t *testing.T) {
 func TestAddChat(t *testing.T) {
 	t.Logf("TestAddChat started")
 	cl := ChatList{}
-	user := User{Id: 1, Name: "John", Type: UserType(UserTypeFree)}
+	user := User{Id: 1, Name: "John", Type: UserType(UserTypeLocal)}
 	chatId1 := cl.AddChat(&user, "test-chat")
 	if chatId1 != 0 {
 		t.Errorf("TestAddChat expected chatId 0, got %d", chatId1)
 		return
 	}
-	user2 := User{Id: 2, Name: "Jill", Type: UserType(UserTypeFree)}
+	user2 := User{Id: 2, Name: "Jill", Type: UserType(UserTypeLocal)}
 	chatId2 := cl.AddChat(&user2, "test-chat")
 	if chatId2 != 1 {
 		t.Errorf("TestAddChat expected chatId 1, got %d", chatId2)
@@ -36,10 +36,10 @@ func TestAddChat(t *testing.T) {
 func TestOpenChat(t *testing.T) {
 	t.Logf("TestOpenChat started")
 	cl := ChatList{}
-	user := User{Id: 1, Name: "John", Type: UserType(UserTypeFree)}
+	user := User{Id: 1, Name: "John", Type: UserType(UserTypeLocal)}
 	chatId1 := cl.AddChat(&user, "test-chat")
 
-	user2 := User{Id: 2, Name: "Jill", Type: UserType(UserTypeFree)}
+	user2 := User{Id: 2, Name: "Jill", Type: UserType(UserTypeLocal)}
 	chatId2 := cl.AddChat(&user2, "test-chat-2")
 
 	if chatId2 == chatId1 {
@@ -68,7 +68,7 @@ func TestOpenChat(t *testing.T) {
 func TestGetChat(t *testing.T) {
 	t.Logf("TestAddChat started")
 	cl := ChatList{}
-	user := User{Id: 1, Name: "John", Type: UserType(UserTypeFree)}
+	user := User{Id: 1, Name: "John", Type: UserType(UserTypeLocal)}
 	chatId := cl.AddChat(&user, "test-chat")
 	if chatId != 0 {
 		t.Errorf("TestAddChat expected chatId 0, got %d", chatId)
@@ -85,7 +85,7 @@ func TestGetChat(t *testing.T) {
 func TestGetOpenChatEmpty(t *testing.T) {
 	t.Logf("TestGetOpenChatEmpty started")
 	cl := ChatList{}
-	user := User{Id: 1, Name: "John", Type: UserType(UserTypeFree)}
+	user := User{Id: 1, Name: "John", Type: UserType(UserTypeLocal)}
 	chat := cl.GetOpenChat(user.Id)
 	if chat != nil {
 		t.Errorf("TestGetOpenChatEmpty expected chat to be NIL")
@@ -95,7 +95,7 @@ func TestGetOpenChatEmpty(t *testing.T) {
 func TestGetOpenChat(t *testing.T) {
 	t.Logf("TestGetOpenChat started")
 	cl := ChatList{}
-	user := User{Id: 1, Name: "John", Type: UserType(UserTypeFree)}
+	user := User{Id: 1, Name: "John", Type: UserType(UserTypeLocal)}
 	chatId := cl.AddChat(&user, "test-chat")
 	if chatId != 0 {
 		t.Errorf("TestGetOpenChat expected chatId 0, got [%d]", chatId)
@@ -122,7 +122,7 @@ func TestGetOpenChat(t *testing.T) {
 func TestGetChats(t *testing.T) {
 	t.Logf("TestGetChats started")
 	cl := ChatList{}
-	user := User{Id: 1, Name: "John", Type: UserType(UserTypeFree)}
+	user := User{Id: 1, Name: "John", Type: UserType(UserTypeLocal)}
 	_ = cl.AddChat(&user, "test-chat")
 	_ = cl.AddChat(&user, "test-chat2")
 	_ = cl.AddChat(&user, "test-chat3")
@@ -137,7 +137,7 @@ func TestGetChats(t *testing.T) {
 func TestDeleteChatEmpty(t *testing.T) {
 	t.Logf("TestDeleteChatEmpty started")
 	cl := ChatList{}
-	user := User{Id: 1, Name: "John", Type: UserType(UserTypeFree)}
+	user := User{Id: 1, Name: "John", Type: UserType(UserTypeLocal)}
 	err := cl.DeleteChat(user.Id, nil)
 	if err == nil {
 		t.Errorf("TestDeleteChatEmpty expected error")
@@ -162,7 +162,7 @@ func TestDeleteChatEmpty(t *testing.T) {
 func TestDeleteChat(t *testing.T) {
 	t.Logf("TestDeleteChatEmpty started")
 	cl := ChatList{}
-	user := User{Id: 1, Name: "John", Type: UserType(UserTypeFree)}
+	user := User{Id: 1, Name: "John", Type: UserType(UserTypeLocal)}
 	chatId := cl.AddChat(&user, "test-chat")
 	if chatId != 0 {
 		t.Errorf("TestAddChat expected chatId 0, got [%d]", chatId)
@@ -192,7 +192,7 @@ func TestDeleteChat(t *testing.T) {
 func TestDeleteChatNotOwner(t *testing.T) {
 	t.Logf("TestDeleteChatEmpty started")
 	cl := ChatList{}
-	user := User{Id: 1, Name: "John", Type: UserType(UserTypeFree)}
+	user := User{Id: 1, Name: "John", Type: UserType(UserTypeLocal)}
 	chatId := cl.AddChat(&user, "test-chat")
 	if chatId != 0 {
 		t.Errorf("TestAddChat expected chatId 0, got [%d]", chatId)
@@ -217,13 +217,13 @@ func TestDeleteChatNotOwner(t *testing.T) {
 func TestInviteUser(t *testing.T) {
 	t.Logf("TestInviteUserEmpty started")
 	cl := ChatList{}
-	owner := User{Id: 1, Name: "John", Type: UserType(UserTypeFree)}
+	owner := User{Id: 1, Name: "John", Type: UserType(UserTypeLocal)}
 	chatId := cl.AddChat(&owner, "test-chat")
 	if chatId != 0 {
 		t.Errorf("TestAddChat expected chatId 0, got %d", chatId)
 		return
 	}
-	invitee := User{Id: 2, Name: "Jill", Type: UserType(UserTypeFree)}
+	invitee := User{Id: 2, Name: "Jill", Type: UserType(UserTypeLocal)}
 	err := cl.InviteUser(owner.Id, chatId, &invitee)
 	if err != nil {
 		t.Errorf("TestInviteUserEmpty fail to invite user [%v]", invitee)

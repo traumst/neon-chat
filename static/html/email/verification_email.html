@@ -1,0 +1,7 @@
+<p>Welcome, {{ .UserName }}!</p>
+<p>Follow the link below and log in.</p>
+<p>Here is <a href="http://localhost:8080/signup-confirm?token={{ .Token }}">your email verification link</a></p>
+<p>Reservation expires at {{ .TokenExpire }}</p>
+<br>
+<p>If the link above does not work, just copy paste the link directly:</p>
+<pre>http://localhost:8080/signup-confirm?token={{ .Token }}</pre>

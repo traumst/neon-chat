@@ -1,0 +1,98 @@
+<div id="auth" class="flex flex-col p-2 gap-y-4 justify-around">
+    <div id="user-login-box" class="flex
+        text-center
+        rounded-md
+        bg-gradient-to-br from-green-800 to-indigo-800
+        text-gray-400
+        shadow shadow-zinc-700
+        hover:shadow-lg hover:shadow-zinc-500"
+    >
+        {{ template "loginForm" }}
+    </div>
+    <div id="user-signup-box" class="flex
+        text-center
+        rounded-md
+        bg-gradient-to-br from-green-800 to-indigo-800
+        text-gray-400
+        shadow shadow-zinc-700
+        hover:shadow-lg hover:shadow-zinc-500"
+    >
+        {{ template "signupForm" }}
+    </div>
+</div>
+
+{{ define "loginForm" }}
+<form hx-post="/login" 
+    hx-include="[name='login-user'],[name='login-pass']"
+    hx-target="body"
+    hx-swap="outerHTML"
+    class="flex flex-col w-full p-4 gap-y-4 shadow-lg rounded-lg"
+>
+    <label for="login-user">
+        User: <input type="text" name="login-user" placeholder="username"
+            autocomplete="current-username"
+            class="text-center
+                rounded-md
+                bg-gradient-to-br from-green-800 to-indigo-800
+                text-gray-400
+                shadow shadow-zinc-700
+                hover:shadow-lg hover:shadow-zinc-500">
+    </label>
+    <label for="login-pass">
+        Pass: <input type="password" name="login-pass" placeholder="********"
+            autocomplete="current-password"
+            class="text-center
+                rounded-md
+                bg-gradient-to-br from-green-800 to-indigo-800
+                text-gray-400
+                shadow shadow-zinc-700
+                hover:shadow-lg hover:shadow-zinc-500">
+    </label>
+    <button type="submit" class="shadow">
+        Login
+    </button>
+</form>
+{{ end }}
+
+{{ define "signupForm" }}
+<form hx-put="/signup" 
+    hx-include="[name='signup-user'],[name='signup-email'],[name='signup-pass']"
+    hx-swap="innerHTML"
+    hx-target=".open-chat"
+    class="flex flex-col w-full p-4 gap-y-4 shadow-lg rounded-lg"
+>
+    <label for="signup-user">
+        User: <input type="text" name="signup-user" placeholder="username"
+            autocomplete="current-username"
+            class="text-center
+                rounded-md
+                bg-gradient-to-br from-green-800 to-indigo-800
+                text-gray-400
+                shadow shadow-zinc-700
+                hover:shadow-lg hover:shadow-zinc-500">
+    </label>
+    <label for="signup-email">
+        Email: <input type="email" name="signup-email" placeholder="user@email.com"
+            autocomplete="email"
+            class="text-center
+                rounded-md
+                bg-gradient-to-br from-green-800 to-indigo-800
+                text-gray-400
+                shadow shadow-zinc-700
+                hover:shadow-lg hover:shadow-zinc-500">
+    </label>
+    <label for="signup-pass">
+        Pass: <input type="password" name="signup-pass" placeholder="********"
+            autocomplete="current-password"
+            class="text-center
+                rounded-md
+                bg-gradient-to-br from-green-800 to-indigo-800
+                text-gray-400
+                shadow shadow-zinc-700
+                hover:shadow-lg hover:shadow-zinc-500">
+    </label>
+    <button type="submit" class="shadow">
+        Signup
+    </button>
+</form>
+{{ end }}

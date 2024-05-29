@@ -4,23 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Min Chat</title>
-    <link rel="icon" type="image/svg+xml" href="icon/favicon.svg">
     <link rel="icon" type="image/svg+xml" href="icon/scarab-bnw.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap">
-    {{ if .LoadLocal }}
-        <script src="/script/htmx.min.1.9.12.js"></script>
-        <script src="/script/htmx.sse.1.9.12.js"></script>
-        <!-- Need to build tailwind to minimize it and apply custom styles -->
-        <script src="/script/tailwindcss.3.4.3.js"></script>
-        <link href="/css/tailwind.css" rel="stylesheet">
-    {{ else }}
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.12/htmx.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.12/ext/sse.min.js"></script>
-        <script src="https://cdn.tailwindcss.com/3.4.3"></script>
-        <link href="/css/tailwind.css" rel="stylesheet">
-    {{ end }}
+    <script src="/script/htmx.min.1.9.12.js"></script>
+    <script src="/script/htmx.sse.1.9.12.js"></script>
+    <!-- Need to build tailwind to minimize it and apply custom styles -->
+    <script src="/script/tailwindcss.3.4.3.js"></script>
+    <link href="/css/tailwind.css" rel="stylesheet">
     <script>
         function escFocus(event) {
             if (event.key === 'Escape') {
@@ -167,7 +159,7 @@
             {{ if .IsAuthorized }}
                 {{ template "left_panel.html" . }}
             {{ else }}
-                {{ template "login_div.html" .LoginTemplate }}
+                {{ template "auth_div.html" . }}
             {{ end }}
         </div>
     </div>
@@ -177,7 +169,10 @@
         w-2/3 
         border-2 border-zinc-700 rounded-lg
         shadow shadow-zinc-900">
-        <div class="open-chat default-transition h-screen overflow-y-auto overflow-x-hidden">
+        <div class="open-chat default-transition h-screen 
+            overflow-y-auto overflow-x-hidden
+            m-2"
+        >
             {{ if .IsAuthorized }}
                 {{ with .OpenChat }}
                     {{ template "chat_div.html" . }}

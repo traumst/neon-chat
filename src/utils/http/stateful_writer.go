@@ -5,6 +5,9 @@ import "net/http"
 type StatefulWriter struct {
 	http.ResponseWriter
 	status int
+	// TODO expand what session can hold
+	// userId   uint
+	// userName string
 }
 
 func StatefulWriterMiddleware(next http.Handler) http.Handler {

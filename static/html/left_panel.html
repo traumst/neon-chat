@@ -25,13 +25,16 @@
         }
     </script>
     <div class="active-user default-transition
-        flex flex-row justify-between
+        flex flex-row justify-end
         p-2
         shadow"
     >
-        {{ template "avatar_div.html" .Avatar }}
-        {{ template "user_div.html" .User }}
-        &nbsp;
+        <div sse-swap="{{ .AvatarChangeEvent }}" hx-swap="innerHTML">
+            {{ template "avatar_div.html" .Avatar }}
+        </div>
+        <div>
+            {{ template "user_div.html" .User }}
+        </div>
         <sub id="logoutButton" 
             title="log out {{ .User.UserName }}"
             hx-trigger="click" 
@@ -93,7 +96,7 @@
         overflow-x-hidden
         overflow-y-auto"
     >
-        <ul sse-swap="{{ .ChatAddEvent }}" 
+        <ul sse-swap="{{ .ChatAddEvent }}, {{ .ChatInviteEvent }}" 
             hx-swap="afterbegin" 
             class="chat-headers default-transition flex flex-col"
         > 
@@ -103,7 +106,7 @@
             {{ end }}
         {{ else }}
             <li id="noChats" 
-                sse-swap="{{ .ChatAddEvent }}" 
+                sse-swap="{{ .ChatAddEvent }}, {{ .ChatInviteEvent }}" 
                 hx-swap="delete" 
                 target="#noChats" 
                 class="h-7 flex flex-grow-0 px-2 py-4"
