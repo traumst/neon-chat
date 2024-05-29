@@ -16,7 +16,7 @@ import (
 // TODO support other types
 const (
 	LocalUserType = a.UserTypeLocal
-	LocalAuthType = a.AuthTypeLocal
+	EmailAuthType = a.AuthTypeEmail
 )
 
 func Login(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
@@ -35,8 +35,8 @@ func Login(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.R
 		return
 	}
 	log.Printf("[%s] Login TRACE authentication check for user[%s] auth[%s]\n",
-		h.GetReqId(r), loginUser, LocalAuthType)
-	user, auth, err := handler.Authenticate(db, loginUser, loginPass, LocalAuthType)
+		h.GetReqId(r), loginUser, EmailAuthType)
+	user, auth, err := handler.Authenticate(db, loginUser, loginPass, EmailAuthType)
 	if err != nil {
 		log.Printf("[%s] Login ERROR unauth user[%s], %s\n", h.GetReqId(r), loginUser, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
@@ -91,14 +91,14 @@ func SignUp(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.
 	signupEmail := utils.Trim(r.FormValue("signup-email"))
 	signupPass := utils.Trim(r.FormValue("signup-pass"))
 	log.Printf("[%s] SignUp TRACE authentication check for user[%s] auth[%s]\n",
-		h.GetReqId(r), signupUser, LocalAuthType)
+		h.GetReqId(r), signupUser, EmailAuthType)
 	if signupUser == "" || signupEmail == "" || signupPass == "" ||
 		len(signupUser) < 4 || len(signupEmail) < 4 || len(signupPass) < 4 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("bad signup credentials"))
 		return
 	}
-	user, auth, _ := handler.Authenticate(db, signupUser, signupPass, LocalAuthType)
+	user, auth, _ := handler.Authenticate(db, signupUser, signupPass, EmailAuthType)
 	if user != nil && user.Status == a.UserStatusActive && auth != nil {
 		log.Printf("[%s] SignUp TRACE signedIn instead of signUp user[%s]\n", h.GetReqId(r), signupUser)
 		h.SetSessionCookie(w, user, auth)
@@ -128,7 +128,7 @@ func SignUp(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.
 		Status: a.UserStatusPending,
 		Salt:   salt,
 	}
-	user, auth, err := handler.Register(db, user, signupPass, LocalAuthType)
+	user, auth, err := handler.Register(db, user, signupPass, EmailAuthType)
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR on register user[%s][%s], %s\n", h.GetReqId(r), signupUser, signupEmail, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
