@@ -26,11 +26,19 @@ func ReqIdMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func DBMiddleware(next http.Handler) http.Handler {
-	log.Printf("DBMiddleware TRACE")
+func LoggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO
-		next.ServeHTTP(w, r)
+		log.Printf("[%s] LoggerMiddleware BEGIN %s %s", h.GetReqId(r), r.Method, r.RequestURI)
+		startTime := time.Now()
+		rec := h.StatefulWriter{ResponseWriter: w}
+
+		next.ServeHTTP(&rec, r)
+		log.Printf("[%s] LoggerMiddleware END %s %s status_code:[%d] in %v",
+			h.GetReqId(r),
+			r.Method,
+			r.RequestURI,
+			rec.Status(),
+			time.Since(startTime))
 	})
 }
 
@@ -48,19 +56,3 @@ func DBMiddleware(next http.Handler) http.Handler {
 // 		next(w, r)
 // 	})
 // }
-
-func LoggerMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("[%s] LoggerMiddleware BEGIN %s %s", h.GetReqId(r), r.Method, r.RequestURI)
-		startTime := time.Now()
-		rec := h.StatefulWriter{ResponseWriter: w}
-
-		next.ServeHTTP(&rec, r)
-		log.Printf("[%s] LoggerMiddleware END %s %s status_code:[%d] in %v",
-			h.GetReqId(r),
-			r.Method,
-			r.RequestURI,
-			rec.Status(),
-			time.Since(startTime))
-	})
-}

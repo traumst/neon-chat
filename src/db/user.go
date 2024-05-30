@@ -42,7 +42,7 @@ func (db *DBConn) AddUser(user *User) (*User, error) {
 	} else if len(user.Salt) <= 0 {
 		return nil, fmt.Errorf("user has no salt")
 	}
-	if !db.IsActive() {
+	if !db.ConnIsActive() {
 		return nil, fmt.Errorf("db is not connected")
 	}
 
@@ -63,7 +63,7 @@ func (db *DBConn) AddUser(user *User) (*User, error) {
 }
 
 func (db *DBConn) DropUser(userId uint) error {
-	if !db.IsActive() {
+	if !db.ConnIsActive() {
 		return fmt.Errorf("db is not connected")
 	}
 	if userId <= 0 {
@@ -128,7 +128,7 @@ func (db *DBConn) UpdateUserName(userId uint, userName string) error {
 	if userId <= 0 {
 		return fmt.Errorf("invalid user id[%d]", userId)
 	}
-	if !db.IsActive() {
+	if !db.ConnIsActive() {
 		return fmt.Errorf("db is not connected")
 	}
 
@@ -150,7 +150,7 @@ func (db *DBConn) UpdateUserStatus(userId uint, userStatus string) error {
 	if userId <= 0 {
 		return fmt.Errorf("invalid user id[%d]", userId)
 	}
-	if !db.IsActive() {
+	if !db.ConnIsActive() {
 		return fmt.Errorf("db is not connected")
 	}
 

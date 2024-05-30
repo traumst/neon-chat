@@ -28,7 +28,7 @@ func (db *DBConn) AuthTableExists() bool {
 }
 
 func (db *DBConn) AddAuth(auth Auth) (*Auth, error) {
-	if !db.IsActive() {
+	if !db.ConnIsActive() {
 		return nil, fmt.Errorf("db is not connected")
 	}
 
