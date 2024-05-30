@@ -1,7 +1,7 @@
 package app
 
 import (
-	"go.chat/src/model/template"
+	"prplchat/src/model/template"
 )
 
 // TODO add flags/permissions mapping

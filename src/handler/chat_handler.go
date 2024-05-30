@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"go.chat/src/model/app"
-	"go.chat/src/model/event"
-	"go.chat/src/model/template"
+	"prplchat/src/model/app"
+	"prplchat/src/model/event"
+	"prplchat/src/model/template"
 )
 
 func chatCreate(conn *Conn, targetChat *app.Chat, author *app.User) error {

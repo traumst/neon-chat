@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 
-	"go.chat/src/db"
-	"go.chat/src/handler"
-	h "go.chat/src/utils/http"
+	"prplchat/src/db"
+	"prplchat/src/handler"
+	h "prplchat/src/utils/http"
 )
 
 func Setup(app *handler.AppState, db *db.DBConn) {

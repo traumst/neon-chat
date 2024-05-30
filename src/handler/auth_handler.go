@@ -7,11 +7,11 @@ import (
 	"sync"
 	"time"
 
-	d "go.chat/src/db"
-	a "go.chat/src/model/app"
-	"go.chat/src/model/template/email"
-	"go.chat/src/utils"
-	h "go.chat/src/utils/http"
+	d "prplchat/src/db"
+	a "prplchat/src/model/app"
+	"prplchat/src/model/template/email"
+	"prplchat/src/utils"
+	h "prplchat/src/utils/http"
 )
 
 func ReadSession(

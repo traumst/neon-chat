@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"go.chat/src/model/app"
-	"go.chat/src/utils"
+	"prplchat/src/model/app"
+	"prplchat/src/utils"
 )
 
 var sessions map[uint]Session = map[uint]Session{}

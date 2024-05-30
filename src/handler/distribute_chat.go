@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"go.chat/src/model/app"
-	"go.chat/src/model/event"
+	"prplchat/src/model/app"
+	"prplchat/src/model/event"
 )
 
 // empty targetUser means all users in chat

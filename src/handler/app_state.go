@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"sync"
 
-	"go.chat/src/db"
-	"go.chat/src/model/app"
-	h "go.chat/src/utils/http"
+	"prplchat/src/db"
+	"prplchat/src/model/app"
+	h "prplchat/src/utils/http"
 )
 
 var ApplicationState AppState

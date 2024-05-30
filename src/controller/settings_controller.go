@@ -4,10 +4,10 @@ import (
 	"log"
 	"net/http"
 
-	d "go.chat/src/db"
-	"go.chat/src/handler"
-	t "go.chat/src/model/template"
-	h "go.chat/src/utils/http"
+	d "prplchat/src/db"
+	"prplchat/src/handler"
+	t "prplchat/src/model/template"
+	h "prplchat/src/utils/http"
 )
 
 func OpenSettings(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {

@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"go.chat/src/controller"
-	"go.chat/src/db"
-	"go.chat/src/handler"
-	"go.chat/src/utils"
+	"prplchat/src/controller"
+	"prplchat/src/db"
+	"prplchat/src/handler"
+	"prplchat/src/utils"
 )
 
 func main() {

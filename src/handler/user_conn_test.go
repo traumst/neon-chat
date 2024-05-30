@@ -9,8 +9,8 @@ import (
 	"sync"
 	"testing"
 
-	"go.chat/src/model/app"
-	h "go.chat/src/utils/http"
+	"prplchat/src/model/app"
+	h "prplchat/src/utils/http"
 )
 
 func TestChannels(t *testing.T) {

@@ -1,4 +1,4 @@
-# MinChat
+# prplchat
 
 Minimalistic chat app built using server-components on go + htmx.
 As simple as: register, create chat rooms, invite other users, chat.
@@ -23,8 +23,8 @@ You should then see output similar to:
 ```
 > sh run.sh
 Running tests
-ok      go.chat/src/handler     (cached)
-ok      go.chat/src/model/app   (cached)
+ok      prplchat/src/handler     (cached)
+ok      prplchat/src/model/app   (cached)
 Starting server...
 2024/05/01 00:07:58 Application is starting...
 ...

@@ -7,13 +7,13 @@ import (
 	"strconv"
 	"sync"
 
-	d "go.chat/src/db"
-	"go.chat/src/handler"
-	a "go.chat/src/model/app"
-	"go.chat/src/model/event"
-	"go.chat/src/model/template"
-	"go.chat/src/utils"
-	h "go.chat/src/utils/http"
+	d "prplchat/src/db"
+	"prplchat/src/handler"
+	a "prplchat/src/model/app"
+	"prplchat/src/model/event"
+	"prplchat/src/model/template"
+	"prplchat/src/utils"
+	h "prplchat/src/utils/http"
 )
 
 func InviteUser(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {

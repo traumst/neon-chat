@@ -5,8 +5,8 @@ import (
 	"log"
 	"sync"
 
-	"go.chat/src/model/app"
-	"go.chat/src/model/event"
+	"prplchat/src/model/app"
+	"prplchat/src/model/event"
 )
 
 func DistributeMsg(

@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"sync"
 
-	d "go.chat/src/db"
-	"go.chat/src/handler"
-	h "go.chat/src/utils/http"
+	d "prplchat/src/db"
+	"prplchat/src/handler"
+	h "prplchat/src/utils/http"
 )
 
 func PollUpdates(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {

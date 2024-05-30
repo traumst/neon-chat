@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"html/template"
 
-	"go.chat/src/model/event"
+	"prplchat/src/model/event"
 )
 
 type HomeTemplate struct {

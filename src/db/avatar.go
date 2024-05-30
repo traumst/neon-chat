@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"go.chat/src/utils"
+	"prplchat/src/utils"
 )
 
 type Avatar struct {

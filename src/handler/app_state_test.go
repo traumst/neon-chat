@@ -4,8 +4,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"go.chat/src/model/app"
-	h "go.chat/src/utils/http"
+	"prplchat/src/model/app"
+	h "prplchat/src/utils/http"
 )
 
 var app1 = &ApplicationState

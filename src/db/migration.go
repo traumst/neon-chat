@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"go.chat/src/utils"
+	"prplchat/src/utils"
 )
 
 type Migration struct {

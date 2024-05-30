@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	h "go.chat/src/utils/http"
+	h "prplchat/src/utils/http"
 )
 
 type Middleware func(http.Handler) http.Handler

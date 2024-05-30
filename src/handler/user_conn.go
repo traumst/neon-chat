@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"sync"
 
-	"go.chat/src/model/app"
-	"go.chat/src/model/event"
-	"go.chat/src/utils"
-	h "go.chat/src/utils/http"
+	"prplchat/src/model/app"
+	"prplchat/src/model/event"
+	"prplchat/src/utils"
+	h "prplchat/src/utils/http"
 )
 
 type Conn struct {

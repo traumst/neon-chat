@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	t "go.chat/src/model/template"
+	t "prplchat/src/model/template"
 )
 
 type Chat struct {

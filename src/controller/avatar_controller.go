@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"go.chat/src/db"
-	"go.chat/src/handler"
-	a "go.chat/src/model/app"
-	"go.chat/src/model/event"
-	"go.chat/src/utils"
-	h "go.chat/src/utils/http"
+	"prplchat/src/db"
+	"prplchat/src/handler"
+	a "prplchat/src/model/app"
+	"prplchat/src/model/event"
+	"prplchat/src/utils"
+	h "prplchat/src/utils/http"
 )
 
 const MaxUploadSize int64 = 10 * utils.KB

@@ -6,14 +6,13 @@ import (
 	"net/http"
 	"time"
 
-	d "go.chat/src/db"
-	"go.chat/src/handler"
-	a "go.chat/src/model/app"
-	"go.chat/src/utils"
-	h "go.chat/src/utils/http"
+	d "prplchat/src/db"
+	"prplchat/src/handler"
+	a "prplchat/src/model/app"
+	"prplchat/src/utils"
+	h "prplchat/src/utils/http"
 )
 
-// TODO support other types
 const (
 	LocalUserType = a.UserTypeLocal
 	EmailAuthType = a.AuthTypeEmail

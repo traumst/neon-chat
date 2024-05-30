@@ -8,12 +8,12 @@ import (
 	"strings"
 	"sync"
 
-	d "go.chat/src/db"
-	"go.chat/src/handler"
-	"go.chat/src/model/event"
-	"go.chat/src/model/template"
-	"go.chat/src/utils"
-	h "go.chat/src/utils/http"
+	d "prplchat/src/db"
+	"prplchat/src/handler"
+	"prplchat/src/model/event"
+	"prplchat/src/model/template"
+	"prplchat/src/utils"
+	h "prplchat/src/utils/http"
 )
 
 func Welcome(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
