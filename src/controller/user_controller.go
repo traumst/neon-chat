@@ -120,7 +120,7 @@ func ExpelUser(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *ht
 		// 	Body:   "Your session has probably expired",
 		// 	Footer: "Reload the page and try again",
 		// }
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	chatId, err := strconv.Atoi(r.FormValue("chatid"))
@@ -210,7 +210,7 @@ func LeaveChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *ht
 		// 	Body:   "Your session has probably expired",
 		// 	Footer: "Reload the page and try again",
 		// }
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	chatId, err := strconv.Atoi(r.FormValue("chatid"))

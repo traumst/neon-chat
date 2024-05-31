@@ -71,7 +71,7 @@ func Logout(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.
 	user, err := handler.ReadSession(app, db, w, r)
 	if user == nil {
 		log.Printf("[%s] Logout INFO user is not authorized, %s\n", h.GetReqId(r), err.Error())
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	h.ClearSessionCookie(w, user.Id)
@@ -101,7 +101,8 @@ func SignUp(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.
 	if user != nil && user.Status == a.UserStatusActive && auth != nil {
 		log.Printf("[%s] SignUp TRACE signedIn instead of signUp user[%s]\n", h.GetReqId(r), signupUser)
 		h.SetSessionCookie(w, user, auth)
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 	if user != nil {
@@ -237,5 +238,6 @@ func ConfirmEmail(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r 
 	// 	Body:   "Your user name is " + user.Name + " until you decide to change it",
 	// 	Footer: "Please, login using your signup credentials",
 	// }
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Header.Add(w.Header(), "HX-Refresh", "true")
+	w.WriteHeader(http.StatusOK)
 }

@@ -50,7 +50,7 @@ func AddAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *h
 		// 	Body:   "Your session has probably expired",
 		// 	Footer: "Reload the page and try again",
 		// }
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	err = r.ParseMultipartForm(MaxUploadSize)
@@ -143,7 +143,7 @@ func GetAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *h
 		// 	Footer: "Reload the page and try again",
 		// }
 
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	dbAvatar, err := db.GetAvatar(user.Id)

@@ -55,7 +55,7 @@ func OpenChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *htt
 		// 	Body:   "Your session has probably expired",
 		// 	Footer: "Reload the page and try again",
 		// }
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	path := strings.Split(r.URL.Path, "/")
@@ -173,7 +173,7 @@ func CloseChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *ht
 		// 	Footer: "Reload the page and try again",
 		// }
 
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	chatIdStr := r.PostFormValue("chatid")
@@ -221,7 +221,7 @@ func DeleteChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 		// 	Footer: "Reload the page and try again",
 		// }
 
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	chatId := r.PostFormValue("chatid")

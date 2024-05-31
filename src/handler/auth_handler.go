@@ -63,7 +63,7 @@ func Authenticate(
 	}
 	user, err := db.SearchUser(username)
 	if err != nil || user == nil || user.Id <= 0 || len(user.Salt) <= 0 {
-		log.Printf("Authenticate TRACE user[%s] not found, %s\n", username, err)
+		log.Printf("Authenticate TRACE user[%s] not found, result[%v], %s\n", username, user, err)
 		return nil, nil, nil
 	}
 	appUser := UserFromDB(*user)

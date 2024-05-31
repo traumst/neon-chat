@@ -80,24 +80,24 @@ func (db *DBConn) DropUser(userId uint) error {
 	return nil
 }
 
-func (db *DBConn) SearchUser(name string) (*User, error) {
+func (db *DBConn) SearchUser(login string) (*User, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
 	if !db.isConn || !db.isInit {
 		return nil, fmt.Errorf("db is not connected")
 	}
-	if name == "" {
-		return nil, fmt.Errorf("name was not provided")
+	if login == "" {
+		return nil, fmt.Errorf("login name/email was not provided")
 	}
 
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
 	var user User
-	err := db.conn.Get(&user, `SELECT * FROM users WHERE name = ?`, name)
+	err := db.conn.Get(&user, `SELECT * FROM users WHERE name = ? or email = ?`, login, login)
 	if err != nil {
-		return nil, fmt.Errorf("user[%s] not found: %s", name, err)
+		return nil, fmt.Errorf("user[%s] not found: %s", login, err)
 	}
 	return &user, err
 }

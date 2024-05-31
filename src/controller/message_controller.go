@@ -29,7 +29,7 @@ func AddMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 		// 	Footer: "Reload the page and try again",
 		// }
 
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	log.Printf("[%s] AddMessage TRACE parsing input\n", h.GetReqId(r))
@@ -102,7 +102,7 @@ func DeleteMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r
 		// 	Footer: "Reload the page and try again",
 		// }
 
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	if r.Method != "POST" {

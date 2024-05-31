@@ -1,7 +1,7 @@
 # prplchat
 
 Minimalistic chat app built using server-components on go + htmx.
-As simple as: register, create chat rooms, invite other users, chat.
+Default colorscheme is a personal preference, with light/dark mode on the horizon.
 This app is being build as an excercise for me to 
 - learn go
 - further explore htmx abilities
@@ -117,6 +117,13 @@ bugs and refactor
 
 ### *Security Considerations*
 - Validate nd sanitize all incoming messages to prevent cross-site scripting (XSS) attacks.
+
+### *Mini Games*
+- embed games into chat, to start
+    - XO
+    - Battle Ships
+    - Chess
+    - Go
 
 ### *GPTs*:
 - Consider for content moderation assistance
