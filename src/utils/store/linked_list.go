@@ -1,4 +1,4 @@
-package utils
+package store
 
 import (
 	"fmt"
@@ -35,7 +35,7 @@ func (ll *DoublyLinkedList) Count() int {
 func (ll *DoublyLinkedList) Add(id uint, value string) (*Node, error) {
 	ll.mu.Lock()
 	defer ll.mu.Unlock()
-	if ll.size >= ll.count {
+	if ll.count >= ll.size {
 		return nil, fmt.Errorf("LinkedList is full")
 	}
 	new := Node{id: id, value: value, prev: nil, next: nil}
