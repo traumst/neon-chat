@@ -8,6 +8,7 @@ import (
 
 	"prplchat/src/db"
 	"prplchat/src/model/app"
+	"prplchat/src/utils"
 	h "prplchat/src/utils/http"
 )
 
@@ -19,22 +20,10 @@ type AppState struct {
 	isInit   bool
 	chats    app.ChatList
 	userConn UserConn
-	config   AppConfig
+	config   utils.Config
 }
 
-type AppConfig struct {
-	LoadLocal bool
-	Smtp      SmtpConfig
-}
-
-type SmtpConfig struct {
-	User string
-	Pass string
-	Host string
-	Port string
-}
-
-func (state *AppState) Init(db *db.DBConn, config AppConfig) {
+func (state *AppState) Init(db *db.DBConn, config utils.Config) {
 	ApplicationState = AppState{
 		isInit:   true,
 		chats:    app.ChatList{},
@@ -47,7 +36,7 @@ func (state *AppState) LoadLocal() bool {
 	return state.config.LoadLocal
 }
 
-func (state *AppState) SmtpConfig() SmtpConfig {
+func (state *AppState) SmtpConfig() utils.SmtpConfig {
 	return state.config.Smtp
 }
 

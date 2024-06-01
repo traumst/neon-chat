@@ -50,9 +50,9 @@ func main() {
 
 	log.Println("init app state...")
 	app := &handler.ApplicationState
-	app.Init(db, handler.AppConfig{
+	app.Init(db, utils.Config{
 		LoadLocal: config.LoadLocal,
-		Smtp: handler.SmtpConfig{
+		Smtp: utils.SmtpConfig{
 			User: config.Smtp.User,
 			Pass: config.Smtp.Pass,
 			Host: config.Smtp.Host,
