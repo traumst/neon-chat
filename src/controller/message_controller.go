@@ -41,7 +41,7 @@ func AddMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 		return
 	}
 	msg := r.FormValue("msg")
-	msg = utils.TrimSpaces(msg)
+	msg = utils.ReplaceWithSingleSpace(msg)
 	if msg == "" || len(msg) < 1 {
 		log.Printf("[%s] AddMessage WARN \n", h.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)

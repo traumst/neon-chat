@@ -2,10 +2,9 @@ package handler
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
-	"strings"
 	"sync"
 	"testing"
 
@@ -49,13 +48,11 @@ func TestChannels(t *testing.T) {
 
 func TestIsConnEmpty(t *testing.T) {
 	t.Logf("TestIsConnEmpty started")
-	uc := make(UserConn, 0)
+	uc := make(ActiveConnections, 0)
 	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeLocal)}
-	isConn, conn := uc.IsConn(user.Id)
+	isConn := uc.IsConn(user.Id)
 	if isConn {
-		t.Errorf("TestIsConnEmpty user was not supposed to be conn [%+v]", conn)
-	} else if conn != nil {
-		t.Errorf("TestIsConnEmpty expected empty, got [%+v]", conn)
+		t.Errorf("TestIsConnEmpty user was not supposed to be connected")
 	}
 }
 
@@ -63,14 +60,12 @@ func TestIsConn(t *testing.T) {
 	t.Logf("TestIsConn started")
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	w := httptest.NewRecorder()
-	uc := UserConn{}
+	uc := ActiveConnections{}
 	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeLocal)}
 	uc.Add(&user, "test_origin", w, *r)
-	isConn, conn := uc.IsConn(user.Id)
+	isConn := uc.IsConn(user.Id)
 	if !isConn {
 		t.Errorf("TestIsConn user was supposed to be conn")
-	} else if conn == nil {
-		t.Errorf("TestIsConn expected to have connection")
 	}
 }
 
@@ -78,7 +73,7 @@ func TestAdd(t *testing.T) {
 	t.Logf("TestAdd started")
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	w := httptest.NewRecorder()
-	uc := UserConn{}
+	uc := ActiveConnections{}
 	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeLocal)}
 	conn := uc.Add(&user, "test_origin", w, *r)
 	if conn == nil {
@@ -90,16 +85,11 @@ func TestAdd(t *testing.T) {
 
 func TestGetEmpty(t *testing.T) {
 	t.Logf("TestGetEmpty started")
-	uc := UserConn{}
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeLocal)}
-	conn, err := uc.Get(user.Id)
-	if conn != nil {
-		t.Errorf("TestGetEmpty expected empty, got [%+v]", conn)
-	} else if err == nil {
-		t.Errorf("TestGetEmpty expected error, got NIL")
-	} else if !strings.Contains(err.Error(), "not connected") ||
-		!strings.Contains(err.Error(), strconv.FormatUint(uint64(user.Id), 10)) {
-		t.Errorf("TestGetEmpty unexpected error [%s]", err)
+	uc := ActiveConnections{}
+	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeLocal)}
+	conns := uc.Get(user.Id)
+	if len(conns) != 0 {
+		t.Errorf("TestGetEmpty expected empty, got [%+v]", conns)
 	}
 }
 
@@ -109,28 +99,29 @@ func TestGet(t *testing.T) {
 	reqId := "test-req-id"
 	h.SetReqId(r, &reqId)
 	w := httptest.NewRecorder()
-	uc := UserConn{}
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeLocal)}
+	uc := ActiveConnections{}
+	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeLocal)}
 	conn := uc.Add(&user, "test_origin", w, *r)
 	if conn == nil {
 		t.Errorf("TestGet expected conn, got NIL")
 	}
-	conn2, err := uc.Get(user.Id)
-	if conn2 == nil {
-		t.Errorf("TestGetEmpty expected conn2, got [%+v]", conn)
-	} else if err != nil {
-		t.Errorf("TestGetEmpty unexpected exception [%s]", err)
-	} else if conn.User != conn2.User ||
-		conn.Origin != conn2.Origin ||
-		conn.In != conn2.In ||
-		conn.Writer != conn2.Writer {
-		t.Errorf("TestGetEmpty expected equality, got [%+v], [%+v]", conn, conn2)
+	conn2 := uc.Get(user.Id)
+	if len(conn2) == 0 {
+		t.Errorf("TestGetEmpty expected conn2, got [%+v]", conn2)
+	}
+	for _, c := range conn2 {
+		if conn.User != c.User ||
+			conn.Origin != c.Origin ||
+			conn.In != c.In ||
+			conn.Writer != c.Writer {
+			t.Errorf("TestGetEmpty expected equality, got [%+v], [%+v]", conn, conn2)
+		}
 	}
 }
 
 func TestDropEmpty(t *testing.T) {
 	t.Logf("TestDropEmpty started")
-	uc := UserConn{}
+	uc := ActiveConnections{}
 	conn := Conn{}
 	uc.Drop(&conn)
 }
@@ -144,25 +135,20 @@ func TestDrop(t *testing.T) {
 		t.Fatal(err)
 	}
 	w := httptest.NewRecorder()
-	uc := make(UserConn, 0)
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeLocal)}
+	uc := make(ActiveConnections, 0)
+	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeLocal)}
 	addedConn := uc.Add(&user, "test_origin", w, *r)
 	if addedConn == nil {
 		t.Errorf("failed to add conn")
 	}
-	conn, err := uc.Get(user.Id)
-	if err != nil || conn == nil {
+	conns := uc.Get(user.Id)
+	if len(conns) == 0 {
 		t.Errorf("TestDrop unexpected error, %s", err)
 	}
-	uc.Drop(conn)
-	conn, err = uc.Get(user.Id)
-	if conn != nil {
-		t.Errorf("TestDrop expected empty, got [%+v]", conn)
-	} else if err == nil {
-		t.Errorf("TestDrop expected error, got NIL")
-	} else if !strings.Contains(err.Error(), "not connected") ||
-		!strings.Contains(err.Error(), strconv.FormatUint(uint64(user.Id), 10)) {
-		t.Errorf("TestDrop unexpected error [%s]", err)
+	uc.Drop(conns[0])
+	conns = uc.Get(user.Id)
+	if len(conns) != 0 {
+		t.Errorf("TestDrop expected empty, got [%+v]", conns)
 	}
 }
 
@@ -170,8 +156,8 @@ func TestUserConns(t *testing.T) {
 	t.Logf("TestUserConns started")
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	w := httptest.NewRecorder()
-	uc := UserConn{}
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeLocal)}
+	uc := ActiveConnections{}
+	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeLocal)}
 	conn1 := uc.Add(&user, "test_origin_1", w, *r)
 	if conn1 == nil {
 		t.Errorf("TestUserConns expected conn1, got NIL")
@@ -187,7 +173,7 @@ func TestUserConns(t *testing.T) {
 		t.Errorf("TestUserConns expected conn3, got NIL")
 	}
 
-	conns := uc.userConns(user2.Id)
+	conns := uc[user2.Id]
 	if len(conns) != 1 {
 		t.Errorf("TestUserConns expected 1 conn, got [%d]", len(conns))
 	} else if conns[0].Id != conn2.Id ||

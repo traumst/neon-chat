@@ -3,14 +3,15 @@ package utils
 import "strings"
 
 // applies all other trims
-func Trim(s string) string {
-	s = TrimSpaces(s)
-	s = TrimSpecial(s)
+func SanitizeInput(s string) string {
+	s = ReplaceWithSingleSpace(s)
+	s = RemoveSpecialChars(s)
+	s = strings.Trim(s, " ")
 	return s
 }
 
 // replaces \s\s, \t and \n to single \s
-func TrimSpaces(s string) string {
+func ReplaceWithSingleSpace(s string) string {
 	if len(s) <= 0 {
 		return ""
 	}
@@ -23,7 +24,7 @@ func TrimSpaces(s string) string {
 	return res
 }
 
-func TrimSpecial(s string) string {
+func RemoveSpecialChars(s string) string {
 	if len(s) <= 0 {
 		return ""
 	}

@@ -22,7 +22,7 @@ func PollUpdates(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *
 		return
 	}
 	log.Printf("[%s] PollUpdates TRACE IN polling updates for user[%d]\n", h.GetReqId(r), user.Id)
-	conn := app.ReplaceConn(w, *r, user)
+	conn := app.AddConn(w, *r, user)
 	if conn == nil {
 		log.Printf("[%s] PollUpdates ERROR conn not be established for user[%d]\n", h.GetReqId(r), user.Id)
 		return

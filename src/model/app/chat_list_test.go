@@ -1,6 +1,9 @@
 package app
 
-import "testing"
+import (
+	"math/rand"
+	"testing"
+)
 
 func TestInit(t *testing.T) {
 	t.Logf("TestAddChat started")
@@ -68,7 +71,7 @@ func TestOpenChat(t *testing.T) {
 func TestGetChat(t *testing.T) {
 	t.Logf("TestAddChat started")
 	cl := ChatList{}
-	user := User{Id: 1, Name: "John", Type: UserType(UserTypeLocal)}
+	user := User{Id: uint(rand.Uint32()), Name: "John", Type: UserType(UserTypeLocal)}
 	chatId := cl.AddChat(&user, "test-chat")
 	if chatId != 0 {
 		t.Errorf("TestAddChat expected chatId 0, got %d", chatId)
@@ -122,7 +125,7 @@ func TestGetOpenChat(t *testing.T) {
 func TestGetChats(t *testing.T) {
 	t.Logf("TestGetChats started")
 	cl := ChatList{}
-	user := User{Id: 1, Name: "John", Type: UserType(UserTypeLocal)}
+	user := User{Id: uint(rand.Uint32()), Name: "John", Type: UserType(UserTypeLocal)}
 	_ = cl.AddChat(&user, "test-chat")
 	_ = cl.AddChat(&user, "test-chat2")
 	_ = cl.AddChat(&user, "test-chat3")
@@ -217,13 +220,13 @@ func TestDeleteChatNotOwner(t *testing.T) {
 func TestInviteUser(t *testing.T) {
 	t.Logf("TestInviteUserEmpty started")
 	cl := ChatList{}
-	owner := User{Id: 1, Name: "John", Type: UserType(UserTypeLocal)}
+	owner := User{Id: uint(rand.Uint32()), Name: "John", Type: UserType(UserTypeLocal)}
 	chatId := cl.AddChat(&owner, "test-chat")
 	if chatId != 0 {
 		t.Errorf("TestAddChat expected chatId 0, got %d", chatId)
 		return
 	}
-	invitee := User{Id: 2, Name: "Jill", Type: UserType(UserTypeLocal)}
+	invitee := User{Id: uint(rand.Uint32()), Name: "Jill", Type: UserType(UserTypeLocal)}
 	err := cl.InviteUser(owner.Id, chatId, &invitee)
 	if err != nil {
 		t.Errorf("TestInviteUserEmpty fail to invite user [%v]", invitee)

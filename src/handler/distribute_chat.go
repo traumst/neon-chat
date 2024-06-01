@@ -15,7 +15,7 @@ func DistributeChat(
 	author *app.User, // who made the change
 	targetUser *app.User, // who to inform, nil for all users in chat
 	subjectUser *app.User, // which chat changed, nil for every user in chat
-	updateType event.UpdateType,
+	updateType event.EventType,
 ) error {
 	if author == nil {
 		return fmt.Errorf("author is nil")
@@ -52,7 +52,7 @@ func distributeToUsers(
 	author *app.User,
 	targetUsers []*app.User,
 	subjectUser *app.User,
-	updateType event.UpdateType,
+	updateType event.EventType,
 ) error {
 	var errors []string
 	for _, targetUser := range targetUsers {
@@ -83,50 +83,60 @@ func distributeChatToUser(
 	targetUser *app.User,
 	targetChat *app.Chat,
 	subjectUser *app.User,
-	updateType event.UpdateType,
+	updateType event.EventType,
 ) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panicked: %v", r)
 		}
 	}()
-
 	if author == nil {
 		return fmt.Errorf("author is nil")
 	}
 	if targetChat == nil {
 		return fmt.Errorf("targetChat is nil")
 	}
-
-	var conn *Conn
-	conn, err = state.GetConn(targetUser.Id)
-	if err != nil {
-		return err
-	}
-	if conn.User.Id != targetUser.Id {
-		return fmt.Errorf("user[%d] does not own conn[%v], user[%d] does", targetUser.Id, conn.Origin, conn.User.Id)
-	}
-
+	var lmd FuncPerConn
 	switch updateType {
 	case event.ChatAdd:
-		return chatCreate(conn, targetChat, author)
-
+		lmd = func(conn *Conn) error {
+			return chatCreate(conn, targetChat, author)
+		}
 	case event.ChatInvite:
-		return chatInvite(conn, targetChat, author.Id, subjectUser)
-
+		lmd = func(conn *Conn) error {
+			return chatInvite(conn, targetChat, author.Id, subjectUser)
+		}
 	case event.ChatDrop:
-		return chatDelete(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser.Id)
-
+		lmd = func(conn *Conn) error {
+			return chatDelete(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser.Id)
+		}
 	case event.ChatExpel:
-		return chatExpel(conn, targetChat.Id, targetChat.Owner.Id, author.Id, subjectUser.Id)
-
+		lmd = func(conn *Conn) error {
+			return chatExpel(conn, targetChat.Id, targetChat.Owner.Id, author.Id, subjectUser.Id)
+		}
 	case event.ChatLeave:
-		return chatLeave(conn, targetChat.Id, targetChat.Owner.Id, author.Id, subjectUser.Id)
-
+		lmd = func(conn *Conn) error {
+			return chatLeave(conn, targetChat.Id, targetChat.Owner.Id, author.Id, subjectUser.Id)
+		}
 	case event.ChatClose:
-		return chatClose(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser)
-
+		lmd = func(conn *Conn) error {
+			return chatClose(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser)
+		}
 	default:
 		return fmt.Errorf("unknown event type[%v]", updateType)
 	}
+	conns := state.GetConn(targetUser.Id)
+	for _, conn := range conns {
+		connerr := lmd(conn)
+		if connerr != nil {
+			log.Printf("distributeChatToUser ERROR failed to send update to user[%d], err[%s]\n",
+				targetUser.Id, connerr)
+			if err == nil {
+				err = connerr
+			} else {
+				err = fmt.Errorf("%s, %s", err.Error(), connerr.Error())
+			}
+		}
+	}
+	return err
 }

@@ -39,8 +39,8 @@ func InviteUser(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 		return
 	}
 	inviteeName := r.FormValue("invitee")
-	inviteeName = utils.TrimSpaces(inviteeName)
-	inviteeName = utils.TrimSpecial(inviteeName)
+	inviteeName = utils.ReplaceWithSingleSpace(inviteeName)
+	inviteeName = utils.RemoveSpecialChars(inviteeName)
 	if inviteeName == "" || len(inviteeName) < 4 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Bad invitee name"))

@@ -25,8 +25,8 @@ func Login(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.R
 		w.Write([]byte("action not allowed"))
 		return
 	}
-	loginUser := utils.Trim(r.FormValue("login-user"))
-	loginPass := utils.Trim(r.FormValue("login-pass"))
+	loginUser := utils.SanitizeInput(r.FormValue("login-user"))
+	loginPass := utils.SanitizeInput(r.FormValue("login-pass"))
 	if loginUser == "" || loginPass == "" || len(loginUser) < 4 || len(loginPass) < 4 {
 		log.Printf("[%s] Login TRACE empty user[%s]", h.GetReqId(r), loginUser)
 		w.WriteHeader(http.StatusBadRequest)
@@ -86,9 +86,9 @@ func SignUp(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.
 		w.Write([]byte("This shouldn't happen"))
 		return
 	}
-	signupUser := utils.Trim(r.FormValue("signup-user"))
-	signupEmail := utils.Trim(r.FormValue("signup-email"))
-	signupPass := utils.Trim(r.FormValue("signup-pass"))
+	signupUser := utils.SanitizeInput(r.FormValue("signup-user"))
+	signupEmail := utils.SanitizeInput(r.FormValue("signup-email"))
+	signupPass := utils.SanitizeInput(r.FormValue("signup-pass"))
 	log.Printf("[%s] SignUp TRACE authentication check for user[%s] auth[%s]\n",
 		h.GetReqId(r), signupUser, EmailAuthType)
 	if signupUser == "" || signupEmail == "" || signupPass == "" ||

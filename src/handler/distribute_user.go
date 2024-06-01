@@ -13,7 +13,7 @@ func DistributeUserChange(
 	state *AppState,
 	//TODO targetUser *app.User, // who to inform, nil for all users
 	subjectUser *app.User, // which user changed, nil for every user in chat
-	updateType event.UpdateType,
+	updateType event.EventType,
 ) error {
 	if subjectUser == nil {
 		return fmt.Errorf("subject user is nil")
@@ -32,28 +32,35 @@ func distributeUpdateOfUser(
 	state *AppState,
 	targetUser *app.User,
 	subjectUser *app.User,
-	updateType event.UpdateType,
+	updateType event.EventType,
 ) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panicked: %v", r)
 		}
 	}()
-
-	var conn *Conn
-	conn, err = state.GetConn(targetUser.Id)
-	if err != nil {
-		return err
-	}
-	if conn.User.Id != targetUser.Id {
-		return fmt.Errorf("user[%d] does not own conn[%v], user[%d] does", targetUser.Id, conn.Origin, conn.User.Id)
-	}
+	var lmd FuncPerConn
 	switch updateType {
 	case event.UserChange:
-		return userNameChanged(conn, subjectUser)
+		lmd = func(conn *Conn) error {
+			return userNameChanged(conn, subjectUser)
+		}
 	default:
 		return fmt.Errorf("unknown event type[%v]", updateType)
 	}
+	conns := state.GetConn(targetUser.Id)
+	for _, conn := range conns {
+		if conn.User.Id != targetUser.Id {
+			return fmt.Errorf("user[%d] does not own conn[%v], user[%d] does", targetUser.Id, conn.Origin, conn.User.Id)
+		}
+		connerr := lmd(conn)
+		if err == nil {
+			err = connerr
+		} else {
+			err = fmt.Errorf("%s, %s", err.Error(), connerr.Error())
+		}
+	}
+	return err
 }
 
 func userNameChanged(conn *Conn, subject *app.User) error {
@@ -66,7 +73,7 @@ func userNameChanged(conn *Conn, subject *app.User) error {
 	if err != nil {
 		return fmt.Errorf("failed to template user")
 	}
-	conn.In <- event.LiveUpdate{
+	conn.In <- event.LiveEvent{
 		Event:    event.UserChange,
 		ChatId:   -2,
 		UserId:   subject.Id,

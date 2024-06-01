@@ -19,7 +19,7 @@ type AppState struct {
 	mu       sync.Mutex
 	isInit   bool
 	chats    app.ChatList
-	userConn UserConn
+	userConn ActiveConnections
 	config   utils.Config
 }
 
@@ -27,7 +27,7 @@ func (state *AppState) Init(db *db.DBConn, config utils.Config) {
 	ApplicationState = AppState{
 		isInit:   true,
 		chats:    app.ChatList{},
-		userConn: make(UserConn, 0),
+		userConn: make(ActiveConnections, 0),
 		config:   config,
 	}
 }
@@ -41,31 +41,20 @@ func (state *AppState) SmtpConfig() utils.SmtpConfig {
 }
 
 // CONN
-func (state *AppState) ReplaceConn(w http.ResponseWriter, r http.Request, user *app.User) *Conn {
-	conn, err := state.GetConn(user.Id)
-	for err == nil && conn != nil {
-		log.Printf("[%s] AppState.ReplaceConn WARN drop old conn to user[%d]\n", h.GetReqId(&r), user.Id)
-		state.DropConn(conn)
-		conn, err = state.GetConn(user.Id)
-	}
-
-	return state.addConn(w, r, user)
-}
-
-func (state *AppState) addConn(w http.ResponseWriter, r http.Request, user *app.User) *Conn {
+func (state *AppState) AddConn(w http.ResponseWriter, r http.Request, user *app.User) *Conn {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
 	if state.userConn == nil {
 		log.Printf("[%s] AppState.AddConn TRACE init UserConn\n", h.GetReqId(&r))
-		state.userConn = make(UserConn, 0)
+		state.userConn = make(ActiveConnections, 0)
 	}
 
 	log.Printf("[%s] AppState.AddConn TRACE add conn for user[%d]\n", h.GetReqId(&r), user.Id)
 	return state.userConn.Add(user, h.GetReqId(&r), w, r)
 }
 
-func (state *AppState) GetConn(userId uint) (*Conn, error) {
+func (state *AppState) GetConn(userId uint) []*Conn {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 

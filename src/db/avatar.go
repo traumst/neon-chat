@@ -36,8 +36,8 @@ func (db *DBConn) AddAvatar(userId uint, title string, image []byte, mime string
 	if userId <= 0 {
 		return nil, fmt.Errorf("avatar must have user id")
 	}
-	title = utils.TrimSpaces(title)
-	title = utils.TrimSpecial(title)
+	title = utils.ReplaceWithSingleSpace(title)
+	title = utils.RemoveSpecialChars(title)
 	size := len(image)
 	if size <= 0 {
 		return nil, fmt.Errorf("avatar requires an image")

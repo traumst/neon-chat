@@ -14,7 +14,7 @@ func DistributeMsg(
 	chat *app.Chat,
 	authorId uint,
 	msg *app.Message,
-	updateType event.UpdateType,
+	updateType event.EventType,
 ) error {
 	// have to get users by owner - author may have been removed
 	users, err := chat.GetUsers(chat.Owner.Id)
@@ -62,7 +62,7 @@ func distributeMsgToUser(
 	msgId int,
 	userId uint,
 	authorId uint,
-	updateType event.UpdateType,
+	updateType event.EventType,
 	data string,
 ) error {
 	log.Printf("distributeMsgToUser TRACE user[%d] chat[%d] event[%v]\n", userId, chatId, updateType)
@@ -76,31 +76,24 @@ func distributeMsgToUser(
 			userId, openChat.Id, chatId)
 		return nil
 	}
-
-	conn, err := state.GetConn(userId)
-	if err != nil {
-		log.Printf("distributeMsgToUser INFO user[%d] not connected, err:%s", userId, err.Error())
-		return nil
-	}
-
-	msg := event.LiveUpdate{
+	msg := event.LiveEvent{
 		Event:    updateType,
 		ChatId:   chatId,
 		MsgId:    msgId,
 		AuthorId: authorId,
 		UserId:   userId,
 	}
-
 	switch updateType {
 	case event.MessageAdd:
 		msg.Data = data
-		conn.In <- msg
-		return nil
 	case event.MessageDrop:
 		msg.Data = "[deletedM]"
-		conn.In <- msg
-		return nil
 	default:
 		return fmt.Errorf("unknown event type: %v", updateType)
 	}
+	conns := state.GetConn(userId)
+	for _, conn := range conns {
+		conn.In <- msg
+	}
+	return nil
 }

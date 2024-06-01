@@ -24,7 +24,7 @@ func chatCreate(conn *Conn, targetChat *app.Chat, author *app.User) error {
 	if err != nil {
 		return err
 	}
-	conn.In <- event.LiveUpdate{
+	conn.In <- event.LiveEvent{
 		Event:    event.ChatAdd,
 		ChatId:   targetChat.Id,
 		UserId:   author.Id,
@@ -53,7 +53,7 @@ func chatInvite(conn *Conn, targetChat *app.Chat, authorId uint, subject *app.Us
 	if err != nil {
 		return err
 	}
-	conn.In <- event.LiveUpdate{
+	conn.In <- event.LiveEvent{
 		Event:    event.ChatInvite,
 		ChatId:   targetChat.Id,
 		UserId:   subject.Id,
@@ -71,7 +71,7 @@ func chatExpel(conn *Conn, chatId int, ownerId uint, authorId uint, subjectId ui
 		return fmt.Errorf("author[%d] is not allowed to expel user[%d] from chat[%d]",
 			authorId, subjectId, chatId)
 	}
-	conn.In <- event.LiveUpdate{
+	conn.In <- event.LiveEvent{
 		Event:    event.ChatExpel,
 		ChatId:   chatId,
 		UserId:   subjectId,
@@ -89,7 +89,7 @@ func chatLeave(conn *Conn, chatId int, ownerId uint, authorId uint, subjectId ui
 		return fmt.Errorf("author[%d] is not allowed to leave chat[%d] for user[%d]",
 			authorId, chatId, subjectId)
 	}
-	conn.In <- event.LiveUpdate{
+	conn.In <- event.LiveEvent{
 		Event:    event.ChatLeave,
 		ChatId:   chatId,
 		UserId:   subjectId,
@@ -110,7 +110,7 @@ func chatDelete(conn *Conn, chatId int, ownerId uint, authorId uint, targetId ui
 	if targetId != 0 && conn.User.Id != targetId {
 		return fmt.Errorf("chatDelete conn[%s] does not belong to user[%d]", conn.Origin, targetId)
 	}
-	conn.In <- event.LiveUpdate{
+	conn.In <- event.LiveEvent{
 		Event:    event.ChatDrop,
 		ChatId:   chatId,
 		UserId:   targetId,
@@ -135,7 +135,7 @@ func chatClose(conn *Conn, chatId int, ownerId uint, authorId uint, target *app.
 	if err != nil {
 		return err
 	}
-	conn.In <- event.LiveUpdate{
+	conn.In <- event.LiveEvent{
 		Event:    event.ChatClose,
 		ChatId:   chatId,
 		UserId:   target.Id,
