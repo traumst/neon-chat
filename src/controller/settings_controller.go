@@ -92,7 +92,3 @@ func CloseSettings(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }
-
-func ChangeAvatar(app *handler.AppState, w http.ResponseWriter, r *http.Request) {
-
-}
