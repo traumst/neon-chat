@@ -1,5 +1,5 @@
 echo "Running tests"
-go test ./...
+time go test ./...
 
 #echo "Dropping db file..."
 # rm chat.db
