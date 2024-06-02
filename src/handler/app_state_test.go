@@ -15,7 +15,7 @@ func TestAddConn(t *testing.T) {
 	t.Logf("TestAddConn started")
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/some-route", nil)
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeLocal)}
+	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeBasic)}
 	conn1 := app1.AddConn(w, *r, &user)
 	if conn1 == nil {
 		t.Fatalf("Expected a conn1, got nil")
@@ -35,7 +35,7 @@ func TestGetConn(t *testing.T) {
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	reqId := "test-req-id"
 	reqId = h.SetReqId(r, &reqId)
-	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeLocal)}
+	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeBasic)}
 	expect := app1.AddConn(w, *r, &user)
 	if expect == nil {
 		t.Fatalf("TestGetConn expected a conn, got nil")
@@ -66,4 +66,48 @@ func TestGetConn(t *testing.T) {
 	if expect.Writer != conn.Writer {
 		t.Fatalf("TestGetConn expected equality,\nexpected writer[%v],\nconn writer[%v]", expect.Writer, conn.Writer)
 	}
+}
+
+func TestDropConn(t *testing.T) {
+	t.Logf("TestGetConn started")
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/some-route", nil)
+	reqId := "test-req-id"
+	reqId = h.SetReqId(r, &reqId)
+	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeBasic)}
+	expect := app1.AddConn(w, *r, &user)
+	if expect == nil {
+		t.Fatalf("TestGetConn expected a conn, got nil")
+	}
+	conns := app1.GetConn(user.Id)
+	if len(conns) == 0 {
+		t.Fatalf("TestGetConn expected connections were empty, count [%d]", len(conns))
+	}
+	err := app1.DropConn(expect)
+	if err != nil {
+		t.Fatalf("TestDropConn expected no error, got [%s]", err.Error())
+	}
+	conns = app1.GetConn(user.Id)
+	if len(conns) != 0 {
+		t.Fatalf("TestGetConn expected connections to be empty, count [%d]", len(conns))
+	}
+}
+
+func TestInviteUser(t *testing.T) {
+	t.Logf("TestInviteUser started")
+	user := app.User{
+		Id:   uint(rand.Uint32()),
+		Name: "John",
+		Type: app.UserType(app.UserTypeBasic),
+	}
+	invitee := app.User{Id: uint(rand.Uint32()),
+		Name: "Jane",
+		Type: app.UserType(app.UserTypeBasic),
+	}
+	chatId := app1.AddChat(&user, "TestChat")
+	err := app1.InviteUser(user.Id, chatId, &invitee)
+	if err != nil {
+		t.Fatalf("TestInviteUser expected no error, got [%s]", err.Error())
+	}
+
 }
