@@ -49,7 +49,13 @@ func AddMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 		return
 	}
 	log.Printf("[%s] AddMessage TRACE opening current chat for user[%d]\n", h.GetReqId(r), author.Id)
-	chat := app.GetOpenChat(author.Id)
+	chat, err := app.GetChat(author.Id, chatId)
+	if err != nil {
+		log.Printf("[%s] AddMessage ERROR get chat, %s\n", h.GetReqId(r), err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to open chat"))
+		return
+	}
 	if chat == nil || chat.Id != chatId {
 		log.Printf("[%s] AddMessage WARN no open chat for user[%d]\n", h.GetReqId(r), author.Id)
 		w.WriteHeader(http.StatusBadRequest)
