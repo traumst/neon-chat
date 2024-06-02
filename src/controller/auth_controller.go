@@ -27,7 +27,7 @@ func Login(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.R
 	}
 	loginUser := utils.SanitizeInput(r.FormValue("login-user"))
 	loginPass := utils.SanitizeInput(r.FormValue("login-pass"))
-	if loginUser == "" || loginPass == "" || len(loginUser) < 4 || len(loginPass) < 4 {
+	if len(loginUser) < 4 || len(loginPass) < 4 {
 		log.Printf("[%s] Login TRACE empty user[%s]", h.GetReqId(r), loginUser)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("bad login credentials"))
@@ -91,8 +91,7 @@ func SignUp(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.
 	signupPass := utils.SanitizeInput(r.FormValue("signup-pass"))
 	log.Printf("[%s] SignUp TRACE authentication check for user[%s] auth[%s]\n",
 		h.GetReqId(r), signupUser, EmailAuthType)
-	if signupUser == "" || signupEmail == "" || signupPass == "" ||
-		len(signupUser) < 4 || len(signupEmail) < 4 || len(signupPass) < 4 {
+	if len(signupUser) < 4 || len(signupEmail) < 4 || len(signupPass) < 4 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("bad signup credentials"))
 		return

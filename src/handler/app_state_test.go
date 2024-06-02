@@ -16,17 +16,14 @@ func TestAddConn(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeLocal)}
-
 	conn1 := app1.AddConn(w, *r, &user)
 	if conn1 == nil {
 		t.Fatalf("Expected a conn1, got nil")
 	}
-
 	conn2 := app1.AddConn(w, *r, &user)
 	if conn2 == nil {
 		t.Fatalf("Expected a conn2, got nil")
 	}
-
 	if conn1 == conn2 {
 		t.Fatalf("Expected conn1 and conn2 to be different")
 	}
@@ -54,7 +51,6 @@ func TestGetConn(t *testing.T) {
 			break
 		}
 	}
-
 	if expect == nil || conn == nil {
 		t.Fatalf("TestGetConn expected connections, got\n expected[%v]\n conn[%v]", expect, conn)
 	}
