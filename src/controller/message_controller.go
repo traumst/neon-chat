@@ -73,13 +73,6 @@ func AddMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 	}
 
 	log.Printf("[%s] AddMessage TRACE templating message\n", h.GetReqId(r))
-	html, err := message.Template(author).HTML()
-	if err != nil {
-		log.Printf("[%s] AddMessage ERROR html [%+v], %s\n", h.GetReqId(r), message, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("failed templating message"))
-		return
-	}
 
 	err = handler.DistributeMsg(app, chat, author.Id, message, event.MessageAdd)
 	if err != nil {
@@ -87,8 +80,7 @@ func AddMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 	}
 
 	log.Printf("[%s] AddMessage TRACE serving html\n", h.GetReqId(r))
-	w.WriteHeader(http.StatusFound)
-	w.Write([]byte(html))
+	w.WriteHeader(http.StatusAccepted)
 }
 
 func DeleteMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
@@ -157,5 +149,4 @@ func DeleteMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r
 
 	log.Printf("[%s] DeleteMessage done\n", reqId)
 	w.WriteHeader(http.StatusAccepted)
-	w.Write([]byte("[DeletedM]"))
 }
