@@ -8,7 +8,7 @@ import (
 type UserType string
 
 const (
-	UserTypeLocal UserType = "local"
+	UserTypeBasic UserType = "basic"
 )
 
 // TODO allow user ban / suspend

@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	LocalUserType = a.UserTypeLocal
+	LocalUserType = a.UserTypeBasic
 	EmailAuthType = a.AuthTypeEmail
 )
 
