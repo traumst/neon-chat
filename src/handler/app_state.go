@@ -118,20 +118,20 @@ func (state *AppState) GetChat(userId uint, chatId int) (*app.Chat, error) {
 	return state.chats.GetChat(userId, chatId)
 }
 
-func (state *AppState) GetOpenChat(userId uint) *app.Chat {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-
-	log.Printf("AppState.GetOpenChat TRACE get open chat for user[%d]\n", userId)
-	return state.chats.GetOpenChat(userId)
-}
-
 func (state *AppState) OpenChat(userId uint, chatId int) (*app.Chat, error) {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
 	log.Printf("AppState.OpenChat TRACE open chat[%d] for user[%d]\n", chatId, userId)
 	return state.chats.OpenChat(userId, chatId)
+}
+
+func (state *AppState) GetOpenChat(userId uint) *app.Chat {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("AppState.GetOpenChat TRACE get open chat for user[%d]\n", userId)
+	return state.chats.GetOpenChat(userId)
 }
 
 func (state *AppState) CloseChat(userId uint, chatId int) error {
