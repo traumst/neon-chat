@@ -38,7 +38,8 @@ bugs and refactor
 ## TODOs
 
 ### Known bugs
-- last open session is the only session a user can have
+- msg should distribute to user connection, event if chat is closed
+- settings update should update app state
 
 ### Persistence
 - message store
