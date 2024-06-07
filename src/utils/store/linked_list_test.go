@@ -6,10 +6,10 @@ import (
 
 func TestNewLinkedList(t *testing.T) {
 	ll := NewLinkedList(3)
-	if ll.size != 3 {
+	if ll.Size() != 3 {
 		t.Fatalf("Expected size to be 3")
 	}
-	if ll.count != 0 {
+	if ll.Count() != 0 {
 		t.Fatalf("Expected count to be 0")
 	}
 	if ll.head != nil {
@@ -27,10 +27,10 @@ func TestAddHeadFirst(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected new head got NIL")
 	}
-	if ll.size != 3 {
+	if ll.Size() != 3 {
 		t.Fatalf("Expected size to remain 3")
 	}
-	if ll.count != 1 {
+	if ll.Count() != 1 {
 		t.Fatalf("Expected count to be 1")
 	}
 	if ll.head != &new {
@@ -94,10 +94,10 @@ func TestAddTail(t *testing.T) {
 	if ll.tail != node {
 		t.Fatalf("Expected tail to be the new node")
 	}
-	if ll.size != 3 {
+	if ll.Size() != 3 {
 		t.Fatalf("Expected size to remain 3")
 	}
-	if ll.count != 1 {
+	if ll.Count() != 1 {
 		t.Fatalf("Expected count to be 1")
 	}
 	if ll.head != node {
@@ -164,7 +164,7 @@ func TestCrop(t *testing.T) {
 	ll.AddTail(3, "three")
 	ll.AddTail(4, "four")
 	ll.AddTail(5, "five")
-	if ll.count != 5 {
+	if ll.Count() != 5 {
 		t.Fatalf("Expected count to be 5")
 	}
 	cropped, err := ll.Crop(2)
@@ -174,8 +174,29 @@ func TestCrop(t *testing.T) {
 	if cropped != 2 {
 		t.Fatalf("Expected 2 nodes to be cropped, but got %d", cropped)
 	}
-	if ll.count != 3 {
+	if ll.Count() != 3 {
 		t.Fatalf("Expected count to be 3")
+	}
+	var test *Node
+	test, err = ll.Get(4)
+	if err == nil || test != nil {
+		t.Fatalf("Expected node[%d] to be removed", 4)
+	}
+	test, err = ll.Get(5)
+	if err == nil || test != nil {
+		t.Fatalf("Expected node[%d] to be removed", 5)
+	}
+	test, err = ll.Get(2)
+	if err != nil || test == nil {
+		t.Fatalf("Expected node[%d] to remain, %v", 2, err)
+	}
+	test, err = ll.Get(1)
+	if err != nil || test == nil {
+		t.Fatalf("Expected node[%d] to remain, %v", 1, err)
+	}
+	test, err = ll.Get(3)
+	if err != nil || test == nil {
+		t.Fatalf("Expected node[%d] to remain, %v", 3, err)
 	}
 }
 
