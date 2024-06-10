@@ -7,10 +7,11 @@ import (
 
 	d "prplchat/src/db"
 	"prplchat/src/handler"
+	"prplchat/src/handler/state"
 	h "prplchat/src/utils/http"
 )
 
-func PollUpdates(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func PollUpdates(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		log.Printf("[%s] PollUpdates TRACE does not provide %s\n", h.GetReqId(r), r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)

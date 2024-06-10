@@ -1,4 +1,4 @@
-package handler
+package state
 
 import (
 	"math/rand"
@@ -9,7 +9,7 @@ import (
 	h "prplchat/src/utils/http"
 )
 
-var app1 = &ApplicationState
+var app1 = &Application
 
 // CONN
 func TestAddConn(t *testing.T) {
@@ -159,6 +159,57 @@ func TestDropUser(t *testing.T) {
 	if chat != nil {
 		t.Fatalf("TestDropUser expected error, got chat[%d]", chat.Id)
 	}
+}
+
+func TestUpdateUser(t *testing.T) {
+	user := app.User{
+		Id:     uint(rand.Uint32()),
+		Name:   "John",
+		Email:  "aaa@aaa.aaa",
+		Type:   app.UserType(app.UserTypeBasic),
+		Status: app.UserStatusPending,
+	}
+	invitee := app.User{Id: uint(rand.Uint32()),
+		Name: "Jane",
+		Type: app.UserType(app.UserTypeBasic),
+	}
+	chatId := app1.AddChat(&user, "TestChat")
+	_ = app1.InviteUser(user.Id, chatId, &invitee)
+	chat, err := app1.GetChat(user.Id, chatId)
+	if err != nil {
+		t.Fatalf("TestUpdateUser failed to get chat[%d] for user[%d], %s", chatId, user.Id, err.Error())
+	}
+	err = app1.UpdateUser(
+		user.Id,
+		app.User{
+			Name:   "Johnny",
+			Email:  "bbb@bbb.bbb",
+			Type:   app.UserType(app.UserTypeBasic),
+			Status: app.UserStatusActive,
+			Salt:   "CANNOT_CHANGE",
+		})
+	if err != nil {
+		t.Fatalf("TestUpdateUser failed to update user[%d], %s", user.Id, err.Error())
+	}
+	updatedUsers, err := chat.GetUsers(user.Id)
+	if err != nil {
+		t.Fatalf("TestUpdateUser failed to get users from chat[%d], %s", chatId, err.Error())
+	}
+	for _, u := range updatedUsers {
+		if u.Id == user.Id {
+			if u.Name != "Johnny" {
+				t.Fatalf("TestUpdateUser expected name[Johnny] got name[%s]", u.Name)
+			}
+			if u.Email != "bbb@bbb.bbb" {
+				t.Fatalf("TestUpdateUser expected name[Johnny] got name[%s]", u.Name)
+			}
+			if u.Salt != user.Salt {
+				t.Fatalf("TestUpdateUser expected salt[%s] changed[%s]", user.Salt, u.Salt)
+			}
+			return
+		}
+	}
+	t.Fatalf("TestUpdateUser user[%d] not found", user.Id)
 }
 
 // CHAT

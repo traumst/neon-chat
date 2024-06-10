@@ -1,15 +1,16 @@
-package handler
+package sse
 
 import (
 	"fmt"
 	"log"
 
+	"prplchat/src/handler/state"
 	"prplchat/src/model/app"
 	"prplchat/src/model/event"
 )
 
 func DistributeAvatarChange(
-	state *AppState,
+	state *state.State,
 	//TODO targetUser *app.User, // who to inform, nil for all users
 	subjectUser *app.User, // which user changed, nil for every user in chat
 	avatar *app.Avatar,
@@ -30,7 +31,7 @@ func DistributeAvatarChange(
 }
 
 func distributeUpdateOfAvatar(
-	state *AppState,
+	state *state.State,
 	targetUser *app.User,
 	subjectUser *app.User,
 	avatar *app.Avatar,
@@ -53,7 +54,7 @@ func distributeUpdateOfAvatar(
 	}
 }
 
-func avatarChanged(conns []*Conn, subject *app.User, avatar *app.Avatar) error {
+func avatarChanged(conns []*state.Conn, subject *app.User, avatar *app.Avatar) error {
 	if len(conns) == 0 {
 		return nil
 	}

@@ -6,10 +6,11 @@ import (
 
 	"prplchat/src/db"
 	"prplchat/src/handler"
+	"prplchat/src/handler/state"
 	h "prplchat/src/utils/http"
 )
 
-func Setup(app *handler.AppState, db *db.DBConn) {
+func Setup(app *state.State, db *db.DBConn) {
 	// loaded in reverse order
 	allMiddleware := []Middleware{LoggerMiddleware, ReqIdMiddleware}
 
@@ -66,7 +67,7 @@ func handleStaticFiles() {
 		}), minMiddleware))
 }
 
-func handleSettings(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware) {
+func handleSettings(app *state.State, db *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/settings", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			OpenSettings(app, db, w, r)
@@ -77,7 +78,7 @@ func handleSettings(app *handler.AppState, db *db.DBConn, allMiddleware []Middle
 		}), allMiddleware))
 }
 
-func handleMsgs(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware) {
+func handleMsgs(app *state.State, db *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/message/delete", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			DeleteMessage(app, db, w, r)
@@ -88,7 +89,7 @@ func handleMsgs(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware
 		}), allMiddleware))
 }
 
-func handleChat(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware) {
+func handleChat(app *state.State, db *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/chat/welcome", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			Welcome(app, db, w, r)
@@ -111,7 +112,7 @@ func handleChat(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware
 		}), allMiddleware))
 }
 
-func handleUser(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware) {
+func handleUser(app *state.State, db *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/user/invite", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			InviteUser(app, db, w, r)
@@ -130,7 +131,7 @@ func handleUser(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware
 		}), allMiddleware))
 }
 
-func handleAuth(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware) {
+func handleAuth(app *state.State, db *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/login", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			Login(app, db, w, r)
@@ -149,7 +150,7 @@ func handleAuth(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware
 		}), allMiddleware))
 }
 
-func handleAvatar(app *handler.AppState, db *db.DBConn, allMiddleware []Middleware) {
+func handleAvatar(app *state.State, db *db.DBConn, allMiddleware []Middleware) {
 	http.Handle("/avatar/add", ChainMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			AddAvatar(app, db, w, r)

@@ -9,6 +9,8 @@ import (
 
 	d "prplchat/src/db"
 	"prplchat/src/handler"
+	"prplchat/src/handler/sse"
+	"prplchat/src/handler/state"
 	a "prplchat/src/model/app"
 	"prplchat/src/model/event"
 	"prplchat/src/model/template"
@@ -16,7 +18,7 @@ import (
 	h "prplchat/src/utils/http"
 )
 
-func InviteUser(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func InviteUser(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] InviteUser\n", reqId)
 	if r.Method != "POST" {
@@ -74,7 +76,7 @@ func InviteUser(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		err := handler.DistributeChat(app, chat, user, &appInvitee, &appInvitee, event.ChatInvite)
+		err := sse.DistributeChat(app, chat, user, &appInvitee, &appInvitee, event.ChatInvite)
 		if err != nil {
 			log.Printf("[%s] InviteUser WARN cannot distribute chat invite, %s\n", reqId, err.Error())
 		}
@@ -104,7 +106,7 @@ func InviteUser(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 		reqId, invitee.Id, chatId, user.Id)
 }
 
-func ExpelUser(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func ExpelUser(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] ExpelUser\n", reqId)
 	if r.Method != "POST" {
@@ -158,17 +160,17 @@ func ExpelUser(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *ht
 		defer wg.Done()
 		log.Printf("[%s] ExpelUser TRACE distributing user[%d] removed[%d] from chat[%d]\n",
 			reqId, user.Id, dbExpelled.Id, chat.Id)
-		err := handler.DistributeChat(app, chat, user, &expelled, &expelled, event.ChatClose)
+		err := sse.DistributeChat(app, chat, user, &expelled, &expelled, event.ChatClose)
 		if err != nil {
 			log.Printf("[%s] ExpelUser ERROR cannot distribute chat close, %s\n", reqId, err.Error())
 			return
 		}
-		err = handler.DistributeChat(app, chat, user, &expelled, &expelled, event.ChatDrop)
+		err = sse.DistributeChat(app, chat, user, &expelled, &expelled, event.ChatDrop)
 		if err != nil {
 			log.Printf("[%s] ExpelUser ERROR cannot distribute chat deleted, %s\n", reqId, err.Error())
 			return
 		}
-		err = handler.DistributeChat(app, chat, user, nil, &expelled, event.ChatExpel)
+		err = sse.DistributeChat(app, chat, user, nil, &expelled, event.ChatExpel)
 		if err != nil {
 			log.Printf("[%s] ExpelUser ERROR cannot distribute chat user expel, %s\n", reqId, err.Error())
 			return
@@ -193,7 +195,7 @@ func ExpelUser(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *ht
 	log.Printf("[%s] ExpelUser TRACE chat[%d] owner[%d] removed[%d]\n", reqId, chatId, user.Id, dbExpelled.Id)
 }
 
-func LeaveChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func LeaveChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] LeaveChat\n", reqId)
 	if r.Method != "POST" {
@@ -245,19 +247,19 @@ func LeaveChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *ht
 	go func() {
 		defer wg.Done()
 		log.Printf("[%s] LeaveChat TRACE distributing user[%d] left chat[%d]\n", reqId, user.Id, chat.Id)
-		err := handler.DistributeChat(app, chat, user, user, user, event.ChatClose)
+		err := sse.DistributeChat(app, chat, user, user, user, event.ChatClose)
 		if err != nil {
 			log.Printf("[%s] LeaveChat ERROR cannot distribute chat close, %s\n", reqId, err.Error())
 			return
 		}
 		log.Printf("[%s] LeaveChat TRACE distributed chat close", reqId)
-		err = handler.DistributeChat(app, chat, user, user, user, event.ChatDrop)
+		err = sse.DistributeChat(app, chat, user, user, user, event.ChatDrop)
 		if err != nil {
 			log.Printf("[%s] LeaveChat ERROR cannot distribute chat deleted, %s\n", reqId, err.Error())
 			return
 		}
 		log.Printf("[%s] LeaveChat TRACE distributed chat deleted", reqId)
-		err = handler.DistributeChat(app, chat, user, nil, user, event.ChatLeave)
+		err = sse.DistributeChat(app, chat, user, nil, user, event.ChatLeave)
 		if err != nil {
 			log.Printf("[%s] LeaveChat ERROR cannot distribute chat user drop, %s\n", reqId, err.Error())
 			return
@@ -273,7 +275,7 @@ func LeaveChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *ht
 	wg.Wait()
 }
 
-func ChangeUser(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func ChangeUser(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] ChangeUser\n", reqId)
 	if r.Method != "POST" {
@@ -303,7 +305,7 @@ func ChangeUser(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 		w.Write([]byte("user update failed"))
 		return
 	}
-	err = handler.DistributeUserChange(app, user, event.UserChange)
+	err = sse.DistributeUserChange(app, user, event.UserChange)
 	if err != nil {
 		log.Printf("[%s] ChangeUser ERROR failed to distribute user change, %s\n", h.GetReqId(r), err.Error())
 		w.WriteHeader(http.StatusOK)

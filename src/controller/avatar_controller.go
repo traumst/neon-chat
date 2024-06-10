@@ -9,6 +9,8 @@ import (
 
 	"prplchat/src/db"
 	"prplchat/src/handler"
+	"prplchat/src/handler/sse"
+	"prplchat/src/handler/state"
 	a "prplchat/src/model/app"
 	"prplchat/src/model/event"
 	"prplchat/src/utils"
@@ -33,7 +35,7 @@ func isAllowedImageFormat(mime string) bool {
 	return false
 }
 
-func AddAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
+func AddAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] AddAvatar\n", reqId)
 	if r.Method != "POST" {
@@ -117,7 +119,7 @@ func AddAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *h
 		http.Error(w, fmt.Sprintf("failed to template avatar[%d]", avatar.Id), http.StatusBadRequest)
 		return
 	}
-	if err = handler.DistributeAvatarChange(app, user, &avatar, event.AvatarChange); err != nil {
+	if err = sse.DistributeAvatarChange(app, user, &avatar, event.AvatarChange); err != nil {
 		log.Printf("controller.AddAvatar ERROR failed to distribute avatar[%s] update, %s", info.Filename, err.Error())
 	}
 
@@ -125,7 +127,7 @@ func AddAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *h
 	w.Write([]byte(html))
 }
 
-func GetAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
+func GetAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] GetAvatar\n", reqId)
 	if r.Method != "GET" {

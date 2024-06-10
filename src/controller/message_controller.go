@@ -7,13 +7,15 @@ import (
 
 	d "prplchat/src/db"
 	"prplchat/src/handler"
+	"prplchat/src/handler/sse"
+	"prplchat/src/handler/state"
 	a "prplchat/src/model/app"
 	"prplchat/src/model/event"
 	"prplchat/src/utils"
 	h "prplchat/src/utils/http"
 )
 
-func AddMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func AddMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] AddMessage TRACE\n", h.GetReqId(r))
 	if r.Method != "POST" {
 		log.Printf("[%s] AddMessage ERROR request method\n", h.GetReqId(r))
@@ -80,7 +82,7 @@ func AddMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 
 	log.Printf("[%s] AddMessage TRACE templating message\n", h.GetReqId(r))
 
-	err = handler.DistributeMsg(app, chat, author.Id, message, event.MessageAdd)
+	err = sse.DistributeMsg(app, chat, author.Id, message, event.MessageAdd)
 	if err != nil {
 		log.Printf("[%s] AddMessage ERROR distribute message, %s\n", h.GetReqId(r), err)
 	}
@@ -89,7 +91,7 @@ func AddMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 	w.WriteHeader(http.StatusAccepted)
 }
 
-func DeleteMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func DeleteMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] DeleteMessage\n", reqId)
 	author, err := handler.ReadSession(app, db, w, r)
@@ -148,7 +150,7 @@ func DeleteMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = handler.DistributeMsg(app, chat, author.Id, msg, event.MessageDrop)
+	err = sse.DistributeMsg(app, chat, author.Id, msg, event.MessageDrop)
 	if err != nil {
 		log.Printf("[%s] DeleteMessage ERROR distribute message, %s\n", reqId, err)
 	}

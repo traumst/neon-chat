@@ -11,7 +11,7 @@ import (
 
 	"prplchat/src/controller"
 	"prplchat/src/db"
-	"prplchat/src/handler"
+	"prplchat/src/handler/state"
 	"prplchat/src/utils"
 )
 
@@ -49,9 +49,11 @@ func main() {
 	}
 
 	log.Println("init app state...")
-	app := &handler.ApplicationState
+	app := &state.Application
 	app.Init(db, utils.Config{
-		LoadLocal: config.LoadLocal,
+		CacheSize: config.CacheSize,
+		Port:      config.Port,
+		Sqlite:    config.Sqlite,
 		Smtp: utils.SmtpConfig{
 			User: config.Smtp.User,
 			Pass: config.Smtp.Pass,

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	d "prplchat/src/db"
+	"prplchat/src/handler/state"
 	a "prplchat/src/model/app"
 	"prplchat/src/model/template/email"
 	"prplchat/src/utils"
@@ -15,7 +16,7 @@ import (
 )
 
 func ReadSession(
-	app *AppState,
+	app *state.State,
 	db *d.DBConn,
 	w http.ResponseWriter,
 	r *http.Request,
@@ -123,7 +124,7 @@ func Register(
 }
 
 func IssueReservationToken(
-	app *AppState,
+	app *state.State,
 	db *d.DBConn,
 	user *a.User,
 ) (*email.VerifyEmailTemplate, error) {

@@ -40,8 +40,10 @@ bugs and refactor
 ### Known bugs
 - msg should distribute to user connection, event if chat is closed
 - settings update should update app state
+- ensure user pointers are the same across the app
 
 ### Persistence
+- all ids should be uint
 - message store
 - cache instead of map
 

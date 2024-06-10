@@ -6,6 +6,7 @@ import (
 
 	"prplchat/src/db"
 	"prplchat/src/handler"
+	"prplchat/src/handler/state"
 	"prplchat/src/model/app"
 	"prplchat/src/model/template"
 	h "prplchat/src/utils/http"
@@ -38,7 +39,7 @@ func RenderLogin(
 }
 
 func RenderHome(
-	app *handler.AppState,
+	app *state.State,
 	db *db.DBConn,
 	w http.ResponseWriter,
 	r *http.Request,

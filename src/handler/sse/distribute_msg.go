@@ -1,16 +1,17 @@
-package handler
+package sse
 
 import (
 	"fmt"
 	"log"
 	"sync"
 
+	"prplchat/src/handler/state"
 	"prplchat/src/model/app"
 	"prplchat/src/model/event"
 )
 
 func DistributeMsg(
-	state *AppState,
+	state *state.State,
 	chat *app.Chat,
 	authorId uint,
 	msg *app.Message,
@@ -53,7 +54,7 @@ func DistributeMsg(
 }
 
 func distributeMsgToUser(
-	state *AppState,
+	state *state.State,
 	chatId int,
 	msgId int,
 	userId uint,

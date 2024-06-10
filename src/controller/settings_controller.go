@@ -6,11 +6,12 @@ import (
 
 	d "prplchat/src/db"
 	"prplchat/src/handler"
+	"prplchat/src/handler/state"
 	t "prplchat/src/model/template"
 	h "prplchat/src/utils/http"
 )
 
-func OpenSettings(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func OpenSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] OpenSettings\n", reqId)
 	if r.Method != "GET" {
@@ -59,7 +60,7 @@ func OpenSettings(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r 
 	w.Write([]byte(html))
 }
 
-func CloseSettings(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func CloseSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] CloseSettings\n", reqId)
 	if r.Method != "GET" {

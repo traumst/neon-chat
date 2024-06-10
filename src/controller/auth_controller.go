@@ -8,6 +8,7 @@ import (
 
 	d "prplchat/src/db"
 	"prplchat/src/handler"
+	"prplchat/src/handler/state"
 	a "prplchat/src/model/app"
 	"prplchat/src/utils"
 	h "prplchat/src/utils/http"
@@ -18,7 +19,7 @@ const (
 	EmailAuthType = a.AuthTypeEmail
 )
 
-func Login(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func Login(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] Login TRACE IN\n", h.GetReqId(r))
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -66,7 +67,7 @@ func Login(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusOK)
 }
 
-func Logout(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func Logout(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] Logout TRACE \n", h.GetReqId(r))
 	user, err := handler.ReadSession(app, db, w, r)
 	if user == nil {
@@ -79,7 +80,7 @@ func Logout(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.
 	w.WriteHeader(http.StatusOK)
 }
 
-func SignUp(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func SignUp(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] SignUp TRACE IN\n", h.GetReqId(r))
 	if r.Method != "PUT" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -172,7 +173,7 @@ func SignUp(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.
 	w.Write([]byte(html))
 }
 
-func ConfirmEmail(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func ConfirmEmail(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] ConfirmEmail TRACE IN\n", h.GetReqId(r))
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)

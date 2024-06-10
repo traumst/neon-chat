@@ -6,9 +6,12 @@ import (
 )
 
 type ChatList struct {
-	mu     sync.Mutex
-	chats  []*Chat
-	open   map[uint]*Chat
+	mu sync.Mutex
+	// chat id -> chat
+	chats []*Chat
+	// userId -> chat
+	open map[uint]*Chat
+	// next chat id
 	nextId int
 	isInit bool
 }
@@ -18,9 +21,9 @@ func (cl *ChatList) init() {
 		return
 	}
 
-	cl.isInit = true
 	cl.chats = []*Chat{}
 	cl.open = make(map[uint]*Chat)
+	cl.isInit = true
 }
 
 func (cl *ChatList) AddChat(owner *User, chatName string) int {

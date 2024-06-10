@@ -1,16 +1,17 @@
-package handler
+package sse
 
 import (
 	"fmt"
 	"log"
 
+	"prplchat/src/handler/state"
 	"prplchat/src/model/app"
 	"prplchat/src/model/event"
 )
 
 // empty targetUser means all users in chat
 func DistributeUserChange(
-	state *AppState,
+	state *state.State,
 	//TODO targetUser *app.User, // who to inform, nil for all users
 	subjectUser *app.User, // which user changed, nil for every user in chat
 	updateType event.EventType,
@@ -29,7 +30,7 @@ func DistributeUserChange(
 }
 
 func distributeUpdateOfUser(
-	state *AppState,
+	state *state.State,
 	targetUser *app.User,
 	subjectUser *app.User,
 	updateType event.EventType,
@@ -39,21 +40,18 @@ func distributeUpdateOfUser(
 			err = fmt.Errorf("panicked: %v", r)
 		}
 	}()
-	var lmd FuncPerConn
-	switch updateType {
-	case event.UserChange:
-		lmd = func(conn *Conn) error {
-			return userNameChanged(conn, subjectUser)
-		}
-	default:
-		return fmt.Errorf("unknown event type[%v]", updateType)
-	}
 	conns := state.GetConn(targetUser.Id)
 	for _, conn := range conns {
 		if conn.User.Id != targetUser.Id {
 			return fmt.Errorf("user[%d] does not own conn[%v], user[%d] does", targetUser.Id, conn.Origin, conn.User.Id)
 		}
-		connerr := lmd(conn)
+		var connerr error
+		switch updateType {
+		case event.UserChange:
+			connerr = userNameChanged(conn, subjectUser)
+		default:
+			connerr = fmt.Errorf("unknown event type[%v]", updateType)
+		}
 		if err == nil {
 			err = connerr
 		} else {
@@ -63,7 +61,7 @@ func distributeUpdateOfUser(
 	return err
 }
 
-func userNameChanged(conn *Conn, subject *app.User) error {
+func userNameChanged(conn *state.Conn, subject *app.User) error {
 	if subject == nil {
 		return fmt.Errorf("subjectUser is nil for userChanged")
 	}
