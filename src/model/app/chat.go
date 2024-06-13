@@ -82,7 +82,7 @@ func (c *Chat) SyncUser(userId uint, template *User) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("user[%d] not found in chat[%d]", userId, c.Id)
+	return nil
 }
 
 func (c *Chat) RemoveUser(ownerId uint, userId uint) error {

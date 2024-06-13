@@ -65,7 +65,6 @@ func AddAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.R
 	file, info, err := r.FormFile("avatar")
 	if err != nil {
 		log.Printf("[%s] AddAvatar ERROR reading input file failed, %s\n", reqId, err.Error())
-		log.Printf("[%s] AddAvatar TRACE reading input file failed, %+v\n", reqId, info.Filename)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid input"))
 		return

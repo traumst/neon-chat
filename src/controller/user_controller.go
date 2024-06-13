@@ -281,7 +281,7 @@ func ChangeUser(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 	if r.Method != "POST" {
 		log.Printf("[%s] ChangeUser TRACE auth does not allow %s\n", reqId, r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte("bad verb"))
+		w.Write([]byte("[verb]"))
 		return
 	}
 	log.Printf("[%s] ChangeUser TRACE check login\n", reqId)
@@ -289,23 +289,32 @@ func ChangeUser(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 	if err != nil || user == nil {
 		log.Printf("[%s] ChangeUser WARN unauthenticated, %s\n", h.GetReqId(r), err.Error())
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("unauthenticated"))
+		w.Write([]byte("[auth]"))
 		return
 	}
 	newName := r.FormValue("new-user-name")
+	log.Printf("[%s] ChangeUser TRACE new name: %s\n", reqId, newName)
 	if newName == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("user did not change"))
+		w.Write([]byte("[noop]"))
+		return
+	}
+	user.Name = newName
+	err = app.UpdateUser(user.Id, *user)
+	if err != nil {
+		log.Printf("[%s] ChangeUser ERROR failed to update user[%d] in app, %s\n", h.GetReqId(r), user.Id, err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("[fail]"))
 		return
 	}
 	err = db.UpdateUserName(user.Id, newName)
 	if err != nil {
 		log.Printf("[%s] ChangeUser ERROR failed to update user[%d] in db, %s\n", h.GetReqId(r), user.Id, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("user update failed"))
+		w.Write([]byte("[fail]"))
 		return
 	}
-	err = sse.DistributeUserChange(app, user, event.UserChange)
+	err = sse.DistributeUserChange(app, nil, user, event.UserChange)
 	if err != nil {
 		log.Printf("[%s] ChangeUser ERROR failed to distribute user change, %s\n", h.GetReqId(r), err.Error())
 		w.WriteHeader(http.StatusOK)
