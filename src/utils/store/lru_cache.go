@@ -27,6 +27,12 @@ func (cache *LRUCache) Count() int {
 }
 
 func (cache *LRUCache) Set(key uint, value interface{}) error {
+	if cache.Count()+1 > cache.Size() {
+		_, err := cache.Drop(1 + cache.Size()/8)
+		if err != nil {
+			return err
+		}
+	}
 	cache.mu.Lock()
 	defer cache.mu.Unlock()
 	newNode := Node{id: key, value: value}
@@ -36,7 +42,7 @@ func (cache *LRUCache) Set(key uint, value interface{}) error {
 	}
 
 	cache.dict[key] = &newNode
-	return err
+	return nil
 }
 
 // gets the value stored in cache and bumps it to the head
@@ -47,7 +53,12 @@ func (cache *LRUCache) Get(key uint) (interface{}, error) {
 	if !ok {
 		return "", fmt.Errorf("key not found")
 	}
-	err := cache.list.Bump(node)
+	dropIds, err := cache.list.Bump(node)
+	if len(dropIds) > 0 {
+		for _, dropId := range dropIds {
+			delete(cache.dict, dropId)
+		}
+	}
 	return node.value, err
 }
 
@@ -59,30 +70,24 @@ func (cache *LRUCache) Take(key uint) (interface{}, error) {
 	if !ok {
 		return nil, fmt.Errorf("key not found")
 	}
-	delete(cache.dict, key)
 	removed := cache.list.Remove(node.id)
 	if removed == nil {
 		panic(fmt.Sprintf("Node[%d] not found in list", key))
 	}
+	delete(cache.dict, key)
 	return node.value, nil
 }
 
-// removes up-to n nodes from the tail
+// removes at least 1 and up-to n oldest nodes
 func (cache *LRUCache) Drop(n int) (int, error) {
 	cache.mu.Lock()
 	defer cache.mu.Unlock()
-	dropCount := 0
-	for i := 0; i < n; i++ {
-		tail := cache.list.tail
-		if tail == nil {
-			return dropCount, nil
-		}
-		delete(cache.dict, tail.id)
-		removed := cache.list.Remove(tail.id)
-		if removed == nil {
-			return dropCount, fmt.Errorf("node[%d] removed as NIL", tail.id)
-		}
-		dropCount++
+	dropCount, dropIds, err := cache.list.Prune(n)
+	if err != nil || dropCount == 0 {
+		return dropCount, err
+	}
+	for _, dropId := range dropIds {
+		delete(cache.dict, dropId)
 	}
 	return dropCount, nil
 }

@@ -189,3 +189,19 @@ func (cl *ChatList) ExpelUser(userId uint, chatId int, removeId uint) error {
 	}
 	return nil
 }
+
+func (cl *ChatList) SyncUser(userId uint, user *User) error {
+	cl.mu.Lock()
+	defer cl.mu.Unlock()
+	cl.init()
+	for _, chat := range cl.chats {
+		if chat == nil {
+			continue
+		}
+		err := chat.SyncUser(userId, user)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

@@ -97,8 +97,11 @@ func TestSetMultiple(t *testing.T) {
 		t.Fatalf("Expected count to be 3")
 	}
 	err = cache.Set(4, "four")
-	if err == nil {
-		t.Fatalf("Expected error 4")
+	if err != nil {
+		t.Fatalf("Expected 4 to be added, 1 removed")
+	}
+	if cache.Count() != 3 {
+		t.Fatalf("Expected count to remain 3 but was [%d]", cache.Count())
 	}
 	_, err = cache.Get(1)
 	if err == nil {

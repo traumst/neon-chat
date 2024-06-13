@@ -14,7 +14,6 @@ import (
 
 var Application State
 
-// TODO track users
 type State struct {
 	mu     sync.Mutex
 	isInit bool
@@ -96,14 +95,7 @@ func (state *State) UpdateUser(userId uint, template app.User) error {
 	defer state.mu.Unlock()
 
 	log.Printf("AppState.UpdateUser TRACE updating user[%d], template[%v]\n", userId, template)
-	// TODO
-	// for _, user := range state.users {
-	// 	if user.Id == userId {
-	// 		user.Update(template)
-	// 		return nil
-	// 	}
-	// }
-	return fmt.Errorf("not implemented")
+	return state.chats.SyncUser(userId, &template)
 }
 
 // CHAT

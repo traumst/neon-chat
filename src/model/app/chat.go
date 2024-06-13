@@ -61,18 +61,6 @@ func (c *Chat) AddUser(ownerId uint, user *User) error {
 	return nil
 }
 
-func (c *Chat) SyncUser(user *User) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	for _, u := range c.users {
-		if u.Id == user.Id {
-			u.Name = user.Name
-			return nil
-		}
-	}
-	return fmt.Errorf("user[%d] is not in chat[%d]", user.Id, c.Id)
-}
-
 func (c *Chat) GetUsers(userId uint) ([]*User, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -80,6 +68,21 @@ func (c *Chat) GetUsers(userId uint) ([]*User, error) {
 		return nil, fmt.Errorf("user[%d] is not in chat[%d]", userId, c.Id)
 	}
 	return c.users, nil
+}
+
+func (c *Chat) SyncUser(userId uint, template *User) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for _, u := range c.users {
+		if u.Id == userId {
+			u.Name = template.Name
+			u.Email = template.Email
+			u.Type = template.Type
+			u.Status = template.Status
+			return nil
+		}
+	}
+	return fmt.Errorf("user[%d] not found in chat[%d]", userId, c.Id)
 }
 
 func (c *Chat) RemoveUser(ownerId uint, userId uint) error {
@@ -124,7 +127,6 @@ func (c *Chat) DropMessage(userId uint, msgId int) (*Message, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if !c.isUserInChat(userId) {

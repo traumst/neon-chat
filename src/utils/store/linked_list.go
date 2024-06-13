@@ -62,13 +62,11 @@ func (ll *DoublyLinkedList) Get(nodeId uint) (*Node, error) {
 func (ll *DoublyLinkedList) AddHead(new *Node) error {
 	ll.mu.Lock()
 	defer ll.mu.Unlock()
+	if new == nil {
+		return fmt.Errorf("attempt to add NIL node")
+	}
 	if ll.count >= ll.size {
-		free := 1 + (ll.size / 8)
-		cropped, cropErr := ll.Crop(free)
-		if cropErr != nil {
-			log.Printf("DoublyLinkedList.AddHead ERROR failed cropped[%d], %s", cropped, cropErr.Error())
-			return cropErr
-		}
+		return fmt.Errorf("list is full: count[%d] size[%d]", ll.count, ll.size)
 	}
 	if ll.head == nil && ll.tail == nil {
 		log.Printf("DoublyLinkedList.AddHead TRACE adding first[%d]", new.id)
@@ -89,81 +87,60 @@ func (ll *DoublyLinkedList) AddHead(new *Node) error {
 	return nil
 }
 
-// creates node and adds to tail
-func (ll *DoublyLinkedList) AddTail(id uint, value interface{}) (*Node, error) {
-	ll.mu.Lock()
-	defer ll.mu.Unlock()
-	if ll.count >= ll.size {
-		free := 1 + (ll.size / 8)
-		cropped, cropErr := ll.Crop(free)
-		if cropErr != nil {
-			log.Printf("DoublyLinkedList.AddHead ERROR failed cropped[%d], %s", cropped, cropErr.Error())
-			return nil, cropErr
-		}
-	}
-	new := &Node{id: id, value: value, prev: nil, next: nil}
-	if ll.head == nil && ll.tail == nil {
-		log.Printf("DoublyLinkedList.Add TRACE adding first[%d]", new.id)
-		ll.head = new
-		ll.tail = new
-	} else if ll.head != nil && ll.tail != nil {
-		log.Printf("DoublyLinkedList.Add TRACE adding tail[%d]", new.id)
-		new.prev = ll.tail
-		ll.tail.next = new
-		ll.tail = new
-	} else {
-		panic(fmt.Sprintf("LinkedList is in an invalid state, head[%+v] tail[%+v]", ll.head, ll.tail))
-	}
-	ll.count++
-	return new, nil
-}
-
 // moves node to head
-func (ll *DoublyLinkedList) Bump(node *Node) error {
+func (ll *DoublyLinkedList) Bump(node *Node) ([]uint, error) {
+	if node == nil {
+		panic("Attempt to bump NIL node")
+	}
+	if node.id == ll.head.id {
+		return nil, nil
+	}
 	removed := ll.Remove(node.id)
 	if removed == nil {
-		return fmt.Errorf("node[%d] not found", node.id)
+		return nil, fmt.Errorf("node[%d] not found", node.id)
 	}
 	err := ll.AddHead(removed)
-	if err != nil {
-		log.Printf("DoublyLinkedList.Bump WARN failed to add node[%d], %s", node.id, err.Error())
-	} else {
-		log.Printf("DoublyLinkedList.Bump TRACE added node[%d]", node.id)
-		return nil
+	if err == nil {
+		log.Printf("DoublyLinkedList.Bump TRACE re-added node[%d]", node.id)
+		return nil, nil
 	}
-	free := 1 + (ll.size / 8)
-	cropped, cropErr := ll.Crop(free)
-	if cropErr != nil {
-		log.Printf("DoublyLinkedList.Bump ERROR failed cropped[%d], %s", cropped, cropErr.Error())
-		return fmt.Errorf("%s, %s", err.Error(), cropErr.Error())
+	log.Printf("DoublyLinkedList.Bump WARN failed to re-add node[%d], %s", node.id, err.Error())
+	pruneCount, pruneIds, pruneErr := ll.Prune(0)
+	if pruneErr != nil {
+		log.Printf("DoublyLinkedList.Bump ERROR failed prunned[%d], %s", pruneCount, pruneErr.Error())
+		return pruneIds, fmt.Errorf("%s, %s", err.Error(), pruneErr.Error())
 	}
 	retryErr := ll.AddHead(removed)
 	if retryErr != nil {
 		log.Printf("DoublyLinkedList.Bump ERROR failed adding after crop node[%d], %s", node.id, retryErr.Error())
-		return fmt.Errorf("%s, %s", err.Error(), retryErr.Error())
+		return pruneIds, fmt.Errorf("%s, %s", err.Error(), retryErr.Error())
 	} else {
 		log.Printf("DoublyLinkedList.Bump TRACE added after crop node[%d]", node.id)
-		return nil
+		return pruneIds, nil
 	}
 }
 
-// removes up-to n nodes from the tail
-func (ll *DoublyLinkedList) Crop(n int) (int, error) {
-	log.Printf("DoublyLinkedList.Crop TRACE removing [%d] nodes from the head", n)
+// removes n nodes from tail, defaults to 1 + (ll.size / 8)
+func (ll *DoublyLinkedList) Prune(drop int) (int, []uint, error) {
+	if drop < 1 || drop > MaxSize {
+		def := 1 + (ll.Size() / 8)
+		log.Printf("Invalid prune size[%d] should be [%d < n <= %d], using default[%d]", drop, 1, MaxSize, def)
+		drop = def
+	}
 	ll.mu.Lock()
 	defer ll.mu.Unlock()
-	if n < MinSize || n > MaxSize {
-		return 0, fmt.Errorf("invalid crop size[%d] should be [%d < n <= %d]", n, MinSize, MaxSize)
-	}
-	removeCount := 0
-	for removeCount < n && ll.head != nil {
+	count := 0
+	ids := []uint{}
+	for count < drop {
 		removed := ll.removeTail()
-		if removed != nil {
-			removeCount++
-			ll.count--
+		if removed == nil {
+			break
 		}
+		ids = append(ids, removed.id)
+		count++
+		ll.count--
 	}
-	return removeCount, nil
+	return count, ids, nil
 }
 
 // removes node from middle
@@ -199,6 +176,9 @@ func (ll *DoublyLinkedList) removeHead() *Node {
 	return removed
 }
 func (ll *DoublyLinkedList) removeTail() *Node {
+	if ll.tail == nil {
+		return nil
+	}
 	removed := ll.tail
 	if ll.tail == ll.head {
 		log.Printf("DoublyLinkedList.removeTail TRACE removing last[%d]", ll.head.id)
