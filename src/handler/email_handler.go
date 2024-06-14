@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"prplchat/src/model/template/email"
+	t "prplchat/src/model/template"
 )
 
 func IsEmailValid(address string) bool {
@@ -16,7 +16,7 @@ func IsEmailValid(address string) bool {
 }
 
 func sendSignupCompletionEmail(
-	tmpl email.VerifyEmailTemplate,
+	tmpl t.VerifyEmailTemplate,
 	source string,
 	pass string,
 ) error {
