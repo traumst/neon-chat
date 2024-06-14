@@ -12,7 +12,7 @@ import (
 func DistributeAvatarChange(
 	state *state.State,
 	//TODO targetUser *app.User, // who to inform, nil for all users
-	subjectUser *app.User, // which user changed, nil for every user in chat
+	subjectUser *app.User, // which user changed
 	avatar *app.Avatar,
 	updateType event.EventType,
 ) error {
