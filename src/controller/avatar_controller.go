@@ -89,7 +89,6 @@ func GetAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.R
 		// 	Body:   "Your session has probably expired",
 		// 	Footer: "Reload the page and try again",
 		// }
-
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}

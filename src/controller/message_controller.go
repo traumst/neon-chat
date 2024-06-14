@@ -30,7 +30,6 @@ func AddMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 		// 	Body:   "Your session has probably expired",
 		// 	Footer: "Reload the page and try again",
 		// }
-
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
@@ -101,7 +100,6 @@ func DeleteMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 		// 	Body:   "Your session has probably expired",
 		// 	Footer: "Reload the page and try again",
 		// }
-
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
