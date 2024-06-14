@@ -4,6 +4,11 @@ Minimalistic chat app built using server-components on go + htmx.
 Default colorscheme is a personal preference, with light/dark mode on the horizon.
 This app is being build as an excercise for me to 
 - learn go
+<<<<<<< HEAD
+=======
+- try sqlx
+- further explore htmx abilities
+>>>>>>> 8ad0b43 (default template value 0)
 - explore server sent events as websocket alternative
 - further explore htmx attributes
 - fiddle with tailwind
