@@ -1,7 +1,7 @@
 package app
 
 import (
-	t "go.chat/src/model/template"
+	t "prplchat/src/model/template"
 )
 
 type Avatar struct {

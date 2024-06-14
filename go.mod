@@ -1,4 +1,4 @@
-module go.chat
+module prplchat
 
 go 1.22
 

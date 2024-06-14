@@ -2,26 +2,26 @@ package event
 
 import "fmt"
 
-type UpdateType string
+type EventType string
 
 const (
-	Ping         UpdateType = "ping"
-	UserChange   UpdateType = "user-changed"
-	AvatarChange UpdateType = "avatar-changed"
+	Ping         EventType = "ping"
+	UserChange   EventType = "user-changed"
+	AvatarChange EventType = "avatar-changed"
 
-	ChatAdd   UpdateType = "chat-add"
-	ChatDrop  UpdateType = "chat-drop"
-	ChatClose UpdateType = "chat-close"
+	ChatAdd   EventType = "chat-add"
+	ChatDrop  EventType = "chat-drop"
+	ChatClose EventType = "chat-close"
 
-	ChatInvite UpdateType = "chat-invite"
-	ChatExpel  UpdateType = "chat-expel"
-	ChatLeave  UpdateType = "chat-leave"
+	ChatInvite EventType = "chat-invite"
+	ChatExpel  EventType = "chat-expel"
+	ChatLeave  EventType = "chat-leave"
 
-	MessageAdd  UpdateType = "msg-add"
-	MessageDrop UpdateType = "msg-drop"
+	MessageAdd  EventType = "msg-add"
+	MessageDrop EventType = "msg-drop"
 )
 
-func (e UpdateType) FormatEventName(
+func (e EventType) FormatEventName(
 	chatId int,
 	userId uint,
 	msgId int,

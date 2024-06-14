@@ -1,9 +1,9 @@
-package utils
+package http
 
 import (
 	"net/http"
 
-	"go.chat/src/utils"
+	"prplchat/src/utils"
 )
 
 func SetReqId(r *http.Request, s *string) string {

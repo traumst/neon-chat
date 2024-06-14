@@ -18,13 +18,13 @@ type SmtpConfig struct {
 
 type Config struct {
 	Port      int
-	LoadLocal bool
 	Sqlite    string
 	Smtp      SmtpConfig
+	CacheSize int
 }
 
 func (a *Config) String() string {
-	return fmt.Sprintf("{LoadLocal:%t,Port:%d,Sqlite:%s}", a.LoadLocal, a.Port, a.Sqlite)
+	return fmt.Sprintf("{Port:%d,Sqlite:%s}", a.Port, a.Sqlite)
 }
 
 func Help() string {
@@ -67,7 +67,6 @@ func EnvRead() (*Config, error) {
 		if len(kv) != 2 {
 			continue
 		}
-
 		switch kv[0] {
 		case "PORT":
 			port, err := strconv.Atoi(kv[1])
@@ -75,8 +74,12 @@ func EnvRead() (*Config, error) {
 				return nil, fmt.Errorf("invalid PORT value [%s], %v", kv[1], err)
 			}
 			envConf.Port = port
-		case "LOCAL":
-			envConf.LoadLocal = strings.ToLower(kv[1]) == "true"
+		case "CACHE_SIZE":
+			size, err := strconv.Atoi(kv[1])
+			if err != nil {
+				return nil, fmt.Errorf("invalid CACHE_SIZE value [%s], %v", kv[1], err)
+			}
+			envConf.CacheSize = size
 		case "SQLITE":
 			envConf.Sqlite = kv[1]
 		case "SMTP_USER":

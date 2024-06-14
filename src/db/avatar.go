@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"go.chat/src/utils"
+	"prplchat/src/utils"
 )
 
 type Avatar struct {
@@ -36,8 +36,8 @@ func (db *DBConn) AddAvatar(userId uint, title string, image []byte, mime string
 	if userId <= 0 {
 		return nil, fmt.Errorf("avatar must have user id")
 	}
-	title = utils.TrimSpaces(title)
-	title = utils.TrimSpecial(title)
+	title = utils.ReplaceWithSingleSpace(title)
+	title = utils.RemoveSpecialChars(title)
 	size := len(image)
 	if size <= 0 {
 		return nil, fmt.Errorf("avatar requires an image")
@@ -46,7 +46,7 @@ func (db *DBConn) AddAvatar(userId uint, title string, image []byte, mime string
 	if size > limit {
 		return nil, fmt.Errorf("avatar image size[%d] is over limit[%d]", size, limit)
 	}
-	if !db.IsActive() {
+	if !db.ConnIsActive() {
 		return nil, fmt.Errorf("db is not connected")
 	}
 
@@ -116,7 +116,7 @@ func (db *DBConn) GetAvatars(userId uint) ([]*Avatar, error) {
 }
 
 func (db *DBConn) DropAvatar(id int) error {
-	if !db.IsActive() {
+	if !db.ConnIsActive() {
 		return fmt.Errorf("db is not connected")
 	}
 	if id <= 0 {

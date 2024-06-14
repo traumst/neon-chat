@@ -1,14 +1,14 @@
 package app
 
 import (
-	"go.chat/src/model/template"
+	"prplchat/src/model/template"
 )
 
 // TODO add flags/permissions mapping
 type UserType string
 
 const (
-	UserTypeLocal UserType = "local"
+	UserTypeBasic UserType = "basic"
 )
 
 // TODO allow user ban / suspend

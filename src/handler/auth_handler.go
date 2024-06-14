@@ -7,15 +7,16 @@ import (
 	"sync"
 	"time"
 
-	d "go.chat/src/db"
-	a "go.chat/src/model/app"
-	"go.chat/src/model/template/email"
-	"go.chat/src/utils"
-	h "go.chat/src/utils/http"
+	d "prplchat/src/db"
+	"prplchat/src/handler/state"
+	a "prplchat/src/model/app"
+	"prplchat/src/model/template/email"
+	"prplchat/src/utils"
+	h "prplchat/src/utils/http"
 )
 
 func ReadSession(
-	app *AppState,
+	app *state.State,
 	db *d.DBConn,
 	w http.ResponseWriter,
 	r *http.Request,
@@ -63,7 +64,7 @@ func Authenticate(
 	}
 	user, err := db.SearchUser(username)
 	if err != nil || user == nil || user.Id <= 0 || len(user.Salt) <= 0 {
-		log.Printf("Authenticate TRACE user[%s] not found, %s\n", username, err)
+		log.Printf("Authenticate TRACE user[%s] not found, result[%v], %s\n", username, user, err)
 		return nil, nil, nil
 	}
 	appUser := UserFromDB(*user)
@@ -123,7 +124,7 @@ func Register(
 }
 
 func IssueReservationToken(
-	app *AppState,
+	app *state.State,
 	db *d.DBConn,
 	user *a.User,
 ) (*email.VerifyEmailTemplate, error) {

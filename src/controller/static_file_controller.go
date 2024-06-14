@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	h "go.chat/src/utils/http"
+	h "prplchat/src/utils/http"
 )
 
 func FavIcon(w http.ResponseWriter, r *http.Request) {

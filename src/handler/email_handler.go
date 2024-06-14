@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"go.chat/src/model/template/email"
+	"prplchat/src/model/template/email"
 )
 
 func IsEmailValid(address string) bool {

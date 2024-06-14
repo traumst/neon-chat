@@ -2,38 +2,20 @@ package controller
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"strconv"
 
-	"go.chat/src/db"
-	"go.chat/src/handler"
-	a "go.chat/src/model/app"
-	"go.chat/src/model/event"
-	"go.chat/src/utils"
-	h "go.chat/src/utils/http"
+	"prplchat/src/db"
+	"prplchat/src/handler"
+	"prplchat/src/handler/sse"
+	"prplchat/src/handler/state"
+	a "prplchat/src/model/app"
+	"prplchat/src/model/event"
+	"prplchat/src/utils"
+	h "prplchat/src/utils/http"
 )
 
-const MaxUploadSize int64 = 10 * utils.KB
-
-var allowedImageFormats = []string{
-	"image/svg+xml",
-	"image/jpeg",
-	"image/gif",
-	"image/png",
-}
-
-func isAllowedImageFormat(mime string) bool {
-	for _, allowed := range allowedImageFormats {
-		if allowed == mime {
-			return true
-		}
-	}
-	return false
-}
-
-func AddAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
+func AddAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] AddAvatar\n", reqId)
 	if r.Method != "POST" {
@@ -50,10 +32,10 @@ func AddAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *h
 		// 	Body:   "Your session has probably expired",
 		// 	Footer: "Reload the page and try again",
 		// }
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
-	err = r.ParseMultipartForm(MaxUploadSize)
+	err = r.ParseMultipartForm(handler.MaxUploadSize)
 	if err != nil {
 		log.Printf("[%s] AddAvatar ERROR multipart failed, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
@@ -63,51 +45,16 @@ func AddAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *h
 	file, info, err := r.FormFile("avatar")
 	if err != nil {
 		log.Printf("[%s] AddAvatar ERROR reading input file failed, %s\n", reqId, err.Error())
-		log.Printf("[%s] AddAvatar TRACE reading input file failed, %+v\n", reqId, info.Filename)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid input"))
 		return
 	}
 	defer file.Close()
-	if info.Size > MaxUploadSize {
-		http.Error(w, "file too large "+strconv.Itoa(int(info.Size))+
-			", limit is "+strconv.Itoa(int(MaxUploadSize)), http.StatusBadRequest)
-		return
-	} else if info.Filename == "" {
-		http.Error(w, "file lacks name", http.StatusBadRequest)
-		return
-	}
-	fileBytes, err := io.ReadAll(file)
+	saved, err := handler.UpdateAvatar(db, user.Id, &file, info)
 	if err != nil {
-		http.Error(w, "failed to load input file", http.StatusBadRequest)
+		log.Printf("controller.AddAvatar ERROR failed to update to avatar[%s], %s", info.Filename, err.Error())
+		http.Error(w, "[fail]", http.StatusBadRequest)
 		return
-	}
-	mime := http.DetectContentType(fileBytes)
-	if !isAllowedImageFormat(mime) {
-		http.Error(w, "file type is not supported: "+mime, http.StatusBadRequest)
-		return
-	}
-	oldAvatars, err := db.GetAvatars(user.Id)
-	if err != nil {
-		http.Error(w, "file type is not supported: "+mime, http.StatusBadRequest)
-		return
-	}
-	saved, err := db.AddAvatar(user.Id, info.Filename, fileBytes, mime)
-	if err != nil {
-		log.Printf("controller.AddAvatar ERROR failed to save avatar[%s], %s", info.Filename, err.Error())
-		http.Error(w, fmt.Sprintf("failed to save avatar[%s]", info.Filename), http.StatusBadRequest)
-		return
-	}
-	if len(oldAvatars) > 0 {
-		for _, old := range oldAvatars {
-			if old == nil {
-				continue
-			}
-			err := db.DropAvatar(old.Id)
-			if err != nil {
-				log.Printf("controller.AddAvatar ERROR failed to drop old avatar[%v]", old)
-			}
-		}
 	}
 	avatar := handler.AvatarFromDB(*saved)
 	tmpl := avatar.Template(user)
@@ -117,7 +64,7 @@ func AddAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *h
 		http.Error(w, fmt.Sprintf("failed to template avatar[%d]", avatar.Id), http.StatusBadRequest)
 		return
 	}
-	if err = handler.DistributeAvatarChange(app, user, &avatar, event.AvatarChange); err != nil {
+	if err = sse.DistributeAvatarChange(app, user, &avatar, event.AvatarChange); err != nil {
 		log.Printf("controller.AddAvatar ERROR failed to distribute avatar[%s] update, %s", info.Filename, err.Error())
 	}
 
@@ -125,7 +72,7 @@ func AddAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *h
 	w.Write([]byte(html))
 }
 
-func GetAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
+func GetAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] GetAvatar\n", reqId)
 	if r.Method != "GET" {
@@ -142,8 +89,7 @@ func GetAvatar(app *handler.AppState, db *db.DBConn, w http.ResponseWriter, r *h
 		// 	Body:   "Your session has probably expired",
 		// 	Footer: "Reload the page and try again",
 		// }
-
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	dbAvatar, err := db.GetAvatar(user.Id)

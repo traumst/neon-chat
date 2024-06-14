@@ -11,4 +11,4 @@ log/*
 *.db
 *.db-journal
 .env
-go.chat
+prplchat

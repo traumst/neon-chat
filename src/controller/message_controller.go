@@ -5,15 +5,17 @@ import (
 	"net/http"
 	"strconv"
 
-	d "go.chat/src/db"
-	"go.chat/src/handler"
-	a "go.chat/src/model/app"
-	"go.chat/src/model/event"
-	"go.chat/src/utils"
-	h "go.chat/src/utils/http"
+	d "prplchat/src/db"
+	"prplchat/src/handler"
+	"prplchat/src/handler/sse"
+	"prplchat/src/handler/state"
+	a "prplchat/src/model/app"
+	"prplchat/src/model/event"
+	"prplchat/src/utils"
+	h "prplchat/src/utils/http"
 )
 
-func AddMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func AddMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] AddMessage TRACE\n", h.GetReqId(r))
 	if r.Method != "POST" {
 		log.Printf("[%s] AddMessage ERROR request method\n", h.GetReqId(r))
@@ -28,8 +30,7 @@ func AddMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 		// 	Body:   "Your session has probably expired",
 		// 	Footer: "Reload the page and try again",
 		// }
-
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	log.Printf("[%s] AddMessage TRACE parsing input\n", h.GetReqId(r))
@@ -41,15 +42,21 @@ func AddMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 		return
 	}
 	msg := r.FormValue("msg")
-	msg = utils.TrimSpaces(msg)
-	if msg == "" || len(msg) < 1 {
+	msg = utils.ReplaceWithSingleSpace(msg)
+	if len(msg) < 1 {
 		log.Printf("[%s] AddMessage WARN \n", h.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("message too short"))
 		return
 	}
 	log.Printf("[%s] AddMessage TRACE opening current chat for user[%d]\n", h.GetReqId(r), author.Id)
-	chat := app.GetOpenChat(author.Id)
+	chat, err := app.GetChat(author.Id, chatId)
+	if err != nil {
+		log.Printf("[%s] AddMessage ERROR get chat, %s\n", h.GetReqId(r), err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to open chat"))
+		return
+	}
 	if chat == nil || chat.Id != chatId {
 		log.Printf("[%s] AddMessage WARN no open chat for user[%d]\n", h.GetReqId(r), author.Id)
 		w.WriteHeader(http.StatusBadRequest)
@@ -73,25 +80,17 @@ func AddMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 	}
 
 	log.Printf("[%s] AddMessage TRACE templating message\n", h.GetReqId(r))
-	html, err := message.Template(author).HTML()
-	if err != nil {
-		log.Printf("[%s] AddMessage ERROR html [%+v], %s\n", h.GetReqId(r), message, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("failed templating message"))
-		return
-	}
 
-	err = handler.DistributeMsg(app, chat, author.Id, message, event.MessageAdd)
+	err = sse.DistributeMsg(app, chat, author.Id, message, event.MessageAdd)
 	if err != nil {
 		log.Printf("[%s] AddMessage ERROR distribute message, %s\n", h.GetReqId(r), err)
 	}
 
 	log.Printf("[%s] AddMessage TRACE serving html\n", h.GetReqId(r))
-	w.WriteHeader(http.StatusFound)
-	w.Write([]byte(html))
+	w.WriteHeader(http.StatusAccepted)
 }
 
-func DeleteMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func DeleteMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] DeleteMessage\n", reqId)
 	author, err := handler.ReadSession(app, db, w, r)
@@ -101,8 +100,7 @@ func DeleteMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r
 		// 	Body:   "Your session has probably expired",
 		// 	Footer: "Reload the page and try again",
 		// }
-
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	if r.Method != "POST" {
@@ -150,12 +148,11 @@ func DeleteMessage(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = handler.DistributeMsg(app, chat, author.Id, msg, event.MessageDrop)
+	err = sse.DistributeMsg(app, chat, author.Id, msg, event.MessageDrop)
 	if err != nil {
 		log.Printf("[%s] DeleteMessage ERROR distribute message, %s\n", reqId, err)
 	}
 
 	log.Printf("[%s] DeleteMessage done\n", reqId)
 	w.WriteHeader(http.StatusAccepted)
-	w.Write([]byte("[DeletedM]"))
 }

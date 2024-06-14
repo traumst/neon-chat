@@ -4,11 +4,12 @@ import (
 	"log"
 	"net/http"
 
-	"go.chat/src/db"
-	"go.chat/src/handler"
-	"go.chat/src/model/app"
-	"go.chat/src/model/template"
-	h "go.chat/src/utils/http"
+	"prplchat/src/db"
+	"prplchat/src/handler"
+	"prplchat/src/handler/state"
+	"prplchat/src/model/app"
+	"prplchat/src/model/template"
+	h "prplchat/src/utils/http"
 )
 
 func RenderLogin(
@@ -38,7 +39,7 @@ func RenderLogin(
 }
 
 func RenderHome(
-	app *handler.AppState,
+	app *state.State,
 	db *db.DBConn,
 	w http.ResponseWriter,
 	r *http.Request,

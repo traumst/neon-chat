@@ -6,9 +6,12 @@ import (
 )
 
 type ChatList struct {
-	mu     sync.Mutex
-	chats  []*Chat
-	open   map[uint]*Chat
+	mu sync.Mutex
+	// chat id -> chat
+	chats []*Chat
+	// userId -> chat
+	open map[uint]*Chat
+	// next chat id
 	nextId int
 	isInit bool
 }
@@ -18,9 +21,9 @@ func (cl *ChatList) init() {
 		return
 	}
 
-	cl.isInit = true
 	cl.chats = []*Chat{}
 	cl.open = make(map[uint]*Chat)
+	cl.isInit = true
 }
 
 func (cl *ChatList) AddChat(owner *User, chatName string) int {
@@ -131,7 +134,7 @@ func (cl *ChatList) DeleteChat(userId uint, chat *Chat) error {
 	if !chat.isOwner(userId) {
 		return fmt.Errorf("user[%d] is not owner of chat %d", userId, chat.Id)
 	}
-	if chat.Id >= len(cl.chats) || chat.Id < 0 {
+	if chat.Id < 0 || chat.Id >= len(cl.chats) {
 		return fmt.Errorf("chat[%d] is out of range", chat.Id)
 	}
 	if cl.chats[chat.Id] == nil {
@@ -183,6 +186,22 @@ func (cl *ChatList) ExpelUser(userId uint, chatId int, removeId uint) error {
 	err := chat.RemoveUser(userId, removeId)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (cl *ChatList) SyncUser(userId uint, user *User) error {
+	cl.mu.Lock()
+	defer cl.mu.Unlock()
+	cl.init()
+	for _, chat := range cl.chats {
+		if chat == nil {
+			continue
+		}
+		err := chat.SyncUser(userId, user)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
