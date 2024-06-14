@@ -129,6 +129,10 @@ func handleUser(app *state.State, db *db.DBConn, allMiddleware []Middleware) {
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ChangeUser(app, db, w, r)
 		}), allMiddleware))
+	http.Handle("/user/search", ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			SearchUsers(app, db, w, r)
+		}), allMiddleware))
 }
 
 func handleAuth(app *state.State, db *db.DBConn, allMiddleware []Middleware) {
