@@ -1,8 +1,8 @@
 package app
 
 import (
-	"go.chat/src/model/event"
-	"go.chat/src/model/template"
+	"prplchat/src/model/event"
+	"prplchat/src/model/template"
 )
 
 type Message struct {

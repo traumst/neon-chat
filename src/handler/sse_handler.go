@@ -2,10 +2,11 @@ package handler
 
 import (
 	"log"
+	"prplchat/src/handler/state"
 )
 
 // TODO queue mechanism for delta updates
-func PollUpdatesForUser(app *AppState, conn *Conn, pollingUserId uint) {
+func PollUpdatesForUser(app *state.State, conn *state.Conn, pollingUserId uint) {
 	log.Printf("[%s] APP.PollUpdatesForUser TRACE IN, triggered by [%d]\n",
 		conn.Origin, conn.User.Id)
 	done := false

@@ -6,37 +6,37 @@ import (
 	"net/http"
 	"time"
 
-	d "go.chat/src/db"
-	"go.chat/src/handler"
-	a "go.chat/src/model/app"
-	"go.chat/src/utils"
-	h "go.chat/src/utils/http"
+	d "prplchat/src/db"
+	"prplchat/src/handler"
+	"prplchat/src/handler/state"
+	a "prplchat/src/model/app"
+	"prplchat/src/utils"
+	h "prplchat/src/utils/http"
 )
 
-// TODO support other types
 const (
-	LocalUserType = a.UserTypeLocal
-	LocalAuthType = a.AuthTypeLocal
+	LocalUserType = a.UserTypeBasic
+	EmailAuthType = a.AuthTypeEmail
 )
 
-func Login(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func Login(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] Login TRACE IN\n", h.GetReqId(r))
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("action not allowed"))
 		return
 	}
-	loginUser := utils.Trim(r.FormValue("login-user"))
-	loginPass := utils.Trim(r.FormValue("login-pass"))
-	if loginUser == "" || loginPass == "" || len(loginUser) < 4 || len(loginPass) < 4 {
+	loginUser := utils.SanitizeInput(r.FormValue("login-user"))
+	loginPass := utils.SanitizeInput(r.FormValue("login-pass"))
+	if len(loginUser) < 4 || len(loginPass) < 4 {
 		log.Printf("[%s] Login TRACE empty user[%s]", h.GetReqId(r), loginUser)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("bad login credentials"))
 		return
 	}
 	log.Printf("[%s] Login TRACE authentication check for user[%s] auth[%s]\n",
-		h.GetReqId(r), loginUser, LocalAuthType)
-	user, auth, err := handler.Authenticate(db, loginUser, loginPass, LocalAuthType)
+		h.GetReqId(r), loginUser, EmailAuthType)
+	user, auth, err := handler.Authenticate(db, loginUser, loginPass, EmailAuthType)
 	if err != nil {
 		log.Printf("[%s] Login ERROR unauth user[%s], %s\n", h.GetReqId(r), loginUser, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
@@ -67,12 +67,12 @@ func Login(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusOK)
 }
 
-func Logout(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func Logout(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] Logout TRACE \n", h.GetReqId(r))
 	user, err := handler.ReadSession(app, db, w, r)
 	if user == nil {
 		log.Printf("[%s] Logout INFO user is not authorized, %s\n", h.GetReqId(r), err.Error())
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	h.ClearSessionCookie(w, user.Id)
@@ -80,29 +80,29 @@ func Logout(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.
 	w.WriteHeader(http.StatusOK)
 }
 
-func SignUp(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func SignUp(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] SignUp TRACE IN\n", h.GetReqId(r))
 	if r.Method != "PUT" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("This shouldn't happen"))
 		return
 	}
-	signupUser := utils.Trim(r.FormValue("signup-user"))
-	signupEmail := utils.Trim(r.FormValue("signup-email"))
-	signupPass := utils.Trim(r.FormValue("signup-pass"))
+	signupUser := utils.SanitizeInput(r.FormValue("signup-user"))
+	signupEmail := utils.SanitizeInput(r.FormValue("signup-email"))
+	signupPass := utils.SanitizeInput(r.FormValue("signup-pass"))
 	log.Printf("[%s] SignUp TRACE authentication check for user[%s] auth[%s]\n",
-		h.GetReqId(r), signupUser, LocalAuthType)
-	if signupUser == "" || signupEmail == "" || signupPass == "" ||
-		len(signupUser) < 4 || len(signupEmail) < 4 || len(signupPass) < 4 {
+		h.GetReqId(r), signupUser, EmailAuthType)
+	if len(signupUser) < 4 || len(signupEmail) < 4 || len(signupPass) < 4 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("bad signup credentials"))
 		return
 	}
-	user, auth, _ := handler.Authenticate(db, signupUser, signupPass, LocalAuthType)
+	user, auth, _ := handler.Authenticate(db, signupUser, signupPass, EmailAuthType)
 	if user != nil && user.Status == a.UserStatusActive && auth != nil {
 		log.Printf("[%s] SignUp TRACE signedIn instead of signUp user[%s]\n", h.GetReqId(r), signupUser)
 		h.SetSessionCookie(w, user, auth)
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 	if user != nil {
@@ -128,7 +128,7 @@ func SignUp(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.
 		Status: a.UserStatusPending,
 		Salt:   salt,
 	}
-	user, auth, err := handler.Register(db, user, signupPass, LocalAuthType)
+	user, auth, err := handler.Register(db, user, signupPass, EmailAuthType)
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR on register user[%s][%s], %s\n", h.GetReqId(r), signupUser, signupEmail, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
@@ -173,7 +173,7 @@ func SignUp(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.
 	w.Write([]byte(html))
 }
 
-func ConfirmEmail(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func ConfirmEmail(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] ConfirmEmail TRACE IN\n", h.GetReqId(r))
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -238,5 +238,6 @@ func ConfirmEmail(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r 
 	// 	Body:   "Your user name is " + user.Name + " until you decide to change it",
 	// 	Footer: "Please, login using your signup credentials",
 	// }
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Header.Add(w.Header(), "HX-Refresh", "true")
+	w.WriteHeader(http.StatusOK)
 }

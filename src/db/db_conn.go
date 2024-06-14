@@ -44,14 +44,14 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 	return &db, err
 }
 
-func (db *DBConn) Close() {
+func (db *DBConn) ConnClose() {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
 	db.conn.Close()
 }
 
-func (db *DBConn) IsActive() bool {
+func (db *DBConn) ConnIsActive() bool {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 

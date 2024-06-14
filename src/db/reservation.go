@@ -28,7 +28,7 @@ func (db *DBConn) ReservationTableExists() bool {
 }
 
 func (db *DBConn) AddReservation(reserve Reservation) (*Reservation, error) {
-	if !db.IsActive() {
+	if !db.ConnIsActive() {
 		return nil, fmt.Errorf("db is not connected")
 	}
 	if reserve.Id != 0 {
@@ -63,7 +63,7 @@ func (db *DBConn) AddReservation(reserve Reservation) (*Reservation, error) {
 }
 
 func (db *DBConn) GetReservation(token string) (*Reservation, error) {
-	if !db.IsActive() {
+	if !db.ConnIsActive() {
 		return nil, fmt.Errorf("db is not connected")
 	}
 	if token == "" {

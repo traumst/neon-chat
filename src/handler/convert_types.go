@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"go.chat/src/db"
-	"go.chat/src/model/app"
-	"go.chat/src/utils"
+	"prplchat/src/db"
+	"prplchat/src/model/app"
+	"prplchat/src/utils"
 )
 
 func UserToDB(user app.User) db.User {

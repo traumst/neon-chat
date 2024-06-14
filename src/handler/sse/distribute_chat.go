@@ -1,21 +1,22 @@
-package handler
+package sse
 
 import (
 	"fmt"
 	"log"
 
-	"go.chat/src/model/app"
-	"go.chat/src/model/event"
+	"prplchat/src/handler/state"
+	"prplchat/src/model/app"
+	"prplchat/src/model/event"
 )
 
 // empty targetUser means all users in chat
 func DistributeChat(
-	state *AppState,
+	state *state.State,
 	chat *app.Chat,
 	author *app.User, // who made the change
 	targetUser *app.User, // who to inform, nil for all users in chat
-	subjectUser *app.User, // which chat changed, nil for every user in chat
-	updateType event.UpdateType,
+	subjectUser *app.User, // user affected by change, nil for every user in chat
+	updateType event.EventType,
 ) error {
 	if author == nil {
 		return fmt.Errorf("author is nil")
@@ -47,12 +48,12 @@ func DistributeChat(
 }
 
 func distributeToUsers(
-	state *AppState,
+	state *state.State,
 	chat *app.Chat,
 	author *app.User,
 	targetUsers []*app.User,
 	subjectUser *app.User,
-	updateType event.UpdateType,
+	updateType event.EventType,
 ) error {
 	var errors []string
 	for _, targetUser := range targetUsers {
@@ -78,55 +79,54 @@ func distributeToUsers(
 }
 
 func distributeChatToUser(
-	state *AppState,
+	state *state.State,
 	author *app.User,
 	targetUser *app.User,
 	targetChat *app.Chat,
 	subjectUser *app.User,
-	updateType event.UpdateType,
+	updateType event.EventType,
 ) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panicked: %v", r)
 		}
 	}()
-
 	if author == nil {
 		return fmt.Errorf("author is nil")
 	}
 	if targetChat == nil {
 		return fmt.Errorf("targetChat is nil")
 	}
+	conns := state.GetConn(targetUser.Id)
+	for _, conn := range conns {
+		var connerr error
 
-	var conn *Conn
-	conn, err = state.GetConn(targetUser.Id)
-	if err != nil {
-		return err
+		switch updateType {
+		case event.ChatAdd:
+			connerr = chatCreate(conn, targetChat, author)
+		case event.ChatInvite:
+			connerr = chatInvite(conn, targetChat, author.Id, subjectUser)
+		case event.ChatDrop:
+			connerr = chatDelete(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser.Id)
+		case event.ChatExpel:
+			connerr = chatExpel(conn, targetChat.Id, targetChat.Owner.Id, author.Id, subjectUser.Id)
+		case event.ChatLeave:
+			connerr = chatLeave(conn, targetChat.Id, targetChat.Owner.Id, author.Id, subjectUser.Id)
+		case event.ChatClose:
+			connerr = chatClose(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser)
+		default:
+			connerr = fmt.Errorf("unknown event type[%v]", updateType)
+		}
+
+		if connerr != nil {
+			log.Printf("distributeChatToUser ERROR failed to send update to user[%d], err[%s]\n",
+				targetUser.Id, connerr)
+			if err == nil {
+				err = connerr
+			} else {
+				err = fmt.Errorf("%s, %s", err.Error(), connerr.Error())
+			}
+		}
 	}
-	if conn.User.Id != targetUser.Id {
-		return fmt.Errorf("user[%d] does not own conn[%v], user[%d] does", targetUser.Id, conn.Origin, conn.User.Id)
-	}
-
-	switch updateType {
-	case event.ChatAdd:
-		return chatCreate(conn, targetChat, author)
-
-	case event.ChatInvite:
-		return chatInvite(conn, targetChat, author.Id, subjectUser)
-
-	case event.ChatDrop:
-		return chatDelete(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser.Id)
-
-	case event.ChatExpel:
-		return chatExpel(conn, targetChat.Id, targetChat.Owner.Id, author.Id, subjectUser.Id)
-
-	case event.ChatLeave:
-		return chatLeave(conn, targetChat.Id, targetChat.Owner.Id, author.Id, subjectUser.Id)
-
-	case event.ChatClose:
-		return chatClose(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser)
-
-	default:
-		return fmt.Errorf("unknown event type[%v]", updateType)
-	}
+	return err
 }

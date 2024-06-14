@@ -2,8 +2,8 @@ package event
 
 import "fmt"
 
-type LiveUpdate struct {
-	Event    UpdateType
+type LiveEvent struct {
+	Event    EventType
 	ChatId   int
 	UserId   uint
 	MsgId    int
@@ -12,7 +12,7 @@ type LiveUpdate struct {
 	Error    error
 }
 
-func (u *LiveUpdate) String() string {
+func (u *LiveEvent) String() string {
 	return fmt.Sprintf("LiveUpdate{event:%v,chat:%d,user:%d,msg:%d,author:%d,error:%v}",
 		u.Event, u.ChatId, u.UserId, u.MsgId, u.AuthorId, u.Error)
 }

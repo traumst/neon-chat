@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"go.chat/src/controller"
-	"go.chat/src/db"
-	"go.chat/src/handler"
-	"go.chat/src/utils"
+	"prplchat/src/controller"
+	"prplchat/src/db"
+	"prplchat/src/handler/state"
+	"prplchat/src/utils"
 )
 
 func main() {
@@ -49,10 +49,12 @@ func main() {
 	}
 
 	log.Println("init app state...")
-	app := &handler.ApplicationState
-	app.Init(db, handler.AppConfig{
-		LoadLocal: config.LoadLocal,
-		Smtp: handler.SmtpConfig{
+	app := &state.Application
+	app.Init(db, utils.Config{
+		CacheSize: config.CacheSize,
+		Port:      config.Port,
+		Sqlite:    config.Sqlite,
+		Smtp: utils.SmtpConfig{
 			User: config.Smtp.User,
 			Pass: config.Smtp.Pass,
 			Host: config.Smtp.Host,

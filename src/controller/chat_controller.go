@@ -8,15 +8,17 @@ import (
 	"strings"
 	"sync"
 
-	d "go.chat/src/db"
-	"go.chat/src/handler"
-	"go.chat/src/model/event"
-	"go.chat/src/model/template"
-	"go.chat/src/utils"
-	h "go.chat/src/utils/http"
+	d "prplchat/src/db"
+	"prplchat/src/handler"
+	"prplchat/src/handler/sse"
+	"prplchat/src/handler/state"
+	"prplchat/src/model/event"
+	"prplchat/src/model/template"
+	"prplchat/src/utils"
+	h "prplchat/src/utils/http"
 )
 
-func Welcome(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func Welcome(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] OpenChat TRACE returning template\n", reqId)
 	user, err := handler.ReadSession(app, db, w, r)
@@ -38,7 +40,7 @@ func Welcome(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http
 	w.Write([]byte(html))
 }
 
-func OpenChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func OpenChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] OpenChat\n", reqId)
 	if r.Method != "GET" {
@@ -55,7 +57,7 @@ func OpenChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *htt
 		// 	Body:   "Your session has probably expired",
 		// 	Footer: "Reload the page and try again",
 		// }
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	path := strings.Split(r.URL.Path, "/")
@@ -94,7 +96,7 @@ func OpenChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *htt
 	w.Write([]byte(html))
 }
 
-func AddChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func AddChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] AddChat\n", reqId)
 	if r.Method != "POST" {
@@ -111,9 +113,9 @@ func AddChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http
 		return
 	}
 	chatName := r.FormValue("chatName")
-	chatName = utils.TrimSpaces(chatName)
-	chatName = utils.TrimSpecial(chatName)
-	if chatName == "" || len(chatName) < 4 {
+	chatName = utils.ReplaceWithSingleSpace(chatName)
+	chatName = utils.RemoveSpecialChars(chatName)
+	if len(chatName) < 4 {
 		log.Printf("[%s] AddChat ERROR chat name [%s]\n", reqId, chatName)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf("bad chat name [%s]", chatName)))
@@ -135,7 +137,7 @@ func AddChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		err = handler.DistributeChat(app, openChat, user, user, user, event.ChatAdd)
+		err = sse.DistributeChat(app, openChat, user, user, user, event.ChatAdd)
 		if err != nil {
 			log.Printf("[%s] AddChat ERROR cannot distribute chat header, %s\n", reqId, err)
 		}
@@ -157,7 +159,7 @@ func AddChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http
 	wg.Wait()
 }
 
-func CloseChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func CloseChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] CloseChat\n", reqId)
 	if r.Method != "POST" {
@@ -172,8 +174,7 @@ func CloseChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *ht
 		// 	Body:   "Your session has probably expired",
 		// 	Footer: "Reload the page and try again",
 		// }
-
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	chatIdStr := r.PostFormValue("chatid")
@@ -205,7 +206,7 @@ func CloseChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *ht
 	w.Write([]byte(html))
 }
 
-func DeleteChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func DeleteChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] DeleteChat TRACE\n", reqId)
 	if r.Method != "POST" {
@@ -220,8 +221,7 @@ func DeleteChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 		// 	Body:   "Your session has probably expired",
 		// 	Footer: "Reload the page and try again",
 		// }
-
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 	chatId := r.PostFormValue("chatid")
@@ -255,19 +255,19 @@ func DeleteChat(app *handler.AppState, db *d.DBConn, w http.ResponseWriter, r *h
 	go func() {
 		defer wg.Done()
 		log.Printf("[%s] DeleteChat TRACE distributes user[%d] closes chat[%d]\n", reqId, user.Id, chat.Id)
-		err = handler.DistributeChat(app, chat, user, nil, user, event.ChatClose)
+		err = sse.DistributeChat(app, chat, user, nil, user, event.ChatClose)
 		if err != nil {
 			log.Printf("[%s] DeleteChat ERROR cannot distribute chat close, %s\n", reqId, err)
 			return
 		}
 		log.Printf("[%s] DeleteChat TRACE distributes user[%d] deletes chat[%d]\n", reqId, user.Id, chat.Id)
-		err = handler.DistributeChat(app, chat, user, nil, user, event.ChatDrop)
+		err = sse.DistributeChat(app, chat, user, nil, user, event.ChatDrop)
 		if err != nil {
 			log.Printf("[%s] DeleteChat ERROR cannot distribute chat deleted, %s\n", reqId, err)
 			return
 		}
 		log.Printf("[%s] DeleteChat TRACE distributes user[%d] expel all from chat[%d]\n", reqId, user.Id, chat.Id)
-		err = handler.DistributeChat(app, chat, user, nil, nil, event.ChatExpel)
+		err = sse.DistributeChat(app, chat, user, nil, nil, event.ChatExpel)
 		if err != nil {
 			log.Printf("[%s] ExpelUser ERROR cannot distribute chat user expel, %s\n", reqId, err)
 			return
