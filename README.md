@@ -1,13 +1,14 @@
-# prplchat
+# Neon chat
 
 Minimalistic chat app built using server-components on go + htmx.
 Default colorscheme is a personal preference, with light/dark mode on the horizon.
 This app is being build as an excercise for me to 
 - learn go
-- further explore htmx abilities
 - explore server sent events as websocket alternative
+- further explore htmx attributes
 - fiddle with tailwind
 - <s>prove react is overrated</s>
+- finish a project for a change
 
 ## How to run
 
@@ -23,8 +24,8 @@ You should then see output similar to:
 ```
 > sh run.sh
 Running tests
-ok      prplchat/src/handler     (cached)
-ok      prplchat/src/model/app   (cached)
+ok      neon-chat/src/handler     (cached)
+ok      neon-chat/src/model/app   (cached)
 Starting server...
 2024/05/01 00:07:58 Application is starting...
 ...
