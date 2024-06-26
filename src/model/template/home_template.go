@@ -21,7 +21,7 @@ func (h *HomeTemplate) ChatAddEvent() string {
 	if h.OpenChat != nil {
 		openChatId = h.OpenChat.ChatId
 	}
-	return event.ChatAdd.FormatEventName(openChatId, h.User.UserId, -5)
+	return event.ChatAdd.FormatEventName(openChatId, h.User.UserId, 0)
 }
 
 func (h *HomeTemplate) ChatInviteEvent() string {
@@ -33,11 +33,11 @@ func (h *HomeTemplate) ChatCloseEvent() string {
 	if h.OpenChat != nil {
 		openChatId = h.OpenChat.ChatId
 	}
-	return event.ChatClose.FormatEventName(openChatId, h.User.UserId, -6)
+	return event.ChatClose.FormatEventName(openChatId, h.User.UserId, 0)
 }
 
 func (h *HomeTemplate) AvatarChangeEvent() string {
-	return event.AvatarChange.FormatEventName(0, h.User.UserId, -5)
+	return event.AvatarChange.FormatEventName(0, h.User.UserId, 0)
 }
 
 func (h *HomeTemplate) HTML() (string, error) {

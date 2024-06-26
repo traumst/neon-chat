@@ -10,7 +10,7 @@ import (
 	d "prplchat/src/db"
 	"prplchat/src/handler/state"
 	a "prplchat/src/model/app"
-	"prplchat/src/model/template/email"
+	t "prplchat/src/model/template"
 	"prplchat/src/utils"
 	h "prplchat/src/utils/http"
 )
@@ -127,7 +127,7 @@ func IssueReservationToken(
 	app *state.State,
 	db *d.DBConn,
 	user *a.User,
-) (*email.VerifyEmailTemplate, error) {
+) (*t.VerifyEmailTemplate, error) {
 	token := utils.RandStringBytes(16)
 	expire := time.Now().Add(1 * time.Hour)
 	reserve, err := reserve(db, user, token, expire)
@@ -136,7 +136,7 @@ func IssueReservationToken(
 		return nil, fmt.Errorf("")
 	}
 	emailConfig := app.SmtpConfig()
-	tmpl := email.VerifyEmailTemplate{
+	tmpl := t.VerifyEmailTemplate{
 		SourceEmail: emailConfig.User,
 		UserEmail:   user.Email,
 		UserName:    user.Name,

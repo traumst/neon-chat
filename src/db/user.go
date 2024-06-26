@@ -4,6 +4,9 @@ import (
 	"fmt"
 )
 
+const minAuthLen = 3
+const maxAuthLen = 64
+
 type User struct {
 	Id     uint   `db:"id"`
 	Name   string `db:"name"`
@@ -31,15 +34,15 @@ func (db *DBConn) UserTableExists() bool {
 func (db *DBConn) AddUser(user *User) (*User, error) {
 	if user.Id != 0 {
 		return nil, fmt.Errorf("user already has an id[%d]", user.Id)
-	} else if user.Name == "" {
+	} else if len(user.Name) < minAuthLen || len(user.Name) > maxAuthLen {
 		return nil, fmt.Errorf("user has no name")
-	} else if user.Email == "" {
+	} else if len(user.Email) < minAuthLen || len(user.Email) > maxAuthLen {
 		return nil, fmt.Errorf("user has no email")
-	} else if user.Type == "" {
+	} else if len(user.Type) < minAuthLen || len(user.Type) > maxAuthLen {
 		return nil, fmt.Errorf("user has no type")
-	} else if user.Status == "" {
+	} else if len(user.Status) < minAuthLen || len(user.Status) > maxAuthLen {
 		return nil, fmt.Errorf("user has no status")
-	} else if len(user.Salt) <= 0 {
+	} else if len(user.Salt) == 0 {
 		return nil, fmt.Errorf("user has no salt")
 	}
 	if !db.ConnIsActive() {
@@ -87,7 +90,7 @@ func (db *DBConn) SearchUser(login string) (*User, error) {
 	if !db.isConn || !db.isInit {
 		return nil, fmt.Errorf("db is not connected")
 	}
-	if login == "" {
+	if len(login) < minAuthLen || len(login) > maxAuthLen {
 		return nil, fmt.Errorf("login name/email was not provided")
 	}
 
@@ -97,9 +100,33 @@ func (db *DBConn) SearchUser(login string) (*User, error) {
 	var user User
 	err := db.conn.Get(&user, `SELECT * FROM users WHERE name = ? or email = ?`, login, login)
 	if err != nil {
-		return nil, fmt.Errorf("user[%s] not found: %s", login, err)
+		return nil, fmt.Errorf("login[%s] not found: %s", login, err)
 	}
 	return &user, err
+}
+
+func (db *DBConn) SearchUsers(name string) ([]*User, error) {
+	if db == nil {
+		return nil, fmt.Errorf("db is nil")
+	}
+	if !db.isConn || !db.isInit {
+		return nil, fmt.Errorf("db is not connected")
+	}
+	if len(name) < minAuthLen || len(name) > maxAuthLen {
+		return nil, fmt.Errorf("name was not provided")
+	}
+	users := make([]*User, 0)
+	approxName := fmt.Sprintf("%%%s%%", name)
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	err := db.conn.Select(&users, `SELECT * FROM users WHERE name like ? or email like ?`,
+		approxName, approxName)
+	if err != nil {
+		return nil, fmt.Errorf("user[%s] not found: %s", name, err)
+	}
+	return users, err
 }
 
 func (db *DBConn) GetUser(id uint) (*User, error) {

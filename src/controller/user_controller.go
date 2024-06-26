@@ -324,3 +324,66 @@ func ChangeUser(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("[ok]"))
 }
+
+func SearchUsers(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+	reqId := h.GetReqId(r)
+	log.Printf("[%s] SearchUsers TRACE IN\n", reqId)
+	if r.Method != "POST" {
+		log.Printf("[%s] SearchUsers TRACE auth does not allow %s\n", reqId, r.Method)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte("[verb]"))
+		return
+	}
+	log.Printf("[%s] SearchUsers TRACE check login\n", reqId)
+	user, err := handler.ReadSession(app, db, w, r)
+	if err != nil || user == nil {
+		log.Printf("[%s] SearchUsers WARN unauthenticated, %s\n", h.GetReqId(r), err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("[auth]"))
+		return
+	}
+	name := r.FormValue("invitee")
+	log.Printf("[%s] ChangeUser TRACE new name: %s\n", reqId, name)
+	if name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("[noop]"))
+		return
+	}
+	users, err := db.SearchUsers(name)
+	if err != nil {
+		log.Printf("[%s] SearchUsers ERROR failed searching users matching[%s], %s\n", h.GetReqId(r), name, err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("[fail]"))
+		return
+	}
+	if len(users) == 0 {
+		log.Printf("[%s] SearchUsers TRACE no users found matching[%s]\n", h.GetReqId(r), name)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(""))
+		return
+	}
+	log.Printf("[%s] SearchUsers TRACE found %d users matching[%s]\n", h.GetReqId(r), len(users), name)
+	html := ""
+	for _, u := range users {
+		appUser := handler.UserFromDB(*u)
+		tmpl := appUser.Template(0, 0, u.Id)
+		option, err := tmpl.ShortHTML()
+		if err != nil {
+			log.Printf("[%s] SearchUsers ERROR failed to template user[%d], %s\n", h.GetReqId(r), u.Id, err.Error())
+			continue
+		}
+		if len(option) == 0 {
+			log.Printf("[%s] SearchUsers ERROR user[%d] has no option\n", h.GetReqId(r), u.Id)
+			continue
+		}
+		html += fmt.Sprintf("%s\n%s", html, option)
+	}
+	if len(html) == 0 {
+		log.Printf("[%s] SearchUsers ERROR empty response for users matching[%s]\n", h.GetReqId(r), name)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed mapping options"))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(html))
+}
