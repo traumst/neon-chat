@@ -25,10 +25,10 @@ func Welcome(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Requ
 	var welcome template.WelcomeTemplate
 	if user == nil {
 		log.Printf("[%s] OpenChat TRACE user is not authorized, %s\n", h.GetReqId(r), err)
-		welcome = template.WelcomeTemplate{User: *user.Template(-1, 0, 0)}
+		welcome = template.WelcomeTemplate{User: *user.Template(0, 0, 0)}
 	} else {
 		log.Printf("[%s] OpenChat TRACE user is authorized, %s\n", h.GetReqId(r), err)
-		welcome = template.WelcomeTemplate{User: *user.Template(-1, 0, 0)}
+		welcome = template.WelcomeTemplate{User: *user.Template(0, 0, 0)}
 	}
 	html, err := welcome.HTML()
 	if err != nil {
@@ -79,7 +79,7 @@ func OpenChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Req
 	openChat, err := app.OpenChat(user.Id, chatId)
 	if err != nil {
 		log.Printf("[%s] OpenChat ERROR chat, %s\n", reqId, err)
-		welcome := template.WelcomeTemplate{User: *user.Template(-1, 0, 0)}
+		welcome := template.WelcomeTemplate{User: *user.Template(0, 0, 0)}
 		html, err = welcome.HTML()
 	} else {
 		log.Printf("[%s] OpenChat TRACE html template\n", reqId)
@@ -194,7 +194,7 @@ func CloseChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Re
 		log.Printf("[%s] CloseChat ERROR close chat[%d] for user[%d], %s\n",
 			reqId, chatId, user.Id, err)
 	}
-	welcome := template.WelcomeTemplate{User: *user.Template(-1, 0, 0)}
+	welcome := template.WelcomeTemplate{User: *user.Template(0, 0, 0)}
 	html, err := welcome.HTML()
 	if err != nil {
 		log.Printf("[%s] CloseChat ERROR cannot template welcome page, %s\n", reqId, err)

@@ -18,27 +18,27 @@ type ChatTemplate struct {
 }
 
 func (c *ChatTemplate) UserChangeEvent() string {
-	return event.UserChange.FormatEventName(-98, c.User.UserId, -97)
+	return event.UserChange.FormatEventName(0, c.User.UserId, 0)
 }
 
 func (c *ChatTemplate) ChatDropEvent() string {
-	return event.ChatDrop.FormatEventName(c.ChatId, c.User.UserId, -96)
+	return event.ChatDrop.FormatEventName(c.ChatId, c.User.UserId, 0)
 }
 
 func (c *ChatTemplate) ChatCloseEvent() string {
-	return event.ChatClose.FormatEventName(c.ChatId, c.User.UserId, -95)
+	return event.ChatClose.FormatEventName(c.ChatId, c.User.UserId, 0)
 }
 
 func (c *ChatTemplate) ChatExpelEvent() string {
-	return event.ChatExpel.FormatEventName(c.ChatId, c.User.UserId, -94)
+	return event.ChatExpel.FormatEventName(c.ChatId, c.User.UserId, 0)
 }
 
 func (c *ChatTemplate) ChatLeaveEvent() string {
-	return event.ChatLeave.FormatEventName(c.ChatId, c.User.UserId, -93)
+	return event.ChatLeave.FormatEventName(c.ChatId, c.User.UserId, 0)
 }
 
 func (c *ChatTemplate) MessageAddEvent() string {
-	return event.MessageAdd.FormatEventName(c.ChatId, c.User.UserId, -93)
+	return event.MessageAdd.FormatEventName(c.ChatId, c.User.UserId, 0)
 }
 
 func (c *ChatTemplate) HTML() (string, error) {

@@ -81,7 +81,7 @@ func CloseSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 	if openChat != nil {
 		html, err = openChat.Template(user, user).HTML()
 	} else {
-		welcome := t.WelcomeTemplate{User: *user.Template(-1, 0, 0)}
+		welcome := t.WelcomeTemplate{User: *user.Template(0, 0, 0)}
 		html, err = welcome.HTML()
 	}
 	if err != nil {

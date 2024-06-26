@@ -4,8 +4,9 @@ Minimalistic chat app built using server-components on go + htmx.
 Default colorscheme is a personal preference, with light/dark mode on the horizon.
 This app is being build as an excercise for me to 
 - learn go
+- try sqlx
+- further explore htmx abilities
 - explore server sent events as websocket alternative
-- further explore htmx attributes
 - fiddle with tailwind
 - <s>prove react is overrated</s>
 - finish a project for a change
@@ -33,13 +34,7 @@ Starting server...
 ```
 And the app should be available at http://localhost:8080
 
-## Right now
-bugs and refactor
-
 ## TODOs
-
-### Known bugs
-- msg should distribute to user connection, event if chat is closed
 
 ### Persistence
 - all ids should be uint
@@ -47,6 +42,7 @@ bugs and refactor
 - cache instead of map
 
 ### Message Broadcasting: 
+- msg should distribute to user connection, event if chat is closed
 - track user deltas: chats, messages
 - only serve deltas
 - buffer for unstable connection/s

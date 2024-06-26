@@ -1,8 +1,6 @@
 package app
 
-import (
-	t "prplchat/src/model/template"
-)
+import "prplchat/src/model/template"
 
 type Avatar struct {
 	Id     int
@@ -13,8 +11,8 @@ type Avatar struct {
 	Mime   string
 }
 
-func (a *Avatar) Template(viewer *User) *t.AvatarTemplate {
-	return &t.AvatarTemplate{
+func (a *Avatar) Template(viewer *User) *template.AvatarTemplate {
+	return &template.AvatarTemplate{
 		Id:     a.Id,
 		Title:  a.Title,
 		UserId: a.UserId,

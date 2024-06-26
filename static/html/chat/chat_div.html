@@ -62,16 +62,29 @@
             {{ end }}
         </div> 
         {{ if eq .Owner.UserId .User.UserId }}
+            <script>
+                function clearUserSearchInput(element) {
+                    const inviteUser = document.getElementById('inviteUser');
+                    if (inviteUser) {
+                        inviteUser.value = '';
+                    }
+                }
+            </script>
             <form id="inviteUserToChatForm"
                 method="POST" 
                 hx-target=".member-list" 
                 hx-post="/user/invite" 
                 hx-trigger="submit" 
                 hx-swap="beforeend"
+                hx-after-swap="scrollToLastChild"
                 class="flex-row flex-shrink border-2 rounded border-emerald-400"
             >
                 <input type="hidden" name="chatId" value="{{ .ChatId }}">
-                <input id="inviteUser" type="text" name="invitee" placeholder="invite user" title="enter to send"
+                <input list="userList" id="inviteUser" name="invitee" 
+                    hx-post="/user/search" 
+                    hx-trigger="keyup delay:500ms" 
+                    hx-target="#userList" 
+                    hx-swap="innerHTML" 
                     class="w-full
                         text-center
                         rounded-md
@@ -79,16 +92,11 @@
                         text-gray-400
                         shadow shadow-zinc-700
                         hover:shadow-lg hover:shadow-zinc-500">
+                <datalist id="userList">
+                    <option value="none">Type to search users...</option>
+                </datalist>
                 <button type="submit" class="hidden">Send Invite</button>
             </form>
-            <script>
-                document.body.addEventListener('htmx:afterSwap', function (event) {
-                    const invitedUsed = document.getElementById('inviteUser');
-                    if (invitedUsed) {
-                        invitedUsed.value = '';
-                    }
-                });
-            </script>
         {{ end }}
     </div>
     <div class="chat-content flex flex-col p-2 grow overflow-y-auto">

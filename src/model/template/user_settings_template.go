@@ -17,15 +17,15 @@ type UserSettingsTemplate struct {
 }
 
 func (c *UserSettingsTemplate) UserChangeEvent() string {
-	return event.UserChange.FormatEventName(-27, c.UserId, -28)
+	return event.UserChange.FormatEventName(0, c.UserId, 0)
 }
 
 func (c *UserSettingsTemplate) ChatExpelEvent() string {
-	return event.ChatExpel.FormatEventName(c.ChatId, c.UserId, -29)
+	return event.ChatExpel.FormatEventName(c.ChatId, c.UserId, 0)
 }
 
 func (c *UserSettingsTemplate) ChatLeaveEvent() string {
-	return event.ChatLeave.FormatEventName(c.ChatId, c.UserId, -30)
+	return event.ChatLeave.FormatEventName(c.ChatId, c.UserId, 0)
 }
 
 func (h *UserSettingsTemplate) HTML() (string, error) {
