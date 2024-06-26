@@ -82,7 +82,6 @@ And the app should be available at http://localhost:8080
     - statistical similarity - slow
 - search chats by: 
     - chat name
-    - invited user name
     - message content
 - search messages by:
     - content
