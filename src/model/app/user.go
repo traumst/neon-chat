@@ -30,7 +30,7 @@ type User struct {
 }
 
 func (user *User) Template(
-	chatId int,
+	chatId uint,
 	chatOwnerId uint,
 	viewerId uint,
 ) *template.UserTemplate {

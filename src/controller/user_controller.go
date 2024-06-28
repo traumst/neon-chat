@@ -33,13 +33,14 @@ func InviteUser(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 		w.Write([]byte("Unauthorized"))
 		return
 	}
-	chatId, err := strconv.Atoi(r.FormValue("chatId"))
+	currChatId, err := strconv.Atoi(r.FormValue("chatId"))
 	if err != nil {
 		log.Printf("[%s] InviteUser ERROR chat id, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Chat not found"))
 		return
 	}
+	chatId := uint(currChatId)
 	inviteeName := r.FormValue("invitee")
 	inviteeName = utils.ReplaceWithSingleSpace(inviteeName)
 	inviteeName = utils.RemoveSpecialChars(inviteeName)
@@ -125,12 +126,13 @@ func ExpelUser(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Re
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
-	chatId, err := strconv.Atoi(r.FormValue("chatid"))
+	currChatId, err := strconv.Atoi(r.FormValue("chatid"))
 	if err != nil {
 		log.Printf("[%s] ExpelUser ERROR chat id, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	chatId := uint(currChatId)
 	expelledUserId := r.FormValue("userid")
 	expelledId, err := strconv.Atoi(expelledUserId)
 	if err != nil {
@@ -215,12 +217,13 @@ func LeaveChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Re
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
-	chatId, err := strconv.Atoi(r.FormValue("chatid"))
+	currChatId, err := strconv.Atoi(r.FormValue("chatid"))
 	if err != nil {
 		log.Printf("[%s] LeaveChat ERROR chat id, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	chatId := uint(currChatId)
 	chat, err := app.GetChat(user.Id, chatId)
 	if err != nil {
 		log.Printf("[%s] LeaveChat ERROR cannot find chat[%d], %s\n", reqId, chatId, err.Error())

@@ -76,7 +76,7 @@ func OpenChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Req
 	}
 	log.Printf("[%s] OpenChat TRACE chat[%d]\n", reqId, chatId)
 	var html string
-	openChat, err := app.OpenChat(user.Id, chatId)
+	openChat, err := app.OpenChat(user.Id, uint(chatId))
 	if err != nil {
 		log.Printf("[%s] OpenChat ERROR chat, %s\n", reqId, err)
 		welcome := template.WelcomeTemplate{User: *user.Template(0, 0, 0)}
@@ -189,7 +189,7 @@ func CloseChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Re
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	err = app.CloseChat(user.Id, chatId)
+	err = app.CloseChat(user.Id, uint(chatId))
 	if err != nil {
 		log.Printf("[%s] CloseChat ERROR close chat[%d] for user[%d], %s\n",
 			reqId, chatId, user.Id, err)
@@ -224,30 +224,31 @@ func DeleteChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
-	chatId := r.PostFormValue("chatid")
-	if chatId == "" {
+	inChatId := r.PostFormValue("chatid")
+	if inChatId == "" {
 		log.Printf("[%s] DeleteChat ERROR parse args, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	id, err := strconv.Atoi(chatId)
+	currChatid, err := strconv.Atoi(inChatId)
 	if err != nil {
 		log.Printf("[%s] DeleteChat ERROR chat id, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	chat, err := app.GetChat(user.Id, id)
+	chatId := uint(currChatid)
+	chat, err := app.GetChat(user.Id, chatId)
 	if err != nil || chat == nil {
-		log.Printf("[%s] DeleteChat ERROR cannot get chat[%d] for user[%d]\n", reqId, id, user.Id)
+		log.Printf("[%s] DeleteChat ERROR cannot get chat[%d] for user[%d]\n", reqId, chatId, user.Id)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	err = app.DeleteChat(user.Id, chat)
 	if err != nil {
-		log.Printf("[%s] DeleteChat ERROR remove chat[%d] from [%s], %s\n", reqId, id, chat.Name, err)
+		log.Printf("[%s] DeleteChat ERROR remove chat[%d] from [%s], %s\n", reqId, chatId, chat.Name, err)
 	} else {
-		log.Printf("[%s] DeleteChat TRACE user[%d] deleted chat [%d]\n", reqId, user.Id, id)
+		log.Printf("[%s] DeleteChat TRACE user[%d] deleted chat [%d]\n", reqId, user.Id, chatId)
 	}
 
 	var wg sync.WaitGroup
@@ -273,7 +274,7 @@ func DeleteChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 			return
 		}
 	}()
-	go func(chatId int, userId uint) {
+	go func(chatId uint, userId uint) {
 		defer wg.Done()
 		log.Printf("[%s] DeleteChat TRACE user[%d] deletes chat[%d]\n", reqId, userId, chat.Id)
 		w.WriteHeader(http.StatusAccepted)

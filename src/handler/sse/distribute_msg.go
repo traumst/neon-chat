@@ -55,8 +55,8 @@ func DistributeMsg(
 
 func distributeMsgToUser(
 	state *state.State,
-	chatId int,
-	msgId int,
+	chatId uint,
+	msgId uint,
 	userId uint,
 	authorId uint,
 	updateType event.EventType,

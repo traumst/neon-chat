@@ -7,7 +7,7 @@ import (
 )
 
 type AvatarTemplate struct {
-	Id     int
+	Id     uint
 	Title  string
 	UserId uint
 	Size   string

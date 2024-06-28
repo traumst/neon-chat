@@ -27,7 +27,7 @@ func (a *Config) String() string {
 	return fmt.Sprintf("{Port:%d,Sqlite:%s}", a.Port, a.Sqlite)
 }
 
-func Help() string {
+func ConfigHelp() string {
 	return `By default, the application will read the config from the .env file in the root directory. 
 	To set them:
 		* find .env.template
@@ -60,11 +60,24 @@ func EnvRead() (*Config, error) {
 		return nil, fmt.Errorf("failed to create scanner")
 	}
 
+	envConf, err := readEnv(scanner)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read env file: %s", err.Error())
+	}
+	if envConf.Port <= 0 {
+		return nil, fmt.Errorf("PORT is required")
+	}
+
+	return envConf, nil
+}
+
+func readEnv(scanner *bufio.Scanner) (*Config, error) {
 	envConf := Config{Smtp: SmtpConfig{}}
 	for scanner.Scan() {
 		line := scanner.Text()
 		kv := strings.Split(line, "=")
 		if len(kv) != 2 {
+			log.Println("invalid config line, ", line)
 			continue
 		}
 		switch kv[0] {
@@ -94,10 +107,5 @@ func EnvRead() (*Config, error) {
 			log.Printf("unknown env config [%s]\n", line)
 		}
 	}
-
-	if envConf.Port <= 0 {
-		return nil, fmt.Errorf("PORT is required")
-	}
-
 	return &envConf, nil
 }

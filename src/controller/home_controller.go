@@ -54,7 +54,7 @@ func RenderHome(
 	}
 	log.Printf("[%s] homePage TRACE IN", h.GetReqId(r))
 	var openChatTemplate *template.ChatTemplate
-	var openChatId int = -1
+	var openChatId uint = 0
 	var openChatOwnerId uint = 0
 	openChat := app.GetOpenChat(user.Id)
 	if openChat == nil {

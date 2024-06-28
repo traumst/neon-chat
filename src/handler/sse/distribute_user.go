@@ -120,9 +120,9 @@ func userNameChanged(conn *state.Conn, subject *app.User) error {
 	}
 	conn.In <- event.LiveEvent{
 		Event:    event.UserChange,
-		ChatId:   -2,
+		ChatId:   0,
 		UserId:   subject.Id,
-		MsgId:    -3,
+		MsgId:    0,
 		AuthorId: subject.Id,
 		Data:     data,
 	}
