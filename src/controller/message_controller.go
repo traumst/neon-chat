@@ -34,13 +34,14 @@ func AddMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 		return
 	}
 	log.Printf("[%s] AddMessage TRACE parsing input\n", h.GetReqId(r))
-	chatId, err := strconv.Atoi(r.FormValue("chatId"))
+	addToChatId, err := strconv.Atoi(r.FormValue("chatId"))
 	if err != nil {
 		log.Printf("[%s] AddMessage WARN \n", h.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid chat id"))
 		return
 	}
+	chatId := uint(addToChatId)
 	msg := r.FormValue("msg")
 	msg = utils.ReplaceWithSingleSpace(msg)
 	if len(msg) < 1 {
@@ -113,12 +114,13 @@ func DeleteMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	chatId, err := strconv.Atoi(inChatId)
+	currChatId, err := strconv.Atoi(inChatId)
 	if err != nil {
 		log.Printf("[%s] DeleteMessage ERROR parse chatid, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	chatId := uint(currChatId)
 	chat := app.GetOpenChat(author.Id)
 	if chat == nil {
 		log.Printf("[%s] DeleteMessage ERROR open template for user[%d]\n", reqId, author.Id)
@@ -136,12 +138,13 @@ func DeleteMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	msgId, err := strconv.Atoi(inMsgId)
+	currMsgId, err := strconv.Atoi(inMsgId)
 	if err != nil {
 		log.Printf("[%s] DeleteMessage ERROR parse msgid, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	msgId := uint(currMsgId)
 	msg, err := chat.DropMessage(author.Id, msgId)
 	if err != nil {
 		log.Printf("[%s] DeleteMessage ERROR remove message[%d] from [%s], %s\n", reqId, msgId, chat.Name, err)

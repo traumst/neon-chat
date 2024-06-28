@@ -71,7 +71,7 @@ func (state *State) DropConn(conn *Conn) error {
 }
 
 // USER
-func (state *State) InviteUser(userId uint, chatId int, invitee *app.User) error {
+func (state *State) InviteUser(userId uint, chatId uint, invitee *app.User) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 	if userId == invitee.Id {
@@ -81,7 +81,7 @@ func (state *State) InviteUser(userId uint, chatId int, invitee *app.User) error
 	return state.chats.InviteUser(userId, chatId, invitee)
 }
 
-func (state *State) DropUser(userId uint, chatId int, removeId uint) error {
+func (state *State) DropUser(userId uint, chatId uint, removeId uint) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
@@ -99,7 +99,7 @@ func (state *State) UpdateUser(userId uint, template app.User) error {
 }
 
 // CHAT
-func (state *State) AddChat(user *app.User, chatName string) int {
+func (state *State) AddChat(user *app.User, chatName string) uint {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
@@ -116,7 +116,7 @@ func (state *State) GetChats(userId uint) []*app.Chat {
 	return state.chats.GetChats(userId)
 }
 
-func (state *State) GetChat(userId uint, chatId int) (*app.Chat, error) {
+func (state *State) GetChat(userId uint, chatId uint) (*app.Chat, error) {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
@@ -124,7 +124,7 @@ func (state *State) GetChat(userId uint, chatId int) (*app.Chat, error) {
 	return state.chats.GetChat(userId, chatId)
 }
 
-func (state *State) OpenChat(userId uint, chatId int) (*app.Chat, error) {
+func (state *State) OpenChat(userId uint, chatId uint) (*app.Chat, error) {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
@@ -140,7 +140,7 @@ func (state *State) GetOpenChat(userId uint) *app.Chat {
 	return state.chats.GetOpenChat(userId)
 }
 
-func (state *State) CloseChat(userId uint, chatId int) error {
+func (state *State) CloseChat(userId uint, chatId uint) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 

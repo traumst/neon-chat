@@ -37,9 +37,10 @@ And the app should be available at http://localhost:8080
 ## TODOs
 
 ### Persistence
-- all ids should be uint
-- message store
-- cache instead of map
+- chat and message persistence
+- consider replacing maps with lru cache in
+    - `type ActiveConnections map[uint][]*Conn`
+    - `type ChatList struct {` -> `open map[uint]*Chat`
 
 ### Message Broadcasting: 
 - msg should distribute to user connection, event if chat is closed

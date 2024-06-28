@@ -8,7 +8,7 @@ import (
 )
 
 type UserTemplate struct {
-	ChatId      int
+	ChatId      uint
 	ChatOwnerId uint
 	UserId      uint
 	UserName    string

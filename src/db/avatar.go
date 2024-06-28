@@ -8,7 +8,7 @@ import (
 )
 
 type Avatar struct {
-	Id     int    `db:"id"`
+	Id     uint   `db:"id"`
 	UserId uint   `db:"user_id"`
 	Title  string `db:"title"`
 	Size   int    `db:"size"`
@@ -63,7 +63,7 @@ func (db *DBConn) AddAvatar(userId uint, title string, image []byte, mime string
 		return nil, fmt.Errorf("error getting last insert avatarId: %s", err)
 	}
 	avatar := Avatar{
-		Id:     int(lastId),
+		Id:     uint(lastId),
 		UserId: userId,
 		Title:  title,
 		Size:   size,
@@ -115,7 +115,7 @@ func (db *DBConn) GetAvatars(userId uint) ([]*Avatar, error) {
 	return avatars, nil
 }
 
-func (db *DBConn) DropAvatar(id int) error {
+func (db *DBConn) DropAvatar(id uint) error {
 	if !db.ConnIsActive() {
 		return fmt.Errorf("db is not connected")
 	}

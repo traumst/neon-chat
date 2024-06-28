@@ -11,7 +11,7 @@ import (
 )
 
 type Conn struct {
-	Id     int
+	Id     uint
 	User   *app.User
 	Origin string
 	Writer http.ResponseWriter

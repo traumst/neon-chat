@@ -8,7 +8,7 @@ import (
 )
 
 type Chat struct {
-	Id      int
+	Id      uint
 	Name    string
 	Owner   *User
 	users   []*User
@@ -16,22 +16,11 @@ type Chat struct {
 	mu      sync.Mutex
 }
 
-// type ChatTable struct {
-// 	Id      uint   `db:"id"`
-// 	Name    string `db:"name"`
-// 	OwnerId uint   `db:"ownerId"`
-// }
-
-// type ChatUsersTable struct {
-// 	ChatId int  `db:"chatId"`
-// 	UserId uint `db:"userId"`
-// }
-
 func (c *Chat) isOwner(userId uint) bool {
 	return c.Owner.Id == userId
 }
 
-func (c *Chat) isAuthor(userId uint, msgId int) bool {
+func (c *Chat) isAuthor(userId uint, msgId uint) bool {
 	msg, _ := c.history.Get(msgId)
 	if msg != nil && msg.Id == msgId {
 		return msg.Author.Id == userId
@@ -113,7 +102,7 @@ func (c *Chat) AddMessage(userId uint, message Message) (*Message, error) {
 	return c.history.Add(&message)
 }
 
-func (c *Chat) GetMessage(userId uint, msgId int) (*Message, error) {
+func (c *Chat) GetMessage(userId uint, msgId uint) (*Message, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if !c.isUserInChat(userId) {
@@ -122,7 +111,7 @@ func (c *Chat) GetMessage(userId uint, msgId int) (*Message, error) {
 	return c.history.Get(msgId)
 }
 
-func (c *Chat) DropMessage(userId uint, msgId int) (*Message, error) {
+func (c *Chat) DropMessage(userId uint, msgId uint) (*Message, error) {
 	msg, err := c.GetMessage(userId, msgId)
 	if err != nil {
 		return nil, err

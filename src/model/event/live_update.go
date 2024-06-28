@@ -4,9 +4,9 @@ import "fmt"
 
 type LiveEvent struct {
 	Event    EventType
-	ChatId   int
+	ChatId   uint
 	UserId   uint
-	MsgId    int
+	MsgId    uint
 	AuthorId uint
 	Data     string
 	Error    error

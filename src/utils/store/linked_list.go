@@ -124,7 +124,7 @@ func (ll *DoublyLinkedList) Bump(node *Node) ([]uint, error) {
 func (ll *DoublyLinkedList) Prune(drop int) (int, []uint, error) {
 	if drop < 1 || drop > MaxSize {
 		def := 1 + (ll.Size() / 8)
-		log.Printf("Invalid prune size[%d] should be [%d < n <= %d], using default[%d]", drop, 1, MaxSize, def)
+		log.Printf("Invalid prune size should be [1 <= %d <= %d], using default[%d]", drop, MaxSize, def)
 		drop = def
 	}
 	ll.mu.Lock()
@@ -195,6 +195,7 @@ func (ll *DoublyLinkedList) removeNode(id uint) *Node {
 	log.Printf("DoublyLinkedList.removeNode TRACE any node[%d]", id)
 	// TODO check from head and tail
 	current := ll.head
+	// TODO consider avoiding this loop - restitch instead
 	for current != nil && current.id != id {
 		if current.id == id {
 			log.Printf("DoublyLinkedList.removeNode TRACE removing node[%d]", id)

@@ -6,8 +6,8 @@ import (
 )
 
 type MessageTemplate struct {
-	MsgId            int
-	ChatId           int
+	MsgId            uint
+	ChatId           uint
 	Owner            string
 	Author           string
 	Text             string
