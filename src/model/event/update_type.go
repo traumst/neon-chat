@@ -22,9 +22,9 @@ const (
 )
 
 func (e EventType) FormatEventName(
-	chatId int,
+	chatId uint,
 	userId uint,
-	msgId int,
+	msgId uint,
 ) string {
 	switch e {
 	case UserChange:

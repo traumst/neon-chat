@@ -155,7 +155,7 @@ func TestDeleteChatEmpty(t *testing.T) {
 	if err == nil {
 		t.Errorf("TestDeleteChatEmpty expected error, 0")
 	}
-	chat3 := Chat{Id: -1, users: []*User{&user}, Owner: &user}
+	chat3 := Chat{Id: 0, users: []*User{&user}, Owner: &user}
 	err = cl.DeleteChat(user.Id, &chat3)
 	if err == nil {
 		t.Errorf("TestDeleteChatEmpty expected error, 0")

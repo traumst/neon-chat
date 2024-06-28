@@ -29,7 +29,7 @@ func chatCreate(conn *state.Conn, targetChat *app.Chat, author *app.User) error 
 		Event:    event.ChatAdd,
 		ChatId:   targetChat.Id,
 		UserId:   author.Id,
-		MsgId:    -1,
+		MsgId:    0,
 		AuthorId: author.Id,
 		Data:     data,
 	}
@@ -58,14 +58,14 @@ func chatInvite(conn *state.Conn, targetChat *app.Chat, authorId uint, subject *
 		Event:    event.ChatInvite,
 		ChatId:   targetChat.Id,
 		UserId:   subject.Id,
-		MsgId:    -1,
+		MsgId:    0,
 		AuthorId: authorId,
 		Data:     data,
 	}
 	return nil
 }
 
-func chatExpel(conn *state.Conn, chatId int, ownerId uint, authorId uint, subjectId uint) error {
+func chatExpel(conn *state.Conn, chatId uint, ownerId uint, authorId uint, subjectId uint) error {
 	log.Printf("chatExpel TRACE to user[%d] about author[%d] dropped subject[%d] from chat[%d]\n",
 		conn.User.Id, authorId, subjectId, chatId)
 	if authorId != ownerId && authorId != subjectId {
@@ -76,14 +76,14 @@ func chatExpel(conn *state.Conn, chatId int, ownerId uint, authorId uint, subjec
 		Event:    event.ChatExpel,
 		ChatId:   chatId,
 		UserId:   subjectId,
-		MsgId:    -1,
+		MsgId:    0,
 		AuthorId: authorId,
 		Data:     "[expelU]",
 	}
 	return nil
 }
 
-func chatLeave(conn *state.Conn, chatId int, ownerId uint, authorId uint, subjectId uint) error {
+func chatLeave(conn *state.Conn, chatId uint, ownerId uint, authorId uint, subjectId uint) error {
 	log.Printf("chatLeave TRACE to user[%d] about author[%d] dropped subject[%d] from chat[%d]\n",
 		conn.User.Id, authorId, subjectId, chatId)
 	if authorId == ownerId || authorId != subjectId {
@@ -94,14 +94,14 @@ func chatLeave(conn *state.Conn, chatId int, ownerId uint, authorId uint, subjec
 		Event:    event.ChatLeave,
 		ChatId:   chatId,
 		UserId:   subjectId,
-		MsgId:    -1,
+		MsgId:    0,
 		AuthorId: authorId,
 		Data:     "[leftU]",
 	}
 	return nil
 }
 
-func chatDelete(conn *state.Conn, chatId int, ownerId uint, authorId uint, targetId uint) error {
+func chatDelete(conn *state.Conn, chatId uint, ownerId uint, authorId uint, targetId uint) error {
 	log.Printf("chatDelete TRACE deleted chat[%d] for subject[%d], target[%d]\n",
 		chatId, targetId, conn.User.Id)
 	if authorId != ownerId && authorId != targetId {
@@ -115,14 +115,14 @@ func chatDelete(conn *state.Conn, chatId int, ownerId uint, authorId uint, targe
 		Event:    event.ChatDrop,
 		ChatId:   chatId,
 		UserId:   targetId,
-		MsgId:    -1,
+		MsgId:    0,
 		AuthorId: authorId,
 		Data:     "[deletedC]",
 	}
 	return nil
 }
 
-func chatClose(conn *state.Conn, chatId int, ownerId uint, authorId uint, target *app.User) error {
+func chatClose(conn *state.Conn, chatId uint, ownerId uint, authorId uint, target *app.User) error {
 	log.Printf("chatClose TRACE user[%d] closed chat[%d] for subject[%d]\n", authorId, chatId, target.Id)
 	if authorId != ownerId && authorId != target.Id {
 		return fmt.Errorf("author[%d] is not allowed to close chat[%d] for user[%d]",
@@ -140,7 +140,7 @@ func chatClose(conn *state.Conn, chatId int, ownerId uint, authorId uint, target
 		Event:    event.ChatClose,
 		ChatId:   chatId,
 		UserId:   target.Id,
-		MsgId:    -1,
+		MsgId:    0,
 		AuthorId: authorId,
 		Data:     data,
 	}

@@ -3,7 +3,7 @@ package app
 import "prplchat/src/model/template"
 
 type Avatar struct {
-	Id     int
+	Id     uint
 	UserId uint
 	Title  string
 	Size   string

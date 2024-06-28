@@ -9,7 +9,7 @@ import (
 type MessageStore struct {
 	mu       sync.Mutex
 	messages []*Message
-	nextId   int
+	nextId   uint
 }
 
 func (s *MessageStore) Add(m *Message) (*Message, error) {
@@ -32,8 +32,8 @@ func (s *MessageStore) GetAll() []*Message {
 	return s.nonNil()
 }
 
-func (s *MessageStore) Get(id int) (*Message, error) {
-	if id < 0 || id >= len(s.messages) {
+func (s *MessageStore) Get(id uint) (*Message, error) {
+	if id < 0 || id >= uint(len(s.messages)) {
 		return nil, fmt.Errorf("invalid msg id")
 	}
 
@@ -51,7 +51,7 @@ func (s *MessageStore) Delete(m *Message) error {
 	if m == nil {
 		return fmt.Errorf("cannot remove NIL")
 	}
-	if m.Id < 0 || m.Id >= len(s.messages) {
+	if m.Id < 0 || m.Id >= uint(len(s.messages)) {
 		return fmt.Errorf("message not found")
 	}
 

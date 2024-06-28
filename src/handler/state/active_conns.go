@@ -26,7 +26,7 @@ func (conns *ActiveConnections) Add(user *app.User, origin string, w http.Respon
 	mu.Lock()
 	defer mu.Unlock()
 	log.Printf("[%s] UserConn.Add TRACE user[%d] added from conn[%s]\n", h.GetReqId(&r), user.Id, origin)
-	id := len(*conns)
+	id := uint(len(*conns))
 	newConn := Conn{
 		Id:     id,
 		User:   user,

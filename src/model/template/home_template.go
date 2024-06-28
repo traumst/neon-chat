@@ -17,7 +17,7 @@ type HomeTemplate struct {
 }
 
 func (h *HomeTemplate) ChatAddEvent() string {
-	var openChatId int = -1
+	var openChatId uint = 0
 	if h.OpenChat != nil {
 		openChatId = h.OpenChat.ChatId
 	}
@@ -29,7 +29,7 @@ func (h *HomeTemplate) ChatInviteEvent() string {
 }
 
 func (h *HomeTemplate) ChatCloseEvent() string {
-	var openChatId int = -1
+	var openChatId uint = 0
 	if h.OpenChat != nil {
 		openChatId = h.OpenChat.ChatId
 	}

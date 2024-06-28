@@ -6,8 +6,8 @@ import (
 )
 
 type Message struct {
-	Id     int
-	ChatId int
+	Id     uint
+	ChatId uint
 	Owner  *User
 	Author *User
 	Text   string

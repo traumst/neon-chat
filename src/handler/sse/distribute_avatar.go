@@ -71,9 +71,9 @@ func avatarChanged(conns []*state.Conn, subject *app.User, avatar *app.Avatar) e
 	for _, conn := range conns {
 		conn.In <- event.LiveEvent{
 			Event:    event.AvatarChange,
-			ChatId:   -2,
+			ChatId:   0,
 			UserId:   subject.Id,
-			MsgId:    -3,
+			MsgId:    0,
 			AuthorId: subject.Id,
 			Data:     data,
 		}

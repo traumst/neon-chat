@@ -26,7 +26,7 @@ func OpenSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		w.Write([]byte("User is not authorized"))
 		return
 	}
-	var openChatId int
+	var openChatId uint
 	var chatOwnerId uint
 	openChat := app.GetOpenChat(user.Id)
 	if openChat != nil {
