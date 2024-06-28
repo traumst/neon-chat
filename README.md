@@ -37,7 +37,6 @@ And the app should be available at http://localhost:8080
 ## TODOs
 
 ### Persistence
-- all ids should be uint
 - chat and message persistence
 - cache instead of map
 
