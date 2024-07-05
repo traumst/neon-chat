@@ -43,7 +43,7 @@ And the app should be available at http://localhost:8080
     - `type ChatList struct {` -> `open map[uint]*Chat`
 
 ### Message Broadcasting: 
-- msg should distribute to user connection, event if chat is closed
+- msg should distribute to user connection, even if chat is closed
 - track user deltas: chats, messages
 - only serve deltas
 - buffer for unstable connection/s
@@ -75,18 +75,18 @@ And the app should be available at http://localhost:8080
 - new msg in chat
 
 ### Search
-- fuzzy name matching methods:
-    - common key [C530, V500] - fast - mostly latin
-        - https://www.sqlite.org/lang_corefunc.html#soundex
-    - word embeding - %VALUE%
-    - edit distance [cindy-cindi=1] - only latin - in-memory
-    - statistical similarity - slow
 - search chats by: 
     - chat name
     - message content
 - search messages by:
     - content
     - author
+- fuzzy name matching methods:
+    - common key [C530, V500] - fast - mostly latin
+        - https://www.sqlite.org/lang_corefunc.html#soundex
+    - word embeding - %VALUE%
+    - edit distance [cindy-cindi=1] - only latin - in-memory
+    - statistical similarity - slow
 
 ### GUI
 - user settings page
@@ -105,6 +105,7 @@ And the app should be available at http://localhost:8080
     * active user - logout, setting
     * open chat - close, delete
     * chat members
+    * msg options
 
 ## Later
 
