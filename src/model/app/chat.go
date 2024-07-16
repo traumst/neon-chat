@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"log"
 	"sync"
 
 	t "prplchat/src/model/template"
@@ -21,7 +22,8 @@ func (c *Chat) isOwner(userId uint) bool {
 }
 
 func (c *Chat) isAuthor(userId uint, msgId uint) bool {
-	msg, _ := c.history.Get(msgId)
+	msg, err := c.history.Get(msgId)
+	log.Println("isAuthor of msg", msg, err, msgId)
 	if msg != nil && msg.Id == msgId {
 		return msg.Author.Id == userId
 	}

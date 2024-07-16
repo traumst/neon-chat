@@ -187,7 +187,7 @@ func TestUpdateUser(t *testing.T) {
 	app1 := &Application
 	app1.Init(nil, utils.Config{})
 	chatId := uint(11)
-	app1.AddChat(11, "TestChat", &user)
+	app1.AddChat(chatId, "TestChat", &user)
 	app1.InviteUser(user.Id, chatId, &invitee)
 	chat, err := app1.GetChat(user.Id, chatId)
 	if err != nil {
@@ -196,7 +196,7 @@ func TestUpdateUser(t *testing.T) {
 	err = app1.UpdateUser(
 		user.Id,
 		app.User{
-			Id:     invitee.Id,
+			Id:     user.Id,
 			Name:   "Johnny",
 			Email:  "bbb@bbb.bbb",
 			Type:   app.UserType(app.UserTypeBasic),
@@ -211,21 +211,22 @@ func TestUpdateUser(t *testing.T) {
 		t.Fatalf("TestUpdateUser failed to get users from chat[%d], %s", chatId, err.Error())
 	}
 	for _, uu := range updatedUsers {
-		if uu.Id == user.Id {
-			if uu != &user {
-				t.Fatalf("TestUpdateUser broken pointer user[%s] and user[%s] should be the same", uu.Name, user.Name)
-			}
-			if uu.Name != "Johnny" {
-				t.Fatalf("TestUpdateUser expected name[Johnny] got name[%s]", uu.Name)
-			}
-			if uu.Email != "bbb@bbb.bbb" {
-				t.Fatalf("TestUpdateUser expected name[Johnny] got name[%s]", uu.Name)
-			}
-			if uu.Salt != user.Salt {
-				t.Fatalf("TestUpdateUser expected salt[%s] changed[%s]", user.Salt, uu.Salt)
-			}
-			return
+		if uu.Id != user.Id {
+			continue
 		}
+		if uu != &user {
+			t.Fatalf("TestUpdateUser broken pointer user[%s] and user[%s] should be the same", uu.Name, user.Name)
+		}
+		if uu.Name != "Johnny" {
+			t.Fatalf("TestUpdateUser expected name[Johnny] got name[%s]", uu.Name)
+		}
+		if uu.Email != "bbb@bbb.bbb" {
+			t.Fatalf("TestUpdateUser expected name[Johnny] got name[%s]", uu.Name)
+		}
+		if uu.Salt != user.Salt {
+			t.Fatalf("TestUpdateUser expected salt[%s] changed[%s]", user.Salt, uu.Salt)
+		}
+		return
 	}
 	t.Fatalf("TestUpdateUser user[%d] not found", user.Id)
 }
@@ -262,7 +263,7 @@ func TestGetChats(t *testing.T) {
 	app1 := &Application
 	app1.Init(nil, utils.Config{})
 	chatId1 := app1.AddChat(11, "TestChat1", &user)
-	chatId2 := app1.AddChat(11, "TestChat2", &user)
+	chatId2 := app1.AddChat(22, "TestChat2", &user)
 	chats := app1.GetChats(user.Id)
 	if len(chats) != 2 {
 		t.Fatalf("TestGetChats expected 2 chats, got [%d]", len(chats))
