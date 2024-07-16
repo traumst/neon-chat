@@ -62,6 +62,17 @@ func (cache *LRUCache) Get(key uint) (interface{}, error) {
 	return node.value, err
 }
 
+// scans cache and returns all existing keys in no particular order
+func (cache *LRUCache) Keys() []uint {
+	cache.mu.Lock()
+	defer cache.mu.Unlock()
+	keys := make([]uint, 0)
+	for _, node := range cache.dict {
+		keys = append(keys, node.id)
+	}
+	return keys
+}
+
 // removes the value stored in cache and returns it
 func (cache *LRUCache) Take(key uint) (interface{}, error) {
 	cache.mu.Lock()

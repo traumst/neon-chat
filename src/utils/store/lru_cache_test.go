@@ -145,6 +145,33 @@ func TestGet(t *testing.T) {
 	}
 }
 
+func TestScan(t *testing.T) {
+	cache := NewLRUCache(3)
+	_ = cache.Set(1, "one")
+	_ = cache.Set(2, "two")
+	_ = cache.Set(3, "three")
+	keys := cache.Keys()
+	if len(keys) != 3 {
+		t.Fatalf("Expected keys to be 3 but was [%d]", len(keys))
+	}
+	i1 := false
+	i2 := false
+	i3 := false
+	for i := 0; i < 3; i++ {
+		switch keys[i] {
+		case 1:
+			i1 = true
+		case 2:
+			i2 = true
+		case 3:
+			i3 = true
+		}
+	}
+	if !i1 || !i2 || !i3 {
+		t.Fatalf("Unexpected set of keys %v", keys)
+	}
+}
+
 func TestTake(t *testing.T) {
 	cache := NewLRUCache(3)
 	_ = cache.Set(1, "one")
