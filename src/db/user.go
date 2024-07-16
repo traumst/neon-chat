@@ -4,8 +4,8 @@ import (
 	"fmt"
 )
 
-const minAuthLen = 3
-const maxAuthLen = 64
+const minUserNameLen = 3
+const maxUserNameLen = 64
 
 type User struct {
 	Id     uint   `db:"id"`
@@ -16,7 +16,7 @@ type User struct {
 	Salt   string `db:"salt"`
 }
 
-const UserSchema string = `
+const UserSchema = `
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
 		name TEXT UNIQUE, 
@@ -25,7 +25,7 @@ const UserSchema string = `
 		status TEXT,
 		salt INTEGER
 	);`
-const UserIndex string = `CREATE INDEX IF NOT EXISTS idx_user_status ON users(status);`
+const UserIndex = `CREATE INDEX IF NOT EXISTS idx_user_status ON users(status);`
 
 func (db *DBConn) UserTableExists() bool {
 	return db.TableExists("users")
@@ -34,13 +34,13 @@ func (db *DBConn) UserTableExists() bool {
 func (db *DBConn) AddUser(user *User) (*User, error) {
 	if user.Id != 0 {
 		return nil, fmt.Errorf("user already has an id[%d]", user.Id)
-	} else if len(user.Name) < minAuthLen || len(user.Name) > maxAuthLen {
+	} else if len(user.Name) < minUserNameLen || len(user.Name) > maxUserNameLen {
 		return nil, fmt.Errorf("user has no name")
-	} else if len(user.Email) < minAuthLen || len(user.Email) > maxAuthLen {
+	} else if len(user.Email) < minUserNameLen || len(user.Email) > maxUserNameLen {
 		return nil, fmt.Errorf("user has no email")
-	} else if len(user.Type) < minAuthLen || len(user.Type) > maxAuthLen {
+	} else if len(user.Type) < minUserNameLen || len(user.Type) > maxUserNameLen {
 		return nil, fmt.Errorf("user has no type")
-	} else if len(user.Status) < minAuthLen || len(user.Status) > maxAuthLen {
+	} else if len(user.Status) < minUserNameLen || len(user.Status) > maxUserNameLen {
 		return nil, fmt.Errorf("user has no status")
 	} else if len(user.Salt) == 0 {
 		return nil, fmt.Errorf("user has no salt")
@@ -90,7 +90,7 @@ func (db *DBConn) SearchUser(login string) (*User, error) {
 	if !db.isConn || !db.isInit {
 		return nil, fmt.Errorf("db is not connected")
 	}
-	if len(login) < minAuthLen || len(login) > maxAuthLen {
+	if len(login) < minUserNameLen || len(login) > maxUserNameLen {
 		return nil, fmt.Errorf("login name/email was not provided")
 	}
 
@@ -112,7 +112,7 @@ func (db *DBConn) SearchUsers(name string) ([]*User, error) {
 	if !db.isConn || !db.isInit {
 		return nil, fmt.Errorf("db is not connected")
 	}
-	if len(name) < minAuthLen || len(name) > maxAuthLen {
+	if len(name) < minUserNameLen || len(name) > maxUserNameLen {
 		return nil, fmt.Errorf("name was not provided")
 	}
 	users := make([]*User, 0)

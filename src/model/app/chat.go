@@ -59,11 +59,11 @@ func (c *Chat) GetUsers(userId uint) ([]*User, error) {
 	return c.users, nil
 }
 
-func (c *Chat) SyncUser(userId uint, template *User) error {
+func (c *Chat) SyncUser(template *User) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	for _, u := range c.users {
-		if u.Id == userId {
+		if u.Id == template.Id {
 			u.Name = template.Name
 			u.Email = template.Email
 			u.Type = template.Type
@@ -98,7 +98,6 @@ func (c *Chat) AddMessage(userId uint, message Message) (*Message, error) {
 	if !c.isUserInChat(userId) {
 		return nil, fmt.Errorf("only invited users can add messages")
 	}
-
 	return c.history.Add(&message)
 }
 

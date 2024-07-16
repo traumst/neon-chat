@@ -20,12 +20,16 @@ func (s *MessageStore) Add(m *Message) (*Message, error) {
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	m.Id = s.nextId
+	// TODO remove, should come from db
+	if m.Id == 0 {
+		m.Id = s.nextId
+		s.nextId += 1
+	}
 	s.messages = append(s.messages, m)
-	s.nextId += 1
 	return m, nil
 }
 
+// TODO add delta
 func (s *MessageStore) GetAll() []*Message {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -33,7 +37,7 @@ func (s *MessageStore) GetAll() []*Message {
 }
 
 func (s *MessageStore) Get(id uint) (*Message, error) {
-	if id < 0 || id >= uint(len(s.messages)) {
+	if id == 0 || id >= uint(len(s.messages)) {
 		return nil, fmt.Errorf("invalid msg id")
 	}
 
@@ -51,7 +55,7 @@ func (s *MessageStore) Delete(m *Message) error {
 	if m == nil {
 		return fmt.Errorf("cannot remove NIL")
 	}
-	if m.Id < 0 || m.Id >= uint(len(s.messages)) {
+	if m.Id == 0 || m.Id >= uint(len(s.messages)) {
 		return fmt.Errorf("message not found")
 	}
 

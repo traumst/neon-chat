@@ -49,7 +49,7 @@ func TestChannels(t *testing.T) {
 func TestIsConnEmpty(t *testing.T) {
 	t.Logf("TestIsConnEmpty started")
 	uc := make(ActiveConnections, 0)
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeBasic)}
+	user := app.User{Id: 1 /*, Name: "John", Type: app.UserType(app.UserTypeBasic) */}
 	isConn := uc.IsConn(user.Id)
 	if isConn {
 		t.Errorf("TestIsConnEmpty user was not supposed to be connected")
@@ -86,7 +86,7 @@ func TestAdd(t *testing.T) {
 func TestGetEmpty(t *testing.T) {
 	t.Logf("TestGetEmpty started")
 	uc := ActiveConnections{}
-	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeBasic)}
+	user := app.User{Id: uint(rand.Uint32()) /*Name: "John", Type: app.UserType(app.UserTypeBasic)*/}
 	conns := uc.Get(user.Id)
 	if len(conns) != 0 {
 		t.Errorf("TestGetEmpty expected empty, got [%+v]", conns)

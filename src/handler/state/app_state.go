@@ -17,7 +17,7 @@ var Application State
 type State struct {
 	mu     sync.Mutex
 	isInit bool
-	chats  app.ChatList
+	chats  app.HotChats
 	conns  ActiveConnections
 	config utils.Config
 }
@@ -29,7 +29,7 @@ func (state *State) Init(db *db.DBConn, config utils.Config) {
 	}
 	Application = State{
 		isInit: true,
-		chats:  app.ChatList{},
+		chats:  app.HotChats{},
 		conns:  make(ActiveConnections, 0),
 		config: config,
 	}
@@ -95,17 +95,17 @@ func (state *State) UpdateUser(userId uint, template app.User) error {
 	defer state.mu.Unlock()
 
 	log.Printf("AppState.UpdateUser TRACE updating user[%d], template[%v]\n", userId, template)
-	return state.chats.SyncUser(userId, &template)
+	return state.chats.SyncUser(&template)
 }
 
 // CHAT
-func (state *State) AddChat(user *app.User, chatName string) uint {
+func (state *State) AddChat(chatId uint, chatName string, chatOwner *app.User) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
-	log.Printf("AppState.AddChat TRACE add chat[%s] for user[%d]\n", chatName, user.Id)
-	chatId := state.chats.AddChat(user, chatName)
-	return chatId
+	log.Printf("AppState.AddChat TRACE add chat[%d][%s] for user[%d]\n", chatId, chatName, chatOwner.Id)
+	state.chats.AddChat(chatId, chatOwner, chatName)
+	return nil
 }
 
 func (state *State) GetChats(userId uint) []*app.Chat {

@@ -20,7 +20,7 @@ func TestDefaultChat(t *testing.T) {
 func TestIsUserInChat(t *testing.T) {
 	t.Logf("TestIsUserInChat started")
 	u1 := User{Id: 1, Name: "John", Type: UserType(UserTypeBasic)}
-	u2 := User{Id: 2, Name: "Jill", Type: UserType(UserTypeBasic)}
+	u2 := User{Id: 2 /*Name: "Jill", Type: UserType(UserTypeBasic)*/}
 	c := Chat{users: []*User{&u1}}
 	if c.isUserInChat(u2.Id) {
 		t.Errorf("TestIsUserInChat [%d] should not have been in the chat with [%d]", u1.Id, u2.Id)
@@ -36,17 +36,33 @@ func TestIsAuthor(t *testing.T) {
 	u1 := User{Id: 1, Name: "John", Type: UserType(UserTypeBasic)}
 	u2 := User{Id: 2, Name: "Jill", Type: UserType(UserTypeBasic)}
 	o := User{Id: 3, Name: "Mr Bill", Type: UserType(UserTypeBasic)}
-	c := Chat{Owner: &o, users: []*User{&u1, &u2}}
-	m := Message{Id: 1, Owner: &o, Author: &u1, Text: "test message"}
-	mwid, err := c.history.Add(&m)
+	c := Chat{Id: 11, Owner: &o, users: []*User{&u1, &u2}}
+	m := Message{Id: 555, ChatId: c.Id, Owner: &o, Author: &u1, Text: "test message"}
+	mwid, err := c.AddMessage(u1.Id, m)
+	//mwid, err := c.history.Add(&m)
 	if err != nil {
 		t.Errorf("TestIsAuthor failed to add message: %s", err)
 	}
+	if mwid.Id != m.Id {
+		t.Errorf("TestIsAuthor expected message id [%d], got [%d]", m.Id, mwid.Id)
+		return
+	}
+	if mwid.ChatId != m.ChatId {
+		t.Errorf("TestIsAuthor expected chat id [%d], got [%d]", m.ChatId, mwid.ChatId)
+		return
+	}
 	if c.isAuthor(o.Id, mwid.Id) {
-		t.Errorf("TestIsAuthor [%d] should not have been the author of the message", o.Id)
+		t.Errorf("TestIsAuthor [%d] should not have been the author of the message, [%v]", o.Id, mwid)
+		return
+	}
+	if mwid.Author.Id != u1.Id {
+		t.Errorf("TestIsAuthor expected author id [%d], got [%d]", u1.Id, mwid.Author.Id)
+		return
+
 	}
 	if !c.isAuthor(u1.Id, mwid.Id) {
-		t.Errorf("TestIsAuthor [%d] should have been the author of the message", u1.Id)
+		t.Errorf("TestIsAuthor [%d] should have been the author but was [%d], [%+v]", u1.Id, mwid.Author.Id, mwid)
+		return
 	}
 	t.Logf("TestIsOwner finished")
 }

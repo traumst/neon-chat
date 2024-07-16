@@ -12,6 +12,7 @@ import (
 	"prplchat/src/handler"
 	"prplchat/src/handler/sse"
 	"prplchat/src/handler/state"
+	a "prplchat/src/model/app"
 	"prplchat/src/model/event"
 	"prplchat/src/model/template"
 	"prplchat/src/utils"
@@ -122,16 +123,13 @@ func AddChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Requ
 		return
 	}
 	log.Printf("[%s] AddChat TRACE adding user[%d] chat[%s]\n", reqId, user.Id, chatName)
-	chatId := app.AddChat(user, chatName)
-	log.Printf("[%s] AddChat TRACE user[%d] opening chat[%s][%d]\n", reqId, user.Id, chatName, chatId)
-	openChat, err := app.OpenChat(user.Id, chatId)
+	openChat, err := handler.HandleChatAdd(app, db, user, chatName)
 	if err != nil {
 		log.Printf("[%s] AddChat ERROR chat, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to open new chat"))
 		return
 	}
-	log.Printf("[%s] AddChat TRACE templating chat[%s][%d]\n", reqId, chatName, chatId)
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -244,9 +242,11 @@ func DeleteChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 		return
 	}
 
-	err = app.DeleteChat(user.Id, chat)
+	err = handler.HandleChatDelete(app, db, user.Id, chat)
 	if err != nil {
-		log.Printf("[%s] DeleteChat ERROR remove chat[%d] from [%s], %s\n", reqId, chatId, chat.Name, err)
+		log.Printf("[%s] DeleteChat ERROR remove chat[%d] from [%s], %s\n", reqId, chatId, chat.Name, err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	} else {
 		log.Printf("[%s] DeleteChat TRACE user[%d] deleted chat [%d]\n", reqId, user.Id, chatId)
 	}
@@ -255,24 +255,7 @@ func DeleteChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		log.Printf("[%s] DeleteChat TRACE distributes user[%d] closes chat[%d]\n", reqId, user.Id, chat.Id)
-		err = sse.DistributeChat(app, chat, user, nil, user, event.ChatClose)
-		if err != nil {
-			log.Printf("[%s] DeleteChat ERROR cannot distribute chat close, %s\n", reqId, err)
-			return
-		}
-		log.Printf("[%s] DeleteChat TRACE distributes user[%d] deletes chat[%d]\n", reqId, user.Id, chat.Id)
-		err = sse.DistributeChat(app, chat, user, nil, user, event.ChatDrop)
-		if err != nil {
-			log.Printf("[%s] DeleteChat ERROR cannot distribute chat deleted, %s\n", reqId, err)
-			return
-		}
-		log.Printf("[%s] DeleteChat TRACE distributes user[%d] expel all from chat[%d]\n", reqId, user.Id, chat.Id)
-		err = sse.DistributeChat(app, chat, user, nil, nil, event.ChatExpel)
-		if err != nil {
-			log.Printf("[%s] ExpelUser ERROR cannot distribute chat user expel, %s\n", reqId, err)
-			return
-		}
+		distrbuteChatDelete(app, chat, user)
 	}()
 	go func(chatId uint, userId uint) {
 		defer wg.Done()
@@ -281,4 +264,25 @@ func DeleteChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 		w.Write([]byte("[DELETED_C]"))
 	}(chat.Id, user.Id)
 	wg.Wait()
+}
+
+func distrbuteChatDelete(app *state.State, chat *a.Chat, user *a.User) {
+	log.Printf("distrbuteChatDelete TRACE distributes user[%d] closes chat[%d]\n", user.Id, chat.Id)
+	err := sse.DistributeChat(app, chat, user, nil, user, event.ChatClose)
+	if err != nil {
+		log.Printf("distrbuteChatDelete ERROR cannot distribute chat close, %s\n", err)
+		return
+	}
+	log.Printf("distrbuteChatDelete TRACE distributes user[%d] deletes chat[%d]\n", user.Id, chat.Id)
+	err = sse.DistributeChat(app, chat, user, nil, user, event.ChatDrop)
+	if err != nil {
+		log.Printf("distrbuteChatDelete ERROR cannot distribute chat deleted, %s\n", err)
+		return
+	}
+	log.Printf("distrbuteChatDelete TRACE distributes user[%d] expel all from chat[%d]\n", user.Id, chat.Id)
+	err = sse.DistributeChat(app, chat, user, nil, nil, event.ChatExpel)
+	if err != nil {
+		log.Printf("distrbuteChatDelete ERROR cannot distribute chat user expel, %s\n", err)
+		return
+	}
 }
