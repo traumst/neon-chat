@@ -36,7 +36,6 @@ func DistributeUserChange(
 			continue
 		}
 		wg.Add(1)
-		defer wg.Done()
 		go func(chat *app.Chat) {
 			defer wg.Done()
 			err := distributeInCommonChat(chat, state, subjectUser, updateType)
