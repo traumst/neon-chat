@@ -53,6 +53,24 @@ func RenderHome(
 		panic("user is nil")
 	}
 	log.Printf("[%s] homePage TRACE IN", h.GetReqId(r))
+	html, err := templateHome(app, db, r, user)
+	if err != nil {
+		log.Printf("[%s] homePage ERROR, %s\n", h.GetReqId(r), err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to render home page"))
+		return
+	}
+	log.Printf("[%s] homePage TRACE, user[%d] gets content\n", h.GetReqId(r), user.Id)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(html))
+}
+
+func templateHome(
+	app *state.State,
+	db *db.DBConn,
+	r *http.Request,
+	user *app.User,
+) (string, error) {
 	var openChatTemplate *template.ChatTemplate
 	var openChatId uint = 0
 	var openChatOwnerId uint = 0
@@ -83,14 +101,5 @@ func RenderHome(
 		LoginTemplate: template.AuthTemplate{},
 		Avatar:        avatarTmpl,
 	}
-	html, err := home.HTML()
-	if err != nil {
-		log.Printf("[%s] homePage ERROR, %s\n", h.GetReqId(r), err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Failed to render home page"))
-		return
-	}
-	log.Printf("[%s] homePage TRACE, user[%d] gets content\n", h.GetReqId(r), user.Id)
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(html))
+	return home.HTML()
 }

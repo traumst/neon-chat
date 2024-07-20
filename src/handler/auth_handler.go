@@ -28,7 +28,7 @@ func ReadSession(
 		h.ClearSessionCookie(w, 0)
 		return nil, fmt.Errorf("failed to read session cookie, %s", err)
 	}
-	var user a.User
+	var appUser a.User
 	err = nil
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -37,19 +37,20 @@ func ReadSession(
 		dbUser, err1 := db.GetUser(cookie.UserId)
 		if err1 != nil {
 			h.ClearSessionCookie(w, 0)
-			err = fmt.Errorf("failed to get user[%d] from cookie[%v], %s", cookie.UserId, cookie, err1.Error())
+			err = fmt.Errorf("failed to get user[%d] from cookie[%v], %s",
+				cookie.UserId, cookie, err1.Error())
 		} else {
-			log.Printf("[%s] ReadSession TRACE session user[%d][%s], err[%s]\n", h.GetReqId(r),
-				dbUser.Id, dbUser.Name, err1)
-			user = UserFromDB(*dbUser)
+			log.Printf("[%s] ReadSession TRACE session user[%d][%s], err[%s]\n",
+				h.GetReqId(r), dbUser.Id, dbUser.Name, err1)
+			appUser = UserFromDB(*dbUser)
 		}
 	}()
 	wg.Wait()
+	log.Printf("[%s] ReadSession TRACE OUT\n", h.GetReqId(r))
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[%s] ReadSession TRACE OUT\n", h.GetReqId(r))
-	return &user, err
+	return &appUser, err
 }
 
 func Authenticate(
@@ -62,14 +63,14 @@ func Authenticate(
 		log.Printf("Authenticate ERROR bad arguments username[%s] authType[%s]\n", username, authType)
 		return nil, nil, fmt.Errorf("bad arguments")
 	}
-	user, err := db.SearchUser(username)
-	if err != nil || user == nil || user.Id <= 0 || len(user.Salt) <= 0 {
-		log.Printf("Authenticate TRACE user[%s] not found, result[%v], %s\n", username, user, err)
+	dbUser, err := db.SearchUser(username)
+	if err != nil || dbUser == nil || dbUser.Id <= 0 || len(dbUser.Salt) <= 0 {
+		log.Printf("Authenticate TRACE user[%s] not found, result[%v], %s\n", username, dbUser, err)
 		return nil, nil, nil
 	}
-	appUser := UserFromDB(*user)
+	appUser := UserFromDB(*dbUser)
 	if appUser.Status != a.UserStatusActive {
-		log.Printf("Authenticate WARN user[%d] status[%s] is inactive\n", user.Id, user.Status)
+		log.Printf("Authenticate WARN user[%d] status[%s] is inactive\n", dbUser.Id, dbUser.Status)
 		return &appUser, nil, nil
 	}
 	hash, err := utils.HashPassword(pass, appUser.Salt)
@@ -78,11 +79,11 @@ func Authenticate(
 		return &appUser, nil, fmt.Errorf("failed hashing pass for user[%d], %s", appUser.Id, err)
 	}
 	log.Printf("Authenticate TRACE user[%d] auth[%s] hash[%s]\n", appUser.Id, authType, hash)
-	auth, err := db.GetAuth(string(authType), hash)
+	dbAuth, err := db.GetAuth(string(authType), hash)
 	if err != nil {
 		return &appUser, nil, fmt.Errorf("no auth for user[%d] hash[%s], %s", appUser.Id, hash, err)
 	}
-	appAuth := AuthFromDB(*auth)
+	appAuth := AuthFromDB(*dbAuth)
 	return &appUser, &appAuth, nil
 }
 
@@ -99,28 +100,28 @@ func Register(
 	if newUser.Name == "" || pass == "" || newUser.Salt == "" {
 		return nil, nil, fmt.Errorf("invalid args user[%s] salt[%s]", newUser.Name, newUser.Salt)
 	}
-	var user *a.User
+	var appUser *a.User
 	var err error
 	if newUser.Id != 0 {
-		user = newUser
+		appUser = newUser
 	} else {
-		user, err = createUser(db, newUser)
-		if err != nil || user == nil {
+		appUser, err = createUser(db, newUser)
+		if err != nil || appUser == nil {
 			return nil, nil, fmt.Errorf("failed to create user[%v], %s", newUser, err)
 		} else {
-			log.Printf("Register TRACE user[%s] created\n", user.Name)
+			log.Printf("Register TRACE user[%s] created\n", appUser.Name)
 		}
 	}
-	auth, err := createAuth(db, user, pass, authType)
+	auth, err := createAuth(db, appUser, pass, authType)
 	if err != nil || auth == nil {
-		if recoverErr := deleteUser(db, user); recoverErr != nil {
-			panic(fmt.Sprintf("failed to recovery-delete user[%d][%s], %s", user.Id, user.Name, err))
+		if recoverErr := deleteUser(db, appUser); recoverErr != nil {
+			panic(fmt.Sprintf("failed to recovery-delete user[%d][%s], %s", appUser.Id, appUser.Name, err))
 		}
 
-		return nil, nil, fmt.Errorf("failed to create auth[%s] for user[%v], %s", authType, user, err)
+		return nil, nil, fmt.Errorf("failed to create auth[%s] for user[%v], %s", authType, appUser, err)
 	}
-	log.Printf("Register TRACE user[%d] auth[%v] created\n", user.Id, auth)
-	return user, auth, nil
+	log.Printf("Register TRACE user[%d] auth[%v] created\n", appUser.Id, auth)
+	return appUser, auth, nil
 }
 
 func IssueReservationToken(
