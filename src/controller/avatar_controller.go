@@ -27,11 +27,6 @@ func AddAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.R
 	user, err := handler.ReadSession(app, db, w, r)
 	if user == nil {
 		log.Printf("[%s] AddAvatar INFO user is not authorized, %s\n", h.GetReqId(r), err)
-		// &template.InfoMessage{
-		// 	Header: "User is not authenticated",
-		// 	Body:   "Your session has probably expired",
-		// 	Footer: "Reload the page and try again",
-		// }
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
@@ -84,11 +79,6 @@ func GetAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.R
 	user, err := handler.ReadSession(app, db, w, r)
 	if user == nil {
 		log.Printf("[%s] GetAvatar INFO user is not authorized, %s\n", h.GetReqId(r), err)
-		// &template.InfoMessage{
-		// 	Header: "User is not authenticated",
-		// 	Body:   "Your session has probably expired",
-		// 	Footer: "Reload the page and try again",
-		// }
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}

@@ -51,13 +51,7 @@ func OpenChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Req
 		return
 	}
 	user, err := handler.ReadSession(app, db, w, r)
-	if user == nil {
-		log.Printf("[%s] OpenChat INFO user is not authorized, %s\n", h.GetReqId(r), err)
-		// &template.InfoMessage{
-		// 	Header: "User is not authenticated",
-		// 	Body:   "Your session has probably expired",
-		// 	Footer: "Reload the page and try again",
-		// }
+	if err != nil || user == nil {
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
@@ -167,11 +161,6 @@ func CloseChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Re
 	user, err := handler.ReadSession(app, db, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] CloseChat WARN user, %s\n", h.GetReqId(r), err)
-		// &template.InfoMessage{
-		// 	Header: "User is not authenticated",
-		// 	Body:   "Your session has probably expired",
-		// 	Footer: "Reload the page and try again",
-		// }
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
@@ -214,11 +203,6 @@ func DeleteChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 	user, err := handler.ReadSession(app, db, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] DeleteChat WARN user, %s\n", h.GetReqId(r), err)
-		// &template.InfoMessage{
-		// 	Header: "User is not authenticated",
-		// 	Body:   "Your session has probably expired",
-		// 	Footer: "Reload the page and try again",
-		// }
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}

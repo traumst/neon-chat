@@ -233,11 +233,6 @@ func ConfirmEmail(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		w.Write([]byte("failed to update user status"))
 		return
 	}
-	// &template.InfoMessage{
-	// 	Header: "Congrats! " + user.Email + " is confirmed",
-	// 	Body:   "Your user name is " + user.Name + " until you decide to change it",
-	// 	Footer: "Please, login using your signup credentials",
-	// }
 	http.Header.Add(w.Header(), "HX-Refresh", "true")
 	w.WriteHeader(http.StatusOK)
 }
