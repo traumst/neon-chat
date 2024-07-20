@@ -159,7 +159,7 @@ func TestDropUser(t *testing.T) {
 	if chat.Id != chatId {
 		t.Fatalf("TestDropUser expected chat[%d], got [%d]", chatId, chat.Id)
 	}
-	err = app1.DropUser(user.Id, chatId, invitee.Id)
+	err = app1.ExpelFromChat(user.Id, chatId, invitee.Id)
 	if err != nil {
 		t.Fatalf("TestDropUser expected no error, %s", err.Error())
 	}

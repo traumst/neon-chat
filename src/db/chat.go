@@ -51,6 +51,25 @@ func (db *DBConn) AddChat(chat *Chat) (*Chat, error) {
 	return chat, nil
 }
 
+func (db *DBConn) GetChat(chatId uint) (*Chat, error) {
+	if chatId == 0 {
+		return nil, fmt.Errorf("invalid chatId[%d]", chatId)
+	}
+	if !db.ConnIsActive() {
+		return nil, fmt.Errorf("db is not connected")
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	var chat *Chat
+	err := db.conn.Select(chat, `SELECT id, title, ownerId FROM chats WHERE id = ?`, chatId)
+	if err != nil {
+		return nil, fmt.Errorf("error adding user: %s", err.Error())
+	}
+	return chat, nil
+}
+
 func (db *DBConn) DeleteChat(chatId uint) error {
 	if !db.ConnIsActive() {
 		return fmt.Errorf("db is not connected")

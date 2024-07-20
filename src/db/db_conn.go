@@ -163,5 +163,21 @@ func (db *DBConn) concatSchema() (schema string, shouldMigrate bool) {
 		schema += ReservationSchema + "\n"
 	}
 
+	if db.ChatTableExists() {
+		log.Println("concatSchema TRACE chat table exists")
+		shouldMigrate = true
+	} else {
+		log.Println("concatSchema TRACE chat table will be created")
+		schema += ChatSchema + "\n"
+	}
+
+	if db.ChatUserTableExists() {
+		log.Println("concatSchema TRACE chat_user table exists")
+		shouldMigrate = true
+	} else {
+		log.Println("concatSchema TRACE chat_user table will be created")
+		schema += ChatUserSchema + "\n"
+	}
+
 	return schema, shouldMigrate
 }

@@ -81,7 +81,7 @@ func (state *State) InviteUser(userId uint, chatId uint, invitee *app.User) erro
 	return state.chats.InviteUser(userId, chatId, invitee)
 }
 
-func (state *State) DropUser(userId uint, chatId uint, removeId uint) error {
+func (state *State) ExpelFromChat(userId uint, chatId uint, removeId uint) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
