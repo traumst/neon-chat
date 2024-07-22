@@ -85,3 +85,28 @@ func HandleChatDelete(app *state.State, db *d.DBConn, user *a.User, chatId uint)
 	}
 	return nil
 }
+
+func GetChat(app *state.State, db *d.DBConn, user *a.User, chatId uint) (*a.Chat, error) {
+	chat, err := app.GetChat(user.Id, chatId)
+	if chat != nil {
+		return chat, nil
+	}
+	if err != nil {
+		log.Printf("GetChat INFO chat[%d] for user[%d] not found in cache, %s\n", chatId, user.Id, err.Error())
+	}
+
+	dbChat, err := db.GetChat(chatId)
+	if err != nil {
+		log.Printf("GetChat INFO chat[%d] not found in db: %s", chatId, err)
+	}
+	if dbChat == nil {
+		return nil, nil
+	}
+
+	err = app.AddChat(dbChat.Id, dbChat.Title, user)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add chat[%d] to app: %s", dbChat.Id, err)
+	}
+
+	return app.GetChat(user.Id, dbChat.Id)
+}

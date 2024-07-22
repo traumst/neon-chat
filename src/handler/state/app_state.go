@@ -71,6 +71,15 @@ func (state *State) DropConn(conn *Conn) error {
 }
 
 // USER
+func (state *State) GetUser(userId uint) (*app.User, error) {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("AppState.GetUser TRACE get user[%d]\n", userId)
+
+	return state.chats.GetUser(userId)
+}
+
 func (state *State) InviteUser(userId uint, chatId uint, invitee *app.User) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()

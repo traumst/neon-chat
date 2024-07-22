@@ -119,6 +119,27 @@ func (cl *HotChats) DeleteChat(userId uint, chat *Chat) error {
 	return nil
 }
 
+func (cl *HotChats) GetUser(userId uint) (*User, error) {
+	// TODO rethink
+	for _, chatId := range cl.chats.Keys() {
+		chat, _ := cl.GetChat(chatId, userId)
+		if chat == nil {
+			continue
+		}
+		chatUsers, err := chat.GetUsers(userId)
+		if err != nil {
+			log.Printf("GetUser ERROR getting users from chat[%d] for user[%d]: %s", chatId, userId, err)
+			continue
+		}
+		for _, user := range chatUsers {
+			if user.Id == userId {
+				return user, nil
+			}
+		}
+	}
+	return nil, nil
+}
+
 func (cl *HotChats) InviteUser(userId uint, chatId uint, invitee *User) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()

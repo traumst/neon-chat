@@ -15,12 +15,7 @@ import (
 	h "prplchat/src/utils/http"
 )
 
-func ReadSession(
-	app *state.State,
-	db *d.DBConn,
-	w http.ResponseWriter,
-	r *http.Request,
-) (*a.User, error) {
+func ReadSession(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) (*a.User, error) {
 	log.Printf("[%s] ReadSession TRACE IN\n", h.GetReqId(r))
 	cookie, err := h.GetSessionCookie(r)
 	log.Printf("[%s] ReadSession TRACE session cookie[%v], err[%s]\n", h.GetReqId(r), cookie, err)
@@ -53,12 +48,7 @@ func ReadSession(
 	return &appUser, err
 }
 
-func Authenticate(
-	db *d.DBConn,
-	username string,
-	pass string,
-	authType a.AuthType,
-) (*a.User, *a.Auth, error) {
+func Authenticate(db *d.DBConn, username string, pass string, authType a.AuthType) (*a.User, *a.Auth, error) {
 	if db == nil || len(username) <= 0 || len(pass) <= 0 {
 		log.Printf("Authenticate ERROR bad arguments username[%s] authType[%s]\n", username, authType)
 		return nil, nil, fmt.Errorf("bad arguments")
@@ -87,12 +77,7 @@ func Authenticate(
 	return &appUser, &appAuth, nil
 }
 
-func Register(
-	db *d.DBConn,
-	newUser *a.User,
-	pass string,
-	authType a.AuthType,
-) (*a.User, *a.Auth, error) {
+func Register(db *d.DBConn, newUser *a.User, pass string, authType a.AuthType) (*a.User, *a.Auth, error) {
 	log.Printf("Register TRACE IN user\n")
 	if db == nil || newUser == nil {
 		return nil, nil, fmt.Errorf("missing mandatory args user[%v] db[%v]", newUser, db)
@@ -124,11 +109,7 @@ func Register(
 	return appUser, auth, nil
 }
 
-func IssueReservationToken(
-	app *state.State,
-	db *d.DBConn,
-	user *a.User,
-) (*t.VerifyEmailTemplate, error) {
+func IssueReservationToken(app *state.State, db *d.DBConn, user *a.User) (*t.VerifyEmailTemplate, error) {
 	token := utils.RandStringBytes(16)
 	expire := time.Now().Add(1 * time.Hour)
 	reserve, err := reserve(db, user, token, expire)
@@ -154,12 +135,7 @@ func IssueReservationToken(
 	return &tmpl, nil
 }
 
-func reserve(
-	db *d.DBConn,
-	user *a.User,
-	token string,
-	expire time.Time,
-) (*d.Reservation, error) {
+func reserve(db *d.DBConn, user *a.User, token string, expire time.Time) (*d.Reservation, error) {
 	reserve := &d.Reservation{
 		Id:     0,
 		UserId: user.Id,

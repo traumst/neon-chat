@@ -38,3 +38,21 @@ func (db *DBConn) AddChatUser(chatId uint, userId uint) error {
 	}
 	return nil
 }
+
+func (db *DBConn) RemoveChatUser(chatId uint, userId uint) error {
+	if chatId == 0 || userId == 0 {
+		return fmt.Errorf("bad input: chatId[%d], userId[%d]", chatId, userId)
+	}
+	if !db.ConnIsActive() {
+		return fmt.Errorf("db is not connected")
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	_, err := db.conn.Exec(`DELETE FROM chat_users WHERE chat_id = ? AND user_id = ?`, chatId, userId)
+	if err != nil {
+		return fmt.Errorf("error removing user: %s", err.Error())
+	}
+	return nil
+}
