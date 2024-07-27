@@ -76,6 +76,22 @@ func InviteUser(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 		return
 	}
 
+	err = chat.AddUser(chatId, appInvitee)
+	if err != nil {
+		log.Printf("[%s] InviteUser ERROR failed to add user[%d] to chat[%d], %s\n", reqId, appInvitee.Id, chatId, err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("Failed to add user [%d] to chat [%d]", appInvitee.Id, chatId)))
+		return
+	}
+
+	err = db.AddChatUser(chatId, appInvitee.Id)
+	if err != nil {
+		log.Printf("[%s] InviteUser ERROR failed to add user[%d] to chat[%d], %s\n", reqId, appInvitee.Id, chatId, err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("Failed to add user [%d] to chat [%d]", appInvitee.Id, chatId)))
+		return
+	}
+
 	err = sse.DistributeChat(app, chat, user, appInvitee, appInvitee, event.ChatInvite)
 	if err != nil {
 		log.Printf("[%s] InviteUser WARN cannot distribute chat invite, %s\n", reqId, err.Error())

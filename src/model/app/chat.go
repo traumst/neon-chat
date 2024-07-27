@@ -30,7 +30,7 @@ func (c *Chat) isAuthor(userId uint, msgId uint) bool {
 	return false
 }
 
-func (c *Chat) isUserInChat(userId uint) bool {
+func (c *Chat) IsUserInChat(userId uint) bool {
 	for _, u := range c.users {
 		if u.Id == userId {
 			return true
@@ -39,23 +39,20 @@ func (c *Chat) isUserInChat(userId uint) bool {
 	return false
 }
 
-func (c *Chat) AddUser(ownerId uint, user *User) error {
+func (c *Chat) AddUser(userId uint, invited *User) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if !c.isOwner(ownerId) {
-		return fmt.Errorf("only the owner can invite users")
-	}
-	if c.isUserInChat(user.Id) {
+	if c.IsUserInChat(invited.Id) {
 		return fmt.Errorf("user already in chat")
 	}
-	c.users = append(c.users, user)
+	c.users = append(c.users, invited)
 	return nil
 }
 
 func (c *Chat) GetUsers(userId uint) ([]*User, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if !c.isUserInChat(userId) {
+	if !c.IsUserInChat(userId) {
 		return nil, fmt.Errorf("user[%d] is not in chat[%d]", userId, c.Id)
 	}
 	return c.users, nil
@@ -73,7 +70,7 @@ func (c *Chat) SyncUser(template *User) error {
 			return nil
 		}
 	}
-	return nil
+	return fmt.Errorf("user[%d] is not in chat[%d]", template.Id, c.Id)
 }
 
 func (c *Chat) RemoveUser(ownerId uint, userId uint) error {
@@ -82,7 +79,7 @@ func (c *Chat) RemoveUser(ownerId uint, userId uint) error {
 	if !c.isOwner(ownerId) && ownerId != userId {
 		return fmt.Errorf("only the owner can remove users from chat")
 	}
-	if !c.isUserInChat(userId) {
+	if !c.IsUserInChat(userId) {
 		return fmt.Errorf("only invited users can be removed from chat")
 	}
 	for i, u := range c.users {
@@ -97,7 +94,7 @@ func (c *Chat) RemoveUser(ownerId uint, userId uint) error {
 func (c *Chat) AddMessage(userId uint, message Message) (*Message, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if !c.isUserInChat(userId) {
+	if !c.IsUserInChat(userId) {
 		return nil, fmt.Errorf("only invited users can add messages")
 	}
 	return c.history.Add(&message)
@@ -106,7 +103,7 @@ func (c *Chat) AddMessage(userId uint, message Message) (*Message, error) {
 func (c *Chat) GetMessage(userId uint, msgId uint) (*Message, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if !c.isUserInChat(userId) {
+	if !c.IsUserInChat(userId) {
 		return nil, fmt.Errorf("only invited users can get messages")
 	}
 	return c.history.Get(msgId)
@@ -119,7 +116,7 @@ func (c *Chat) DropMessage(userId uint, msgId uint) (*Message, error) {
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if !c.isUserInChat(userId) {
+	if !c.IsUserInChat(userId) {
 		return msg, fmt.Errorf("only invited users can delete messages")
 	}
 	if !c.isAuthor(userId, msgId) && !c.isOwner(userId) {

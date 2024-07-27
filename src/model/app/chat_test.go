@@ -22,10 +22,10 @@ func TestIsUserInChat(t *testing.T) {
 	u1 := User{Id: 1, Name: "John", Type: UserType(UserTypeBasic)}
 	u2 := User{Id: 2 /*Name: "Jill", Type: UserType(UserTypeBasic)*/}
 	c := Chat{users: []*User{&u1}}
-	if c.isUserInChat(u2.Id) {
+	if c.IsUserInChat(u2.Id) {
 		t.Errorf("TestIsUserInChat [%d] should not have been in the chat with [%d]", u1.Id, u2.Id)
 	}
-	if !c.isUserInChat(u1.Id) {
+	if !c.IsUserInChat(u1.Id) {
 		t.Errorf("TestIsUserInChat [%d] should have been in the chat", u1.Id)
 	}
 	t.Logf("TestIsUserInChat finished")

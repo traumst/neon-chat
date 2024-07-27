@@ -16,7 +16,7 @@ func RenderLogin(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	log.Printf("[%s] homeLogin TRACE IN", h.GetReqId(r))
+	log.Printf("[%s] RenderLogin TRACE IN", h.GetReqId(r))
 	login := template.AuthTemplate{}
 	home := template.HomeTemplate{
 		Chats:         nil,
@@ -26,10 +26,10 @@ func RenderLogin(
 		LoginTemplate: login,
 		Avatar:        nil,
 	}
-	log.Printf("[%s] homeLogin TRACE templating", h.GetReqId(r))
+	log.Printf("[%s] RenderLogin TRACE templating", h.GetReqId(r))
 	html, err := home.HTML()
 	if err != nil {
-		log.Printf("[%s] homeLogin ERROR login %s\n", h.GetReqId(r), err)
+		log.Printf("[%s] RenderLogin ERROR login %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to render home login"))
 		return
@@ -52,15 +52,15 @@ func RenderHome(
 	} else if user == nil {
 		panic("user is nil")
 	}
-	log.Printf("[%s] homePage TRACE IN", h.GetReqId(r))
+	log.Printf("[%s] RenderHome TRACE IN", h.GetReqId(r))
 	html, err := templateHome(app, db, r, user)
 	if err != nil {
-		log.Printf("[%s] homePage ERROR, %s\n", h.GetReqId(r), err)
+		log.Printf("[%s] RenderHome ERROR, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to render home page"))
 		return
 	}
-	log.Printf("[%s] homePage TRACE, user[%d] gets content\n", h.GetReqId(r), user.Id)
+	log.Printf("[%s] RenderHome TRACE, user[%d] gets content\n", h.GetReqId(r), user.Id)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }
@@ -76,16 +76,22 @@ func templateHome(
 	var openChatOwnerId uint = 0
 	openChat := app.GetOpenChat(user.Id)
 	if openChat == nil {
-		log.Printf("[%s] homePage DEBUG, user[%d] has no open chat\n", h.GetReqId(r), user.Id)
+		log.Printf("[%s] templateHome DEBUG, user[%d] has no open chat\n", h.GetReqId(r), user.Id)
 		openChatTemplate = nil
 	} else {
-		log.Printf("[%s] homePage DEBUG, user[%d] has chat[%d] open\n", h.GetReqId(r), user.Id, openChat.Id)
+		log.Printf("[%s] templateHome DEBUG, user[%d] has chat[%d] open\n", h.GetReqId(r), user.Id, openChat.Id)
 		openChatTemplate = openChat.Template(user, user)
 		openChatId = openChat.Id
 		openChatOwnerId = openChat.Owner.Id
 	}
+	chats, err := handler.GetChats(app, db, user.Id)
+	if err != nil {
+		log.Printf("[%s] templateHome ERROR, failed getting chats for user[%d], %s\n",
+			h.GetReqId(r), user.Id, err.Error())
+		return "", err
+	}
 	var chatTemplates []*template.ChatTemplate
-	for _, chat := range app.GetChats(user.Id) {
+	for _, chat := range chats {
 		chatTemplates = append(chatTemplates, chat.Template(user, user))
 	}
 	var avatarTmpl *template.AvatarTemplate

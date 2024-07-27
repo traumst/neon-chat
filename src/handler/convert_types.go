@@ -6,6 +6,22 @@ import (
 	"prplchat/src/utils"
 )
 
+func ChatToDB(chat *app.Chat) db.Chat {
+	return db.Chat{
+		Id:      chat.Id,
+		Title:   chat.Name,
+		OwnerId: chat.Owner.Id,
+	}
+}
+
+func ChatFromDB(chat *db.Chat) app.Chat {
+	return app.Chat{
+		Id:    chat.Id,
+		Name:  chat.Title,
+		Owner: &app.User{Id: chat.OwnerId},
+	}
+}
+
 func UserToDB(user app.User) db.User {
 	return db.User{
 		Id:     user.Id,

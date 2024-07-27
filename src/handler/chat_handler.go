@@ -103,10 +103,37 @@ func GetChat(app *state.State, db *d.DBConn, user *a.User, chatId uint) (*a.Chat
 		return nil, nil
 	}
 
-	err = app.AddChat(dbChat.Id, dbChat.Title, user)
+	err = app.AddChat(dbChat.Id, dbChat.Title, &a.User{Id: dbChat.OwnerId})
 	if err != nil {
 		return nil, fmt.Errorf("failed to add chat[%d] to app: %s", dbChat.Id, err)
 	}
 
 	return app.GetChat(user.Id, dbChat.Id)
+}
+
+func GetChats(
+	app *state.State,
+	db *d.DBConn,
+	userId uint,
+) ([]*a.Chat, error) {
+	userChats := app.GetChats(userId)
+	if len(userChats) > 0 {
+		return userChats, nil
+	}
+	dbUserChats, err := db.GetUserChats(userId)
+	if err != nil {
+		return nil, fmt.Errorf("error getting user chats: %s", err)
+	}
+	for _, dbChat := range dbUserChats {
+		chat := ChatFromDB(&dbChat)
+		// TODO refresh chat details in a goroutine
+		err = app.AddChat(chat.Id, chat.Name, chat.Owner)
+		if err != nil {
+			log.Printf("GetChats ERROR adding chat[%d] to app: %s", chat.Id, err)
+			continue
+		}
+		userChats = append(userChats, &chat)
+	}
+
+	return userChats, nil
 }

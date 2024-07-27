@@ -26,7 +26,7 @@ func GetUser(app *state.State, db *d.DBConn, userId uint) (*a.User, error) {
 }
 
 func FindUser(app *state.State, db *d.DBConn, userName string) (*a.User, error) {
-	log.Printf("FindUser TRACE user[%s]\n", userName)
+	log.Printf("FindUser TRACE IN user[%s]\n", userName)
 	dbUser, err := db.SearchUser(userName)
 	if err != nil {
 		return nil, fmt.Errorf("user[%s] not found: %s", userName, err.Error())
@@ -38,12 +38,12 @@ func FindUser(app *state.State, db *d.DBConn, userName string) (*a.User, error) 
 		log.Printf("FindUser ERROR failed to cache user[%d]: %s", appUser.Id, err.Error())
 		return &appUser, err
 	}
-
+	log.Printf("FindUser TRACE OUT user[%s]\n", userName)
 	return &appUser, nil
 }
 
 func FindUsers(db *d.DBConn, userName string) ([]*a.User, error) {
-	log.Printf("FindUser TRACE user[%s]\n", userName)
+	log.Printf("FindUsers TRACE user[%s]\n", userName)
 	dbUsers, err := db.SearchUsers(userName)
 	if err != nil {
 		return nil, fmt.Errorf("user[%s] not found: %s", userName, err.Error())
@@ -58,7 +58,29 @@ func FindUsers(db *d.DBConn, userName string) ([]*a.User, error) {
 		appUsers = append(appUsers, &appUser)
 	}
 
+	log.Printf("FindUsers TRACE OUT user[%s]\n", userName)
 	return appUsers, nil
+}
+
+func InviteUser(app *state.State, db *d.DBConn, userId uint, chatId uint, inviteeId uint) error {
+	log.Printf("InviteUser TRACE inviting[%d] to chat[%d]\n", inviteeId, chatId)
+	appInvitee, err := app.GetUser(inviteeId)
+	if err != nil || appInvitee == nil {
+		log.Printf("InviteUser DEBUG refreshing user[%d] from db: %s", inviteeId, err.Error())
+		dbUser, _ := db.GetUser(inviteeId)
+		if dbUser == nil {
+			return fmt.Errorf("user[%d] not found in db", inviteeId)
+		}
+	}
+	err = app.InviteUser(userId, chatId, appInvitee)
+	if err != nil {
+		return fmt.Errorf("inviting user[%d] to chat[%d] in app: %s", appInvitee.Id, chatId, err.Error())
+	}
+	err = db.AddChatUser(inviteeId, chatId)
+	if err != nil {
+		return fmt.Errorf("failed to add user[%d] to chat[%d]: %s", inviteeId, chatId, err.Error())
+	}
+	return nil
 }
 
 func ExpelUser(app *state.State, db *d.DBConn, user *a.User, chatId uint, expelledId uint) (*a.User, error) {

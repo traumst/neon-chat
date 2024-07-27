@@ -1,6 +1,8 @@
 package db
 
-import "fmt"
+import (
+	"fmt"
+)
 
 const minChatTitleLen = 5
 const maxChatTitleLen = 256
@@ -53,7 +55,7 @@ func (db *DBConn) AddChat(chat *Chat) (*Chat, error) {
 
 func (db *DBConn) GetChat(chatId uint) (*Chat, error) {
 	if chatId == 0 {
-		return nil, fmt.Errorf("invalid chatId[%d]", chatId)
+		return nil, fmt.Errorf("bad input: chatId[%d]", chatId)
 	}
 	if !db.ConnIsActive() {
 		return nil, fmt.Errorf("db is not connected")
@@ -62,12 +64,12 @@ func (db *DBConn) GetChat(chatId uint) (*Chat, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	var chat *Chat
-	err := db.conn.Select(chat, `SELECT id, title, ownerId FROM chats WHERE id = ?`, chatId)
+	var chat Chat
+	err := db.conn.Get(&chat, `SELECT * FROM chats WHERE id = ?`, chatId)
 	if err != nil {
-		return nil, fmt.Errorf("error adding user: %s", err.Error())
+		return nil, fmt.Errorf("error getting chat: %s", err)
 	}
-	return chat, nil
+	return &chat, nil
 }
 
 func (db *DBConn) DeleteChat(chatId uint) error {
