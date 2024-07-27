@@ -7,13 +7,13 @@ import (
 
 type LRUCache struct {
 	mu   sync.Mutex
-	dict map[uint]*Node
+	dict map[uint]*node
 	list *DoublyLinkedList
 }
 
 func NewLRUCache(size int) *LRUCache {
 	return &LRUCache{
-		dict: make(map[uint]*Node),
+		dict: make(map[uint]*node),
 		list: NewLinkedList(size),
 	}
 }
@@ -33,14 +33,19 @@ func (cache *LRUCache) Set(key uint, value interface{}) error {
 			return err
 		}
 	}
+	if _, ok := cache.dict[key]; ok {
+		_, err := cache.Take(key)
+		if err != nil {
+			return fmt.Errorf("failed to pop taken key[%d]: %s", key, err)
+		}
+	}
 	cache.mu.Lock()
 	defer cache.mu.Unlock()
-	newNode := Node{id: key, value: value}
+	newNode := node{id: key, value: value}
 	err := cache.list.AddHead(&newNode)
 	if err != nil {
 		return err
 	}
-
 	cache.dict[key] = &newNode
 	return nil
 }

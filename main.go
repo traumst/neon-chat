@@ -50,7 +50,7 @@ func main() {
 
 	log.Println("init app state...")
 	app := &state.Application
-	app.Init(db, utils.Config{
+	app.Init(utils.Config{
 		CacheSize: config.CacheSize,
 		Port:      config.Port,
 		Sqlite:    config.Sqlite,

@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"sync"
 
-	"prplchat/src/db"
 	"prplchat/src/model/app"
 	"prplchat/src/utils"
 	h "prplchat/src/utils/http"
+	"prplchat/src/utils/store"
 )
 
 var Application State
@@ -17,20 +17,22 @@ var Application State
 type State struct {
 	mu     sync.Mutex
 	isInit bool
+	users  store.LRUCache
 	chats  app.HotChats
-	conns  ActiveConnections
+	conns  OpenConnections
 	config utils.Config
 }
 
-func (state *State) Init(db *db.DBConn, config utils.Config) {
+func (state *State) Init(config utils.Config) {
 	cacheSize := config.CacheSize
 	if cacheSize <= 0 {
 		cacheSize = 1024
 	}
 	Application = State{
 		isInit: true,
-		chats:  app.HotChats{},
-		conns:  make(ActiveConnections, 0),
+		users:  *store.NewLRUCache(128),
+		chats:  *app.NewHotChats(),
+		conns:  make(OpenConnections, 0),
 		config: config,
 	}
 }
@@ -40,7 +42,7 @@ func (state *State) SmtpConfig() utils.SmtpConfig {
 }
 
 // CONN
-func (state *State) AddConn(w http.ResponseWriter, r http.Request, user *app.User) *Conn {
+func (state *State) AddConn(w http.ResponseWriter, r http.Request, user *app.User, openChat *app.Chat) *Conn {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 	if state.conns == nil {
@@ -71,15 +73,6 @@ func (state *State) DropConn(conn *Conn) error {
 }
 
 // USER
-func (state *State) GetUser(userId uint) (*app.User, error) {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-
-	log.Printf("AppState.GetUser TRACE get user[%d]\n", userId)
-
-	return state.chats.GetUser(userId)
-}
-
 func (state *State) InviteUser(userId uint, chatId uint, invitee *app.User) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
@@ -87,18 +80,29 @@ func (state *State) InviteUser(userId uint, chatId uint, invitee *app.User) erro
 		return fmt.Errorf("user cannot invite self")
 	}
 
-	return state.chats.InviteUser(userId, chatId, invitee)
+	return state.users.Set(invitee.Id, invitee)
+}
+
+func (state *State) GetUser(userId uint) (*app.User, error) {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	log.Printf("AppState.GetUser TRACE retrieving user[%d]\n", userId)
+	cached, err := state.users.Get(userId)
+	if err != nil {
+		return nil, fmt.Errorf("user[%d] not found: %s", userId, err.Error())
+	}
+	return cached.(*app.User), nil
 }
 
 func (state *State) ExpelFromChat(userId uint, chatId uint, removeId uint) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
-	_ = state.chats.CloseChat(removeId, chatId)
+	log.Printf("AppState.ExpelFromChat TRACE user[%d] expels user[%d] from chat[%d]\n", userId, removeId, chatId)
 	return state.chats.ExpelUser(userId, chatId, removeId)
 }
 
-// TODO update user: status, name, email, avatar
 func (state *State) UpdateUser(userId uint, template app.User) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()

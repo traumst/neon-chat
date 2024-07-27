@@ -8,17 +8,17 @@ import (
 
 type DoublyLinkedList struct {
 	mu    sync.Mutex
-	head  *Node
-	tail  *Node
+	head  *node
+	tail  *node
 	size  int
 	count int
 }
 
-type Node struct {
+type node struct {
 	id    uint
 	value interface{}
-	prev  *Node
-	next  *Node
+	prev  *node
+	next  *node
 }
 
 const (
@@ -45,7 +45,7 @@ func (ll *DoublyLinkedList) Count() int {
 	return ll.count
 }
 
-func (ll *DoublyLinkedList) Get(nodeId uint) (*Node, error) {
+func (ll *DoublyLinkedList) Get(nodeId uint) (*node, error) {
 	ll.mu.Lock()
 	defer ll.mu.Unlock()
 	current := ll.head
@@ -59,7 +59,7 @@ func (ll *DoublyLinkedList) Get(nodeId uint) (*Node, error) {
 }
 
 // adds node to head
-func (ll *DoublyLinkedList) AddHead(new *Node) error {
+func (ll *DoublyLinkedList) AddHead(new *node) error {
 	ll.mu.Lock()
 	defer ll.mu.Unlock()
 	if new == nil {
@@ -88,7 +88,7 @@ func (ll *DoublyLinkedList) AddHead(new *Node) error {
 }
 
 // moves node to head
-func (ll *DoublyLinkedList) Bump(node *Node) ([]uint, error) {
+func (ll *DoublyLinkedList) Bump(node *node) ([]uint, error) {
 	if node == nil {
 		panic("Attempt to bump NIL node")
 	}
@@ -144,13 +144,13 @@ func (ll *DoublyLinkedList) Prune(drop int) (int, []uint, error) {
 }
 
 // removes node from middle
-func (ll *DoublyLinkedList) Remove(id uint) *Node {
+func (ll *DoublyLinkedList) Remove(id uint) *node {
 	ll.mu.Lock()
 	defer ll.mu.Unlock()
 	if ll.count <= 0 {
 		return nil
 	}
-	var removed *Node
+	var removed *node
 	if ll.head.id == id {
 		removed = ll.removeHead()
 	} else if ll.tail.id == id {
@@ -163,7 +163,7 @@ func (ll *DoublyLinkedList) Remove(id uint) *Node {
 	}
 	return removed
 }
-func (ll *DoublyLinkedList) removeHead() *Node {
+func (ll *DoublyLinkedList) removeHead() *node {
 	removed := ll.head
 	if ll.head == ll.tail {
 		log.Printf("DoublyLinkedList.removeHead TRACE removing last[%d]", ll.head.id)
@@ -175,7 +175,7 @@ func (ll *DoublyLinkedList) removeHead() *Node {
 	}
 	return removed
 }
-func (ll *DoublyLinkedList) removeTail() *Node {
+func (ll *DoublyLinkedList) removeTail() *node {
 	if ll.tail == nil {
 		return nil
 	}
@@ -191,7 +191,7 @@ func (ll *DoublyLinkedList) removeTail() *Node {
 	}
 	return removed
 }
-func (ll *DoublyLinkedList) removeNode(id uint) *Node {
+func (ll *DoublyLinkedList) removeNode(id uint) *node {
 	log.Printf("DoublyLinkedList.removeNode TRACE any node[%d]", id)
 	// TODO check from head and tail
 	current := ll.head

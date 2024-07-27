@@ -5,22 +5,9 @@ import (
 	"testing"
 )
 
-func TestInit(t *testing.T) {
-	t.Logf("TestAddChat started")
-	cl := HotChats{}
-	if cl.isInit {
-		t.Errorf("TestAddChat expected isInit false, got true")
-		return
-	}
-	cl.init()
-	if !cl.isInit {
-		t.Errorf("TestAddChat expected isInit true, got false")
-	}
-}
-
 func TestAddChat(t *testing.T) {
 	t.Logf("TestAddChat started")
-	cl := HotChats{}
+	cl := NewHotChats()
 	user := User{Id: 1, Name: "John", Type: UserType(UserTypeBasic)}
 	cl.AddChat(11, &user, "test-chat")
 	user2 := User{Id: 2, Name: "Jane", Type: UserType(UserTypeBasic)}
@@ -212,9 +199,9 @@ func TestInviteUser(t *testing.T) {
 		t.Errorf("TestInviteUserEmpty expected 1 chat, got %d", len(inviteeChats))
 	} else if inviteeChats[0].Id != 11 {
 		t.Errorf("TestInviteUserEmpty expected chatId %d, got %d", 11, inviteeChats[0].Id)
-	} else if !inviteeChats[0].isUserInChat(invitee.Id) {
+	} else if !inviteeChats[0].IsUserInChat(invitee.Id) {
 		t.Errorf("TestInviteUserEmpty user [%v] is not in chat", invitee)
-	} else if !inviteeChats[0].isUserInChat(owner.Id) {
+	} else if !inviteeChats[0].IsUserInChat(owner.Id) {
 		t.Errorf("TestInviteUserEmpty owner [%v] is not in chat", owner)
 	}
 }

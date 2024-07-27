@@ -6,26 +6,29 @@ import (
 	"net/http"
 	"prplchat/src/model/app"
 	"prplchat/src/model/event"
-	h "prplchat/src/utils/http"
 	"sync"
 )
 
 // TODO should be LRUCache
-type ActiveConnections map[uint][]*Conn
+type OpenConnections map[uint][]*Conn
 
 var mu sync.Mutex
 
-func (conns *ActiveConnections) IsConn(userId uint) bool {
+func (conns *OpenConnections) IsConn(userId uint) bool {
 	mu.Lock()
 	defer mu.Unlock()
 
 	return len((*conns)[userId]) > 0
 }
 
-func (conns *ActiveConnections) Add(user *app.User, origin string, w http.ResponseWriter, r http.Request) *Conn {
+func (conns *OpenConnections) Add(
+	user *app.User,
+	origin string,
+	w http.ResponseWriter,
+	r http.Request,
+) *Conn {
 	mu.Lock()
 	defer mu.Unlock()
-	log.Printf("[%s] UserConn.Add TRACE user[%d] added from conn[%s]\n", h.GetReqId(&r), user.Id, origin)
 	id := uint(len(*conns))
 	newConn := Conn{
 		Id:     id,
@@ -37,16 +40,17 @@ func (conns *ActiveConnections) Add(user *app.User, origin string, w http.Respon
 		//Out:    make(chan event.LiveUpdate, 64),
 	}
 	(*conns)[user.Id] = append((*conns)[user.Id], &newConn)
+	log.Printf("UserConn.Add INFO added conn[%s] user[%d]\n", origin, user.Id)
 	return &newConn
 }
 
-func (conns *ActiveConnections) Get(userId uint) []*Conn {
+func (conns *OpenConnections) Get(userId uint) []*Conn {
 	mu.Lock()
 	defer mu.Unlock()
 	return (*conns)[userId]
 }
 
-func (uc *ActiveConnections) Drop(c *Conn) error {
+func (uc *OpenConnections) Drop(c *Conn) error {
 	mu.Lock()
 	defer mu.Unlock()
 	if c == nil || c.Origin == "" || c.User == nil {
@@ -56,6 +60,7 @@ func (uc *ActiveConnections) Drop(c *Conn) error {
 	for i, conn := range userConns {
 		if conn.User == c.User && conn.Origin == c.Origin {
 			(*uc)[c.User.Id] = append(userConns[:i], userConns[i+1:]...)
+			log.Printf("UserConn.Drop INFO dropped conn[%s] user[%d]\n", c.Origin, c.User.Id)
 			return nil
 		}
 	}

@@ -17,12 +17,12 @@ func TestAddConn(t *testing.T) {
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeBasic)}
 	app1 := &Application
-	app1.Init(nil, utils.Config{})
-	conn1 := app1.AddConn(w, *r, &user)
+	app1.Init(utils.Config{})
+	conn1 := app1.AddConn(w, *r, &user, nil)
 	if conn1 == nil {
 		t.Fatalf("TestAddConn expected a conn1, got nil")
 	}
-	conn2 := app1.AddConn(w, *r, &user)
+	conn2 := app1.AddConn(w, *r, &user, nil)
 	if conn2 == nil {
 		t.Fatalf("TestAddConn expected a conn2, got nil")
 	}
@@ -39,8 +39,8 @@ func TestGetConn(t *testing.T) {
 	reqId = h.SetReqId(r, &reqId)
 	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeBasic)}
 	app1 := &Application
-	app1.Init(nil, utils.Config{})
-	expect := app1.AddConn(w, *r, &user)
+	app1.Init(utils.Config{})
+	expect := app1.AddConn(w, *r, &user, nil)
 	if expect == nil {
 		t.Fatalf("TestGetConn expected a conn, got nil")
 	}
@@ -80,8 +80,8 @@ func TestDropConn(t *testing.T) {
 	reqId = h.SetReqId(r, &reqId)
 	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeBasic)}
 	app1 := &Application
-	app1.Init(nil, utils.Config{})
-	expect := app1.AddConn(w, *r, &user)
+	app1.Init(utils.Config{})
+	expect := app1.AddConn(w, *r, &user, nil)
 	if expect == nil {
 		t.Fatalf("TestDropConn expected a conn, got nil")
 	}
@@ -112,18 +112,18 @@ func TestInviteUser(t *testing.T) {
 		Type: app.UserType(app.UserTypeBasic),
 	}
 	app1 := &Application
-	app1.Init(nil, utils.Config{})
+	app1.Init(utils.Config{})
 	chatId := uint(11)
 	app1.AddChat(chatId, "TestChat", &user)
 	err := app1.InviteUser(user.Id, chatId, &invitee)
 	if err != nil {
 		t.Fatalf("TestInviteUser failed to invite user[%d] into chat[%d], [%s]",
-			user.Id, chatId, err.Error())
+			invitee.Id, chatId, err.Error())
 	}
 	chat, err := app1.GetChat(invitee.Id, chatId)
 	if err != nil {
 		t.Fatalf("TestInviteUser failed to get chat[%d] for user[%d], [%s]",
-			chatId, user.Id, err.Error())
+			chatId, invitee.Id, err.Error())
 	}
 	if chat == nil || chat.Id != chatId {
 		t.Fatalf("TestInviteUser expected a chat[%d] for user[%d] got nil", chatId, user.Id)
@@ -142,7 +142,7 @@ func TestDropUser(t *testing.T) {
 		Type: app.UserType(app.UserTypeBasic),
 	}
 	app1 := &Application
-	app1.Init(nil, utils.Config{})
+	app1.Init(utils.Config{})
 	chatId := uint(11)
 	app1.AddChat(chatId, "TestChat", &user)
 	err := app1.InviteUser(user.Id, chatId, &invitee)
@@ -185,7 +185,7 @@ func TestUpdateUser(t *testing.T) {
 		Type: app.UserType(app.UserTypeBasic),
 	}
 	app1 := &Application
-	app1.Init(nil, utils.Config{})
+	app1.Init(utils.Config{})
 	chatId := uint(11)
 	app1.AddChat(chatId, "TestChat", &user)
 	app1.InviteUser(user.Id, chatId, &invitee)
@@ -240,9 +240,12 @@ func TestAddChat(t *testing.T) {
 		Type: app.UserType(app.UserTypeBasic),
 	}
 	app1 := &Application
-	app1.Init(nil, utils.Config{})
+	app1.Init(utils.Config{})
 	chatId := uint(11)
-	app1.AddChat(chatId, "TestChat", &user)
+	err := app1.AddChat(chatId, "TestChat", &user)
+	if err != nil {
+		t.Fatalf("TestAddChat failed to add user[%d] into chat[%d], %s", user.Id, chatId, err.Error())
+	}
 	chat, err := app1.GetChat(user.Id, chatId)
 	if err != nil {
 		t.Fatalf("TestAddChat failed to get chat[%d] for user[%d], [%s]",
@@ -261,7 +264,7 @@ func TestGetChats(t *testing.T) {
 		Type: app.UserType(app.UserTypeBasic),
 	}
 	app1 := &Application
-	app1.Init(nil, utils.Config{})
+	app1.Init(utils.Config{})
 	chatId1 := app1.AddChat(11, "TestChat1", &user)
 	chatId2 := app1.AddChat(22, "TestChat2", &user)
 	chats := app1.GetChats(user.Id)
@@ -282,7 +285,7 @@ func TestGetChat(t *testing.T) {
 		Type: app.UserType(app.UserTypeBasic),
 	}
 	app1 := &Application
-	app1.Init(nil, utils.Config{})
+	app1.Init(utils.Config{})
 	app1.AddChat(11, "TestChat1", &user)
 	chat1, err := app1.GetChat(user.Id, 11)
 	if err != nil {
@@ -311,7 +314,7 @@ func TestOpenChat(t *testing.T) {
 		Type: app.UserType(app.UserTypeBasic),
 	}
 	app1 := &Application
-	app1.Init(nil, utils.Config{})
+	app1.Init(utils.Config{})
 	chatId1 := app1.AddChat(11, "TestChat1", &user)
 	chatId2 := app1.AddChat(22, "TestChat2", &user)
 	chatId3 := app1.AddChat(33, "TestChat3", &user)
@@ -339,7 +342,7 @@ func TestGetOpenChatEmpty(t *testing.T) {
 		// Type: app.UserType(app.UserTypeBasic),
 	}
 	app1 := &Application
-	app1.Init(nil, utils.Config{})
+	app1.Init(utils.Config{})
 	open := app1.GetOpenChat(user.Id)
 	if open != nil {
 		t.Fatalf("TestGetOpenChatEmpty expected nil, got [%v]", open)
@@ -354,7 +357,7 @@ func TestGetOpenChat(t *testing.T) {
 		Type: app.UserType(app.UserTypeBasic),
 	}
 	app1 := &Application
-	app1.Init(nil, utils.Config{})
+	app1.Init(utils.Config{})
 	app1.AddChat(11, "TestChat1", &user)
 	app1.AddChat(22, "TestChat2", &user)
 	app1.AddChat(33, "TestChat3", &user)
@@ -392,7 +395,7 @@ func TestCloseChat(t *testing.T) {
 		Type: app.UserType(app.UserTypeBasic),
 	}
 	app1 := &Application
-	app1.Init(nil, utils.Config{})
+	app1.Init(utils.Config{})
 	app1.AddChat(11, "TestChat1", &user)
 	open := app1.GetOpenChat(user.Id)
 	if open == nil {
@@ -419,7 +422,7 @@ func TestDeleteChat(t *testing.T) {
 		Type: app.UserType(app.UserTypeBasic),
 	}
 	app1 := &Application
-	app1.Init(nil, utils.Config{})
+	app1.Init(utils.Config{})
 	app1.AddChat(11, "TestChat1", &user)
 	open := app1.GetOpenChat(user.Id)
 	if open == nil {

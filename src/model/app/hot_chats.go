@@ -9,36 +9,27 @@ import (
 )
 
 type HotChats struct {
-	mu sync.Mutex
-	// NOT ANYMORE chat id -> chat
-	// TODO , CANT chats[id]
-	//	replace with LRU
+	mu    sync.Mutex
 	chats *store.LRUCache
 	// userId -> chat
-	open   map[uint]*Chat
-	isInit bool
+	open map[uint]*Chat
 }
 
-func (cl *HotChats) init() {
-	if cl.isInit {
-		return
-	}
-
+func NewHotChats() *HotChats {
+	cl := HotChats{}
 	cl.chats = store.NewLRUCache(1024)
 	cl.open = make(map[uint]*Chat)
-	cl.isInit = true
+	return &cl
 }
 
 func (cl *HotChats) GetChat(userId uint, chatId uint) (*Chat, error) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.init()
 	return cl.getCached(chatId, userId)
 }
 func (cl *HotChats) GetChats(userId uint) []*Chat {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.init()
 	chatIds := cl.chats.Keys()
 	var userChats []*Chat
 	for _, chatId := range chatIds {
@@ -54,7 +45,6 @@ func (cl *HotChats) GetChats(userId uint) []*Chat {
 func (cl *HotChats) AddChat(chatId uint, owner *User, chatName string) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.init()
 	chat := Chat{
 		Id:      chatId,
 		Name:    chatName,
@@ -70,7 +60,6 @@ func (cl *HotChats) AddChat(chatId uint, owner *User, chatName string) {
 func (cl *HotChats) OpenChat(userId uint, chatId uint) (*Chat, error) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.init()
 	openChat, err := cl.getCached(chatId, userId)
 	if err != nil {
 		return nil, err
@@ -82,14 +71,12 @@ func (cl *HotChats) OpenChat(userId uint, chatId uint) (*Chat, error) {
 func (cl *HotChats) GetOpenChat(userId uint) *Chat {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.init()
 	return cl.open[userId]
 }
 
 func (cl *HotChats) CloseChat(userId uint, chatId uint) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.init()
 	userAtChat := cl.open[userId]
 	if userAtChat == nil {
 		return fmt.Errorf("user[%d] has no open chat", userId)
@@ -104,7 +91,6 @@ func (cl *HotChats) CloseChat(userId uint, chatId uint) error {
 func (cl *HotChats) DeleteChat(userId uint, chat *Chat) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.init()
 	if chat == nil {
 		return fmt.Errorf("user[%d] cannot remove NIL chat", userId)
 	}
@@ -143,7 +129,6 @@ func (cl *HotChats) GetUser(userId uint) (*User, error) {
 func (cl *HotChats) InviteUser(userId uint, chatId uint, invitee *User) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.init()
 	chat, err := cl.getCached(chatId, userId)
 	if err != nil || chat == nil {
 		return err
@@ -161,7 +146,6 @@ func (cl *HotChats) InviteUser(userId uint, chatId uint, invitee *User) error {
 func (cl *HotChats) ExpelUser(userId uint, chatId uint, removeId uint) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.init()
 	chat, err := cl.getCached(chatId, userId)
 	if chat == nil || err != nil {
 		return fmt.Errorf("chat[%d] not found, [%s]", chatId, err)
@@ -176,7 +160,6 @@ func (cl *HotChats) ExpelUser(userId uint, chatId uint, removeId uint) error {
 func (cl *HotChats) SyncUser(user *User) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.init()
 	chatIds := cl.chats.Keys()
 	for _, chatId := range chatIds {
 		chat, _ := cl.getCached(chatId, user.Id)
@@ -203,7 +186,7 @@ func (cl *HotChats) getCached(chatId uint, userId uint) (*Chat, error) {
 	if !ok {
 		return nil, fmt.Errorf("chat[%d] is not a chat but [%t]", chatId, cachedObj)
 	}
-	if !openChat.isOwner(userId) && !openChat.isUserInChat(userId) {
+	if !openChat.isOwner(userId) && !openChat.IsUserInChat(userId) {
 		return nil, fmt.Errorf("user[%d] is not in chat[%d]", userId, chatId)
 	}
 	return openChat, nil
