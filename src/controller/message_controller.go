@@ -9,7 +9,6 @@ import (
 	"prplchat/src/handler"
 	"prplchat/src/handler/sse"
 	"prplchat/src/handler/state"
-	a "prplchat/src/model/app"
 	"prplchat/src/model/event"
 	"prplchat/src/utils"
 	h "prplchat/src/utils/http"
@@ -45,41 +44,13 @@ func AddMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 		w.Write([]byte("message too short"))
 		return
 	}
-	log.Printf("[%s] AddMessage TRACE opening current chat for user[%d]\n", h.GetReqId(r), author.Id)
-	chat, err := app.GetChat(author.Id, chatId)
-	if err != nil {
-		log.Printf("[%s] AddMessage ERROR get chat, %s\n", h.GetReqId(r), err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("failed to open chat"))
-		return
-	}
-	if chat == nil || chat.Id != chatId {
-		log.Printf("[%s] AddMessage WARN no open chat for user[%d]\n", h.GetReqId(r), author.Id)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("chat not found"))
-		return
-	}
-	log.Printf("[%s] AddMessage TRACE storing message for user[%d] in chat[%s]\n",
-		h.GetReqId(r), author.Id, chat.Name)
-	message, err := chat.AddMessage(author.Id, a.Message{
-		Id:     0,
-		ChatId: chat.Id,
-		Owner:  chat.Owner,
-		Author: author,
-		Text:   msg,
-	})
-	if err != nil {
-		log.Printf("[%s] AddMessage ERROR add message, %s\n", h.GetReqId(r), err)
+
+	message, err := handler.HandleMessageAdd(app, db, chatId, author, msg)
+	if err != nil || message == nil {
+		log.Printf("[%s] AddMessage ERROR while handing, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed adding message"))
 		return
-	}
-
-	log.Printf("[%s] AddMessage TRACE templating message\n", h.GetReqId(r))
-
-	err = sse.DistributeMsg(app, chat, author.Id, message, event.MessageAdd)
-	if err != nil {
-		log.Printf("[%s] AddMessage ERROR distribute message, %s\n", h.GetReqId(r), err)
 	}
 
 	log.Printf("[%s] AddMessage TRACE serving html\n", h.GetReqId(r))

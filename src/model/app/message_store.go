@@ -9,7 +9,6 @@ import (
 type MessageStore struct {
 	mu       sync.Mutex
 	messages []*Message
-	nextId   uint
 }
 
 func (s *MessageStore) Add(m *Message) (*Message, error) {
@@ -18,11 +17,10 @@ func (s *MessageStore) Add(m *Message) (*Message, error) {
 	if author == "" || msg == "" {
 		return nil, fmt.Errorf("bad arguments")
 	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	// TODO should come from db
-	m.Id = s.nextId
-	s.nextId += 1
+
 	s.messages = append(s.messages, m)
 	return m, nil
 }
@@ -41,6 +39,9 @@ func (s *MessageStore) Get(id uint) (*Message, error) {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	// TODO binary search ids
+
 	msg := s.messages[id]
 	if msg == nil {
 		return nil, fmt.Errorf("msg not found")

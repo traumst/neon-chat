@@ -14,7 +14,11 @@ import (
 func HandleChatAdd(app *state.State, db *d.DBConn, user *a.User, chatName string) (string, error) {
 	chat, err := db.AddChat(&d.Chat{Title: chatName, OwnerId: user.Id})
 	if err != nil {
-		return "", fmt.Errorf("failed to add chat to db: %s", err)
+		return "", fmt.Errorf("failed to add chat[%s] to db: %s", chatName, err)
+	}
+	err = db.AddChatUser(chat.Id, user.Id)
+	if err != nil {
+		return "", fmt.Errorf("failed to add owner[%d] to chat[%d] in db: %s", user.Id, chat.Id, err)
 	}
 	err = app.AddChat(chat.Id, chat.Title, user)
 	if err != nil {

@@ -72,6 +72,22 @@ func (db *DBConn) GetChat(chatId uint) (*Chat, error) {
 	return &chat, nil
 }
 
+func (db *DBConn) UserCanChat(chatId uint, userId uint) (bool, error) {
+	if !db.ConnIsActive() {
+		return false, fmt.Errorf("db is not connected")
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	var chatUser *ChatUser
+	err := db.conn.Get(&chatUser, `SELECT * FROM chat_users where chat_id = ? and user_id = ?`, chatId, userId)
+	if err != nil {
+		return false, fmt.Errorf("error getting chats: %s", err)
+	}
+	return true, nil
+}
+
 func (db *DBConn) DeleteChat(chatId uint) error {
 	if !db.ConnIsActive() {
 		return fmt.Errorf("db is not connected")

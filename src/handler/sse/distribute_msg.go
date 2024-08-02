@@ -17,6 +17,9 @@ func DistributeMsg(
 	msg *app.Message,
 	updateType event.EventType,
 ) error {
+	if chat == nil || msg == nil {
+		return fmt.Errorf("mandatory argument/s cannot be nil")
+	}
 	// have to get users by owner - author may have been removed
 	users, err := chat.GetUsers(chat.Owner.Id)
 	if err != nil || users == nil {
