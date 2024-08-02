@@ -18,7 +18,7 @@ type State struct {
 	mu     sync.Mutex
 	isInit bool
 	users  store.LRUCache
-	chats  app.HotChats
+	chats  app.OpenChats
 	conns  OpenConnections
 	config utils.Config
 }

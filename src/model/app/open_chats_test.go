@@ -27,7 +27,7 @@ func TestAddChat(t *testing.T) {
 
 func TestOpenChat(t *testing.T) {
 	t.Logf("TestOpenChat started")
-	cl := HotChats{}
+	cl := OpenChats{}
 	user := User{Id: 1, Name: "John", Type: UserType(UserTypeBasic)}
 	cl.AddChat(11, &user, "test-chat")
 
@@ -54,7 +54,7 @@ func TestOpenChat(t *testing.T) {
 
 func TestGetChat(t *testing.T) {
 	t.Logf("TestAddChat started")
-	cl := HotChats{}
+	cl := OpenChats{}
 	user := User{Id: uint(rand.Uint32()), Name: "John", Type: UserType(UserTypeBasic)}
 	cl.AddChat(11, &user, "test-chat")
 	chats := cl.GetChats(user.Id)
@@ -67,7 +67,7 @@ func TestGetChat(t *testing.T) {
 
 func TestGetOpenChatEmpty(t *testing.T) {
 	t.Logf("TestGetOpenChatEmpty started")
-	cl := HotChats{}
+	cl := OpenChats{}
 	user := User{Id: 1 /*Name: "John", Type: UserType(UserTypeBasic)*/}
 	chat := cl.GetOpenChat(user.Id)
 	if chat != nil {
@@ -77,7 +77,7 @@ func TestGetOpenChatEmpty(t *testing.T) {
 
 func TestGetOpenChat(t *testing.T) {
 	t.Logf("TestGetOpenChat started")
-	cl := HotChats{}
+	cl := OpenChats{}
 	user := User{Id: 1, Name: "John", Type: UserType(UserTypeBasic)}
 	cl.AddChat(11, &user, "test-chat")
 	chat := cl.GetOpenChat(user.Id)
@@ -96,7 +96,7 @@ func TestGetOpenChat(t *testing.T) {
 
 func TestGetChats(t *testing.T) {
 	t.Logf("TestGetChats started")
-	cl := HotChats{}
+	cl := OpenChats{}
 	user := User{Id: uint(rand.Uint32()), Name: "John", Type: UserType(UserTypeBasic)}
 	cl.AddChat(11, &user, "test-chat")
 	cl.AddChat(11, &user, "test-chat2")
@@ -111,7 +111,7 @@ func TestGetChats(t *testing.T) {
 
 func TestDeleteChatEmpty(t *testing.T) {
 	t.Logf("TestDeleteChatEmpty started")
-	cl := HotChats{}
+	cl := OpenChats{}
 	user := User{Id: 1, Name: "John", Type: UserType(UserTypeBasic)}
 	err := cl.DeleteChat(user.Id, nil)
 	if err == nil {
@@ -136,7 +136,7 @@ func TestDeleteChatEmpty(t *testing.T) {
 
 func TestDeleteChat(t *testing.T) {
 	t.Logf("TestDeleteChatEmpty started")
-	cl := HotChats{}
+	cl := OpenChats{}
 	user := User{Id: 1, Name: "John", Type: UserType(UserTypeBasic)}
 	cl.AddChat(11, &user, "test-chat")
 	openChat := cl.GetOpenChat(user.Id)
@@ -162,7 +162,7 @@ func TestDeleteChat(t *testing.T) {
 
 func TestDeleteChatNotOwner(t *testing.T) {
 	t.Logf("TestDeleteChatEmpty started")
-	cl := HotChats{}
+	cl := OpenChats{}
 	user := User{Id: 1, Name: "John", Type: UserType(UserTypeBasic)}
 	cl.AddChat(11, &user, "test-chat")
 	openChat := cl.GetOpenChat(user.Id)
@@ -183,7 +183,7 @@ func TestDeleteChatNotOwner(t *testing.T) {
 
 func TestInviteUser(t *testing.T) {
 	t.Logf("TestInviteUserEmpty started")
-	cl := HotChats{}
+	cl := OpenChats{}
 	owner := User{Id: uint(rand.Uint32()), Name: "John", Type: UserType(UserTypeBasic)}
 	cl.AddChat(11, &owner, "test-chat")
 	invitee := User{Id: uint(rand.Uint32()), Name: "Jill", Type: UserType(UserTypeBasic)}

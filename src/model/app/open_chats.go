@@ -8,26 +8,26 @@ import (
 	"prplchat/src/utils/store"
 )
 
-type HotChats struct {
+type OpenChats struct {
 	mu    sync.Mutex
 	chats *store.LRUCache
 	// userId -> chat
 	open map[uint]*Chat
 }
 
-func NewHotChats() *HotChats {
-	cl := HotChats{}
+func NewHotChats() *OpenChats {
+	cl := OpenChats{}
 	cl.chats = store.NewLRUCache(1024)
 	cl.open = make(map[uint]*Chat)
 	return &cl
 }
 
-func (cl *HotChats) GetChat(userId uint, chatId uint) (*Chat, error) {
+func (cl *OpenChats) GetChat(userId uint, chatId uint) (*Chat, error) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	return cl.getCached(chatId, userId)
 }
-func (cl *HotChats) GetChats(userId uint) []*Chat {
+func (cl *OpenChats) GetChats(userId uint) []*Chat {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	chatIds := cl.chats.Keys()
@@ -42,7 +42,7 @@ func (cl *HotChats) GetChats(userId uint) []*Chat {
 	return userChats
 }
 
-func (cl *HotChats) AddChat(chatId uint, owner *User, chatName string) {
+func (cl *OpenChats) AddChat(chatId uint, owner *User, chatName string) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	chat := Chat{
@@ -57,7 +57,7 @@ func (cl *HotChats) AddChat(chatId uint, owner *User, chatName string) {
 }
 
 // fails if chat does not exist
-func (cl *HotChats) OpenChat(userId uint, chatId uint) (*Chat, error) {
+func (cl *OpenChats) OpenChat(userId uint, chatId uint) (*Chat, error) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	openChat, err := cl.getCached(chatId, userId)
@@ -68,13 +68,13 @@ func (cl *HotChats) OpenChat(userId uint, chatId uint) (*Chat, error) {
 	return openChat, nil
 }
 
-func (cl *HotChats) GetOpenChat(userId uint) *Chat {
+func (cl *OpenChats) GetOpenChat(userId uint) *Chat {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	return cl.open[userId]
 }
 
-func (cl *HotChats) CloseChat(userId uint, chatId uint) error {
+func (cl *OpenChats) CloseChat(userId uint, chatId uint) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	userAtChat := cl.open[userId]
@@ -88,7 +88,7 @@ func (cl *HotChats) CloseChat(userId uint, chatId uint) error {
 	return nil
 }
 
-func (cl *HotChats) DeleteChat(userId uint, chat *Chat) error {
+func (cl *OpenChats) DeleteChat(userId uint, chat *Chat) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	if chat == nil {
@@ -105,7 +105,7 @@ func (cl *HotChats) DeleteChat(userId uint, chat *Chat) error {
 	return nil
 }
 
-func (cl *HotChats) GetUser(userId uint) (*User, error) {
+func (cl *OpenChats) GetUser(userId uint) (*User, error) {
 	// TODO rethink
 	for _, chatId := range cl.chats.Keys() {
 		chat, _ := cl.GetChat(chatId, userId)
@@ -126,7 +126,7 @@ func (cl *HotChats) GetUser(userId uint) (*User, error) {
 	return nil, nil
 }
 
-func (cl *HotChats) InviteUser(userId uint, chatId uint, invitee *User) error {
+func (cl *OpenChats) InviteUser(userId uint, chatId uint, invitee *User) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	chat, err := cl.getCached(chatId, userId)
@@ -143,7 +143,7 @@ func (cl *HotChats) InviteUser(userId uint, chatId uint, invitee *User) error {
 	return nil
 }
 
-func (cl *HotChats) ExpelUser(userId uint, chatId uint, removeId uint) error {
+func (cl *OpenChats) ExpelUser(userId uint, chatId uint, removeId uint) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	chat, err := cl.getCached(chatId, userId)
@@ -157,7 +157,7 @@ func (cl *HotChats) ExpelUser(userId uint, chatId uint, removeId uint) error {
 	return nil
 }
 
-func (cl *HotChats) SyncUser(user *User) error {
+func (cl *OpenChats) SyncUser(user *User) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	chatIds := cl.chats.Keys()
@@ -174,7 +174,7 @@ func (cl *HotChats) SyncUser(user *User) error {
 	return nil
 }
 
-func (cl *HotChats) getCached(chatId uint, userId uint) (*Chat, error) {
+func (cl *OpenChats) getCached(chatId uint, userId uint) (*Chat, error) {
 	cachedObj, err := cl.chats.Get(chatId)
 	if err != nil {
 		return nil, err
@@ -193,7 +193,7 @@ func (cl *HotChats) getCached(chatId uint, userId uint) (*Chat, error) {
 }
 
 // removes chat and closes it for all users
-func (cl *HotChats) deleteCached(chatId uint) (int, error) {
+func (cl *OpenChats) deleteCached(chatId uint) (int, error) {
 	deleted, err := cl.chats.Take(chatId)
 	if err != nil {
 		return 0, err
