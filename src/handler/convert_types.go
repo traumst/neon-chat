@@ -6,7 +6,27 @@ import (
 	"prplchat/src/utils"
 )
 
-func ChatToDB(chat *app.Chat) db.Chat {
+func MessageAppToDB(message *app.Message) db.Message {
+	return db.Message{
+		Id:       message.Id,
+		ChatId:   message.ChatId,
+		OwnerId:  message.Owner.Id,
+		AuthorId: message.Author.Id,
+		Text:     message.Text,
+	}
+}
+
+func MessageDBToApp(message *db.Message) app.Message {
+	return app.Message{
+		Id:     message.Id,
+		ChatId: message.ChatId,
+		Owner:  &app.User{Id: message.OwnerId},
+		Author: &app.User{Id: message.AuthorId},
+		Text:   message.Text,
+	}
+}
+
+func ChatAppToDB(chat *app.Chat) db.Chat {
 	return db.Chat{
 		Id:      chat.Id,
 		Title:   chat.Name,
@@ -14,7 +34,7 @@ func ChatToDB(chat *app.Chat) db.Chat {
 	}
 }
 
-func ChatFromDB(chat *db.Chat) app.Chat {
+func ChatDBToApp(chat *db.Chat) app.Chat {
 	return app.Chat{
 		Id:    chat.Id,
 		Name:  chat.Title,
@@ -22,7 +42,7 @@ func ChatFromDB(chat *db.Chat) app.Chat {
 	}
 }
 
-func UserToDB(user app.User) db.User {
+func UserAppToDB(user app.User) db.User {
 	return db.User{
 		Id:     user.Id,
 		Name:   user.Name,
@@ -33,7 +53,7 @@ func UserToDB(user app.User) db.User {
 	}
 }
 
-func UserFromDB(user db.User) app.User {
+func UserDBToApp(user db.User) app.User {
 	return app.User{
 		Id:     user.Id,
 		Name:   user.Name,
@@ -44,7 +64,7 @@ func UserFromDB(user db.User) app.User {
 	}
 }
 
-func AuthToDB(auth app.Auth) db.Auth {
+func AuthAppToDB(auth app.Auth) db.Auth {
 	return db.Auth{
 		Id:     auth.Id,
 		UserId: auth.UserId,
@@ -53,7 +73,7 @@ func AuthToDB(auth app.Auth) db.Auth {
 	}
 }
 
-func AuthFromDB(auth db.Auth) app.Auth {
+func AuthDBToApp(auth db.Auth) app.Auth {
 	return app.Auth{
 		Id:     auth.Id,
 		UserId: auth.UserId,
@@ -62,7 +82,7 @@ func AuthFromDB(auth db.Auth) app.Auth {
 	}
 }
 
-func AvatarToDB(avatar app.Avatar) db.Avatar {
+func AvatarAppToDB(avatar app.Avatar) db.Avatar {
 	return db.Avatar{
 		Id:     avatar.Id,
 		UserId: avatar.UserId,
@@ -73,7 +93,7 @@ func AvatarToDB(avatar app.Avatar) db.Avatar {
 	}
 }
 
-func AvatarFromDB(avatar db.Avatar) app.Avatar {
+func AvatarDBToApp(avatar db.Avatar) app.Avatar {
 	return app.Avatar{
 		Id:     avatar.Id,
 		UserId: avatar.UserId,

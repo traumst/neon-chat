@@ -15,7 +15,7 @@ func GetUser(app *state.State, db *d.DBConn, userId uint) (*a.User, error) {
 		return nil, fmt.Errorf("user[%d] not found: %s", userId, err.Error())
 	}
 
-	appUser := UserFromDB(*dbUser)
+	appUser := UserDBToApp(*dbUser)
 	err = app.UpdateUser(appUser.Id, appUser)
 	if err != nil {
 		log.Printf("GetUser ERROR failed to cache user[%d]: %s", appUser.Id, err.Error())
@@ -32,7 +32,7 @@ func FindUser(app *state.State, db *d.DBConn, userName string) (*a.User, error) 
 		return nil, fmt.Errorf("user[%s] not found: %s", userName, err.Error())
 	}
 
-	appUser := UserFromDB(*dbUser)
+	appUser := UserDBToApp(*dbUser)
 	err = app.UpdateUser(appUser.Id, appUser)
 	if err != nil {
 		log.Printf("FindUser ERROR failed to cache user[%d]: %s", appUser.Id, err.Error())
@@ -54,7 +54,7 @@ func FindUsers(db *d.DBConn, userName string) ([]*a.User, error) {
 		if dbUser == nil {
 			continue
 		}
-		appUser := UserFromDB(*dbUser)
+		appUser := UserDBToApp(*dbUser)
 		appUsers = append(appUsers, &appUser)
 	}
 
@@ -97,7 +97,7 @@ func ExpelUser(app *state.State, db *d.DBConn, user *a.User, chatId uint, expell
 	if err != nil {
 		return nil, fmt.Errorf("removing user[%d] from chat[%d]: %s", dbExpelled.Id, chatId, err.Error())
 	}
-	appExpelled := UserFromDB(*dbExpelled)
+	appExpelled := UserDBToApp(*dbExpelled)
 	return &appExpelled, nil
 }
 

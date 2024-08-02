@@ -96,7 +96,7 @@ func templateHome(
 	}
 	var avatarTmpl *template.AvatarTemplate
 	if dbAvatar, err := db.GetAvatar(user.Id); dbAvatar != nil && err == nil {
-		avatar := handler.AvatarFromDB(*dbAvatar)
+		avatar := handler.AvatarDBToApp(*dbAvatar)
 		avatarTmpl = avatar.Template(user)
 	}
 	home := template.HomeTemplate{

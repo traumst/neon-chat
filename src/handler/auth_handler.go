@@ -37,7 +37,7 @@ func ReadSession(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.
 		} else {
 			log.Printf("[%s] ReadSession TRACE session user[%d][%s], err[%s]\n",
 				h.GetReqId(r), dbUser.Id, dbUser.Name, err1)
-			appUser = UserFromDB(*dbUser)
+			appUser = UserDBToApp(*dbUser)
 		}
 	}()
 	wg.Wait()
@@ -58,7 +58,7 @@ func Authenticate(db *d.DBConn, username string, pass string, authType a.AuthTyp
 		log.Printf("Authenticate TRACE user[%s] not found, result[%v], %s\n", username, dbUser, err)
 		return nil, nil, nil
 	}
-	appUser := UserFromDB(*dbUser)
+	appUser := UserDBToApp(*dbUser)
 	if appUser.Status != a.UserStatusActive {
 		log.Printf("Authenticate WARN user[%d] status[%s] is inactive\n", dbUser.Id, dbUser.Status)
 		return &appUser, nil, nil
@@ -73,7 +73,7 @@ func Authenticate(db *d.DBConn, username string, pass string, authType a.AuthTyp
 	if err != nil {
 		return &appUser, nil, fmt.Errorf("no auth for user[%d] hash[%s], %s", appUser.Id, hash, err)
 	}
-	appAuth := AuthFromDB(*dbAuth)
+	appAuth := AuthDBToApp(*dbAuth)
 	return &appUser, &appAuth, nil
 }
 
@@ -159,7 +159,7 @@ func createUser(db *d.DBConn, user *a.User) (*a.User, error) {
 		return user, nil
 	}
 	log.Printf("createUser TRACE creating user[%s]\n", user.Name)
-	dbUser := UserToDB(*user)
+	dbUser := UserAppToDB(*user)
 	created, err := db.AddUser(&dbUser)
 	if err != nil || created == nil {
 		return nil, fmt.Errorf("failed to add user[%v], %s", created, err)
@@ -167,7 +167,7 @@ func createUser(db *d.DBConn, user *a.User) (*a.User, error) {
 	if created.Id <= 0 {
 		return nil, fmt.Errorf("user[%s] was not created", created.Name)
 	}
-	appUser := UserFromDB(*created)
+	appUser := UserDBToApp(*created)
 	return &appUser, err
 }
 
@@ -210,6 +210,6 @@ func createAuth(db *d.DBConn, user *a.User, pass string, authType a.AuthType) (*
 	if dbAuth.Id <= 0 {
 		return nil, fmt.Errorf("user[%d][%s] auth was not created", user.Id, user.Name)
 	}
-	appAuth := AuthFromDB(*dbAuth)
+	appAuth := AuthDBToApp(*dbAuth)
 	return &appAuth, err
 }

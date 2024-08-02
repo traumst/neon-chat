@@ -51,7 +51,7 @@ func AddAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.R
 		http.Error(w, "[fail]", http.StatusBadRequest)
 		return
 	}
-	avatar := handler.AvatarFromDB(*saved)
+	avatar := handler.AvatarDBToApp(*saved)
 	tmpl := avatar.Template(user)
 	html, err := tmpl.HTML()
 	if err != nil {

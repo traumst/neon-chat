@@ -125,7 +125,7 @@ func GetChats(
 		return nil, fmt.Errorf("error getting user chats: %s", err)
 	}
 	for _, dbChat := range dbUserChats {
-		chat := ChatFromDB(&dbChat)
+		chat := ChatDBToApp(&dbChat)
 		// TODO refresh chat details in a goroutine
 		err = app.AddChat(chat.Id, chat.Name, chat.Owner)
 		if err != nil {
