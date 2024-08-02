@@ -59,7 +59,7 @@ func HandleMessageDelete(
 
 	appChat, err := app.GetChat(user.Id, chatId)
 	if err != nil {
-		return nil, fmt.Errorf("chat not found: %s", user.Id, err.Error())
+		return nil, fmt.Errorf("chat[%d] not found: %s", user.Id, err.Error())
 	}
 	msg, err := appChat.DropMessage(user.Id, msgId)
 	if err != nil {

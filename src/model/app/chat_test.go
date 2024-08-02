@@ -37,7 +37,7 @@ func TestIsAuthor(t *testing.T) {
 	u2 := User{Id: 2, Name: "Jill", Type: UserType(UserTypeBasic)}
 	o := User{Id: 3, Name: "Mr Bill", Type: UserType(UserTypeBasic)}
 	c := Chat{Id: 11, Owner: &o, users: []*User{&u1, &u2}}
-	m := Message{ChatId: c.Id, Owner: &o, Author: &u1, Text: "test message"}
+	m := Message{ChatId: c.Id, Author: &u1, Text: "test message"}
 	mwid, err := c.AddMessage(u1.Id, m)
 	//mwid, err := c.history.Add(&m)
 	if err != nil {

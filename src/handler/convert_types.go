@@ -10,7 +10,6 @@ func MessageAppToDB(message *app.Message) db.Message {
 	return db.Message{
 		Id:       message.Id,
 		ChatId:   message.ChatId,
-		OwnerId:  message.Owner.Id,
 		AuthorId: message.Author.Id,
 		Text:     message.Text,
 	}
@@ -20,7 +19,6 @@ func MessageDBToApp(message *db.Message) app.Message {
 	return app.Message{
 		Id:     message.Id,
 		ChatId: message.ChatId,
-		Owner:  &app.User{Id: message.OwnerId},
 		Author: &app.User{Id: message.AuthorId},
 		Text:   message.Text,
 	}

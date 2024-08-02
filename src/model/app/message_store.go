@@ -29,6 +29,7 @@ func (s *MessageStore) Add(m *Message) (*Message, error) {
 func (s *MessageStore) GetAll() []*Message {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	return s.nonNil()
 }
 
