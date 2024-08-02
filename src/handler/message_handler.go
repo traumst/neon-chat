@@ -40,6 +40,39 @@ func HandleMessageAdd(
 	return appMsg, nil
 }
 
+func HandleMessageDelete(
+	app *state.State,
+	db *d.DBConn,
+	chatId uint,
+	user *a.User,
+	msgId uint,
+) (*a.Message, error) {
+	log.Printf("HandleMessageDelete TRACE removing msg[%d] from chat[%d] for user[%d]\n", msgId, chatId, user.Id)
+	if canChat, _ := db.UserCanChat(chatId, user.Id); !canChat {
+		return nil, fmt.Errorf("user cannot remove messages from this chat")
+	}
+
+	err := db.DeleteMessage(msgId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to remove message[%d] from chat[%d] in db, %s", msgId, chatId, err.Error())
+	}
+
+	appChat, err := app.GetChat(user.Id, chatId)
+	if err != nil {
+		return nil, fmt.Errorf("chat not found: %s", user.Id, err.Error())
+	}
+	msg, err := appChat.DropMessage(user.Id, msgId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to remove message[%d] from chat[%d], %s", msgId, appChat.Id, err)
+	}
+
+	err = sse.DistributeMsg(app, appChat, user.Id, msg, event.MessageDrop)
+	if err != nil {
+		log.Printf("HandleMessageDelete ERROR distributing msg update, %s\n", err)
+	}
+	return msg, err
+}
+
 func addMsgIntoDB(
 	db *d.DBConn,
 	chatId uint,
@@ -47,14 +80,9 @@ func addMsgIntoDB(
 	msg string,
 ) (*d.Message, error) {
 	log.Printf("addMsgIntoApp TRACE storing message for user[%d] in chat[%d]\n", author.Id, chatId)
-	dbChat, err := db.GetChat(chatId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get chat: %s", err.Error())
-	}
 	dbMsg, err := db.AddMessage(&d.Message{
 		Id:       0,
 		ChatId:   chatId,
-		OwnerId:  dbChat.OwnerId,
 		AuthorId: author.Id,
 		Text:     msg, // TODO: sanitize
 	})
