@@ -18,7 +18,11 @@ func HandleMessageAdd(
 	msg string,
 ) (*a.Message, error) {
 	log.Printf("HandleMessageAdd TRACE opening current chat for user[%d]\n", author.Id)
-	if canChat, _ := db.UserCanChat(chatId, author.Id); !canChat {
+	canChat, err := db.UserCanChat(chatId, author.Id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check user[%d] can chat[%d]: %s", author.Id, chatId, err.Error())
+	}
+	if !canChat {
 		return nil, fmt.Errorf("user is not in chat")
 	}
 	dbMsg, err := addMsgIntoDB(db, chatId, author, msg)
@@ -29,13 +33,13 @@ func HandleMessageAdd(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get chat from app: %s", err.Error())
 	}
-	appMsg, err := addMsgIntoApp(app, dbMsg)
+	appMsg, err := addMsgIntoApp(app, author, dbMsg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to add message to app: %s", err.Error())
 	}
 	err = sse.DistributeMsg(app, appChat, author.Id, appMsg, event.MessageAdd)
 	if err != nil {
-		return nil, fmt.Errorf("failed to distribute new message, %s", err.Error())
+		log.Printf("HandleMessageAdd ERROR distributing msg update, %s\n", err)
 	}
 	return appMsg, nil
 }
@@ -94,6 +98,7 @@ func addMsgIntoDB(
 
 func addMsgIntoApp(
 	app *state.State,
+	author *a.User,
 	dbMsg *d.Message,
 ) (*a.Message, error) {
 	log.Printf("addMsgIntoApp TRACE storing message for user[%d] in chat[%d]\n", dbMsg.AuthorId, dbMsg.ChatId)
@@ -101,7 +106,8 @@ func addMsgIntoApp(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get chat from app: %s", err.Error())
 	}
-	newMsg := MessageDBToApp(dbMsg)
+	newMsg := MessageDBToApp(dbMsg, appChat.Owner)
+	newMsg.Author = author
 	appMsg, err := appChat.AddMessage(dbMsg.AuthorId, newMsg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to store message: %s", err.Error())

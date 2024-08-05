@@ -129,14 +129,22 @@ func GetChats(
 		return nil, fmt.Errorf("error getting user chats: %s", err)
 	}
 	for _, dbChat := range dbUserChats {
-		chat := ChatDBToApp(&dbChat)
-		// TODO refresh chat details in a goroutine
+		appChatOwner, _ := GetUser(app, db, dbChat.OwnerId)
+		if appChatOwner == nil {
+			log.Printf("GetChats WARN chat[%d] owner[%d] not found\n", dbChat.Id, dbChat.OwnerId)
+			continue
+		}
+		chat := ChatDBToApp(&dbChat, appChatOwner)
+		if chat == nil {
+			log.Printf("GetChats WARN chat[%d] failed to map from db to app\n", dbChat.Id)
+			continue
+		}
 		err = app.AddChat(chat.Id, chat.Name, chat.Owner)
 		if err != nil {
 			log.Printf("GetChats ERROR adding chat[%d] to app: %s", chat.Id, err)
 			continue
 		}
-		userChats = append(userChats, &chat)
+		userChats = append(userChats, chat)
 	}
 
 	return userChats, nil

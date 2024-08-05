@@ -195,7 +195,7 @@ func TestUpdateUser(t *testing.T) {
 	}
 	err = app1.UpdateUser(
 		user.Id,
-		app.User{
+		&app.User{
 			Id:     user.Id,
 			Name:   "Johnny",
 			Email:  "bbb@bbb.bbb",

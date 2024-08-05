@@ -23,8 +23,7 @@ func ReadSession(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.
 		h.ClearSessionCookie(w, 0)
 		return nil, fmt.Errorf("failed to read session cookie, %s", err)
 	}
-	var appUser a.User
-	err = nil
+	var appUser *a.User
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -37,15 +36,12 @@ func ReadSession(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.
 		} else {
 			log.Printf("[%s] ReadSession TRACE session user[%d][%s], err[%s]\n",
 				h.GetReqId(r), dbUser.Id, dbUser.Name, err1)
-			appUser = UserDBToApp(*dbUser)
+			appUser = UserDBToApp(dbUser)
 		}
 	}()
 	wg.Wait()
-	log.Printf("[%s] ReadSession TRACE OUT\n", h.GetReqId(r))
-	if err != nil {
-		return nil, err
-	}
-	return &appUser, err
+	log.Printf("[%s] ReadSession TRACE OUT, success:%t\n", h.GetReqId(r), err == nil)
+	return appUser, err
 }
 
 func Authenticate(db *d.DBConn, username string, pass string, authType a.AuthType) (*a.User, *a.Auth, error) {
@@ -58,23 +54,23 @@ func Authenticate(db *d.DBConn, username string, pass string, authType a.AuthTyp
 		log.Printf("Authenticate TRACE user[%s] not found, result[%v], %s\n", username, dbUser, err)
 		return nil, nil, nil
 	}
-	appUser := UserDBToApp(*dbUser)
+	appUser := UserDBToApp(dbUser)
 	if appUser.Status != a.UserStatusActive {
 		log.Printf("Authenticate WARN user[%d] status[%s] is inactive\n", dbUser.Id, dbUser.Status)
-		return &appUser, nil, nil
+		return appUser, nil, nil
 	}
 	hash, err := utils.HashPassword(pass, appUser.Salt)
 	if err != nil {
 		log.Printf("Authenticate TRACE failed on hashing[%s] pass for user[%d], %s", hash, appUser.Id, err)
-		return &appUser, nil, fmt.Errorf("failed hashing pass for user[%d], %s", appUser.Id, err)
+		return appUser, nil, fmt.Errorf("failed hashing pass for user[%d], %s", appUser.Id, err)
 	}
 	log.Printf("Authenticate TRACE user[%d] auth[%s] hash[%s]\n", appUser.Id, authType, hash)
 	dbAuth, err := db.GetAuth(string(authType), hash)
 	if err != nil {
-		return &appUser, nil, fmt.Errorf("no auth for user[%d] hash[%s], %s", appUser.Id, hash, err)
+		return appUser, nil, fmt.Errorf("no auth for user[%d] hash[%s], %s", appUser.Id, hash, err)
 	}
-	appAuth := AuthDBToApp(*dbAuth)
-	return &appUser, &appAuth, nil
+	appAuth := AuthDBToApp(dbAuth)
+	return appUser, appAuth, nil
 }
 
 func Register(db *d.DBConn, newUser *a.User, pass string, authType a.AuthType) (*a.User, *a.Auth, error) {
@@ -159,16 +155,16 @@ func createUser(db *d.DBConn, user *a.User) (*a.User, error) {
 		return user, nil
 	}
 	log.Printf("createUser TRACE creating user[%s]\n", user.Name)
-	dbUser := UserAppToDB(*user)
-	created, err := db.AddUser(&dbUser)
+	dbUser := UserAppToDB(user)
+	created, err := db.AddUser(dbUser)
 	if err != nil || created == nil {
 		return nil, fmt.Errorf("failed to add user[%v], %s", created, err)
 	}
 	if created.Id <= 0 {
 		return nil, fmt.Errorf("user[%s] was not created", created.Name)
 	}
-	appUser := UserDBToApp(*created)
-	return &appUser, err
+	appUser := UserDBToApp(created)
+	return appUser, err
 }
 
 func deleteUser(db *d.DBConn, user *a.User) error {
@@ -210,6 +206,6 @@ func createAuth(db *d.DBConn, user *a.User, pass string, authType a.AuthType) (*
 	if dbAuth.Id <= 0 {
 		return nil, fmt.Errorf("user[%d][%s] auth was not created", user.Id, user.Name)
 	}
-	appAuth := AuthDBToApp(*dbAuth)
-	return &appAuth, err
+	appAuth := AuthDBToApp(dbAuth)
+	return appAuth, err
 }

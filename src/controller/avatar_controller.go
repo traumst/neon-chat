@@ -51,7 +51,7 @@ func AddAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.R
 		http.Error(w, "[fail]", http.StatusBadRequest)
 		return
 	}
-	avatar := handler.AvatarDBToApp(*saved)
+	avatar := handler.AvatarDBToApp(saved)
 	tmpl := avatar.Template(user)
 	html, err := tmpl.HTML()
 	if err != nil {
@@ -59,7 +59,7 @@ func AddAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.R
 		http.Error(w, fmt.Sprintf("failed to template avatar[%d]", avatar.Id), http.StatusBadRequest)
 		return
 	}
-	if err = sse.DistributeAvatarChange(app, user, &avatar, event.AvatarChange); err != nil {
+	if err = sse.DistributeAvatarChange(app, user, avatar, event.AvatarChange); err != nil {
 		log.Printf("controller.AddAvatar ERROR failed to distribute avatar[%s] update, %s", info.Filename, err.Error())
 	}
 

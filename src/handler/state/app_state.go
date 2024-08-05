@@ -103,12 +103,12 @@ func (state *State) ExpelFromChat(userId uint, chatId uint, removeId uint) error
 	return state.chats.ExpelUser(userId, chatId, removeId)
 }
 
-func (state *State) UpdateUser(userId uint, template app.User) error {
+func (state *State) UpdateUser(userId uint, template *app.User) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
 	log.Printf("AppState.UpdateUser TRACE updating user[%d], template[%v]\n", userId, template)
-	return state.chats.SyncUser(&template)
+	return state.chats.SyncUser(template)
 }
 
 // CHAT

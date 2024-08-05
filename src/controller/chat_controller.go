@@ -141,13 +141,7 @@ func CloseChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	chatIdStr := r.PostFormValue("chatid")
-	if chatIdStr == "" {
-		log.Printf("[%s] CloseChat ERROR parse args, %s\n", reqId, err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	chatId, err := strconv.Atoi(chatIdStr)
+	chatId, err := handler.FormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] CloseChat ERROR chat id, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -180,19 +174,12 @@ func DeleteChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 		return
 	}
 
-	inChatId := r.PostFormValue("chatid")
-	if inChatId == "" {
-		log.Printf("[%s] readChatId ERROR empty input\n", reqId)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	currChatid, err := strconv.Atoi(inChatId)
+	chatId, err := handler.FormValueUint(r, "chatid")
 	if err != nil {
-		log.Printf("[%s] readChatId ERROR bad chat id [%s], %s\n", reqId, inChatId, err)
+		log.Printf("[%s] DeleteChat ERROR chat id, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	chatId := uint(currChatid)
 
 	err = handler.HandleChatDelete(app, db, user, chatId)
 	if err != nil {

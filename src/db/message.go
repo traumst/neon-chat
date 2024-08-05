@@ -41,7 +41,7 @@ func (db *DBConn) AddMessage(msg *Message) (*Message, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	result, err := db.conn.Exec(`INSERT INTO messages (chat_id, author_id, text) VALUES (?, ?, ?, ?)`,
+	result, err := db.conn.Exec(`INSERT INTO messages (chat_id, author_id, text) VALUES (?, ?, ?)`,
 		msg.ChatId, msg.AuthorId, msg.Text)
 	if err != nil {
 		return nil, fmt.Errorf("error adding message: %s", err)

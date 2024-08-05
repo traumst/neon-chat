@@ -38,7 +38,7 @@ func OpenSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 	}
 	var avatarTmpl *t.AvatarTemplate
 	if avatar, _ := db.GetAvatar(user.Id); avatar != nil {
-		appAvatar := handler.AvatarDBToApp(*avatar)
+		appAvatar := handler.AvatarDBToApp(avatar)
 		avatarTmpl = appAvatar.Template(user)
 	}
 	settings := t.UserSettingsTemplate{

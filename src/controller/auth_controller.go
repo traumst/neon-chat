@@ -218,7 +218,7 @@ func ConfirmEmail(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		w.Write([]byte("corrupted token"))
 		return
 	}
-	user := handler.UserDBToApp(*dbUser)
+	user := handler.UserDBToApp(dbUser)
 	if user.Status != a.UserStatusPending {
 		log.Printf("[%s] ConfirmEmail ERROR user[%d] status[%s] is not pending\n", h.GetReqId(r), user.Id, user.Status)
 		w.WriteHeader(http.StatusBadRequest)

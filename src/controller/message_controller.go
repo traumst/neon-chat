@@ -3,12 +3,10 @@ package controller
 import (
 	"log"
 	"net/http"
-	"strconv"
 
 	d "prplchat/src/db"
 	"prplchat/src/handler"
 	"prplchat/src/handler/state"
-	"prplchat/src/utils"
 	h "prplchat/src/utils/http"
 )
 
@@ -25,18 +23,16 @@ func AddMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
-	log.Printf("[%s] AddMessage TRACE parsing input\n", h.GetReqId(r))
-	addToChatId, err := strconv.Atoi(r.FormValue("chatId"))
+
+	chatId, err := handler.FormValueUint(r, "chatId")
 	if err != nil {
 		log.Printf("[%s] AddMessage WARN \n", h.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid chat id"))
 		return
 	}
-	chatId := uint(addToChatId)
-	msg := r.FormValue("msg")
-	msg = utils.ReplaceWithSingleSpace(msg)
-	if len(msg) < 1 {
+	msg, err := handler.FormValueString(r, "msg")
+	if err != nil || len(msg) < 1 {
 		log.Printf("[%s] AddMessage WARN \n", h.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("message too short"))
@@ -45,7 +41,7 @@ func AddMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 
 	message, err := handler.HandleMessageAdd(app, db, chatId, author, msg)
 	if err != nil || message == nil {
-		log.Printf("[%s] AddMessage ERROR while handing, %s\n", h.GetReqId(r), err)
+		log.Printf("[%s] AddMessage ERROR while handing, %s, %v\n", h.GetReqId(r), err.Error(), message)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed adding message"))
 		return

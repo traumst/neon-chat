@@ -80,7 +80,7 @@ func (db *DBConn) UserCanChat(chatId uint, userId uint) (bool, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	var chatUser *ChatUser
+	var chatUser ChatUser
 	err := db.conn.Get(&chatUser, `SELECT * FROM chat_users where chat_id = ? and user_id = ?`, chatId, userId)
 	if err != nil {
 		return false, fmt.Errorf("error getting chats: %s", err)

@@ -2,11 +2,11 @@ package handler
 
 import (
 	"prplchat/src/db"
-	"prplchat/src/model/app"
+	a "prplchat/src/model/app"
 	"prplchat/src/utils"
 )
 
-func MessageAppToDB(message *app.Message) db.Message {
+func MessageAppToDB(message *a.Message) db.Message {
 	return db.Message{
 		Id:       message.Id,
 		ChatId:   message.ChatId,
@@ -15,33 +15,42 @@ func MessageAppToDB(message *app.Message) db.Message {
 	}
 }
 
-func MessageDBToApp(message *db.Message) app.Message {
-	return app.Message{
+func MessageDBToApp(message *db.Message, author *a.User) a.Message {
+	return a.Message{
 		Id:     message.Id,
 		ChatId: message.ChatId,
-		Author: &app.User{Id: message.AuthorId},
+		Author: author,
 		Text:   message.Text,
 	}
 }
 
-func ChatAppToDB(chat *app.Chat) db.Chat {
-	return db.Chat{
+func ChatAppToDB(chat *a.Chat) *db.Chat {
+	if chat == nil {
+		return nil
+	}
+	return &db.Chat{
 		Id:      chat.Id,
 		Title:   chat.Name,
 		OwnerId: chat.Owner.Id,
 	}
 }
 
-func ChatDBToApp(chat *db.Chat) app.Chat {
-	return app.Chat{
+func ChatDBToApp(chat *db.Chat, owner *a.User) *a.Chat {
+	if chat == nil {
+		return nil
+	}
+	if owner == nil {
+		return nil
+	}
+	return &a.Chat{
 		Id:    chat.Id,
 		Name:  chat.Title,
-		Owner: &app.User{Id: chat.OwnerId},
+		Owner: owner,
 	}
 }
 
-func UserAppToDB(user app.User) db.User {
-	return db.User{
+func UserAppToDB(user *a.User) *db.User {
+	return &db.User{
 		Id:     user.Id,
 		Name:   user.Name,
 		Email:  user.Email,
@@ -51,19 +60,19 @@ func UserAppToDB(user app.User) db.User {
 	}
 }
 
-func UserDBToApp(user db.User) app.User {
-	return app.User{
+func UserDBToApp(user *db.User) *a.User {
+	return &a.User{
 		Id:     user.Id,
 		Name:   user.Name,
 		Email:  user.Email,
-		Type:   app.UserType(user.Type),
-		Status: app.UserStatus(user.Status),
+		Type:   a.UserType(user.Type),
+		Status: a.UserStatus(user.Status),
 		Salt:   user.Salt,
 	}
 }
 
-func AuthAppToDB(auth app.Auth) db.Auth {
-	return db.Auth{
+func AuthAppToDB(auth *a.Auth) *db.Auth {
+	return &db.Auth{
 		Id:     auth.Id,
 		UserId: auth.UserId,
 		Type:   string(auth.Type),
@@ -71,17 +80,17 @@ func AuthAppToDB(auth app.Auth) db.Auth {
 	}
 }
 
-func AuthDBToApp(auth db.Auth) app.Auth {
-	return app.Auth{
+func AuthDBToApp(auth *db.Auth) *a.Auth {
+	return &a.Auth{
 		Id:     auth.Id,
 		UserId: auth.UserId,
-		Type:   app.AuthType(auth.Type),
+		Type:   a.AuthType(auth.Type),
 		Hash:   auth.Hash,
 	}
 }
 
-func AvatarAppToDB(avatar app.Avatar) db.Avatar {
-	return db.Avatar{
+func AvatarAppToDB(avatar *a.Avatar) *db.Avatar {
+	return &db.Avatar{
 		Id:     avatar.Id,
 		UserId: avatar.UserId,
 		Title:  avatar.Title,
@@ -91,8 +100,8 @@ func AvatarAppToDB(avatar app.Avatar) db.Avatar {
 	}
 }
 
-func AvatarDBToApp(avatar db.Avatar) app.Avatar {
-	return app.Avatar{
+func AvatarDBToApp(avatar *db.Avatar) *a.Avatar {
+	return &a.Avatar{
 		Id:     avatar.Id,
 		UserId: avatar.UserId,
 		Title:  avatar.Title,
