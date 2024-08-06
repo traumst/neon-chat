@@ -1,7 +1,6 @@
 package state
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -31,7 +30,7 @@ func (state *State) Init(config utils.Config) {
 	Application = State{
 		isInit: true,
 		users:  *store.NewLRUCache(128),
-		chats:  *app.NewHotChats(),
+		chats:  *app.NewOpenChats(),
 		conns:  make(OpenConnections, 0),
 		config: config,
 	}
@@ -72,28 +71,7 @@ func (state *State) DropConn(conn *Conn) error {
 	return state.conns.Drop(conn)
 }
 
-// USER
-func (state *State) InviteUser(userId uint, chatId uint, invitee *app.User) error {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-	if userId == invitee.Id {
-		return fmt.Errorf("user cannot invite self")
-	}
-
-	return state.users.Set(invitee.Id, invitee)
-}
-
-func (state *State) GetUser(userId uint) (*app.User, error) {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-
-	log.Printf("AppState.GetUser TRACE retrieving user[%d]\n", userId)
-	cached, err := state.users.Get(userId)
-	if err != nil {
-		return nil, fmt.Errorf("user[%d] not found: %s", userId, err.Error())
-	}
-	return cached.(*app.User), nil
-}
+//# USER
 
 func (state *State) ExpelFromChat(userId uint, chatId uint, removeId uint) error {
 	state.mu.Lock()

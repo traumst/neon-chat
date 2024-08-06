@@ -100,36 +100,6 @@ func TestDropConn(t *testing.T) {
 }
 
 // USER
-func TestInviteUser(t *testing.T) {
-	t.Logf("TestInviteUser started")
-	user := app.User{
-		Id:   uint(rand.Uint32()),
-		Name: "John",
-		Type: app.UserType(app.UserTypeBasic),
-	}
-	invitee := app.User{Id: uint(rand.Uint32()),
-		Name: "Jane",
-		Type: app.UserType(app.UserTypeBasic),
-	}
-	app1 := &Application
-	app1.Init(utils.Config{})
-	chatId := uint(11)
-	app1.AddChat(chatId, "TestChat", &user)
-	err := app1.InviteUser(user.Id, chatId, &invitee)
-	if err != nil {
-		t.Fatalf("TestInviteUser failed to invite user[%d] into chat[%d], [%s]",
-			invitee.Id, chatId, err.Error())
-	}
-	chat, err := app1.GetChat(invitee.Id, chatId)
-	if err != nil {
-		t.Fatalf("TestInviteUser failed to get chat[%d] for user[%d], [%s]",
-			chatId, invitee.Id, err.Error())
-	}
-	if chat == nil || chat.Id != chatId {
-		t.Fatalf("TestInviteUser expected a chat[%d] for user[%d] got nil", chatId, user.Id)
-	}
-}
-
 func TestDropUser(t *testing.T) {
 	t.Logf("TestDropUser started")
 	user := app.User{
@@ -145,30 +115,22 @@ func TestDropUser(t *testing.T) {
 	app1.Init(utils.Config{})
 	chatId := uint(11)
 	app1.AddChat(chatId, "TestChat", &user)
-	err := app1.InviteUser(user.Id, chatId, &invitee)
+	chat, _ := app1.GetChat(user.Id, chatId)
+	err := chat.AddUser(user.Id, &invitee)
 	if err != nil {
-		t.Fatalf("TestDropUser failed to invite, %s", err.Error())
+		t.Fatalf("TestDropUser failed to add user to chat, %s", err.Error())
 	}
-	chat, err := app1.GetChat(invitee.Id, chatId)
-	if err != nil {
-		t.Fatalf("TestDropUser failed to get chat, %s", err.Error())
-	}
-	if chat == nil {
-		t.Fatalf("TestDropUser expected chat[%d], got nil", chatId)
-	}
-	if chat.Id != chatId {
-		t.Fatalf("TestDropUser expected chat[%d], got [%d]", chatId, chat.Id)
+	users, err := chat.GetUsers(invitee.Id)
+	if err != nil || users == nil {
+		t.Fatalf("TestDropUser expected user[%d] to be invited, but: %s", invitee.Id, err)
 	}
 	err = app1.ExpelFromChat(user.Id, chatId, invitee.Id)
 	if err != nil {
 		t.Fatalf("TestDropUser expected no error, %s", err.Error())
 	}
-	chat, err = app1.GetChat(invitee.Id, chatId)
-	if err == nil {
-		t.Fatalf("TestDropUser expected error, got chat[%v]", chat)
-	}
-	if chat != nil {
-		t.Fatalf("TestDropUser expected error, got chat[%d]", chat.Id)
+	users, err = chat.GetUsers(invitee.Id)
+	if err == nil || users != nil {
+		t.Fatalf("TestDropUser expected user[%d] to be expelled, got [%v]", invitee.Id, users)
 	}
 }
 
@@ -188,12 +150,9 @@ func TestUpdateUser(t *testing.T) {
 	app1.Init(utils.Config{})
 	chatId := uint(11)
 	app1.AddChat(chatId, "TestChat", &user)
-	app1.InviteUser(user.Id, chatId, &invitee)
-	chat, err := app1.GetChat(user.Id, chatId)
-	if err != nil {
-		t.Fatalf("TestUpdateUser failed to get chat[%d] for user[%d], %s", chatId, user.Id, err.Error())
-	}
-	err = app1.UpdateUser(
+	chat, _ := app1.GetChat(user.Id, chatId)
+	_ = chat.AddUser(user.Id, &invitee)
+	err := app1.UpdateUser(
 		user.Id,
 		&app.User{
 			Id:     user.Id,

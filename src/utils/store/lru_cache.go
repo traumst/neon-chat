@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"math"
 	"sync"
 )
 
@@ -9,12 +10,15 @@ type LRUCache struct {
 	mu   sync.Mutex
 	dict map[uint]*node
 	list *DoublyLinkedList
+	// 0 to 1, defaults to 1/4 of keys will to be dropped when full
+	cleanupRatio float64
 }
 
 func NewLRUCache(size int) *LRUCache {
 	return &LRUCache{
-		dict: make(map[uint]*node),
-		list: NewLinkedList(size),
+		dict:         make(map[uint]*node, size),
+		list:         NewLinkedList(size),
+		cleanupRatio: 0.25,
 	}
 }
 
@@ -26,11 +30,16 @@ func (cache *LRUCache) Count() int {
 	return cache.list.Count()
 }
 
+func (cache *LRUCache) CleanupRatio() int {
+	return int(math.Ceil(cache.cleanupRatio * float64(cache.Size())))
+}
+
 func (cache *LRUCache) Set(key uint, value interface{}) error {
 	if cache.Count()+1 > cache.Size() {
-		_, err := cache.Drop(1 + cache.Size()/8)
+		n := cache.CleanupRatio()
+		_, err := cache.Drop(n)
 		if err != nil {
-			return err
+			return fmt.Errorf("cache is full, failed to drop [%d] keys: %s", n, err.Error())
 		}
 	}
 	if _, ok := cache.dict[key]; ok {
@@ -39,13 +48,16 @@ func (cache *LRUCache) Set(key uint, value interface{}) error {
 			return fmt.Errorf("failed to pop taken key[%d]: %s", key, err)
 		}
 	}
+
 	cache.mu.Lock()
 	defer cache.mu.Unlock()
+
 	newNode := node{id: key, value: value}
 	err := cache.list.AddHead(&newNode)
 	if err != nil {
 		return err
 	}
+
 	cache.dict[key] = &newNode
 	return nil
 }

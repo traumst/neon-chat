@@ -15,10 +15,11 @@ type OpenChats struct {
 	open map[uint]*Chat
 }
 
-func NewHotChats() *OpenChats {
-	cl := OpenChats{}
-	cl.chats = store.NewLRUCache(1024)
-	cl.open = make(map[uint]*Chat)
+func NewOpenChats() *OpenChats {
+	cl := OpenChats{
+		chats: store.NewLRUCache(1024),
+		open:  make(map[uint]*Chat),
+	}
 	return &cl
 }
 
