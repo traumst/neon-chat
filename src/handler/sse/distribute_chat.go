@@ -34,7 +34,7 @@ func DistributeChat(
 		targetUsers = []*app.User{targetUser}
 	} else {
 		// have to get users by owner - author may have been removed
-		targetUsers, err = chat.GetUsers(chat.Owner.Id)
+		targetUsers, err = chat.GetUsers(chat.OwnerId)
 	}
 
 	if err != nil {
@@ -103,17 +103,17 @@ func distributeChatToUser(
 
 		switch updateType {
 		case event.ChatAdd:
-			connerr = chatCreate(conn, targetChat, author)
+			connerr = chatCreate(conn, targetChat)
 		case event.ChatInvite:
 			connerr = chatInvite(conn, targetChat, author.Id, subjectUser)
 		case event.ChatDrop:
-			connerr = chatDelete(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser.Id)
+			connerr = chatDelete(conn, targetChat.Id, targetChat.OwnerId, author.Id, targetUser.Id)
 		case event.ChatExpel:
-			connerr = chatExpel(conn, targetChat.Id, targetChat.Owner.Id, author.Id, subjectUser.Id)
+			connerr = chatExpel(conn, targetChat.Id, targetChat.OwnerId, author.Id, subjectUser.Id)
 		case event.ChatLeave:
-			connerr = chatLeave(conn, targetChat.Id, targetChat.Owner.Id, author.Id, subjectUser.Id)
+			connerr = chatLeave(conn, targetChat.Id, targetChat.OwnerId, author.Id, subjectUser.Id)
 		case event.ChatClose:
-			connerr = chatClose(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser)
+			connerr = chatClose(conn, targetChat.Id, targetChat.OwnerId, author.Id, targetUser)
 		default:
 			connerr = fmt.Errorf("unknown event type[%v]", updateType)
 		}

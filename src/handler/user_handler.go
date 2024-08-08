@@ -36,13 +36,6 @@ func HandleUserInvite(
 		return nil, nil, fmt.Errorf("chat not found")
 	}
 
-	err = appChat.AddUser(chatId, appInvitee)
-	if err != nil {
-		log.Printf("HandleUserInvite ERROR failed to add user[%d] to chat[%d] in app, %s\n",
-			appInvitee.Id, chatId, err.Error())
-		return nil, nil, fmt.Errorf("failed to add user to chat in app")
-	}
-
 	err = db.AddChatUser(chatId, appInvitee.Id)
 	if err != nil {
 		log.Printf("HandleUserInvite ERROR failed to add user[%d] to chat[%d] in db, %s\n",
@@ -94,7 +87,7 @@ func HandleUserLeaveChat(app *state.State, db *d.DBConn, user *a.User, chatId ui
 		return fmt.Errorf("failed to leave chat: %s", err.Error())
 	}
 	log.Printf("HandleUserLeaveChat TRACE removing[%d] from chat[%d]\n", user.Id, chat.Id)
-	if user.Id == chat.Owner.Id {
+	if user.Id == chat.OwnerId {
 		log.Printf("HandleUserLeaveChat ERROR cannot leave chat[%d] as owner\n", chatId)
 		return fmt.Errorf("creator cannot leave chat")
 	}
@@ -118,19 +111,13 @@ func HandleUserLeaveChat(app *state.State, db *d.DBConn, user *a.User, chatId ui
 	return nil
 }
 
-func GetUser(app *state.State, db *d.DBConn, userId uint) (*a.User, error) {
+func GetUser(db *d.DBConn, userId uint) (*a.User, error) {
 	log.Printf("GetUser TRACE user[%d]\n", userId)
 	dbUser, err := db.GetUser(userId)
 	if err != nil {
 		return nil, fmt.Errorf("user[%d] not found: %s", userId, err.Error())
 	}
-	appUser := UserDBToApp(dbUser)
-	err = app.UpdateUser(appUser.Id, appUser)
-	if err != nil {
-		log.Printf("GetUser ERROR failed to cache user[%d]: %s", appUser.Id, err.Error())
-		return appUser, err
-	}
-	return appUser, nil
+	return UserDBToApp(dbUser), nil
 }
 
 func findUser(app *state.State, db *d.DBConn, userName string) (*a.User, error) {
@@ -140,14 +127,8 @@ func findUser(app *state.State, db *d.DBConn, userName string) (*a.User, error) 
 		return nil, fmt.Errorf("user[%s] not found: %s", userName, err.Error())
 	}
 
-	appUser := UserDBToApp(dbUser)
-	err = app.UpdateUser(appUser.Id, appUser)
-	if err != nil {
-		log.Printf("FindUser ERROR failed to cache user[%d]: %s", appUser.Id, err.Error())
-		return appUser, err
-	}
 	log.Printf("FindUser TRACE OUT user[%s]\n", userName)
-	return appUser, nil
+	return UserDBToApp(dbUser), nil
 }
 
 func FindUsers(db *d.DBConn, userName string) ([]*a.User, error) {
@@ -175,42 +156,21 @@ func expelUser(app *state.State, db *d.DBConn, user *a.User, chatId uint, expell
 	if user.Id == expelledId {
 		return nil, fmt.Errorf("user[%d] cannot expel itself", user.Id)
 	}
-	appChat, err := app.GetChat(user.Id, chatId)
-	if err != nil {
-		dbChat, _ := db.GetChat(chatId)
-		if dbChat == nil {
-			return nil, fmt.Errorf("chat[%d] not found in db", chatId)
-		}
-		err = app.AddChat(dbChat.Id, dbChat.Title, &a.User{Id: dbChat.OwnerId})
-		if err != nil {
-			return nil, fmt.Errorf("failed to add chat[%d] to app: %s", dbChat.Id, err.Error())
-		}
-		appChat, _ = app.GetChat(user.Id, chatId)
-	}
-	if appChat == nil {
-		return nil, fmt.Errorf("chat[%d] not found", chatId)
-	}
-	if user.Id != appChat.Owner.Id {
-		return nil, fmt.Errorf("user[%d] not owner of chat[%d]", user.Id, chatId)
-	}
-	dbExpelled, err := db.GetUser(uint(expelledId))
+	dbExpelled, err := db.GetUser(expelledId)
 	if err != nil || dbExpelled == nil {
 		return nil, fmt.Errorf("user[%d] not found in db", expelledId)
 	}
-	err = db.RemoveChatUser(dbExpelled.Id, chatId)
+	err = db.RemoveChatUser(expelledId, chatId)
 	if err != nil {
-		return nil, fmt.Errorf("failed to remove user[%d] from chat[%d]: %s", dbExpelled.Id, chatId, err.Error())
+		return nil, fmt.Errorf("failed to remove user[%d] from chat[%d]: %s", expelledId, chatId, err.Error())
 	}
-	err = app.ExpelFromChat(dbExpelled.Id, chatId, dbExpelled.Id)
-	if err != nil {
-		return nil, fmt.Errorf("removing user[%d] from chat[%d]: %s", dbExpelled.Id, chatId, err.Error())
-	}
+	err = app.CloseChat(expelledId, chatId)
 	appExpelled := UserDBToApp(dbExpelled)
 	return appExpelled, nil
 }
 
 func UpdateUser(app *state.State, db *d.DBConn, template *a.User) (*a.User, error) {
-	current, err := GetUser(app, db, template.Id)
+	current, err := GetUser(db, template.Id)
 	if err != nil {
 		return nil, fmt.Errorf("user for update[%d] not found: %s", template.Id, err.Error())
 	}
@@ -230,5 +190,5 @@ func UpdateUser(app *state.State, db *d.DBConn, template *a.User) (*a.User, erro
 		}
 	}
 
-	return current, app.UpdateUser(current.Id, current)
+	return current, nil
 }

@@ -65,7 +65,7 @@ func InviteUser(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 
 	template := template.UserTemplate{
 		ChatId:      chatId,
-		ChatOwnerId: appChat.Owner.Id,
+		ChatOwnerId: appChat.OwnerId,
 		UserId:      appInvitee.Id,
 		UserName:    appInvitee.Name,
 		UserEmail:   appInvitee.Email,

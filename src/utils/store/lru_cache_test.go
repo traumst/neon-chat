@@ -73,6 +73,40 @@ func TestSet(t *testing.T) {
 	}
 }
 
+func TestSetNumericValue(t *testing.T) {
+	cache := NewLRUCache(3)
+	err := cache.Set(1, uint(1))
+	if err != nil {
+		t.Fatalf("Expected no error, %s", err.Error())
+	}
+	if cache.Count() != 1 {
+		t.Fatalf("Expected count to be 1")
+	}
+	storedInMap := cache.dict[1]
+	if storedInMap == nil {
+		t.Fatalf("Expected storedInMap dict is empty")
+	}
+	if storedInMap.id != 1 {
+		t.Fatalf("Expected storedInMap id to be 1")
+	}
+	if storedInMap.value != 1 {
+		t.Fatalf("Expected storedInMap value to be 1")
+	}
+	storedInList, err := cache.list.Get(1)
+	if err != nil {
+		t.Fatalf("Expected node to be in list, %s", err.Error())
+	}
+	if storedInList.id != 1 {
+		t.Fatalf("Expected storedInList id to be 1")
+	}
+	if storedInList.value != 1 {
+		t.Fatalf("Expected value to be 1")
+	}
+	if storedInList != storedInMap {
+		t.Fatalf("Expected storedInList to be storedInMap")
+	}
+}
+
 func TestSetMultiple(t *testing.T) {
 	cache := NewLRUCache(3)
 	err := cache.Set(1, "one")

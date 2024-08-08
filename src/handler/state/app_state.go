@@ -1,6 +1,7 @@
 package state
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -16,8 +17,8 @@ var Application State
 type State struct {
 	mu     sync.Mutex
 	isInit bool
-	users  store.LRUCache
-	chats  app.OpenChats
+	// users  store.LRUCache
+	chats  store.LRUCache
 	conns  OpenConnections
 	config utils.Config
 }
@@ -29,8 +30,8 @@ func (state *State) Init(config utils.Config) {
 	}
 	Application = State{
 		isInit: true,
-		users:  *store.NewLRUCache(128),
-		chats:  *app.NewOpenChats(),
+		// users:  *store.NewLRUCache(128),
+		// chats:  *app.NewOpenChats(),
 		conns:  make(OpenConnections, 0),
 		config: config,
 	}
@@ -72,63 +73,69 @@ func (state *State) DropConn(conn *Conn) error {
 }
 
 //# USER
+// func (state *State) ExpelFromChat(userId uint, chatId uint, removeId uint) error {
+// 	state.mu.Lock()
+// 	defer state.mu.Unlock()
 
-func (state *State) ExpelFromChat(userId uint, chatId uint, removeId uint) error {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+// 	log.Printf("AppState.ExpelFromChat TRACE user[%d] expels user[%d] from chat[%d]\n", userId, removeId, chatId)
+// 	return state.chats.ExpelUser(userId, chatId, removeId)
+// }
 
-	log.Printf("AppState.ExpelFromChat TRACE user[%d] expels user[%d] from chat[%d]\n", userId, removeId, chatId)
-	return state.chats.ExpelUser(userId, chatId, removeId)
-}
+// func (state *State) UpdateUser(userId uint, template *app.User) error {
+// 	state.mu.Lock()
+// 	defer state.mu.Unlock()
 
-func (state *State) UpdateUser(userId uint, template *app.User) error {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+// 	log.Printf("AppState.UpdateUser TRACE updating user[%d], template[%v]\n", userId, template)
+// 	return state.chats.SyncUser(template)
+// }
 
-	log.Printf("AppState.UpdateUser TRACE updating user[%d], template[%v]\n", userId, template)
-	return state.chats.SyncUser(template)
-}
+// // CHAT
+// func (state *State) AddChat(chatId uint, chatName string, chatOwner *app.User) error {
+// 	state.mu.Lock()
+// 	defer state.mu.Unlock()
 
-// CHAT
-func (state *State) AddChat(chatId uint, chatName string, chatOwner *app.User) error {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+// 	log.Printf("AppState.AddChat TRACE add chat[%d][%s] for user[%d]\n", chatId, chatName, chatOwner.Id)
+// 	state.chats.AddChat(chatId, chatOwner, chatName)
+// 	return nil
+// }
 
-	log.Printf("AppState.AddChat TRACE add chat[%d][%s] for user[%d]\n", chatId, chatName, chatOwner.Id)
-	state.chats.AddChat(chatId, chatOwner, chatName)
-	return nil
-}
+// func (state *State) GetChats(userId uint) []*app.Chat {
+// 	state.mu.Lock()
+// 	defer state.mu.Unlock()
 
-func (state *State) GetChats(userId uint) []*app.Chat {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+// 	log.Printf("AppState.GetChats TRACE get chats for user[%d]\n", userId)
+// 	return state.chats.GetChats(userId)
+// }
 
-	log.Printf("AppState.GetChats TRACE get chats for user[%d]\n", userId)
-	return state.chats.GetChats(userId)
-}
+// func (state *State) GetChat(userId uint, chatId uint) (*app.Chat, error) {
+// 	state.mu.Lock()
+// 	defer state.mu.Unlock()
 
-func (state *State) GetChat(userId uint, chatId uint) (*app.Chat, error) {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+// 	log.Printf("AppState.GetChat TRACE get chat[%d] for user[%d]\n", chatId, userId)
+// 	return state.chats.GetChat(userId, chatId)
+// }
 
-	log.Printf("AppState.GetChat TRACE get chat[%d] for user[%d]\n", chatId, userId)
-	return state.chats.GetChat(userId, chatId)
-}
-
-func (state *State) OpenChat(userId uint, chatId uint) (*app.Chat, error) {
+func (state *State) OpenChat(userId uint, chatId uint) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
 	log.Printf("AppState.OpenChat TRACE open chat[%d] for user[%d]\n", chatId, userId)
-	return state.chats.OpenChat(userId, chatId)
+	return state.chats.Set(userId, chatId)
 }
 
-func (state *State) GetOpenChat(userId uint) *app.Chat {
+func (state *State) GetOpenChat(userId uint) uint {
 	state.mu.Lock()
 	defer state.mu.Unlock()
-
 	log.Printf("AppState.GetOpenChat TRACE get open chat for user[%d]\n", userId)
-	return state.chats.GetOpenChat(userId)
+	chatIdWrap, err := state.chats.Get(userId)
+	if err != nil {
+		return 0
+	}
+	chatId, ok := chatIdWrap.(uint)
+	if !ok {
+		return 0
+	}
+	return chatId
 }
 
 func (state *State) CloseChat(userId uint, chatId uint) error {
@@ -136,14 +143,28 @@ func (state *State) CloseChat(userId uint, chatId uint) error {
 	defer state.mu.Unlock()
 
 	log.Printf("AppState.CloseChat TRACE close chat[%d] for user[%d]\n", chatId, userId)
-	return state.chats.CloseChat(userId, chatId)
+	removedIdWrap, err := state.chats.Take(userId)
+	if err != nil {
+		return err
+	}
+	if removedIdWrap == nil {
+		return nil
+	}
+	removedId, ok := removedIdWrap.(uint)
+	if removedId != 0 && removedId != chatId {
+		state.chats.Set(userId, removedId)
+	}
+	if ok {
+		return nil
+	}
+	return fmt.Errorf("failed to remove chat[%d] for user[%d], checked[%d]", chatId, userId, removedId)
 }
 
-func (state *State) DeleteChat(userId uint, chat *app.Chat) error {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+// func (state *State) DeleteChat(userId uint, chat *app.Chat) error {
+// 	state.mu.Lock()
+// 	defer state.mu.Unlock()
 
-	log.Printf("AppState.DeleteChat TRACE get chats for user[%d]\n", userId)
-	_ = state.chats.CloseChat(userId, chat.Id)
-	return state.chats.DeleteChat(userId, chat)
-}
+// 	log.Printf("AppState.DeleteChat TRACE get chats for user[%d]\n", userId)
+// 	_ = state.chats.CloseChat(userId, chat.Id)
+// 	return state.chats.DeleteChat(userId, chat)
+// }

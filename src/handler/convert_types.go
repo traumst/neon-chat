@@ -31,21 +31,18 @@ func ChatAppToDB(chat *a.Chat) *db.Chat {
 	return &db.Chat{
 		Id:      chat.Id,
 		Title:   chat.Name,
-		OwnerId: chat.Owner.Id,
+		OwnerId: chat.OwnerId,
 	}
 }
 
-func ChatDBToApp(chat *db.Chat, owner *a.User) *a.Chat {
+func ChatDBToApp(chat *db.Chat) *a.Chat {
 	if chat == nil {
 		return nil
 	}
-	if owner == nil {
-		return nil
-	}
 	return &a.Chat{
-		Id:    chat.Id,
-		Name:  chat.Title,
-		Owner: owner,
+		Id:      chat.Id,
+		Name:    chat.Title,
+		OwnerId: chat.OwnerId,
 	}
 }
 

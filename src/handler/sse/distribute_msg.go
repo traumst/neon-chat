@@ -21,7 +21,7 @@ func DistributeMsg(
 		return fmt.Errorf("mandatory argument/s cannot be nil")
 	}
 	// have to get users by owner - author may have been removed
-	users, err := chat.GetUsers(chat.Owner.Id)
+	users, err := chat.GetUsers(chat.OwnerId)
 	if err != nil || users == nil {
 		return fmt.Errorf("DistributeMsg: get users, chat[%d], %s", chat.Id, err)
 	}
@@ -66,14 +66,15 @@ func distributeMsgToUser(
 	data string,
 ) error {
 	log.Printf("distributeMsgToUser TRACE user[%d] chat[%d] event[%v]\n", userId, chatId, updateType)
-	openChat := state.GetOpenChat(userId)
-	if openChat == nil {
+	openChatId := state.GetOpenChat(userId)
+	if openChatId == 0 {
 		log.Printf("distributeMsgToUser INFO user[%d] has no open chat to distribute", userId)
 		return nil
 	}
-	if openChat.Id != chatId {
+	// TODO only sends updates to open chat
+	if openChatId != chatId {
 		log.Printf("distributeMsgToUser INFO user[%d] has open chat[%d] different from message chat[%d]",
-			userId, openChat.Id, chatId)
+			userId, openChatId, chatId)
 		return nil
 	}
 	msg := event.LiveEvent{

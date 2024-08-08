@@ -10,17 +10,9 @@ import (
 	"prplchat/src/model/template"
 )
 
-func chatCreate(conn *state.Conn, targetChat *app.Chat, author *app.User) error {
-	log.Printf("chatCreate TRACE author[%d] created chat[%d]\n",
-		author.Id, targetChat.Id)
-	if author.Id != targetChat.Owner.Id {
-		return fmt.Errorf("author[%d] is not owner[%d] of chat[%d]",
-			author.Id, targetChat.Owner.Id, targetChat.Id)
-	}
-	if author.Id != conn.User.Id || conn.User.Id != author.Id {
-		return fmt.Errorf("chatCreate conn[%s] does not belong to user[%d]", conn.Origin, author.Id)
-	}
-	template := targetChat.Template(author, conn.User)
+func chatCreate(conn *state.Conn, targetChat *app.Chat) error {
+	log.Printf("chatCreate TRACE chat[%d] created by user[%d]\n", targetChat.Id, targetChat.OwnerId)
+	template := targetChat.Template(conn.User, conn.User, []*app.User{conn.User})
 	data, err := template.ShortHTML()
 	if err != nil {
 		return err
@@ -28,9 +20,9 @@ func chatCreate(conn *state.Conn, targetChat *app.Chat, author *app.User) error 
 	conn.In <- event.LiveEvent{
 		Event:    event.ChatAdd,
 		ChatId:   targetChat.Id,
-		UserId:   author.Id,
+		UserId:   conn.User.Id,
 		MsgId:    0,
-		AuthorId: author.Id,
+		AuthorId: conn.User.Id,
 		Data:     data,
 	}
 	return nil
@@ -39,9 +31,9 @@ func chatCreate(conn *state.Conn, targetChat *app.Chat, author *app.User) error 
 func chatInvite(conn *state.Conn, targetChat *app.Chat, authorId uint, subject *app.User) error {
 	log.Printf("chatCreate TRACE author[%d] invited subject[%d] to chat[%d], target[%d]\n",
 		authorId, subject.Id, targetChat.Id, conn.User.Id)
-	if authorId != targetChat.Owner.Id {
+	if authorId != targetChat.OwnerId {
 		return fmt.Errorf("author[%d] is not owner[%d] of chat[%d]",
-			authorId, targetChat.Owner.Id, targetChat.Id)
+			authorId, targetChat.OwnerId, targetChat.Id)
 	}
 	if subject == nil {
 		return fmt.Errorf("subjectUser is nil for chatCreate")
@@ -49,7 +41,7 @@ func chatInvite(conn *state.Conn, targetChat *app.Chat, authorId uint, subject *
 	if authorId == conn.User.Id || conn.User.Id != subject.Id {
 		return fmt.Errorf("chatCreate conn[%s] does not belong to user[%d]", conn.Origin, subject.Id)
 	}
-	template := targetChat.Template(subject, conn.User)
+	template := targetChat.Template(subject, conn.User, []*app.User{subject}) // TODO BAD?
 	data, err := template.ShortHTML()
 	if err != nil {
 		return err

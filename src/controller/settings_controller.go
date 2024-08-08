@@ -7,6 +7,7 @@ import (
 	d "prplchat/src/db"
 	"prplchat/src/handler"
 	"prplchat/src/handler/state"
+	a "prplchat/src/model/app"
 	t "prplchat/src/model/template"
 	h "prplchat/src/utils/http"
 )
@@ -26,16 +27,18 @@ func OpenSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		w.Write([]byte("User is not authorized"))
 		return
 	}
-	var openChatId uint
-	var chatOwnerId uint
-	openChat := app.GetOpenChat(user.Id)
-	if openChat != nil {
-		openChatId = openChat.Id
-		chatOwnerId = openChat.Owner.Id
-	} else {
-		openChatId = 0
-		chatOwnerId = 0
+
+	openChatId := app.GetOpenChat(user.Id)
+	chatOwnerId := uint(0)
+	if openChatId > 0 {
+		chat, err := db.GetChat(openChatId)
+		if err != nil || chat == nil {
+			log.Printf("[%s] OpenSettings ERROR retrieving open chat[%d] data %s\n", reqId, openChatId, err)
+		} else {
+			chatOwnerId = chat.OwnerId
+		}
 	}
+
 	var avatarTmpl *t.AvatarTemplate
 	if avatar, _ := db.GetAvatar(user.Id); avatar != nil {
 		appAvatar := handler.AvatarDBToApp(avatar)
@@ -77,9 +80,22 @@ func CloseSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 		return
 	}
 	var html string
-	openChat := app.GetOpenChat(user.Id)
+	openChatId := app.GetOpenChat(user.Id)
+	openChat, err := db.GetChat(openChatId)
 	if openChat != nil {
-		html, err = openChat.Template(user, user).HTML()
+		chat := handler.ChatDBToApp(openChat)
+		dbUsers, err := db.GetChatUsers(user.Id)
+		if err != nil {
+			log.Printf("[%s] CloseSettings ERROR getting chat[%d] users %s\n", h.GetReqId(r), openChatId, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Failed to get chat users"))
+			return
+		}
+		var chatUsers []*a.User
+		for _, dbUser := range dbUsers {
+			chatUsers = append(chatUsers, handler.UserDBToApp(&dbUser))
+		}
+		html, err = chat.Template(user, user, chatUsers).HTML()
 	} else {
 		welcome := t.WelcomeTemplate{User: *user.Template(0, 0, 0)}
 		html, err = welcome.HTML()

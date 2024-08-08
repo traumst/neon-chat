@@ -9,6 +9,7 @@ import (
 	a "prplchat/src/model/app"
 	"prplchat/src/model/event"
 	"prplchat/src/model/template"
+	"prplchat/src/utils"
 )
 
 func HandleChatAdd(app *state.State, db *d.DBConn, user *a.User, chatName string) (string, error) {
@@ -20,37 +21,56 @@ func HandleChatAdd(app *state.State, db *d.DBConn, user *a.User, chatName string
 	if err != nil {
 		return "", fmt.Errorf("failed to add owner[%d] to chat[%d] in db: %s", user.Id, chat.Id, err)
 	}
-	err = app.AddChat(chat.Id, chat.Title, user)
-	if err != nil {
-		return "", fmt.Errorf("failed to add chat[%d] to app", chat.Id)
-	}
-	openChat, err := app.OpenChat(user.Id, chat.Id)
+	err = app.OpenChat(user.Id, chat.Id)
 	if err != nil {
 		return "", fmt.Errorf("failed to open new chat: %s", err)
 	}
-	err = sse.DistributeChat(app, openChat, user, user, user, event.ChatAdd)
+	openChat, err := db.GetChat(chat.Id)
+	if err != nil {
+		return "", fmt.Errorf("failed to get chat[%d] from db: %s", chat.Id, err)
+	}
+	appChat := ChatDBToApp(openChat)
+	err = sse.DistributeChat(app, appChat, user, user, user, event.ChatAdd)
 	if err != nil {
 		log.Printf("HandleChatAdd ERROR cannot distribute chat[%d] creation to user[%d]: %s",
 			openChat.Id, user.Id, err.Error())
 	}
-	template := openChat.Template(user, user)
-	return template.HTML()
+	chatUsers := make([]*a.User, 0)
+	dbChatUsers, err := db.GetChatUsers(chat.Id)
+	if err != nil {
+		log.Printf("HandleChatAdd ERROR getting chat[%d] users: %s", chat.Id, err)
+		return appChat.Template(user, user, chatUsers).HTML()
+	}
+	for _, dbChatUser := range dbChatUsers {
+		chatUsers = append(chatUsers, UserDBToApp(&dbChatUser))
+	}
+	return appChat.Template(user, user, chatUsers).HTML()
 }
 
 func HandleChatOpen(app *state.State, db *d.DBConn, user *a.User, chatId uint) (string, error) {
-	var html string
-	openChat, err := app.OpenChat(user.Id, uint(chatId))
+	err := app.OpenChat(user.Id, chatId)
 	if err != nil {
 		log.Printf("HandleChatOpen ERROR opening chat[%d] for user[%d], %s\n", chatId, user.Id, err.Error())
 		welcome := template.WelcomeTemplate{User: *user.Template(0, 0, 0)}
-		html, err = welcome.HTML()
-	} else {
-		html, err = openChat.Template(user, user).HTML()
+		return welcome.HTML()
 	}
+	dbChat, err := db.GetChat(chatId)
 	if err != nil {
-		return "", fmt.Errorf("failed to template chat")
+		log.Printf("HandleChatOpen ERROR opening chat[%d] for user[%d], %s\n", chatId, user.Id, err.Error())
+		welcome := template.WelcomeTemplate{User: *user.Template(0, 0, 0)}
+		return welcome.HTML()
 	}
-	return html, nil
+	appChat := ChatDBToApp(dbChat)
+	dbUsers, err := db.GetChatUsers(chatId)
+	if err != nil {
+		log.Printf("HandleChatOpen ERROR getting chat[%d] users for user[%d], %s\n", chatId, user.Id, err.Error())
+		return appChat.Template(user, user, make([]*a.User, 0)).HTML()
+	}
+	chatUsers := make([]*a.User, 0)
+	for _, dbUser := range dbUsers {
+		chatUsers = append(chatUsers, UserDBToApp(&dbUser))
+	}
+	return appChat.Template(user, user, chatUsers).HTML()
 }
 
 func HandleChatClose(app *state.State, db *d.DBConn, user *a.User, chatId uint) (string, error) {
@@ -63,18 +83,19 @@ func HandleChatClose(app *state.State, db *d.DBConn, user *a.User, chatId uint) 
 }
 
 func HandleChatDelete(app *state.State, db *d.DBConn, user *a.User, chatId uint) error {
-	chat, err := app.GetChat(user.Id, chatId)
-	if err != nil || chat == nil {
-		return fmt.Errorf("chat[%d] inaccessible for user[%d], %s", chatId, user.Id, err)
-	}
-	err = app.DeleteChat(user.Id, chat)
+	dbChat, err := db.GetChat(chatId)
 	if err != nil {
-		return fmt.Errorf("error deleting chat in app: %s", err.Error())
+		log.Printf("HandleChatDelete ERROR chat[%d] not found in db: %s", chatId, err)
+		return nil
+	}
+	if user.Id != dbChat.OwnerId {
+		return fmt.Errorf("user[%d] is not owner[%d] of chat[%d]", user.Id, dbChat.OwnerId, chatId)
 	}
 	err = db.DeleteChat(chatId)
 	if err != nil {
 		return fmt.Errorf("error deleting chat in db: %s", err.Error())
 	}
+	chat := ChatDBToApp(dbChat)
 	err = sse.DistributeChat(app, chat, user, nil, user, event.ChatClose)
 	if err != nil {
 		log.Printf("HandleChatDelete ERROR cannot distribute chat close, %s", err.Error())
@@ -91,28 +112,21 @@ func HandleChatDelete(app *state.State, db *d.DBConn, user *a.User, chatId uint)
 }
 
 func GetChat(app *state.State, db *d.DBConn, user *a.User, chatId uint) (*a.Chat, error) {
-	chat, err := app.GetChat(user.Id, chatId)
-	if chat != nil {
-		return chat, nil
-	}
-	if err != nil {
-		log.Printf("GetChat INFO chat[%d] for user[%d] not found in cache, %s\n", chatId, user.Id, err.Error())
-	}
-
 	dbChat, err := db.GetChat(chatId)
 	if err != nil {
-		log.Printf("GetChat INFO chat[%d] not found in db: %s", chatId, err)
+		return nil, fmt.Errorf("chat[%d] not found in db: %s", chatId, err)
 	}
 	if dbChat == nil {
 		return nil, nil
 	}
-
-	err = app.AddChat(dbChat.Id, dbChat.Title, &a.User{Id: dbChat.OwnerId})
+	chatIds, err := db.GetUserChatIds(user.Id)
 	if err != nil {
-		return nil, fmt.Errorf("failed to add chat[%d] to app: %s", dbChat.Id, err)
+		return nil, fmt.Errorf("error getting chat ids for user[%d]: %s", user.Id, err)
 	}
-
-	return app.GetChat(user.Id, dbChat.Id)
+	if !utils.Contains(chatIds, chatId) {
+		return nil, fmt.Errorf("user[%d] is not in chat[%d]", user.Id, chatId)
+	}
+	return ChatDBToApp(dbChat), nil
 }
 
 func GetChats(
@@ -120,32 +134,23 @@ func GetChats(
 	db *d.DBConn,
 	userId uint,
 ) ([]*a.Chat, error) {
-	userChats := app.GetChats(userId)
-	if len(userChats) > 0 {
-		return userChats, nil
-	}
 	dbUserChats, err := db.GetUserChats(userId)
 	if err != nil {
 		return nil, fmt.Errorf("error getting user chats: %s", err)
 	}
+	userChats := make([]*a.Chat, 0)
 	for _, dbChat := range dbUserChats {
-		appChatOwner, _ := GetUser(app, db, dbChat.OwnerId)
+		appChatOwner, _ := GetUser(db, dbChat.OwnerId)
 		if appChatOwner == nil {
 			log.Printf("GetChats WARN chat[%d] owner[%d] not found\n", dbChat.Id, dbChat.OwnerId)
 			continue
 		}
-		chat := ChatDBToApp(&dbChat, appChatOwner)
+		chat := ChatDBToApp(&dbChat)
 		if chat == nil {
 			log.Printf("GetChats WARN chat[%d] failed to map from db to app\n", dbChat.Id)
 			continue
 		}
-		err = app.AddChat(chat.Id, chat.Name, chat.Owner)
-		if err != nil {
-			log.Printf("GetChats ERROR adding chat[%d] to app: %s", chat.Id, err)
-			continue
-		}
 		userChats = append(userChats, chat)
 	}
-
 	return userChats, nil
 }

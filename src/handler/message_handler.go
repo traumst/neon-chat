@@ -25,23 +25,26 @@ func HandleMessageAdd(
 	if !canChat {
 		return nil, fmt.Errorf("user is not in chat")
 	}
-	dbMsg, err := addMsgIntoDB(db, chatId, author, msg)
+	dbChat, err := db.GetChat(chatId)
 	if err != nil {
-		return nil, fmt.Errorf("failed to add message to db: %s", err.Error())
+		return nil, fmt.Errorf("failed to get chat[%d] from db: %s", chatId, err.Error())
 	}
-	appChat, err := app.GetChat(dbMsg.AuthorId, dbMsg.ChatId)
+	dbMsg, err := db.AddMessage(&d.Message{
+		Id:       0,
+		ChatId:   chatId,
+		AuthorId: author.Id,
+		Text:     msg, // TODO: sanitize
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get chat from app: %s", err.Error())
+		return nil, fmt.Errorf("failed to add message to chat[%d]: %s", chatId, err.Error())
 	}
-	appMsg, err := addMsgIntoApp(app, author, dbMsg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to add message to app: %s", err.Error())
-	}
-	err = sse.DistributeMsg(app, appChat, author.Id, appMsg, event.MessageAdd)
+	appChat := ChatDBToApp(dbChat)
+	appMsg := MessageDBToApp(dbMsg, author)
+	err = sse.DistributeMsg(app, appChat, author.Id, &appMsg, event.MessageAdd)
 	if err != nil {
 		log.Printf("HandleMessageAdd ERROR distributing msg update, %s\n", err)
 	}
-	return appMsg, nil
+	return &appMsg, nil
 }
 
 func HandleMessageDelete(
@@ -52,65 +55,26 @@ func HandleMessageDelete(
 	msgId uint,
 ) (*a.Message, error) {
 	log.Printf("HandleMessageDelete TRACE removing msg[%d] from chat[%d] for user[%d]\n", msgId, chatId, user.Id)
-	if canChat, _ := db.UserCanChat(chatId, user.Id); !canChat {
-		return nil, fmt.Errorf("user cannot remove messages from this chat")
+	dbMsg, err := db.GetMessage(msgId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get message[%d] from db: %s", msgId, err.Error())
 	}
-
-	err := db.DeleteMessage(msgId)
+	dbChat, err := db.GetChat(chatId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get chat[%d] from db: %s", chatId, err.Error())
+	}
+	if dbMsg.AuthorId != user.Id && dbChat.OwnerId != user.Id {
+		return nil, fmt.Errorf("user[%d] is not allowed to delete message[%d] in chat[%d]", user.Id, msgId, chatId)
+	}
+	err = db.DeleteMessage(msgId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to remove message[%d] from chat[%d] in db, %s", msgId, chatId, err.Error())
 	}
-
-	appChat, err := app.GetChat(user.Id, chatId)
-	if err != nil {
-		return nil, fmt.Errorf("chat[%d] not found: %s", user.Id, err.Error())
-	}
-	msg, err := appChat.DropMessage(user.Id, msgId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to remove message[%d] from chat[%d], %s", msgId, appChat.Id, err)
-	}
-
-	err = sse.DistributeMsg(app, appChat, user.Id, msg, event.MessageDrop)
+	appChat := ChatDBToApp(dbChat)
+	appMsg := MessageDBToApp(dbMsg, &a.User{Id: dbMsg.AuthorId}) // TODO bad user
+	err = sse.DistributeMsg(app, appChat, user.Id, &appMsg, event.MessageDrop)
 	if err != nil {
 		log.Printf("HandleMessageDelete ERROR distributing msg update, %s\n", err)
 	}
-	return msg, err
-}
-
-func addMsgIntoDB(
-	db *d.DBConn,
-	chatId uint,
-	author *a.User,
-	msg string,
-) (*d.Message, error) {
-	log.Printf("addMsgIntoApp TRACE storing message for user[%d] in chat[%d]\n", author.Id, chatId)
-	dbMsg, err := db.AddMessage(&d.Message{
-		Id:       0,
-		ChatId:   chatId,
-		AuthorId: author.Id,
-		Text:     msg, // TODO: sanitize
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to add message to chat[%d]: %s", chatId, err.Error())
-	}
-	return dbMsg, nil
-}
-
-func addMsgIntoApp(
-	app *state.State,
-	author *a.User,
-	dbMsg *d.Message,
-) (*a.Message, error) {
-	log.Printf("addMsgIntoApp TRACE storing message for user[%d] in chat[%d]\n", dbMsg.AuthorId, dbMsg.ChatId)
-	appChat, err := app.GetChat(dbMsg.AuthorId, dbMsg.ChatId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get chat from app: %s", err.Error())
-	}
-	newMsg := MessageDBToApp(dbMsg, appChat.Owner)
-	newMsg.Author = author
-	appMsg, err := appChat.AddMessage(dbMsg.AuthorId, newMsg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to store message: %s", err.Error())
-	}
-	return appMsg, nil
+	return &appMsg, err
 }

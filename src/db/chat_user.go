@@ -25,6 +25,24 @@ func (db *DBConn) ChatUserTableExists() bool {
 	return db.TableExists("chat_users")
 }
 
+func (db *DBConn) IsUserInChat(chatId uint, userId uint) error {
+	if chatId == 0 || userId == 0 {
+		return fmt.Errorf("bad input: chatId[%d], userId[%d]", chatId, userId)
+	}
+	if !db.ConnIsActive() {
+		return fmt.Errorf("db is not connected")
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	_, err := db.conn.Exec(`INSERT INTO chat_users (chat_id, user_id) VALUES (?, ?)`, chatId, userId)
+	if err != nil {
+		return fmt.Errorf("error adding user: %s", err.Error())
+	}
+	return nil
+}
+
 func (db *DBConn) AddChatUser(chatId uint, userId uint) error {
 	if chatId == 0 || userId == 0 {
 		return fmt.Errorf("bad input: chatId[%d], userId[%d]", chatId, userId)
@@ -54,22 +72,15 @@ func (db *DBConn) GetUserChatIds(userId uint) ([]uint, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	var userChatIds []uint
-	err := db.conn.Select(&userChatIds, `SELECT chat_id FROM chat_users WHERE user_id = ?`, userId)
+	var chatIds []uint
+	err := db.conn.Select(&chatIds, `SELECT chat_id FROM chat_users WHERE user_id = ?`, userId)
 	if err != nil {
 		return nil, fmt.Errorf("error adding user: %s", err.Error())
 	}
-	return userChatIds, nil
+	return chatIds, nil
 }
 
 func (db *DBConn) GetUserChats(userId uint) ([]Chat, error) {
-	if userId == 0 {
-		return nil, fmt.Errorf("invalid userId[%d]", userId)
-	}
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
-	}
-
 	chatIds, err := db.GetUserChatIds(userId)
 	if err != nil {
 		return nil, fmt.Errorf("error getting chat ids for user[%d]: %s", userId, err)
@@ -89,9 +100,53 @@ func (db *DBConn) GetUserChats(userId uint) ([]Chat, error) {
 
 	var userChats []Chat
 	err = db.conn.Select(&userChats, query, args...)
-	//err = db.conn.Select(&userChats, `SELECT * FROM chats WHERE id IN (?)`, chatIds)
 	if err != nil {
 		return nil, fmt.Errorf("error getting chats for user[%d]: %s", userId, err)
+	}
+	return userChats, nil
+}
+
+func (db *DBConn) GetChatUserIds(chatId uint) ([]uint, error) {
+	if chatId == 0 {
+		return nil, fmt.Errorf("bad input: chatId[%d]", chatId)
+	}
+	if !db.ConnIsActive() {
+		return nil, fmt.Errorf("db is not connected")
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	var userIds []uint
+	err := db.conn.Select(&userIds, `SELECT userId FROM chat_users WHERE chat_id = ?`, chatId)
+	if err != nil {
+		return nil, fmt.Errorf("error adding user: %s", err.Error())
+	}
+	return userIds, nil
+}
+
+func (db *DBConn) GetChatUsers(chatId uint) ([]User, error) {
+	userIds, err := db.GetChatUserIds(chatId)
+	if err != nil {
+		return nil, fmt.Errorf("error getting user ids in chat[%d]: %s", chatId, err)
+	}
+	if len(userIds) == 0 {
+		return []User{}, nil
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	query, args, err := sqlx.In(`SELECT * FROM users WHERE id IN (?)`, userIds)
+	if err != nil {
+		return nil, fmt.Errorf("error preparing query with userIds[%v]: %s", userIds, err)
+	}
+	query = db.conn.Rebind(query)
+
+	var userChats []User
+	err = db.conn.Select(&userChats, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("error getting users int chat[%d]: %s", chatId, err)
 	}
 	return userChats, nil
 }

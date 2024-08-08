@@ -7,7 +7,7 @@ import (
 	"prplchat/src/db"
 	"prplchat/src/handler"
 	"prplchat/src/handler/state"
-	"prplchat/src/model/app"
+	a "prplchat/src/model/app"
 	"prplchat/src/model/template"
 	h "prplchat/src/utils/http"
 )
@@ -43,7 +43,7 @@ func RenderHome(
 	db *db.DBConn,
 	w http.ResponseWriter,
 	r *http.Request,
-	user *app.User,
+	user *a.User,
 ) {
 	if app == nil {
 		panic("app is nil")
@@ -65,25 +65,43 @@ func RenderHome(
 	w.Write([]byte(html))
 }
 
+func templateOpenChat(app *state.State, db *db.DBConn, user *a.User) *template.ChatTemplate {
+	openChatId := app.GetOpenChat(user.Id)
+	if openChatId == 0 {
+		log.Printf("templateOpenchat DEBUG, user[%d] has no open chat\n", user.Id)
+		return nil
+	}
+	openChat, err := db.GetChat(openChatId)
+	if err != nil {
+		log.Printf("templateOpenchat ERROR, failed to get chat[%d], %s\n", openChatId, err.Error())
+		return nil // TODO custom error pop-up
+	}
+	dbChatUsers, err := db.GetChatUsers(user.Id)
+	if err != nil {
+		log.Printf("templateHome ERROR, failed getting chat[%d] users, %s\n", openChatId, err.Error())
+		return nil
+	}
+	appChatUsers := make([]*a.User, 0)
+	for _, dbUser := range dbChatUsers {
+		appChatUsers = append(appChatUsers, handler.UserDBToApp(&dbUser))
+	}
+	appChat := handler.ChatDBToApp(openChat)
+	return appChat.Template(user, user, appChatUsers)
+}
+
 func templateHome(
 	app *state.State,
 	db *db.DBConn,
 	r *http.Request,
-	user *app.User,
+	user *a.User,
 ) (string, error) {
-	var openChatTemplate *template.ChatTemplate
-	var openChatId uint = 0
-	var openChatOwnerId uint = 0
-	openChat := app.GetOpenChat(user.Id)
-	if openChat == nil {
-		log.Printf("[%s] templateHome DEBUG, user[%d] has no open chat\n", h.GetReqId(r), user.Id)
-		openChatTemplate = nil
-	} else {
-		log.Printf("[%s] templateHome DEBUG, user[%d] has chat[%d] open\n", h.GetReqId(r), user.Id, openChat.Id)
-		openChatTemplate = openChat.Template(user, user)
-		openChatId = openChat.Id
-		openChatOwnerId = openChat.Owner.Id
+	var avatarTmpl *template.AvatarTemplate
+	if dbAvatar, err := db.GetAvatar(user.Id); dbAvatar != nil && err == nil {
+		avatar := handler.AvatarDBToApp(dbAvatar)
+		avatarTmpl = avatar.Template(user)
 	}
+
+	openChatTemplate := templateOpenChat(app, db, user)
 	chats, err := handler.GetChats(app, db, user.Id)
 	if err != nil {
 		log.Printf("[%s] templateHome ERROR, failed getting chats for user[%d], %s\n",
@@ -92,17 +110,19 @@ func templateHome(
 	}
 	var chatTemplates []*template.ChatTemplate
 	for _, chat := range chats {
-		chatTemplates = append(chatTemplates, chat.Template(user, user))
+		chatTemplates = append(chatTemplates, chat.Template(user, user, make([]*a.User, 0)))
 	}
-	var avatarTmpl *template.AvatarTemplate
-	if dbAvatar, err := db.GetAvatar(user.Id); dbAvatar != nil && err == nil {
-		avatar := handler.AvatarDBToApp(dbAvatar)
-		avatarTmpl = avatar.Template(user)
+	var openChatId uint
+	var chatOwnerId uint
+	if openChatTemplate != nil {
+		openChatId = openChatTemplate.ChatId
+		chatOwnerId = openChatTemplate.Owner.UserId
 	}
+	userTemplate := user.Template(openChatId, chatOwnerId, user.Id)
 	home := template.HomeTemplate{
 		Chats:         chatTemplates,
 		OpenChat:      openChatTemplate,
-		User:          *user.Template(openChatId, openChatOwnerId, user.Id),
+		User:          *userTemplate,
 		IsAuthorized:  true,
 		LoginTemplate: template.AuthTemplate{},
 		Avatar:        avatarTmpl,

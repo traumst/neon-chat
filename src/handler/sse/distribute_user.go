@@ -63,8 +63,8 @@ func distributeInCommonChat(
 		if targetUser == nil {
 			continue
 		}
-		openChat := state.GetOpenChat(targetUser.Id)
-		if openChat == nil || openChat.Id != chat.Id {
+		openChatId := state.GetOpenChat(targetUser.Id)
+		if openChatId == 0 || openChatId != chat.Id {
 			continue
 		}
 		uErr := distributeUpdateOfUser(state, targetUser, subjectUser, updateType)
