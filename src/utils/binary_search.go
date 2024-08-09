@@ -1,9 +1,7 @@
 package utils
 
 import (
-	"log"
 	"prplchat/src/utils/interfaces"
-	"time"
 )
 
 // arr is expected to be orderred by item id
@@ -11,19 +9,19 @@ func BinarySearch(
 	arr []interfaces.Identifiable,
 	item_id uint,
 ) (found interfaces.Identifiable, idx int) {
-	//
-	count := 0
-	start := time.Now()
-	//
+	// //
+	// count := 0
+	// start := time.Now()
+	// //
 	found = nil
 	idx = -1
 	len := len(arr)
 	a := 0
 	z := len - 1
 	for a <= z && z >= 0 && a <= len {
-		//
-		count++
-		//
+		// //
+		// count++
+		// //
 		mid_idx := (a + z) / 2
 		mid_val := arr[mid_idx]
 		mid_val_id := mid_val.GetId()
@@ -40,11 +38,11 @@ func BinarySearch(
 			z = mid_idx - 1
 		}
 	}
-	//
-	elapsed := time.Since(start)
-	log.Printf("BinarySearch for id[%d] isfound:%t check took %s, %d loops in %d items\n",
-		item_id, idx >= 0, elapsed, count, len)
-	//
+	// //
+	// elapsed := time.Since(start)
+	// log.Printf("BinarySearch for id[%d] isfound:%t check took %s, %d loops in %d items\n",
+	// 	item_id, idx >= 0, elapsed, count, len)
+	// //
 
 	return found, idx
 }
