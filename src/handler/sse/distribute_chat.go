@@ -31,7 +31,6 @@ func DistributeChat(
 		return fmt.Errorf("state is nil")
 	}
 
-	var err error
 	var targetUsers []*app.User
 	if targetUser != nil {
 		targetUsers = []*app.User{targetUser}
@@ -45,11 +44,8 @@ func DistributeChat(
 		}
 	}
 
-	if err != nil {
-		return fmt.Errorf("fail to get users from chat[%d], %s", chat.Id, err)
-	}
 	if len(targetUsers) <= 0 {
-		return fmt.Errorf("chatUsers are empty in chat[%d], %s", chat.Id, err)
+		return fmt.Errorf("chatUsers are empty in chat[%d]", chat.Id)
 	}
 
 	return distributeToUsers(state, chat, author, targetUsers, subjectUser, updateType)

@@ -63,9 +63,13 @@ func distributeInCommonChat(
 	subjectUser *app.User,
 	updateType event.EventType,
 ) error {
-	targetUsers, err := chat.GetUsers(subjectUser.Id)
+	dbUsers, err := db.GetChatUsers(chat.Id)
 	if err != nil {
-		return fmt.Errorf("failed to get users in chat[%d] for subject[%d], %s", chat.Id, subjectUser.Id, err)
+		return fmt.Errorf("failed to get users in chat[%d], %s", chat.Id, err)
+	}
+	var targetUsers []*app.User
+	for _, dbUser := range dbUsers {
+		targetUsers = append(targetUsers, convert.UserDBToApp(&dbUser))
 	}
 	// inform if chat is open
 	for _, targetUser := range targetUsers {

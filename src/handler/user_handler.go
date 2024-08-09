@@ -18,7 +18,7 @@ func HandleUserInvite(
 	chatId uint,
 	inviteeName string,
 ) (*a.Chat, *a.User, error) {
-	appInvitee, err := findUser(state, db, inviteeName)
+	appInvitee, err := findUser(db, inviteeName)
 	if err != nil {
 		log.Printf("HandleUserInvite ERROR invitee not found [%s], %s\n", inviteeName, err.Error())
 		return nil, nil, fmt.Errorf("invitee not found")
@@ -121,7 +121,7 @@ func GetUser(db *d.DBConn, userId uint) (*a.User, error) {
 	return convert.UserDBToApp(dbUser), nil
 }
 
-func findUser(state *state.State, db *d.DBConn, userName string) (*a.User, error) {
+func findUser(db *d.DBConn, userName string) (*a.User, error) {
 	log.Printf("FindUser TRACE IN user[%s]\n", userName)
 	dbUser, err := db.SearchUser(userName)
 	if err != nil {
