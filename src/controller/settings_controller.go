@@ -13,7 +13,7 @@ import (
 	h "prplchat/src/utils/http"
 )
 
-func OpenSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func OpenSettings(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] OpenSettings\n", reqId)
 	if r.Method != "GET" {
@@ -21,7 +21,7 @@ func OpenSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	user, err := handler.ReadSession(app, db, w, r)
+	user, err := handler.ReadSession(state, db, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] OpenSettings WARN user, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -29,7 +29,7 @@ func OpenSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		return
 	}
 
-	openChatId := app.GetOpenChat(user.Id)
+	openChatId := state.GetOpenChat(user.Id)
 	chatOwnerId := uint(0)
 	if openChatId > 0 {
 		chat, err := db.GetChat(openChatId)
@@ -64,7 +64,7 @@ func OpenSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 	w.Write([]byte(html))
 }
 
-func CloseSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func CloseSettings(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] CloseSettings\n", reqId)
 	if r.Method != "GET" {
@@ -73,7 +73,7 @@ func CloseSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 		w.Write([]byte("User is unauthorized"))
 		return
 	}
-	user, err := handler.ReadSession(app, db, w, r)
+	user, err := handler.ReadSession(state, db, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] CloseSettings WARN user, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -81,7 +81,7 @@ func CloseSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 		return
 	}
 	var html string
-	openChatId := app.GetOpenChat(user.Id)
+	openChatId := state.GetOpenChat(user.Id)
 	openChat, err := db.GetChat(openChatId)
 	if openChat != nil {
 		chat := convert.ChatDBToApp(openChat)

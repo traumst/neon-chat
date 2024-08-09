@@ -15,10 +15,10 @@ import (
 	h "prplchat/src/utils/http"
 )
 
-func Welcome(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func Welcome(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] Welcome TRACE\n", reqId)
-	user, err := handler.ReadSession(app, db, w, r)
+	user, err := handler.ReadSession(state, db, w, r)
 	var welcome template.WelcomeTemplate
 	if user == nil {
 		log.Printf("[%s] OpenChat TRACE user is not authorized, %s\n", h.GetReqId(r), err)
@@ -37,7 +37,7 @@ func Welcome(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Requ
 	w.Write([]byte(html))
 }
 
-func OpenChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func OpenChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] OpenChat TRACE\n", reqId)
 	if r.Method != "GET" {
@@ -46,7 +46,7 @@ func OpenChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Req
 		w.Write([]byte("Only GET method is allowed"))
 		return
 	}
-	user, err := handler.ReadSession(app, db, w, r)
+	user, err := handler.ReadSession(state, db, w, r)
 	if err != nil || user == nil {
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		var msg string
@@ -62,7 +62,7 @@ func OpenChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Req
 	chatId, err := strconv.Atoi(path[2])
 	if err != nil {
 		log.Printf("[%s] OpenChat INFO invalid chat-id, %s\n", reqId, err)
-		Welcome(app, db, w, r)
+		Welcome(state, db, w, r)
 		return
 	}
 	if chatId < 0 {
@@ -73,7 +73,7 @@ func OpenChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Req
 	}
 
 	log.Printf("[%s] OpenChat TRACE chat[%d]\n", reqId, chatId)
-	html, err := handler.HandleChatOpen(app, db, user, uint(chatId))
+	html, err := handler.HandleChatOpen(state, db, user, uint(chatId))
 	if err != nil {
 		log.Printf("[%s] OpenChat ERROR cannot open chat[%d], %s\n", reqId, chatId, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -86,7 +86,7 @@ func OpenChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Req
 	w.Write([]byte(html))
 }
 
-func AddChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func AddChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] AddChat TRACE\n", reqId)
 	if r.Method != "POST" {
@@ -95,7 +95,7 @@ func AddChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Requ
 		w.Write([]byte("action not allowed"))
 		return
 	}
-	user, err := handler.ReadSession(app, db, w, r)
+	user, err := handler.ReadSession(state, db, w, r)
 	if user == nil {
 		log.Printf("[%s] AddChat INFO user is not authorized, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -114,7 +114,7 @@ func AddChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Requ
 	}
 
 	log.Printf("[%s] AddChat TRACE adding user[%d] chat[%s]\n", reqId, user.Id, chatName)
-	html, err := handler.HandleChatAdd(app, db, user, chatName)
+	html, err := handler.HandleChatAdd(state, db, user, chatName)
 	if err != nil {
 		log.Printf("sendChat ERROR cannot template chat[%s], %s", chatName, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -127,14 +127,14 @@ func AddChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Requ
 	w.Write([]byte(html))
 }
 
-func CloseChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func CloseChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] CloseChat\n", reqId)
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	user, err := handler.ReadSession(app, db, w, r)
+	user, err := handler.ReadSession(state, db, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] CloseChat WARN user, %s\n", h.GetReqId(r), err)
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
@@ -148,7 +148,7 @@ func CloseChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	html, err := handler.HandleChatClose(app, db, user, uint(chatId))
+	html, err := handler.HandleChatClose(state, db, user, uint(chatId))
 	if err != nil {
 		log.Printf("[%s] CloseChat ERROR cannot template welcome page, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -160,14 +160,14 @@ func CloseChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Re
 	w.Write([]byte(html))
 }
 
-func DeleteChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func DeleteChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] DeleteChat TRACE\n", reqId)
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	user, err := handler.ReadSession(app, db, w, r)
+	user, err := handler.ReadSession(state, db, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] DeleteChat WARN user, %s\n", h.GetReqId(r), err)
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
@@ -181,7 +181,7 @@ func DeleteChat(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 		return
 	}
 
-	err = handler.HandleChatDelete(app, db, user, chatId)
+	err = handler.HandleChatDelete(state, db, user, chatId)
 	if err != nil {
 		log.Printf("[%s] DeleteChat WARN user[%d] failed to delete chat[%d], %s\n", reqId, user.Id, chatId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

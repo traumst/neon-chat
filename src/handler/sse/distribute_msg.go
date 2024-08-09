@@ -5,6 +5,8 @@ import (
 	"log"
 	"sync"
 
+	"prplchat/src/convert"
+	"prplchat/src/db"
 	"prplchat/src/handler/state"
 	"prplchat/src/model/app"
 	"prplchat/src/model/event"
@@ -12,6 +14,7 @@ import (
 
 func DistributeMsg(
 	state *state.State,
+	db *db.DBConn,
 	chat *app.Chat,
 	authorId uint,
 	msg *app.Message,
@@ -20,13 +23,16 @@ func DistributeMsg(
 	if chat == nil || msg == nil {
 		return fmt.Errorf("mandatory argument/s cannot be nil")
 	}
-	// have to get users by owner - author may have been removed
-	users, err := chat.GetUsers(chat.OwnerId)
-	if err != nil || users == nil {
-		return fmt.Errorf("DistributeMsg: get users, chat[%d], %s", chat.Id, err)
+	dbUsers, err := db.GetChatUsers(chat.Id)
+	if err != nil {
+		return fmt.Errorf("failed to get users in chat[%d], %s", chat.Id, err)
+	}
+	var users []*app.User
+	for _, dbUser := range dbUsers {
+		users = append(users, convert.UserDBToApp(&dbUser))
 	}
 	if len(users) <= 0 {
-		return fmt.Errorf("DistributeMsg: chatUsers are empty, chat[%d], %s", chat.Id, err)
+		return fmt.Errorf("chatUsers are empty, chat[%d], %s", chat.Id, err)
 	}
 
 	var wg sync.WaitGroup

@@ -49,7 +49,7 @@ func main() {
 	}
 
 	log.Println("init app state...")
-	app := &state.Application
+	app := &state.GlobalAppState
 	app.Init(utils.Config{
 		CacheSize: config.CacheSize,
 		Port:      config.Port,

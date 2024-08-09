@@ -12,13 +12,13 @@ import (
 )
 
 func HandleUserInvite(
-	app *state.State,
+	state *state.State,
 	db *d.DBConn,
 	user *a.User,
 	chatId uint,
 	inviteeName string,
 ) (*a.Chat, *a.User, error) {
-	appInvitee, err := findUser(app, db, inviteeName)
+	appInvitee, err := findUser(state, db, inviteeName)
 	if err != nil {
 		log.Printf("HandleUserInvite ERROR invitee not found [%s], %s\n", inviteeName, err.Error())
 		return nil, nil, fmt.Errorf("invitee not found")
@@ -27,7 +27,7 @@ func HandleUserInvite(
 		return nil, nil, nil
 	}
 
-	appChat, err := GetChat(app, db, user, chatId)
+	appChat, err := GetChat(state, db, user, chatId)
 	if err != nil {
 		log.Printf("HandleUserInvite ERROR user[%d] cannot invite into chat[%d], %s\n",
 			user.Id, chatId, err.Error())
@@ -44,7 +44,7 @@ func HandleUserInvite(
 		return nil, nil, fmt.Errorf("failed to add user to chat in db")
 	}
 
-	err = sse.DistributeChat(app, appChat, user, appInvitee, appInvitee, event.ChatInvite)
+	err = sse.DistributeChat(state, db, appChat, user, appInvitee, appInvitee, event.ChatInvite)
 	if err != nil {
 		log.Printf("HandleUserInvite WARN cannot distribute chat invite, %s\n", err.Error())
 	}
@@ -52,28 +52,28 @@ func HandleUserInvite(
 	return appChat, appInvitee, nil
 }
 
-func HandleUserExpelled(app *state.State, db *d.DBConn, user *a.User, chatId uint, expelledId uint) (*a.User, error) {
-	appExpelled, err := expelUser(app, db, user, chatId, uint(expelledId))
+func HandleUserExpelled(state *state.State, db *d.DBConn, user *a.User, chatId uint, expelledId uint) (*a.User, error) {
+	appExpelled, err := expelUser(state, db, user, chatId, uint(expelledId))
 	if err != nil {
 		log.Printf("HandleUserExpelled ERROR failed to expell, %s\n", err.Error())
 		return nil, fmt.Errorf("failed to expell user, %s", err.Error())
 	}
-	chat, err := GetChat(app, db, user, chatId)
+	chat, err := GetChat(state, db, user, chatId)
 	if err != nil {
 		log.Printf("HandleUserExpelled ERROR cannot find chat[%d], %s\n", chatId, err.Error())
 		return nil, fmt.Errorf("failed to expell user: %s", err.Error())
 	}
-	err = sse.DistributeChat(app, chat, user, appExpelled, appExpelled, event.ChatClose)
+	err = sse.DistributeChat(state, db, chat, user, appExpelled, appExpelled, event.ChatClose)
 	if err != nil {
 		log.Printf("HandleUserExpelled ERROR cannot distribute chat close, %s\n", err.Error())
 		return appExpelled, fmt.Errorf("cannot distribute chat close: %s", err.Error())
 	}
-	err = sse.DistributeChat(app, chat, user, appExpelled, appExpelled, event.ChatDrop)
+	err = sse.DistributeChat(state, db, chat, user, appExpelled, appExpelled, event.ChatDrop)
 	if err != nil {
 		log.Printf("HandleUserExpelled ERROR cannot distribute chat deleted, %s\n", err.Error())
 		return appExpelled, fmt.Errorf("cannot distribute chat deleted: %s", err.Error())
 	}
-	err = sse.DistributeChat(app, chat, user, nil, appExpelled, event.ChatExpel)
+	err = sse.DistributeChat(state, db, chat, user, nil, appExpelled, event.ChatExpel)
 	if err != nil {
 		log.Printf("HandleUserExpelled ERROR cannot distribute chat expel, %s\n", err.Error())
 		return appExpelled, fmt.Errorf("cannot distribute chat expel: %s", err.Error())
@@ -81,8 +81,8 @@ func HandleUserExpelled(app *state.State, db *d.DBConn, user *a.User, chatId uin
 	return appExpelled, nil
 }
 
-func HandleUserLeaveChat(app *state.State, db *d.DBConn, user *a.User, chatId uint) error {
-	chat, err := GetChat(app, db, user, chatId)
+func HandleUserLeaveChat(state *state.State, db *d.DBConn, user *a.User, chatId uint) error {
+	chat, err := GetChat(state, db, user, chatId)
 	if err != nil {
 		log.Printf("HandleUserLeaveChat ERROR cannot find chat[%d], %s\n", chatId, err.Error())
 		return fmt.Errorf("failed to leave chat: %s", err.Error())
@@ -92,20 +92,20 @@ func HandleUserLeaveChat(app *state.State, db *d.DBConn, user *a.User, chatId ui
 		log.Printf("HandleUserLeaveChat ERROR cannot leave chat[%d] as owner\n", chatId)
 		return fmt.Errorf("creator cannot leave chat")
 	}
-	expelled, err := expelUser(app, db, user, chatId, user.Id)
+	expelled, err := expelUser(state, db, user, chatId, user.Id)
 	if err != nil {
 		log.Printf("HandleUserLeaveChat ERROR failed to expell, %s\n", err.Error())
 		return fmt.Errorf("failed to self-expel from chat: %s", err.Error())
 	}
-	err = sse.DistributeChat(app, chat, expelled, expelled, expelled, event.ChatClose)
+	err = sse.DistributeChat(state, db, chat, expelled, expelled, expelled, event.ChatClose)
 	if err != nil {
 		log.Printf("HandleUserLeaveChat ERROR cannot distribute chat close, %s\n", err.Error())
 	}
-	err = sse.DistributeChat(app, chat, expelled, expelled, expelled, event.ChatDrop)
+	err = sse.DistributeChat(state, db, chat, expelled, expelled, expelled, event.ChatDrop)
 	if err != nil {
 		log.Printf("HandleUserLeaveChat ERROR cannot distribute chat deleted, %s\n", err.Error())
 	}
-	err = sse.DistributeChat(app, chat, expelled, nil, expelled, event.ChatLeave)
+	err = sse.DistributeChat(state, db, chat, expelled, nil, expelled, event.ChatLeave)
 	if err != nil {
 		log.Printf("HandleUserLeaveChat ERROR cannot distribute chat user drop, %s\n", err.Error())
 	}
@@ -121,7 +121,7 @@ func GetUser(db *d.DBConn, userId uint) (*a.User, error) {
 	return convert.UserDBToApp(dbUser), nil
 }
 
-func findUser(app *state.State, db *d.DBConn, userName string) (*a.User, error) {
+func findUser(state *state.State, db *d.DBConn, userName string) (*a.User, error) {
 	log.Printf("FindUser TRACE IN user[%s]\n", userName)
 	dbUser, err := db.SearchUser(userName)
 	if err != nil {
@@ -152,7 +152,7 @@ func FindUsers(db *d.DBConn, userName string) ([]*a.User, error) {
 	return appUsers, nil
 }
 
-func expelUser(app *state.State, db *d.DBConn, user *a.User, chatId uint, expelledId uint) (*a.User, error) {
+func expelUser(state *state.State, db *d.DBConn, user *a.User, chatId uint, expelledId uint) (*a.User, error) {
 	log.Printf("ExpelUser TRACE expelling[%d] from chat[%d]\n", expelledId, chatId)
 	if user.Id == expelledId {
 		return nil, fmt.Errorf("user[%d] cannot expel itself", user.Id)
@@ -165,12 +165,12 @@ func expelUser(app *state.State, db *d.DBConn, user *a.User, chatId uint, expell
 	if err != nil {
 		return nil, fmt.Errorf("failed to remove user[%d] from chat[%d]: %s", expelledId, chatId, err.Error())
 	}
-	err = app.CloseChat(expelledId, chatId)
+	err = state.CloseChat(expelledId, chatId)
 	appExpelled := convert.UserDBToApp(dbExpelled)
 	return appExpelled, nil
 }
 
-func UpdateUser(app *state.State, db *d.DBConn, template *a.User) (*a.User, error) {
+func UpdateUser(state *state.State, db *d.DBConn, template *a.User) (*a.User, error) {
 	current, err := GetUser(db, template.Id)
 	if err != nil {
 		return nil, fmt.Errorf("user for update[%d] not found: %s", template.Id, err.Error())

@@ -16,7 +16,7 @@ import (
 	h "prplchat/src/utils/http"
 )
 
-func ReadSession(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) (*a.User, error) {
+func ReadSession(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) (*a.User, error) {
 	log.Printf("[%s] ReadSession TRACE IN\n", h.GetReqId(r))
 	cookie, err := h.GetSessionCookie(r)
 	log.Printf("[%s] ReadSession TRACE session cookie[%v], err[%s]\n", h.GetReqId(r), cookie, err)
@@ -106,7 +106,7 @@ func Register(db *d.DBConn, newUser *a.User, pass string, authType a.AuthType) (
 	return appUser, auth, nil
 }
 
-func IssueReservationToken(app *state.State, db *d.DBConn, user *a.User) (*t.VerifyEmailTemplate, error) {
+func IssueReservationToken(state *state.State, db *d.DBConn, user *a.User) (*t.VerifyEmailTemplate, error) {
 	token := utils.RandStringBytes(16)
 	expire := time.Now().Add(1 * time.Hour)
 	reserve, err := reserve(db, user, token, expire)
@@ -114,7 +114,7 @@ func IssueReservationToken(app *state.State, db *d.DBConn, user *a.User) (*t.Ver
 		log.Printf("IssueReservationToken ERROR reserving[%s], %s\n", user.Email, err.Error())
 		return nil, fmt.Errorf("")
 	}
-	emailConfig := app.SmtpConfig()
+	emailConfig := state.SmtpConfig()
 	tmpl := t.VerifyEmailTemplate{
 		SourceEmail: emailConfig.User,
 		UserEmail:   user.Email,

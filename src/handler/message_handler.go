@@ -12,7 +12,7 @@ import (
 )
 
 func HandleMessageAdd(
-	app *state.State,
+	state *state.State,
 	db *d.DBConn,
 	chatId uint,
 	author *a.User,
@@ -41,7 +41,7 @@ func HandleMessageAdd(
 	}
 	appChat := convert.ChatDBToApp(dbChat)
 	appMsg := convert.MessageDBToApp(dbMsg, author)
-	err = sse.DistributeMsg(app, appChat, author.Id, &appMsg, event.MessageAdd)
+	err = sse.DistributeMsg(state, db, appChat, author.Id, &appMsg, event.MessageAdd)
 	if err != nil {
 		log.Printf("HandleMessageAdd ERROR distributing msg update, %s\n", err)
 	}
@@ -49,7 +49,7 @@ func HandleMessageAdd(
 }
 
 func HandleMessageDelete(
-	app *state.State,
+	state *state.State,
 	db *d.DBConn,
 	chatId uint,
 	user *a.User,
@@ -73,7 +73,7 @@ func HandleMessageDelete(
 	}
 	appChat := convert.ChatDBToApp(dbChat)
 	appMsg := convert.MessageDBToApp(dbMsg, &a.User{Id: dbMsg.AuthorId}) // TODO bad user
-	err = sse.DistributeMsg(app, appChat, user.Id, &appMsg, event.MessageDrop)
+	err = sse.DistributeMsg(state, db, appChat, user.Id, &appMsg, event.MessageDrop)
 	if err != nil {
 		log.Printf("HandleMessageDelete ERROR distributing msg update, %s\n", err)
 	}

@@ -16,7 +16,7 @@ import (
 	h "prplchat/src/utils/http"
 )
 
-func AddAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
+func AddAvatar(state *state.State, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] AddAvatar\n", reqId)
 	if r.Method != "POST" {
@@ -25,7 +25,7 @@ func AddAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.R
 		w.Write([]byte("Only GET method is allowed"))
 		return
 	}
-	user, err := handler.ReadSession(app, db, w, r)
+	user, err := handler.ReadSession(state, db, w, r)
 	if user == nil {
 		log.Printf("[%s] AddAvatar INFO user is not authorized, %s\n", h.GetReqId(r), err)
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
@@ -60,7 +60,7 @@ func AddAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.R
 		http.Error(w, fmt.Sprintf("failed to template avatar[%d]", avatar.Id), http.StatusBadRequest)
 		return
 	}
-	if err = sse.DistributeAvatarChange(app, user, avatar, event.AvatarChange); err != nil {
+	if err = sse.DistributeAvatarChange(state, user, avatar, event.AvatarChange); err != nil {
 		log.Printf("controller.AddAvatar ERROR failed to distribute avatar[%s] update, %s", info.Filename, err.Error())
 	}
 
@@ -68,7 +68,7 @@ func AddAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.R
 	w.Write([]byte(html))
 }
 
-func GetAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
+func GetAvatar(state *state.State, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] GetAvatar\n", reqId)
 	if r.Method != "GET" {
@@ -77,7 +77,7 @@ func GetAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.R
 		w.Write([]byte("Only GET method is allowed"))
 		return
 	}
-	user, err := handler.ReadSession(app, db, w, r)
+	user, err := handler.ReadSession(state, db, w, r)
 	if user == nil {
 		log.Printf("[%s] GetAvatar INFO user is not authorized, %s\n", h.GetReqId(r), err)
 		http.Header.Add(w.Header(), "HX-Refresh", "true")

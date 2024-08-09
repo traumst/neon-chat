@@ -12,7 +12,7 @@ import (
 	"prplchat/src/utils/store"
 )
 
-var Application State
+var GlobalAppState State
 
 type State struct {
 	mu     sync.Mutex
@@ -28,7 +28,7 @@ func (state *State) Init(config utils.Config) {
 	if cacheSize <= 0 {
 		cacheSize = 1024
 	}
-	Application = State{
+	GlobalAppState = State{
 		isInit: true,
 		// users:  *store.NewLRUCache(128),
 		// chats:  *app.NewOpenChats(),

@@ -40,13 +40,13 @@ func RenderLogin(
 }
 
 func RenderHome(
-	app *state.State,
+	state *state.State,
 	db *db.DBConn,
 	w http.ResponseWriter,
 	r *http.Request,
 	user *a.User,
 ) {
-	if app == nil {
+	if state == nil {
 		panic("app is nil")
 	} else if db == nil {
 		panic("db is nil")
@@ -54,7 +54,7 @@ func RenderHome(
 		panic("user is nil")
 	}
 	log.Printf("[%s] RenderHome TRACE IN", h.GetReqId(r))
-	html, err := templateHome(app, db, r, user)
+	html, err := templateHome(state, db, r, user)
 	if err != nil {
 		log.Printf("[%s] RenderHome ERROR, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -66,8 +66,8 @@ func RenderHome(
 	w.Write([]byte(html))
 }
 
-func templateOpenChat(app *state.State, db *db.DBConn, user *a.User) *template.ChatTemplate {
-	openChatId := app.GetOpenChat(user.Id)
+func templateOpenChat(state *state.State, db *db.DBConn, user *a.User) *template.ChatTemplate {
+	openChatId := state.GetOpenChat(user.Id)
 	if openChatId == 0 {
 		log.Printf("templateOpenchat DEBUG, user[%d] has no open chat\n", user.Id)
 		return nil
@@ -91,7 +91,7 @@ func templateOpenChat(app *state.State, db *db.DBConn, user *a.User) *template.C
 }
 
 func templateHome(
-	app *state.State,
+	state *state.State,
 	db *db.DBConn,
 	r *http.Request,
 	user *a.User,
@@ -102,8 +102,8 @@ func templateHome(
 		avatarTmpl = avatar.Template(user)
 	}
 
-	openChatTemplate := templateOpenChat(app, db, user)
-	chats, err := handler.GetChats(app, db, user.Id)
+	openChatTemplate := templateOpenChat(state, db, user)
+	chats, err := handler.GetChats(state, db, user.Id)
 	if err != nil {
 		log.Printf("[%s] templateHome ERROR, failed getting chats for user[%d], %s\n",
 			h.GetReqId(r), user.Id, err.Error())

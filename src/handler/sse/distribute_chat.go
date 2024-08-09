@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"prplchat/src/convert"
+	"prplchat/src/db"
 	"prplchat/src/handler/state"
 	"prplchat/src/model/app"
 	"prplchat/src/model/event"
@@ -12,10 +14,11 @@ import (
 // empty targetUser means all users in chat
 func DistributeChat(
 	state *state.State,
+	db *db.DBConn,
 	chat *app.Chat,
 	author *app.User, // who made the change
 	targetUser *app.User, // who to inform, nil for all users in chat
-	subjectUser *app.User, // user affected by change, nil for every user in chat
+	subjectUser *app.User, // viewer, user affected by change, nil for every user in chat
 	updateType event.EventType,
 ) error {
 	if author == nil {
@@ -33,8 +36,13 @@ func DistributeChat(
 	if targetUser != nil {
 		targetUsers = []*app.User{targetUser}
 	} else {
-		// have to get users by owner - author may have been removed
-		targetUsers, err = chat.GetUsers(chat.OwnerId)
+		dbUsers, err := db.GetChatUsers(chat.Id)
+		if err != nil {
+			return fmt.Errorf("fail to get owner[%d] from chat[%d], %s", chat.OwnerId, chat.Id, err)
+		}
+		for _, dbUser := range dbUsers {
+			targetUsers = append(targetUsers, convert.UserDBToApp(&dbUser))
+		}
 	}
 
 	if err != nil {

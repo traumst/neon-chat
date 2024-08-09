@@ -10,7 +10,7 @@ import (
 	h "prplchat/src/utils/http"
 )
 
-func AddMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func AddMessage(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] AddMessage TRACE\n", h.GetReqId(r))
 	if r.Method != "POST" {
 		log.Printf("[%s] AddMessage ERROR request method\n", h.GetReqId(r))
@@ -18,7 +18,7 @@ func AddMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 		w.Write([]byte("action not allowed"))
 		return
 	}
-	author, err := handler.ReadSession(app, db, w, r)
+	author, err := handler.ReadSession(state, db, w, r)
 	if err != nil || author == nil {
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
@@ -39,7 +39,7 @@ func AddMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 		return
 	}
 
-	message, err := handler.HandleMessageAdd(app, db, chatId, author, msg)
+	message, err := handler.HandleMessageAdd(state, db, chatId, author, msg)
 	if err != nil || message == nil {
 		log.Printf("[%s] AddMessage ERROR while handing, %s, %v\n", h.GetReqId(r), err.Error(), message)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -51,10 +51,10 @@ func AddMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusAccepted)
 }
 
-func DeleteMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func DeleteMessage(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] DeleteMessage\n", reqId)
-	user, err := handler.ReadSession(app, db, w, r)
+	user, err := handler.ReadSession(state, db, w, r)
 	if err != nil || user == nil {
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
@@ -77,7 +77,7 @@ func DeleteMessage(app *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 		return
 	}
 
-	deleted, err := handler.HandleMessageDelete(app, db, chatId, user, msgId)
+	deleted, err := handler.HandleMessageDelete(state, db, chatId, user, msgId)
 	if err != nil {
 		log.Printf("[%s] DeleteMessage ERROR %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
