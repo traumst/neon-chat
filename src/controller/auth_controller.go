@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"prplchat/src/convert"
 	d "prplchat/src/db"
 	"prplchat/src/handler"
 	"prplchat/src/handler/state"
@@ -218,7 +219,7 @@ func ConfirmEmail(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		w.Write([]byte("corrupted token"))
 		return
 	}
-	user := handler.UserDBToApp(dbUser)
+	user := convert.UserDBToApp(dbUser)
 	if user.Status != a.UserStatusPending {
 		log.Printf("[%s] ConfirmEmail ERROR user[%d] status[%s] is not pending\n", h.GetReqId(r), user.Id, user.Status)
 		w.WriteHeader(http.StatusBadRequest)

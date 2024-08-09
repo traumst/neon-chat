@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"log"
+	"prplchat/src/convert"
 	d "prplchat/src/db"
 	"prplchat/src/handler/sse"
 	"prplchat/src/handler/state"
@@ -117,7 +118,7 @@ func GetUser(db *d.DBConn, userId uint) (*a.User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("user[%d] not found: %s", userId, err.Error())
 	}
-	return UserDBToApp(dbUser), nil
+	return convert.UserDBToApp(dbUser), nil
 }
 
 func findUser(app *state.State, db *d.DBConn, userName string) (*a.User, error) {
@@ -128,7 +129,7 @@ func findUser(app *state.State, db *d.DBConn, userName string) (*a.User, error) 
 	}
 
 	log.Printf("FindUser TRACE OUT user[%s]\n", userName)
-	return UserDBToApp(dbUser), nil
+	return convert.UserDBToApp(dbUser), nil
 }
 
 func FindUsers(db *d.DBConn, userName string) ([]*a.User, error) {
@@ -143,7 +144,7 @@ func FindUsers(db *d.DBConn, userName string) ([]*a.User, error) {
 		if dbUser == nil {
 			continue
 		}
-		appUser := UserDBToApp(dbUser)
+		appUser := convert.UserDBToApp(dbUser)
 		appUsers = append(appUsers, appUser)
 	}
 
@@ -165,7 +166,7 @@ func expelUser(app *state.State, db *d.DBConn, user *a.User, chatId uint, expell
 		return nil, fmt.Errorf("failed to remove user[%d] from chat[%d]: %s", expelledId, chatId, err.Error())
 	}
 	err = app.CloseChat(expelledId, chatId)
-	appExpelled := UserDBToApp(dbExpelled)
+	appExpelled := convert.UserDBToApp(dbExpelled)
 	return appExpelled, nil
 }
 

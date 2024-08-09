@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"prplchat/src/convert"
 	"prplchat/src/db"
 	"prplchat/src/handler"
 	"prplchat/src/handler/state"
@@ -83,9 +84,9 @@ func templateOpenChat(app *state.State, db *db.DBConn, user *a.User) *template.C
 	}
 	appChatUsers := make([]*a.User, 0)
 	for _, dbUser := range dbChatUsers {
-		appChatUsers = append(appChatUsers, handler.UserDBToApp(&dbUser))
+		appChatUsers = append(appChatUsers, convert.UserDBToApp(&dbUser))
 	}
-	appChat := handler.ChatDBToApp(openChat)
+	appChat := convert.ChatDBToApp(openChat)
 	return appChat.Template(user, user, appChatUsers)
 }
 
@@ -97,7 +98,7 @@ func templateHome(
 ) (string, error) {
 	var avatarTmpl *template.AvatarTemplate
 	if dbAvatar, err := db.GetAvatar(user.Id); dbAvatar != nil && err == nil {
-		avatar := handler.AvatarDBToApp(dbAvatar)
+		avatar := convert.AvatarDBToApp(dbAvatar)
 		avatarTmpl = avatar.Template(user)
 	}
 

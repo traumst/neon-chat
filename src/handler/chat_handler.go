@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"log"
+	"prplchat/src/convert"
 	d "prplchat/src/db"
 	"prplchat/src/handler/sse"
 	"prplchat/src/handler/state"
@@ -29,7 +30,7 @@ func HandleChatAdd(app *state.State, db *d.DBConn, user *a.User, chatName string
 	if err != nil {
 		return "", fmt.Errorf("failed to get chat[%d] from db: %s", chat.Id, err)
 	}
-	appChat := ChatDBToApp(openChat)
+	appChat := convert.ChatDBToApp(openChat)
 	err = sse.DistributeChat(app, appChat, user, user, user, event.ChatAdd)
 	if err != nil {
 		log.Printf("HandleChatAdd ERROR cannot distribute chat[%d] creation to user[%d]: %s",
@@ -42,7 +43,7 @@ func HandleChatAdd(app *state.State, db *d.DBConn, user *a.User, chatName string
 		return appChat.Template(user, user, chatUsers).HTML()
 	}
 	for _, dbChatUser := range dbChatUsers {
-		chatUsers = append(chatUsers, UserDBToApp(&dbChatUser))
+		chatUsers = append(chatUsers, convert.UserDBToApp(&dbChatUser))
 	}
 	return appChat.Template(user, user, chatUsers).HTML()
 }
@@ -60,7 +61,7 @@ func HandleChatOpen(app *state.State, db *d.DBConn, user *a.User, chatId uint) (
 		welcome := template.WelcomeTemplate{User: *user.Template(0, 0, 0)}
 		return welcome.HTML()
 	}
-	appChat := ChatDBToApp(dbChat)
+	appChat := convert.ChatDBToApp(dbChat)
 	dbUsers, err := db.GetChatUsers(chatId)
 	if err != nil {
 		log.Printf("HandleChatOpen ERROR getting chat[%d] users for user[%d], %s\n", chatId, user.Id, err.Error())
@@ -68,7 +69,7 @@ func HandleChatOpen(app *state.State, db *d.DBConn, user *a.User, chatId uint) (
 	}
 	chatUsers := make([]*a.User, 0)
 	for _, dbUser := range dbUsers {
-		chatUsers = append(chatUsers, UserDBToApp(&dbUser))
+		chatUsers = append(chatUsers, convert.UserDBToApp(&dbUser))
 	}
 	return appChat.Template(user, user, chatUsers).HTML()
 }
@@ -95,7 +96,7 @@ func HandleChatDelete(app *state.State, db *d.DBConn, user *a.User, chatId uint)
 	if err != nil {
 		return fmt.Errorf("error deleting chat in db: %s", err.Error())
 	}
-	chat := ChatDBToApp(dbChat)
+	chat := convert.ChatDBToApp(dbChat)
 	err = sse.DistributeChat(app, chat, user, nil, user, event.ChatClose)
 	if err != nil {
 		log.Printf("HandleChatDelete ERROR cannot distribute chat close, %s", err.Error())
@@ -126,7 +127,7 @@ func GetChat(app *state.State, db *d.DBConn, user *a.User, chatId uint) (*a.Chat
 	if !utils.Contains(chatIds, chatId) {
 		return nil, fmt.Errorf("user[%d] is not in chat[%d]", user.Id, chatId)
 	}
-	return ChatDBToApp(dbChat), nil
+	return convert.ChatDBToApp(dbChat), nil
 }
 
 func GetChats(
@@ -145,7 +146,7 @@ func GetChats(
 			log.Printf("GetChats WARN chat[%d] owner[%d] not found\n", dbChat.Id, dbChat.OwnerId)
 			continue
 		}
-		chat := ChatDBToApp(&dbChat)
+		chat := convert.ChatDBToApp(&dbChat)
 		if chat == nil {
 			log.Printf("GetChats WARN chat[%d] failed to map from db to app\n", dbChat.Id)
 			continue

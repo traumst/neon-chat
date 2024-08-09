@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"log"
+	"prplchat/src/convert"
 	d "prplchat/src/db"
 	"prplchat/src/handler/sse"
 	"prplchat/src/handler/state"
@@ -38,8 +39,8 @@ func HandleMessageAdd(
 	if err != nil {
 		return nil, fmt.Errorf("failed to add message to chat[%d]: %s", chatId, err.Error())
 	}
-	appChat := ChatDBToApp(dbChat)
-	appMsg := MessageDBToApp(dbMsg, author)
+	appChat := convert.ChatDBToApp(dbChat)
+	appMsg := convert.MessageDBToApp(dbMsg, author)
 	err = sse.DistributeMsg(app, appChat, author.Id, &appMsg, event.MessageAdd)
 	if err != nil {
 		log.Printf("HandleMessageAdd ERROR distributing msg update, %s\n", err)
@@ -70,8 +71,8 @@ func HandleMessageDelete(
 	if err != nil {
 		return nil, fmt.Errorf("failed to remove message[%d] from chat[%d] in db, %s", msgId, chatId, err.Error())
 	}
-	appChat := ChatDBToApp(dbChat)
-	appMsg := MessageDBToApp(dbMsg, &a.User{Id: dbMsg.AuthorId}) // TODO bad user
+	appChat := convert.ChatDBToApp(dbChat)
+	appMsg := convert.MessageDBToApp(dbMsg, &a.User{Id: dbMsg.AuthorId}) // TODO bad user
 	err = sse.DistributeMsg(app, appChat, user.Id, &appMsg, event.MessageDrop)
 	if err != nil {
 		log.Printf("HandleMessageDelete ERROR distributing msg update, %s\n", err)

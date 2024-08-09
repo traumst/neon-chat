@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"prplchat/src/convert"
 	"prplchat/src/db"
 	"prplchat/src/handler"
 	"prplchat/src/handler/sse"
@@ -51,7 +52,7 @@ func AddAvatar(app *state.State, db *db.DBConn, w http.ResponseWriter, r *http.R
 		http.Error(w, "[fail]", http.StatusBadRequest)
 		return
 	}
-	avatar := handler.AvatarDBToApp(saved)
+	avatar := convert.AvatarDBToApp(saved)
 	tmpl := avatar.Template(user)
 	html, err := tmpl.HTML()
 	if err != nil {

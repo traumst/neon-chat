@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"prplchat/src/convert"
 	d "prplchat/src/db"
 	"prplchat/src/handler"
 	"prplchat/src/handler/state"
@@ -41,7 +42,7 @@ func OpenSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 
 	var avatarTmpl *t.AvatarTemplate
 	if avatar, _ := db.GetAvatar(user.Id); avatar != nil {
-		appAvatar := handler.AvatarDBToApp(avatar)
+		appAvatar := convert.AvatarDBToApp(avatar)
 		avatarTmpl = appAvatar.Template(user)
 	}
 	settings := t.UserSettingsTemplate{
@@ -83,7 +84,7 @@ func CloseSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 	openChatId := app.GetOpenChat(user.Id)
 	openChat, err := db.GetChat(openChatId)
 	if openChat != nil {
-		chat := handler.ChatDBToApp(openChat)
+		chat := convert.ChatDBToApp(openChat)
 		dbUsers, err := db.GetChatUsers(user.Id)
 		if err != nil {
 			log.Printf("[%s] CloseSettings ERROR getting chat[%d] users %s\n", h.GetReqId(r), openChatId, err)
@@ -93,7 +94,7 @@ func CloseSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 		}
 		var chatUsers []*a.User
 		for _, dbUser := range dbUsers {
-			chatUsers = append(chatUsers, handler.UserDBToApp(&dbUser))
+			chatUsers = append(chatUsers, convert.UserDBToApp(&dbUser))
 		}
 		html, err = chat.Template(user, user, chatUsers).HTML()
 	} else {
