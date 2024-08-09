@@ -193,7 +193,7 @@ func ChangeUser(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		return
 	}
 
-	err = sse.DistributeUserChange(state, nil, updatedUser, event.UserChange)
+	err = sse.DistributeUserChange(state, db, nil, updatedUser, event.UserChange)
 	if err != nil {
 		log.Printf("[%s] ChangeUser ERROR failed to distribute user change, %s\n", h.GetReqId(r), err.Error())
 		w.WriteHeader(http.StatusOK)

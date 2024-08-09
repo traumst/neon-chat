@@ -5,6 +5,8 @@ import (
 	"log"
 	"sync"
 
+	"prplchat/src/convert"
+	"prplchat/src/db"
 	"prplchat/src/handler/state"
 	"prplchat/src/model/app"
 	"prplchat/src/model/event"
@@ -13,6 +15,7 @@ import (
 // targetUser=nil means all users in chat
 func DistributeUserChange(
 	state *state.State,
+	db *db.DBConn,
 	targetUser *app.User, // who to inform, nil for all users
 	subjectUser *app.User, // which user changed
 	updateType event.EventType,
@@ -23,14 +26,19 @@ func DistributeUserChange(
 	if targetUser != nil {
 		return distributeUpdateOfUser(state, targetUser, subjectUser, updateType)
 	}
-	// get all common chats
-	chats := state.GetChats(subjectUser.Id)
-	if chats == nil {
+	dbChats, err := db.GetUserChats(subjectUser.Id)
+	if err != nil {
+		return fmt.Errorf("failed to get chats for user[%d], %s", subjectUser.Id, err)
+	}
+	var chats []*app.Chat
+	for _, dbChat := range dbChats {
+		chats = append(chats, convert.ChatDBToApp(&dbChat))
+	}
+	if len(chats) <= 0 {
 		log.Printf("userChanged WARN user[%d] has no chats\n", subjectUser.Id)
 		return fmt.Errorf("user[%d] has no chats", subjectUser.Id)
 	}
 	var wg sync.WaitGroup
-	var err error
 	for _, chat := range chats {
 		if chat == nil {
 			continue
@@ -38,7 +46,7 @@ func DistributeUserChange(
 		wg.Add(1)
 		go func(chat *app.Chat) {
 			defer wg.Done()
-			err := distributeInCommonChat(chat, state, subjectUser, updateType)
+			err := distributeInCommonChat(db, chat, state, subjectUser, updateType)
 			if err != nil {
 				log.Printf("userChanged ERROR failed to distribute to chat[%d], %s\n", chat.Id, err)
 			}
@@ -49,6 +57,7 @@ func DistributeUserChange(
 }
 
 func distributeInCommonChat(
+	db *db.DBConn,
 	chat *app.Chat,
 	state *state.State,
 	subjectUser *app.User,
