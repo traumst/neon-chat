@@ -35,12 +35,9 @@ Starting server...
 And the app should be available at http://localhost:8080
 
 ## TODOs
-
-### Persistence
-- chat and message persistence
-- consider replacing maps with lru cache in
-    - `type ActiveConnections map[uint][]*Conn`
-    - `type ChatList struct {` -> `open map[uint]*Chat`
++ Bugz after persistence changes
+    - Members are empty
+    - Can't invite users
 
 ### Message Broadcasting: 
 - msg should distribute to user connection, even if chat is closed
@@ -81,7 +78,7 @@ And the app should be available at http://localhost:8080
 - search messages by:
     - content
     - author
-- fuzzy name matching methods:
+- fuzzy search methods:
     - common key [C530, V500] - fast - mostly latin
         - https://www.sqlite.org/lang_corefunc.html#soundex
     - word embeding - %VALUE%
