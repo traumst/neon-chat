@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"prplchat/src/controller/shared"
 	"prplchat/src/convert"
 	d "prplchat/src/db"
 	"prplchat/src/handler"
@@ -79,7 +80,7 @@ func CloseSettings(state *state.State, db *d.DBConn, w http.ResponseWriter, r *h
 		w.Write([]byte("User is unauthorized"))
 		return
 	}
-	html, err := templateHome(state, db, r, user)
+	html, err := shared.TemplateHome(state, db, r, user)
 	if err != nil {
 		log.Printf("[%s] CloseSettings ERROR  %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)

@@ -55,46 +55,21 @@ func HandleChatOpen(state *state.State, db *d.DBConn, user *a.User, chatId uint)
 		welcome := template.WelcomeTemplate{User: *user.Template(0, 0, 0)}
 		return welcome.HTML()
 	}
-	dbChat, err := db.GetChat(chatId)
+	appChat, err := GetChat(state, db, user, chatId)
 	if err != nil {
 		log.Printf("HandleChatOpen ERROR opening chat[%d] for user[%d], %s\n", chatId, user.Id, err.Error())
 		welcome := template.WelcomeTemplate{User: *user.Template(0, 0, 0)}
 		return welcome.HTML()
 	}
-	appChat := convert.ChatDBToApp(dbChat)
-
-	dbChatUsers, err := db.GetChatUsers(chatId)
+	appChatUsers, err := GetChatUsers(db, chatId)
 	if err != nil {
 		log.Printf("HandleChatOpen ERROR getting chat[%d] users for user[%d], %s\n", chatId, user.Id, err.Error())
 		return appChat.Template(user, user, make([]*a.User, 0), make([]*a.Message, 0)).HTML()
 	}
-	appChatUsers := make([]*a.User, 0)
-	for _, dbUser := range dbChatUsers {
-		appChatUsers = append(appChatUsers, convert.UserDBToApp(&dbUser))
-	}
-
-	dbChatMsgs, err := db.GetMessages(chatId, 0)
+	appChatMsgs, err := GetChatMessages(db, chatId)
 	if err != nil {
 		log.Printf("HandleChatAdd ERROR getting chat[%d] messages: %s", appChat.Id, err)
 	}
-	appChatMsgs := make([]*a.Message, 0)
-	for _, dbMsg := range dbChatMsgs {
-		var appMsgAuthor *a.User
-		for _, appChatUser := range appChatUsers {
-			if appChatUser.Id == dbMsg.AuthorId {
-				appMsgAuthor = appChatUser
-				break
-			}
-		}
-		if appMsgAuthor == nil {
-			log.Printf("HandleChatAdd ERROR author[%d] of message[%d] not found in chat[%d]",
-				dbMsg.AuthorId, dbMsg.Id, chatId)
-			continue
-		}
-		appMsg := convert.MessageDBToApp(&dbMsg, appMsgAuthor)
-		appChatMsgs = append(appChatMsgs, &appMsg)
-	}
-
 	return appChat.Template(user, user, appChatUsers, appChatMsgs).HTML()
 }
 
