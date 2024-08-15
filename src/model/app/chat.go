@@ -52,7 +52,6 @@ func (c *Chat) Template(
 		}
 	} else {
 		log.Printf("Chat.Template INFO chat[%d] has no users\n", c.Id)
-		return nil
 	}
 	// current viewer + chat owner
 	var usr t.UserTemplate

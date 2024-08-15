@@ -56,7 +56,7 @@ func RenderHome(
 	log.Printf("[%s] RenderHome TRACE IN", h.GetReqId(r))
 	html, err := templateHome(state, db, r, user)
 	if err != nil {
-		log.Printf("[%s] RenderHome ERROR, %s\n", h.GetReqId(r), err)
+		log.Printf("[%s] RenderHome ERROR failed to template home, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to render home page"))
 		return
@@ -108,7 +108,7 @@ func templateHome(
 			h.GetReqId(r), user.Id, err.Error())
 		return "", err
 	}
-	var chatTemplates []*template.ChatTemplate
+	chatTemplates := make([]*template.ChatTemplate, 0)
 	for _, chat := range chats {
 		chatTemplates = append(chatTemplates, chat.Template(user, user, []*a.User{}, []*a.Message{}))
 	}

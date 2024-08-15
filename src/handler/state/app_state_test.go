@@ -21,7 +21,6 @@ func TestStateDefaults(t *testing.T) {
 	}
 }
 
-// CONN
 func TestAddConn(t *testing.T) {
 	t.Logf("TestAddConn started")
 	w := httptest.NewRecorder()
@@ -110,7 +109,6 @@ func TestDropConn(t *testing.T) {
 	}
 }
 
-// CHAT
 func TestOpenChat(t *testing.T) {
 	t.Logf("TestOpenChat started")
 	user := app.User{
