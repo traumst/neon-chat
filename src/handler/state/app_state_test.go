@@ -19,7 +19,6 @@ func TestStateDefaults(t *testing.T) {
 	if app1.config.CacheSize != 1024 {
 		t.Errorf("TestStateDefaults expected cache size 1024, got [%d]", app1.config.CacheSize)
 	}
-
 }
 
 // CONN
