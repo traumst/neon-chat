@@ -89,7 +89,7 @@ func TestSetNumericValue(t *testing.T) {
 	if storedInMap.id != 1 {
 		t.Fatalf("Expected storedInMap id to be 1")
 	}
-	if storedInMap.value != 1 {
+	if storedInMap.value != uint(1) {
 		t.Fatalf("Expected storedInMap value to be 1")
 	}
 	storedInList, err := cache.list.Get(1)
@@ -99,7 +99,7 @@ func TestSetNumericValue(t *testing.T) {
 	if storedInList.id != 1 {
 		t.Fatalf("Expected storedInList id to be 1")
 	}
-	if storedInList.value != 1 {
+	if storedInList.value != uint(1) {
 		t.Fatalf("Expected value to be 1")
 	}
 	if storedInList != storedInMap {

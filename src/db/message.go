@@ -73,6 +73,25 @@ func (db *DBConn) GetMessage(msgId uint) (*Message, error) {
 	return &message, nil
 }
 
+func (db *DBConn) GetMessages(chatId uint, offset int) ([]Message, error) {
+	if chatId == 0 {
+		return nil, fmt.Errorf("bad input: chatId[%d]", chatId)
+	}
+	if !db.ConnIsActive() {
+		return nil, fmt.Errorf("db is not connected")
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	var messages []Message
+	err := db.conn.Select(&messages, `SELECT * FROM messages where chat_id = ?`, chatId)
+	if err != nil {
+		return nil, fmt.Errorf("error getting chat[%d] messages: %s", chatId, err)
+	}
+	return messages, nil
+}
+
 func (db *DBConn) DeleteMessage(msgId uint) error {
 	if msgId == 0 {
 		return fmt.Errorf("cannot delete message with id [%d]", msgId)

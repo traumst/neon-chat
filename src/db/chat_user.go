@@ -134,21 +134,7 @@ func (db *DBConn) GetChatUsers(chatId uint) ([]User, error) {
 		return []User{}, nil
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	query, args, err := sqlx.In(`SELECT * FROM users WHERE id IN (?)`, userIds)
-	if err != nil {
-		return nil, fmt.Errorf("error preparing query with userIds[%v]: %s", userIds, err)
-	}
-	query = db.conn.Rebind(query)
-
-	var userChats []User
-	err = db.conn.Select(&userChats, query, args...)
-	if err != nil {
-		return nil, fmt.Errorf("error getting users int chat[%d]: %s", chatId, err)
-	}
-	return userChats, nil
+	return db.GetUsers(userIds)
 }
 
 func (db *DBConn) RemoveChatUser(chatId uint, userId uint) error {

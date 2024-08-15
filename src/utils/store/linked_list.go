@@ -42,6 +42,7 @@ func (ll *DoublyLinkedList) Size() int {
 func (ll *DoublyLinkedList) Count() int {
 	ll.mu.Lock()
 	defer ll.mu.Unlock()
+
 	return ll.count
 }
 

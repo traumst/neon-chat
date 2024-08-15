@@ -23,18 +23,36 @@ func NewLRUCache(size int) *LRUCache {
 }
 
 func (cache *LRUCache) Size() int {
+	if cache == nil {
+		panic("cache is nil")
+	}
+	if cache.list == nil {
+		panic("cache.list is nil")
+	}
 	return cache.list.Size()
 }
 
 func (cache *LRUCache) Count() int {
+	if cache == nil {
+		panic("cache is nil")
+	}
+	if cache.list == nil {
+		panic("cache.list is nil")
+	}
 	return cache.list.Count()
 }
 
 func (cache *LRUCache) CleanupRatio() int {
+	if cache == nil {
+		panic("cache is nil")
+	}
 	return int(math.Ceil(cache.cleanupRatio * float64(cache.Size())))
 }
 
 func (cache *LRUCache) Set(key uint, value interface{}) error {
+	if cache == nil {
+		panic("cache is nil")
+	}
 	if cache.Count()+1 > cache.Size() {
 		n := cache.CleanupRatio()
 		_, err := cache.Drop(n)

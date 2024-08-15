@@ -8,7 +8,6 @@ import (
 	d "prplchat/src/db"
 	"prplchat/src/handler"
 	"prplchat/src/handler/state"
-	a "prplchat/src/model/app"
 	t "prplchat/src/model/template"
 	h "prplchat/src/utils/http"
 )
@@ -80,27 +79,7 @@ func CloseSettings(state *state.State, db *d.DBConn, w http.ResponseWriter, r *h
 		w.Write([]byte("User is unauthorized"))
 		return
 	}
-	var html string
-	openChatId := state.GetOpenChat(user.Id)
-	openChat, err := db.GetChat(openChatId)
-	if openChat != nil {
-		chat := convert.ChatDBToApp(openChat)
-		dbUsers, err := db.GetChatUsers(user.Id)
-		if err != nil {
-			log.Printf("[%s] CloseSettings ERROR getting chat[%d] users %s\n", h.GetReqId(r), openChatId, err)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Failed to get chat users"))
-			return
-		}
-		var chatUsers []*a.User
-		for _, dbUser := range dbUsers {
-			chatUsers = append(chatUsers, convert.UserDBToApp(&dbUser))
-		}
-		html, err = chat.Template(user, user, chatUsers).HTML()
-	} else {
-		welcome := t.WelcomeTemplate{User: *user.Template(0, 0, 0)}
-		html, err = welcome.HTML()
-	}
+	html, err := templateHome(state, db, r, user)
 	if err != nil {
 		log.Printf("[%s] CloseSettings ERROR  %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)

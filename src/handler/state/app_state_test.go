@@ -10,6 +10,18 @@ import (
 	h "prplchat/src/utils/http"
 )
 
+func TestStateDefaults(t *testing.T) {
+	app1 := &GlobalAppState
+	app1.Init(utils.Config{})
+	if app1.isInit != true {
+		t.Errorf("TestStateDefaults expected isInit true, got [%v]", app1.isInit)
+	}
+	if app1.config.CacheSize != 1024 {
+		t.Errorf("TestStateDefaults expected cache size 1024, got [%d]", app1.config.CacheSize)
+	}
+
+}
+
 // CONN
 func TestAddConn(t *testing.T) {
 	t.Logf("TestAddConn started")
@@ -108,7 +120,17 @@ func TestOpenChat(t *testing.T) {
 		// Type: app.UserType(app.UserTypeBasic),
 	}
 	app1 := &GlobalAppState
-	app1.Init(utils.Config{})
+	app1.Init(utils.Config{
+		Port:   0,
+		Sqlite: "",
+		Smtp: utils.SmtpConfig{
+			User: "",
+			Pass: "",
+			Host: "",
+			Port: "",
+		},
+		CacheSize: 0,
+	})
 	err := app1.OpenChat(user.Id, 22)
 	if err != nil {
 		t.Fatalf("TestOpenChat expected no error, %s", err.Error())

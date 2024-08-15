@@ -12,7 +12,7 @@ import (
 
 func chatCreate(conn *state.Conn, targetChat *app.Chat) error {
 	log.Printf("chatCreate TRACE chat[%d] created by user[%d]\n", targetChat.Id, targetChat.OwnerId)
-	template := targetChat.Template(conn.User, conn.User, []*app.User{conn.User})
+	template := targetChat.Template(conn.User, conn.User, []*app.User{conn.User}, []*app.Message{})
 	data, err := template.ShortHTML()
 	if err != nil {
 		return err
@@ -41,7 +41,7 @@ func chatInvite(conn *state.Conn, targetChat *app.Chat, authorId uint, subject *
 	if authorId == conn.User.Id || conn.User.Id != subject.Id {
 		return fmt.Errorf("chatCreate conn[%s] does not belong to user[%d]", conn.Origin, subject.Id)
 	}
-	template := targetChat.Template(subject, conn.User, []*app.User{subject}) // TODO BAD?
+	template := targetChat.Template(subject, conn.User, []*app.User{subject}, nil) // TODO BAD?
 	data, err := template.ShortHTML()
 	if err != nil {
 		return err

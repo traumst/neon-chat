@@ -121,6 +121,18 @@ func GetUser(db *d.DBConn, userId uint) (*a.User, error) {
 	return convert.UserDBToApp(dbUser), nil
 }
 
+func GetChatUsers(db *d.DBConn, chatId uint) ([]*a.User, error) {
+	dbChatUsers, err := db.GetChatUsers(chatId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get users of chat[%d], %s", chatId, err.Error())
+	}
+	appChatUsers := make([]*a.User, 0)
+	for _, dbUser := range dbChatUsers {
+		appChatUsers = append(appChatUsers, convert.UserDBToApp(&dbUser))
+	}
+	return appChatUsers, nil
+}
+
 func findUser(db *d.DBConn, userName string) (*a.User, error) {
 	log.Printf("FindUser TRACE IN user[%s]\n", userName)
 	dbUser, err := db.SearchUser(userName)
@@ -166,6 +178,9 @@ func expelUser(state *state.State, db *d.DBConn, user *a.User, chatId uint, expe
 		return nil, fmt.Errorf("failed to remove user[%d] from chat[%d]: %s", expelledId, chatId, err.Error())
 	}
 	err = state.CloseChat(expelledId, chatId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to close chat[%d] for user[%d]: %s", chatId, expelledId, err.Error())
+	}
 	appExpelled := convert.UserDBToApp(dbExpelled)
 	return appExpelled, nil
 }

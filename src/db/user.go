@@ -2,6 +2,8 @@ package db
 
 import (
 	"fmt"
+
+	"github.com/jmoiron/sqlx"
 )
 
 const minUserNameLen = 3
@@ -133,11 +135,8 @@ func (db *DBConn) GetUser(id uint) (*User, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
-	if !db.isConn || !db.isInit {
+	if !db.ConnIsActive() {
 		return nil, fmt.Errorf("db is not connected")
-	}
-	if id <= 0 {
-		return nil, fmt.Errorf("id was 0")
 	}
 
 	db.mu.Lock()
@@ -149,6 +148,31 @@ func (db *DBConn) GetUser(id uint) (*User, error) {
 		return nil, fmt.Errorf("userId[%d] not found: %s", id, err)
 	}
 	return &user, err
+}
+
+func (db *DBConn) GetUsers(userIds []uint) ([]User, error) {
+	if len(userIds) <= 0 {
+		return []User{}, nil
+	}
+	if !db.ConnIsActive() {
+		return nil, fmt.Errorf("db is not connected")
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	query, args, err := sqlx.In(`SELECT * FROM users WHERE id IN (?)`, userIds)
+	if err != nil {
+		return nil, fmt.Errorf("error preparing query with userIds[%v]: %s", userIds, err)
+	}
+	query = db.conn.Rebind(query)
+
+	var userChats []User
+	err = db.conn.Select(&userChats, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("error getting users[%v]: %s", userIds, err)
+	}
+	return userChats, nil
 }
 
 func (db *DBConn) UpdateUserName(userId uint, userName string) error {

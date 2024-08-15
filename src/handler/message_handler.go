@@ -79,3 +79,39 @@ func HandleMessageDelete(
 	}
 	return &appMsg, err
 }
+
+func GetChatMessages(db *d.DBConn, chatId uint) ([]*a.Message, error) {
+	// TODO offset := 0 means no offset, ie get entire chat history
+	dbMsgs, err := db.GetMessages(chatId, 0)
+	if err != nil {
+		return nil, fmt.Errorf("failed getting chat[%d] messages, %s", chatId, err.Error())
+	}
+	msgAuthorIds := make(map[uint]bool)
+	authorIds := make([]uint, 0)
+	for _, dbMsg := range dbMsgs {
+		if msgAuthorIds[dbMsg.AuthorId] {
+			continue
+		}
+		msgAuthorIds[dbMsg.AuthorId] = true
+		authorIds = append(authorIds, dbMsg.AuthorId)
+	}
+	dbUsers, err := db.GetUsers(authorIds)
+	if err != nil {
+		return nil, fmt.Errorf("failed getting chat[%d] users[%v], %s", chatId, authorIds, err.Error())
+	}
+	msgAuthors := make(map[uint]*a.User)
+	for _, dbUser := range dbUsers {
+		msgAuthors[dbUser.Id] = convert.UserDBToApp(&dbUser)
+	}
+	appChatMsgs := make([]*a.Message, 0)
+	for _, dbMsg := range dbMsgs {
+		author, ok := msgAuthors[dbMsg.AuthorId]
+		if !ok {
+			log.Printf("GetChatMessages ERROR author[%d] of message[%d] is not mapped\n", dbMsg.AuthorId, dbMsg.Id)
+			continue
+		}
+		appMsg := convert.MessageDBToApp(&dbMsg, author)
+		appChatMsgs = append(appChatMsgs, &appMsg)
+	}
+	return appChatMsgs, nil
+}
