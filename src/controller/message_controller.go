@@ -24,16 +24,16 @@ func AddMessage(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		return
 	}
 
-	chatId, err := handler.FormValueUint(r, "chatId")
+	chatId, err := handler.FormValueUint(r, "chatid")
 	if err != nil {
-		log.Printf("[%s] AddMessage WARN \n", h.GetReqId(r))
+		log.Printf("[%s] AddMessage WARN bad argument - chatid\n", h.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid chat id"))
 		return
 	}
 	msg, err := handler.FormValueString(r, "msg")
 	if err != nil || len(msg) < 1 {
-		log.Printf("[%s] AddMessage WARN \n", h.GetReqId(r))
+		log.Printf("[%s] AddMessage WARN bad argument - msg\n", h.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("message too short"))
 		return

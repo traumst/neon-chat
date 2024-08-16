@@ -36,8 +36,8 @@ And the app should be available at http://localhost:8080
 
 ## TODOs
 + Bugz after persistence changes
-    - Members are empty
-    - Can't invite users
+    - templating issues - msgid, chatid, etc are empty
+        - message delete fails
 
 ### Message Broadcasting: 
 - msg should distribute to user connection, even if chat is closed
