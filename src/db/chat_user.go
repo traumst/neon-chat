@@ -118,9 +118,9 @@ func (db *DBConn) GetChatUserIds(chatId uint) ([]uint, error) {
 	defer db.mu.Unlock()
 
 	var userIds []uint
-	err := db.conn.Select(&userIds, `SELECT userId FROM chat_users WHERE chat_id = ?`, chatId)
+	err := db.conn.Select(&userIds, `SELECT user_id FROM chat_users WHERE chat_id = ?`, chatId)
 	if err != nil {
-		return nil, fmt.Errorf("error adding user: %s", err.Error())
+		return nil, fmt.Errorf("error getting chat users: %s", err.Error())
 	}
 	return userIds, nil
 }
