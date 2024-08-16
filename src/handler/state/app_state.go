@@ -17,7 +17,6 @@ var GlobalAppState State
 type State struct {
 	mu     sync.Mutex
 	isInit bool
-	// users  store.LRUCache
 	chats  store.LRUCache
 	conns  OpenConnections
 	config utils.Config
@@ -35,53 +34,61 @@ func (state *State) Init(config utils.Config) {
 	}
 }
 
-func (state *State) SmtpConfig() utils.SmtpConfig {
-	return state.config.Smtp
+func (state *State) SmtpConfig() (*utils.SmtpConfig, error) {
+	if !state.isInit {
+		return nil, fmt.Errorf("state is not initialized")
+	}
+	return &state.config.Smtp, nil
 }
 
 // CONN
 func (state *State) AddConn(w http.ResponseWriter, r http.Request, user *app.User, openChat *app.Chat) *Conn {
+	if !state.isInit {
+		log.Printf("AddConn ERROR state is not initialized")
+		return nil
+	}
 	state.mu.Lock()
 	defer state.mu.Unlock()
-	if state.conns == nil {
-		panic("AddConn state.conns is nil")
-	}
-
 	return state.conns.Add(user, h.GetReqId(&r), w, r)
 }
 
 func (state *State) GetConn(userId uint) []*Conn {
+	if !state.isInit {
+		log.Printf("GetConn ERROR state is not initialized")
+		return nil
+	}
 	state.mu.Lock()
 	defer state.mu.Unlock()
-	if state.conns == nil {
-		panic("GetConn state.conns is nil")
-	}
-
 	return state.conns.Get(userId)
 }
 
 func (state *State) DropConn(conn *Conn) error {
+	if !state.isInit {
+		log.Printf("DropConn ERROR state is not initialized")
+		return fmt.Errorf("state is not initialized")
+	}
 	state.mu.Lock()
 	defer state.mu.Unlock()
-	if state.conns == nil {
-		panic("DropConn state.conns is nil")
-	}
-
 	return state.conns.Drop(conn)
 }
 
 func (state *State) OpenChat(userId uint, chatId uint) error {
+	if !state.isInit {
+		log.Printf("OpenChat ERROR state is not initialized")
+		return fmt.Errorf("state is not initialized")
+	}
 	state.mu.Lock()
 	defer state.mu.Unlock()
-
-	log.Printf("AppState.OpenChat TRACE open chat[%d] for user[%d]\n", chatId, userId)
 	return state.chats.Set(userId, chatId)
 }
 
 func (state *State) GetOpenChat(userId uint) uint {
+	if !state.isInit {
+		log.Printf("GetOpenChat ERROR state is not initialized")
+		return 0
+	}
 	state.mu.Lock()
 	defer state.mu.Unlock()
-	log.Printf("AppState.GetOpenChat TRACE get open chat for user[%d]\n", userId)
 	chatIdWrap, err := state.chats.Get(userId)
 	if err != nil {
 		return 0
@@ -94,10 +101,12 @@ func (state *State) GetOpenChat(userId uint) uint {
 }
 
 func (state *State) CloseChat(userId uint, chatId uint) error {
+	if !state.isInit {
+		log.Printf("GetOpenChat ERROR state is not initialized")
+		return fmt.Errorf("state is not initialized")
+	}
 	state.mu.Lock()
 	defer state.mu.Unlock()
-
-	log.Printf("AppState.CloseChat TRACE close chat[%d] for user[%d]\n", chatId, userId)
 	removedIdWrap, err := state.chats.Take(userId)
 	if err != nil {
 		return err
@@ -109,8 +118,8 @@ func (state *State) CloseChat(userId uint, chatId uint) error {
 	if removedId != 0 && removedId != chatId {
 		state.chats.Set(userId, removedId)
 	}
-	if ok {
-		return nil
+	if !ok {
+		return fmt.Errorf("failed to remove chat[%d] for user[%d], checked[%d]", chatId, userId, removedId)
 	}
-	return fmt.Errorf("failed to remove chat[%d] for user[%d], checked[%d]", chatId, userId, removedId)
+	return nil
 }

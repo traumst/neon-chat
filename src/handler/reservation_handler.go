@@ -19,7 +19,10 @@ func IssueReservationToken(state *state.State, db *d.DBConn, user *a.User) (*t.V
 		log.Printf("IssueReservationToken ERROR reserving[%s], %s\n", user.Email, err.Error())
 		return nil, fmt.Errorf("")
 	}
-	emailConfig := state.SmtpConfig()
+	emailConfig, err := state.SmtpConfig()
+	if err != nil {
+		panic(fmt.Errorf("IssueReservationToken ERROR getting smtp config, %s", err.Error()))
+	}
 	tmpl := t.VerifyEmailTemplate{
 		SourceEmail: emailConfig.User,
 		UserEmail:   user.Email,

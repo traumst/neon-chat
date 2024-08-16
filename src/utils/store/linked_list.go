@@ -70,13 +70,11 @@ func (ll *DoublyLinkedList) AddHead(new *node) error {
 		return fmt.Errorf("list is full: count[%d] size[%d]", ll.count, ll.size)
 	}
 	if ll.head == nil && ll.tail == nil {
-		log.Printf("DoublyLinkedList.AddHead TRACE adding first[%d]", new.id)
 		new.prev = nil
 		new.next = nil
 		ll.head = new
 		ll.tail = new
 	} else if ll.head != nil && ll.tail != nil {
-		log.Printf("DoublyLinkedList.AddHead TRACE adding head[%d]", new.id)
 		new.next = ll.head
 		new.prev = nil
 		ll.head.prev = new
@@ -102,7 +100,6 @@ func (ll *DoublyLinkedList) Bump(node *node) ([]uint, error) {
 	}
 	err := ll.AddHead(removed)
 	if err == nil {
-		log.Printf("DoublyLinkedList.Bump TRACE re-added node[%d]", node.id)
 		return nil, nil
 	}
 	log.Printf("DoublyLinkedList.Bump WARN failed to re-add node[%d], %s", node.id, err.Error())
@@ -125,7 +122,8 @@ func (ll *DoublyLinkedList) Bump(node *node) ([]uint, error) {
 func (ll *DoublyLinkedList) Prune(drop int) (int, []uint, error) {
 	if drop < 1 || drop > MaxSize {
 		def := 1 + (ll.Size() / 8)
-		log.Printf("Invalid prune size should be [1 <= %d <= %d], using default[%d]", drop, MaxSize, def)
+		log.Printf("DoublyLinkedList.Prune WARN Invalid prune size, should be [1 <= %d <= %d], using default[%d]",
+			drop, MaxSize, def)
 		drop = def
 	}
 	ll.mu.Lock()

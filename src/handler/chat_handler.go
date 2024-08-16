@@ -64,7 +64,7 @@ func HandleChatOpen(state *state.State, db *d.DBConn, user *a.User, chatId uint)
 	appChatUsers, err := GetChatUsers(db, chatId)
 	if err != nil {
 		log.Printf("HandleChatOpen ERROR getting chat[%d] users for user[%d], %s\n", chatId, user.Id, err.Error())
-		return appChat.Template(user, user, make([]*a.User, 0), make([]*a.Message, 0)).HTML()
+		return appChat.Template(user, user, nil, nil).HTML()
 	}
 	appChatMsgs, err := GetChatMessages(db, chatId)
 	if err != nil {

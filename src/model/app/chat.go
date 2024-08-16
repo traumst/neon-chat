@@ -12,6 +12,8 @@ type Chat struct {
 	OwnerName string
 }
 
+// Short html template does not require members or messages
+//
 // Parameters:
 //
 //	user: user who triggered state change
@@ -23,36 +25,6 @@ func (c *Chat) Template(
 	members []*User,
 	msgs []*Message,
 ) *t.ChatTemplate {
-	// chat messages
-	msgCount := len(msgs)
-	messages := make([]t.MessageTemplate, msgCount)
-	if msgCount > 0 {
-		for _, msg := range msgs {
-			if msg == nil {
-				continue
-			}
-			messages = append(messages, *msg.Template(viewer))
-		}
-	} else {
-		log.Printf("Chat.Template INFO chat[%d] has no messages\n", c.Id)
-	}
-	// chat users
-	userCount := len(members)
-	users := make([]t.UserTemplate, userCount)
-	if userCount > 0 {
-		for i, member := range members {
-			users[i] = t.UserTemplate{
-				ChatId:      c.Id,
-				ChatOwnerId: c.OwnerId,
-				UserId:      member.Id,
-				UserName:    member.Name,
-				UserEmail:   member.Email,
-				ViewerId:    viewer.Id,
-			}
-		}
-	} else {
-		log.Printf("Chat.Template INFO chat[%d] has no users\n", c.Id)
-	}
 	// current viewer + chat owner
 	var usr t.UserTemplate
 	var ownr t.UserTemplate
@@ -74,6 +46,35 @@ func (c *Chat) Template(
 	} else {
 		log.Printf("Chat.Template ERROR viewer cannot be nil\n")
 		return nil
+	}
+	// chat users
+	users := make([]t.UserTemplate, 0)
+	if len(members) > 0 {
+		for i, member := range members {
+			users[i] = t.UserTemplate{
+				ChatId:      c.Id,
+				ChatOwnerId: c.OwnerId,
+				UserId:      member.Id,
+				UserName:    member.Name,
+				UserEmail:   member.Email,
+				ViewerId:    viewer.Id,
+			}
+		}
+	} else {
+		log.Printf("Chat.Template INFO chat[%d] has no users\n", c.Id)
+	}
+	// chat messages
+	messages := make([]t.MessageTemplate, 0)
+	if len(msgs) > 0 {
+		for idx, msg := range msgs {
+			if msg == nil {
+				log.Printf("Chat.Template TRACE skip nil msg on index[%d] in chat[%d]\n", idx, c.Id)
+				continue
+			}
+			messages = append(messages, *msg.Template(viewer))
+		}
+	} else {
+		log.Printf("Chat.Template INFO chat[%d] has no messages\n", c.Id)
 	}
 	// chat
 	return &t.ChatTemplate{

@@ -30,9 +30,9 @@ func TemplateHome(
 			h.GetReqId(r), user.Id, err.Error())
 		return "", err
 	}
-	chatTemplates := make([]*template.ChatTemplate, 0)
+	var chatTemplates []*template.ChatTemplate
 	for _, chat := range chats {
-		chatTemplates = append(chatTemplates, chat.Template(user, user, []*app.User{}, []*app.Message{}))
+		chatTemplates = append(chatTemplates, chat.Template(user, user, nil, nil))
 	}
 	var openChatId uint
 	var chatOwnerId uint
