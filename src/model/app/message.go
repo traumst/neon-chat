@@ -12,10 +12,11 @@ type Message struct {
 	Text   string
 }
 
-func (m *Message) Template(viewer *User) *template.MessageTemplate {
+func (m *Message) Template(viewer *User, ownerName string) *template.MessageTemplate {
 	return &template.MessageTemplate{
-		MsgId:            m.Id,
-		ChatId:           m.ChatId,
+		MsgId:  m.Id,
+		ChatId: m.ChatId,
+		//Owner:            ownerName,
 		Author:           m.Author.Name,
 		Text:             m.Text,
 		ActiveUser:       viewer.Name,

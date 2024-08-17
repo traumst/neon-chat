@@ -7,8 +7,9 @@ import (
 )
 
 type MessageTemplate struct {
-	MsgId            uint
-	ChatId           uint
+	MsgId  uint
+	ChatId uint
+	// TODO use ids instead of names
 	Owner            string
 	Author           string
 	Text             string
@@ -35,9 +36,9 @@ func (m *MessageTemplate) validate() error {
 	if m.ChatId < 1 {
 		return fmt.Errorf("MessageTemplate requires ChatId, but is [%d]", m.ChatId)
 	}
-	if len(m.Owner) < 1 {
-		return fmt.Errorf("MessageTemplate requires Owner, but is [%s]", m.Owner)
-	}
+	// if len(m.Owner) < 1 {
+	// 	return fmt.Errorf("MessageTemplate requires Owner, but is [%s]", m.Owner)
+	// }
 	if len(m.Author) < 1 {
 		return fmt.Errorf("MessageTemplate requires Author, but is [%s]", m.Author)
 	}

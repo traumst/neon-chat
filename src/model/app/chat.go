@@ -34,6 +34,7 @@ func (c *Chat) Template(
 			ChatOwnerId: c.OwnerId,
 			UserId:      viewer.Id,
 			UserName:    viewer.Name,
+			UserEmail:   viewer.Email,
 			ViewerId:    viewer.Id,
 		}
 		ownr = t.UserTemplate{
@@ -41,7 +42,8 @@ func (c *Chat) Template(
 			ChatOwnerId: c.OwnerId,
 			UserId:      c.OwnerId,
 			UserName:    c.OwnerName,
-			ViewerId:    viewer.Id,
+			//UserEmail:   c.OwnerEmail,
+			ViewerId: viewer.Id,
 		}
 	} else {
 		log.Printf("Chat.Template ERROR viewer cannot be nil\n")
@@ -50,15 +52,19 @@ func (c *Chat) Template(
 	// chat users
 	users := make([]t.UserTemplate, 0)
 	if len(members) > 0 {
-		for i, member := range members {
-			users[i] = t.UserTemplate{
+		for _, member := range members {
+			if member == nil {
+				log.Printf("Chat.Template TRACE skip nil member in chat[%d]\n", c.Id)
+				continue
+			}
+			users = append(users, t.UserTemplate{
 				ChatId:      c.Id,
 				ChatOwnerId: c.OwnerId,
 				UserId:      member.Id,
 				UserName:    member.Name,
 				UserEmail:   member.Email,
 				ViewerId:    viewer.Id,
-			}
+			})
 		}
 	} else {
 		log.Printf("Chat.Template INFO chat[%d] has no users\n", c.Id)
@@ -71,7 +77,7 @@ func (c *Chat) Template(
 				log.Printf("Chat.Template TRACE skip nil msg on index[%d] in chat[%d]\n", idx, c.Id)
 				continue
 			}
-			messages = append(messages, *msg.Template(viewer))
+			messages = append(messages, *msg.Template(viewer, ownr.UserName))
 		}
 	} else {
 		log.Printf("Chat.Template INFO chat[%d] has no messages\n", c.Id)

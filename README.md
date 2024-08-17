@@ -36,8 +36,7 @@ And the app should be available at http://localhost:8080
 
 ## TODOs
 + Bugz after persistence changes
-    - templating issues - msgid, chatid, etc are empty
-        - message delete fails
++ Introduce Tmpl
 
 ### Message Broadcasting: 
 - msg should distribute to user connection, even if chat is closed

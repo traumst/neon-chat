@@ -42,14 +42,14 @@ func DistributeMsg(
 		go func(user app.User, msg app.Message) {
 			defer wg.Done()
 			log.Printf("DistributeMsg TRACE new message will be sent to user[%d]\n", user.Id)
-			data, err := msg.Template(&user).HTML()
+			data, err := msg.Template(&user, chat.OwnerName).HTML()
 			if err != nil {
-				errors = append(errors, err.Error())
+				errors = append(errors, fmt.Sprintf("template:%s", err.Error()))
 				return
 			}
 			err = distributeMsgToUser(state, chat.Id, msg.Id, user.Id, authorId, updateType, data)
 			if err != nil {
-				errors = append(errors, err.Error())
+				errors = append(errors, fmt.Sprintf("distribute:%s", err.Error()))
 			}
 		}(*user, *msg)
 	}
