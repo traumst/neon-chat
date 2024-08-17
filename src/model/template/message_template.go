@@ -7,13 +7,12 @@ import (
 )
 
 type MessageTemplate struct {
-	MsgId  uint
-	ChatId uint
-	// TODO use ids instead of names
-	Owner            string
-	Author           string
+	ChatId           uint
+	MsgId            uint
+	ViewerName       string
+	OwnerName        string
+	AuthorName       string
 	Text             string
-	ActiveUser       string
 	MessageDropEvent string
 }
 
@@ -30,26 +29,26 @@ func (m *MessageTemplate) HTML() (string, error) {
 }
 
 func (m *MessageTemplate) validate() error {
-	if m.MsgId < 1 {
-		return fmt.Errorf("MessageTemplate requires MsgId, but is [%d]", m.MsgId)
-	}
 	if m.ChatId < 1 {
-		return fmt.Errorf("MessageTemplate requires ChatId, but is [%d]", m.ChatId)
+		return fmt.Errorf("MessageTemplate requires ChatId but is [%d]", m.ChatId)
 	}
-	// if len(m.Owner) < 1 {
-	// 	return fmt.Errorf("MessageTemplate requires Owner, but is [%s]", m.Owner)
-	// }
-	if len(m.Author) < 1 {
-		return fmt.Errorf("MessageTemplate requires Author, but is [%s]", m.Author)
+	if m.MsgId < 1 {
+		return fmt.Errorf("MessageTemplate requires MsgId but is [%d]", m.MsgId)
+	}
+	if len(m.ViewerName) < 1 {
+		return fmt.Errorf("MessageTemplate requires ViewerName but is [%s]", m.ViewerName)
+	}
+	if len(m.OwnerName) < 1 {
+		return fmt.Errorf("MessageTemplate requires OwnerName but is [%s]", m.OwnerName)
+	}
+	if len(m.AuthorName) < 1 {
+		return fmt.Errorf("MessageTemplate requires AuthorName but is [%s]", m.AuthorName)
 	}
 	if len(m.Text) < 1 {
-		return fmt.Errorf("MessageTemplate requires Text, but is [%s]", m.Text)
-	}
-	if len(m.ActiveUser) < 1 {
-		return fmt.Errorf("MessageTemplate requires ActiveUser, but is [%s]", m.ActiveUser)
+		return fmt.Errorf("MessageTemplate requires Text but is [%s]", m.Text)
 	}
 	if len(m.MessageDropEvent) < 1 {
-		return fmt.Errorf("MessageTemplate requires MessageDropEvent, but is [%s]", m.MessageDropEvent)
+		return fmt.Errorf("MessageTemplate requires MessageDropEvent but is [%s]", m.MessageDropEvent)
 	}
 	return nil
 }
