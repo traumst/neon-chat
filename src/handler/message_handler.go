@@ -39,9 +39,13 @@ func HandleMessageAdd(
 	if err != nil {
 		return nil, fmt.Errorf("failed to add message to chat[%d]: %s", chatId, err.Error())
 	}
-	appChat := convert.ChatDBToApp(dbChat)
+	dbOwner, err := db.GetUser(dbChat.OwnerId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get chat[%d] owner[%d] from db: %s", chatId, dbChat.OwnerId, err.Error())
+	}
+	appChat := convert.ChatDBToApp(dbChat, convert.UserDBToApp(dbOwner))
 	appMsg := convert.MessageDBToApp(dbMsg, author)
-	err = sse.DistributeMsg(state, db, appChat, author.Id, &appMsg, event.MessageAdd)
+	err = sse.DistributeMsg(state, db, appChat, &appMsg, event.MessageAdd)
 	if err != nil {
 		log.Printf("HandleMessageAdd ERROR distributing msg update, %s\n", err)
 	}
@@ -71,9 +75,13 @@ func HandleMessageDelete(
 	if err != nil {
 		return nil, fmt.Errorf("failed to remove message[%d] from chat[%d] in db, %s", msgId, chatId, err.Error())
 	}
-	appChat := convert.ChatDBToApp(dbChat)
+	appChatOwner, _ := GetUser(db, dbChat.OwnerId)
+	if appChatOwner == nil {
+		return nil, fmt.Errorf("chat[%d] owner[%d] not found", dbChat.Id, dbChat.OwnerId)
+	}
+	appChat := convert.ChatDBToApp(dbChat, appChatOwner)
 	appMsg := convert.MessageDBToApp(dbMsg, &a.User{Id: dbMsg.AuthorId}) // TODO bad user
-	err = sse.DistributeMsg(state, db, appChat, user.Id, &appMsg, event.MessageDrop)
+	err = sse.DistributeMsg(state, db, appChat, &appMsg, event.MessageDrop)
 	if err != nil {
 		log.Printf("HandleMessageDelete ERROR distributing msg update, %s\n", err)
 	}

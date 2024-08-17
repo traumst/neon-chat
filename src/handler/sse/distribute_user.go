@@ -30,17 +30,14 @@ func DistributeUserChange(
 	if err != nil {
 		return fmt.Errorf("failed to get chats for user[%d], %s", subjectUser.Id, err)
 	}
-	var chats []*app.Chat
-	for _, dbChat := range dbChats {
-		chats = append(chats, convert.ChatDBToApp(&dbChat))
-	}
-	if len(chats) <= 0 {
+	appChats, err := convertToApp(db, dbChats)
+	if len(appChats) <= 0 {
 		log.Printf("userChanged WARN user[%d] has no chats\n", subjectUser.Id)
 		return fmt.Errorf("user[%d] has no chats", subjectUser.Id)
 	}
 	var wg sync.WaitGroup
-	for _, chat := range chats {
-		if chat == nil {
+	for _, appChat := range appChats {
+		if appChat == nil {
 			continue
 		}
 		wg.Add(1)
@@ -50,10 +47,43 @@ func DistributeUserChange(
 			if err != nil {
 				log.Printf("userChanged ERROR failed to distribute to chat[%d], %s\n", chat.Id, err)
 			}
-		}(chat)
+		}(appChat)
 	}
 	wg.Wait()
 	return err
+}
+
+func convertToApp(db *db.DBConn, dbChats []db.Chat) ([]*app.Chat, error) {
+	// chatId by userId
+	chatIdToOwnerId := make(map[uint]uint)
+	// owners by userId
+	ownerIdSet := make(map[uint]bool)
+	ownerIds := make([]uint, 0)
+	for _, dbChat := range dbChats {
+		chatIdToOwnerId[dbChat.Id] = dbChat.OwnerId
+		if _, ok := ownerIdSet[dbChat.OwnerId]; !ok {
+			ownerIdSet[dbChat.OwnerId] = true
+			ownerIds = append(ownerIds, dbChat.OwnerId)
+		}
+	}
+	dbChatOwners, err := db.GetUsers(ownerIds)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get chat owners[%v], %s", ownerIds, err)
+	}
+	ownerMap := make(map[uint]*app.User)
+	for _, dbChatOwner := range dbChatOwners {
+		ownerMap[dbChatOwner.Id] = convert.UserDBToApp(&dbChatOwner)
+	}
+	var chats []*app.Chat
+	for _, dbChat := range dbChats {
+		owner, ok := ownerMap[dbChat.OwnerId]
+		if !ok {
+			log.Printf("userChanged WARN chat[%d] skipped due to owner[%d] not found\n", dbChat.Id, dbChat.OwnerId)
+			continue
+		}
+		chats = append(chats, convert.ChatDBToApp(&dbChat, owner))
+	}
+	return chats, nil
 }
 
 func distributeInCommonChat(

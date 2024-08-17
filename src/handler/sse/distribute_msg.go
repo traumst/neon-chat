@@ -16,7 +16,6 @@ func DistributeMsg(
 	state *state.State,
 	db *db.DBConn,
 	chat *app.Chat,
-	authorId uint,
 	msg *app.Message,
 	updateType event.EventType,
 ) error {
@@ -27,9 +26,14 @@ func DistributeMsg(
 	if err != nil {
 		return fmt.Errorf("failed to get users in chat[%d], %s", chat.Id, err)
 	}
+	var owner *app.User
 	var users []*app.User
 	for _, dbUser := range dbUsers {
-		users = append(users, convert.UserDBToApp(&dbUser))
+		appUser := convert.UserDBToApp(&dbUser)
+		users = append(users, appUser)
+		if owner == nil && dbUser.Id == chat.OwnerId {
+			owner = appUser
+		}
 	}
 	if len(users) <= 0 {
 		return fmt.Errorf("chatUsers are empty, chat[%d], %s", chat.Id, err)
@@ -39,15 +43,15 @@ func DistributeMsg(
 	var errors []string
 	for _, user := range users {
 		wg.Add(1)
-		go func(user app.User, msg app.Message) {
+		go func(viewer app.User, msg app.Message) {
 			defer wg.Done()
-			log.Printf("DistributeMsg TRACE new message will be sent to user[%d]\n", user.Id)
-			data, err := msg.Template(&user, chat.OwnerName).HTML()
+			log.Printf("DistributeMsg TRACE new message will be sent to user[%d]\n", viewer.Id)
+			data, err := msg.Template(&viewer, owner)
 			if err != nil {
 				errors = append(errors, fmt.Sprintf("template:%s", err.Error()))
 				return
 			}
-			err = distributeMsgToUser(state, chat.Id, msg.Id, user.Id, authorId, updateType, data)
+			err = distributeMsgToUser(state, chat.Id, msg.Id, viewer.Id, msg.Author.Id, updateType, data)
 			if err != nil {
 				errors = append(errors, fmt.Sprintf("distribute:%s", err.Error()))
 			}

@@ -16,13 +16,14 @@ func ChatAppToDB(chat *app.Chat) *db.Chat {
 	}
 }
 
-func ChatDBToApp(chat *db.Chat) *app.Chat {
+func ChatDBToApp(chat *db.Chat, owner *app.User) *app.Chat {
 	if chat == nil {
 		return nil
 	}
 	return &app.Chat{
-		Id:      chat.Id,
-		Name:    chat.Title,
-		OwnerId: chat.OwnerId,
+		Id:        chat.Id,
+		Name:      chat.Title,
+		OwnerId:   owner.Id,
+		OwnerName: owner.Name,
 	}
 }
