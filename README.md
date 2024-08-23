@@ -36,6 +36,17 @@ And the app should be available at http://localhost:8080
 
 ## TODOs
 
++ UI improvements
+    * collapsible menus
+    * avatars on messages
+    * @ other messages
+    * @ other users
+
++ Fuzzy search
+    * messages by author
+    * messages by content
+    * in chat
+
 ### Message Broadcasting: 
 - msg should distribute to user connection, even if chat is closed
 - track user deltas: chats, messages
