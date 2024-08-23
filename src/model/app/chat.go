@@ -28,30 +28,31 @@ func (c *Chat) Template(
 	// current viewer + chat owner
 	var usr t.UserTemplate
 	var ownr t.UserTemplate
-	if viewer != nil {
-		usr = t.UserTemplate{
-			ChatId:      c.Id,
-			ChatOwnerId: c.OwnerId,
-			UserId:      viewer.Id,
-			UserName:    viewer.Name,
-			UserEmail:   viewer.Email,
-			ViewerId:    viewer.Id,
-		}
-		ownr = t.UserTemplate{
-			ChatId:      c.Id,
-			ChatOwnerId: c.OwnerId,
-			UserId:      c.OwnerId,
-			UserName:    c.OwnerName,
-			//UserEmail:   c.OwnerEmail,
-			ViewerId: viewer.Id,
-		}
-	} else {
+	if viewer == nil {
 		log.Printf("Chat.Template ERROR viewer cannot be nil\n")
 		return nil
 	}
+	usr = t.UserTemplate{
+		ChatId:      c.Id,
+		ChatOwnerId: c.OwnerId,
+		UserId:      viewer.Id,
+		UserName:    viewer.Name,
+		UserEmail:   viewer.Email,
+		ViewerId:    viewer.Id,
+	}
+	ownr = t.UserTemplate{
+		ChatId:      c.Id,
+		ChatOwnerId: c.OwnerId,
+		UserId:      c.OwnerId,
+		UserName:    c.OwnerName,
+		//UserEmail:   c.OwnerEmail,
+		ViewerId: viewer.Id,
+	}
 	// chat users
 	users := make([]t.UserTemplate, 0)
-	if len(members) > 0 {
+	if len(members) <= 0 {
+		log.Printf("Chat.Template INFO chat[%d] has no users\n", c.Id)
+	} else {
 		for _, member := range members {
 			if member == nil {
 				log.Printf("Chat.Template TRACE skip nil member in chat[%d]\n", c.Id)
@@ -66,8 +67,6 @@ func (c *Chat) Template(
 				ViewerId:    viewer.Id,
 			})
 		}
-	} else {
-		log.Printf("Chat.Template INFO chat[%d] has no users\n", c.Id)
 	}
 	// chat messages
 	messages := make([]t.MessageTemplate, 0)
@@ -77,7 +76,12 @@ func (c *Chat) Template(
 				log.Printf("Chat.Template TRACE skip nil msg on index[%d] in chat[%d]\n", idx, c.Id)
 				continue
 			}
-			messages = append(messages, *msg.Template(viewer, ownr.UserName))
+			msgTmpl, err := msg.Template(viewer, &User{Id: c.OwnerId, Name: c.OwnerName})
+			if err != nil {
+				log.Printf("Chat.Template ERROR failed to create message template, %s\n", err)
+				continue
+			}
+			messages = append(messages, *msgTmpl)
 		}
 	} else {
 		log.Printf("Chat.Template INFO chat[%d] has no messages\n", c.Id)

@@ -79,7 +79,7 @@ func DeleteMessage(state *state.State, db *d.DBConn, w http.ResponseWriter, r *h
 
 	deleted, err := handler.HandleMessageDelete(state, db, chatId, user, msgId)
 	if err != nil {
-		log.Printf("[%s] DeleteMessage ERROR %s\n", reqId, err.Error())
+		log.Printf("[%s] DeleteMessage ERROR deletion failed: %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

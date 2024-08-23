@@ -75,12 +75,31 @@ func HandleMessageDelete(
 	if err != nil {
 		return nil, fmt.Errorf("failed to remove message[%d] from chat[%d] in db, %s", msgId, chatId, err.Error())
 	}
-	appChatOwner, _ := GetUser(db, dbChat.OwnerId)
+	dbSpecialUsers, err := db.GetUsers([]uint{dbMsg.AuthorId, dbChat.OwnerId})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get chat[%d] owner[%d] from db: %s", dbChat.Id, dbChat.OwnerId, err.Error())
+	}
+	var appChatOwner *a.User
+	var appMsgAuthor *a.User
+	for _, dbSpecialUser := range dbSpecialUsers {
+		if dbSpecialUser.Id == dbChat.OwnerId {
+			appChatOwner = convert.UserDBToApp(&dbSpecialUser)
+		}
+		if dbSpecialUser.Id == dbMsg.AuthorId {
+			appMsgAuthor = convert.UserDBToApp(&dbSpecialUser)
+		}
+	}
 	if appChatOwner == nil {
 		return nil, fmt.Errorf("chat[%d] owner[%d] not found", dbChat.Id, dbChat.OwnerId)
 	}
+	if appMsgAuthor == nil {
+		return nil, fmt.Errorf("message[%d] author[%d] not found", dbMsg.Id, dbMsg.AuthorId)
+	}
 	appChat := convert.ChatDBToApp(dbChat, appChatOwner)
-	appMsg := convert.MessageDBToApp(dbMsg, &a.User{Id: dbMsg.AuthorId}) // TODO bad user
+	if appChat == nil {
+		return nil, fmt.Errorf("cannot convert chat[%d] for app, owner[%v]", dbChat.Id, appChatOwner)
+	}
+	appMsg := convert.MessageDBToApp(dbMsg, appMsgAuthor) // TODO bad user
 	err = sse.DistributeMsg(state, db, appChat, &appMsg, event.MessageDrop)
 	if err != nil {
 		log.Printf("HandleMessageDelete ERROR distributing msg update, %s\n", err)

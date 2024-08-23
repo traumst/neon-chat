@@ -45,13 +45,18 @@ func DistributeMsg(
 		wg.Add(1)
 		go func(viewer app.User, msg app.Message) {
 			defer wg.Done()
-			log.Printf("DistributeMsg TRACE new message will be sent to user[%d]\n", viewer.Id)
-			data, err := msg.Template(&viewer, owner)
+			log.Printf("DistributeMsg TRACE event[%s] will be sent to user[%d]\n", updateType, viewer.Id)
+			msgTmpl, err := msg.Template(&viewer, owner)
 			if err != nil {
 				errors = append(errors, fmt.Sprintf("template:%s", err.Error()))
 				return
 			}
-			err = distributeMsgToUser(state, chat.Id, msg.Id, viewer.Id, msg.Author.Id, updateType, data)
+			msgData, err := msgTmpl.HTML()
+			if err != nil {
+				errors = append(errors, fmt.Sprintf("html:%s", err.Error()))
+				return
+			}
+			err = distributeMsgToUser(state, chat.Id, msg.Id, viewer.Id, msg.Author.Id, updateType, msgData)
 			if err != nil {
 				errors = append(errors, fmt.Sprintf("distribute:%s", err.Error()))
 			}
