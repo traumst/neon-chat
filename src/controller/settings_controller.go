@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"prplchat/src/convert"
 	d "prplchat/src/db"
 	"prplchat/src/handler"
 	"prplchat/src/handler/state"
@@ -11,7 +12,7 @@ import (
 	h "prplchat/src/utils/http"
 )
 
-func OpenSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func OpenSettings(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] OpenSettings\n", reqId)
 	if r.Method != "GET" {
@@ -19,26 +20,28 @@ func OpenSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	user, err := handler.ReadSession(app, db, w, r)
+	user, err := handler.ReadSession(state, db, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] OpenSettings WARN user, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("User is not authorized"))
 		return
 	}
-	var openChatId uint
-	var chatOwnerId uint
-	openChat := app.GetOpenChat(user.Id)
-	if openChat != nil {
-		openChatId = openChat.Id
-		chatOwnerId = openChat.Owner.Id
-	} else {
-		openChatId = 0
-		chatOwnerId = 0
+
+	openChatId := state.GetOpenChat(user.Id)
+	chatOwnerId := uint(0)
+	if openChatId > 0 {
+		chat, err := db.GetChat(openChatId)
+		if err != nil || chat == nil {
+			log.Printf("[%s] OpenSettings ERROR retrieving open chat[%d] data %s\n", reqId, openChatId, err)
+		} else {
+			chatOwnerId = chat.OwnerId
+		}
 	}
+
 	var avatarTmpl *t.AvatarTemplate
 	if avatar, _ := db.GetAvatar(user.Id); avatar != nil {
-		appAvatar := handler.AvatarFromDB(*avatar)
+		appAvatar := convert.AvatarDBToApp(avatar)
 		avatarTmpl = appAvatar.Template(user)
 	}
 	settings := t.UserSettingsTemplate{
@@ -60,7 +63,7 @@ func OpenSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 	w.Write([]byte(html))
 }
 
-func CloseSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func CloseSettings(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] CloseSettings\n", reqId)
 	if r.Method != "GET" {
@@ -69,7 +72,7 @@ func CloseSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 		w.Write([]byte("User is unauthorized"))
 		return
 	}
-	user, err := handler.ReadSession(app, db, w, r)
+	user, err := handler.ReadSession(state, db, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] CloseSettings WARN user, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -77,19 +80,19 @@ func CloseSettings(app *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 		return
 	}
 	var html string
-	openChat := app.GetOpenChat(user.Id)
-	if openChat != nil {
-		html, err = openChat.Template(user, user).HTML()
+	openChat := handler.TemplateOpenChat(state, db, user)
+	if openChat == nil {
+		html, err = handler.TemplateWelcome(user)
 	} else {
-		welcome := t.WelcomeTemplate{User: *user.Template(0, 0, 0)}
-		html, err = welcome.HTML()
+		html, err = openChat.HTML()
 	}
 	if err != nil {
-		log.Printf("[%s] CloseSettings ERROR  %s\n", h.GetReqId(r), err)
+		log.Printf("[%s] CloseSettings ERROR failed to template, chat[%t] %s\n", h.GetReqId(r), openChat == nil, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to template response"))
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }

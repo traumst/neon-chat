@@ -2,6 +2,7 @@ package template
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 
 	"prplchat/src/model/event"
@@ -56,9 +57,8 @@ func (h *HomeTemplate) HTML() (string, error) {
 		"static/html/chat/message_li.html",
 	))
 	var buf bytes.Buffer
-	err := homeTmpl.Execute(&buf, h)
-	if err != nil {
-		return "", err
+	if err := homeTmpl.Execute(&buf, h); err != nil {
+		return "", fmt.Errorf("failed to template, %s", err.Error())
 	}
 	return buf.String(), nil
 }

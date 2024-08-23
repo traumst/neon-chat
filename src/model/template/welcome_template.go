@@ -6,7 +6,7 @@ import (
 )
 
 type WelcomeTemplate struct {
-	User UserTemplate
+	User UserTemplate // default user will be served generic message
 }
 
 func (w *WelcomeTemplate) HTML() (string, error) {

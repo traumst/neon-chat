@@ -5,6 +5,8 @@ import (
 	"log"
 	"sync"
 
+	"prplchat/src/convert"
+	"prplchat/src/db"
 	"prplchat/src/handler/state"
 	"prplchat/src/model/app"
 	"prplchat/src/model/event"
@@ -12,35 +14,51 @@ import (
 
 func DistributeMsg(
 	state *state.State,
+	db *db.DBConn,
 	chat *app.Chat,
-	authorId uint,
 	msg *app.Message,
 	updateType event.EventType,
 ) error {
-	// have to get users by owner - author may have been removed
-	users, err := chat.GetUsers(chat.Owner.Id)
-	if err != nil || users == nil {
-		return fmt.Errorf("DistributeMsg: get users, chat[%d], %s", chat.Id, err)
+	if chat == nil || msg == nil {
+		return fmt.Errorf("mandatory argument/s cannot be nil")
+	}
+	dbUsers, err := db.GetChatUsers(chat.Id)
+	if err != nil {
+		return fmt.Errorf("failed to get users in chat[%d], %s", chat.Id, err)
+	}
+	var owner *app.User
+	var users []*app.User
+	for _, dbUser := range dbUsers {
+		appUser := convert.UserDBToApp(&dbUser)
+		users = append(users, appUser)
+		if owner == nil && dbUser.Id == chat.OwnerId {
+			owner = appUser
+		}
 	}
 	if len(users) <= 0 {
-		return fmt.Errorf("DistributeMsg: chatUsers are empty, chat[%d], %s", chat.Id, err)
+		return fmt.Errorf("chatUsers are empty, chat[%d], %s", chat.Id, err)
 	}
 
 	var wg sync.WaitGroup
 	var errors []string
 	for _, user := range users {
 		wg.Add(1)
-		go func(user app.User, msg app.Message) {
+		go func(viewer app.User, msg app.Message) {
 			defer wg.Done()
-			log.Printf("DistributeMsg TRACE new message will be sent to user[%d]\n", user.Id)
-			data, err := msg.Template(&user).HTML()
+			log.Printf("DistributeMsg TRACE event[%s] will be sent to user[%d]\n", updateType, viewer.Id)
+			msgTmpl, err := msg.Template(&viewer, owner)
 			if err != nil {
-				errors = append(errors, err.Error())
+				errors = append(errors, fmt.Sprintf("template:%s", err.Error()))
 				return
 			}
-			err = distributeMsgToUser(state, chat.Id, msg.Id, user.Id, authorId, updateType, data)
+			msgData, err := msgTmpl.HTML()
 			if err != nil {
-				errors = append(errors, err.Error())
+				errors = append(errors, fmt.Sprintf("html:%s", err.Error()))
+				return
+			}
+			err = distributeMsgToUser(state, chat.Id, msg.Id, viewer.Id, msg.Author.Id, updateType, msgData)
+			if err != nil {
+				errors = append(errors, fmt.Sprintf("distribute:%s", err.Error()))
 			}
 		}(*user, *msg)
 	}
@@ -63,14 +81,15 @@ func distributeMsgToUser(
 	data string,
 ) error {
 	log.Printf("distributeMsgToUser TRACE user[%d] chat[%d] event[%v]\n", userId, chatId, updateType)
-	openChat := state.GetOpenChat(userId)
-	if openChat == nil {
+	openChatId := state.GetOpenChat(userId)
+	if openChatId == 0 {
 		log.Printf("distributeMsgToUser INFO user[%d] has no open chat to distribute", userId)
 		return nil
 	}
-	if openChat.Id != chatId {
+	// TODO only sends updates to open chat
+	if openChatId != chatId {
 		log.Printf("distributeMsgToUser INFO user[%d] has open chat[%d] different from message chat[%d]",
-			userId, openChat.Id, chatId)
+			userId, openChatId, chatId)
 		return nil
 	}
 	msg := event.LiveEvent{

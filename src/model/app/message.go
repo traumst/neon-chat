@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"prplchat/src/model/event"
 	"prplchat/src/model/template"
 )
@@ -8,19 +9,34 @@ import (
 type Message struct {
 	Id     uint
 	ChatId uint
-	Owner  *User
 	Author *User
 	Text   string
 }
 
-func (m *Message) Template(viewer *User) *template.MessageTemplate {
-	return &template.MessageTemplate{
-		MsgId:            m.Id,
-		ChatId:           m.ChatId,
-		Owner:            m.Owner.Name,
-		Author:           m.Author.Name,
-		Text:             m.Text,
-		ActiveUser:       viewer.Name,
-		MessageDropEvent: event.MessageDrop.FormatEventName(m.ChatId, m.Author.Id, m.Id),
+func (m *Message) Template(viewer *User, owner *User) (*template.MessageTemplate, error) {
+	if viewer == nil || viewer.Id == 0 {
+		return nil, fmt.Errorf("viewer cannot be nil or blank")
 	}
+	if owner == nil || owner.Id == 0 {
+		return nil, fmt.Errorf("owner cannot be nil or blank")
+	}
+	if m.Author == nil || m.Author.Id == 0 || m.Author.Name == "" {
+		return nil, fmt.Errorf("message author cannot be nil or blank")
+	}
+	if m.ChatId == 0 {
+		return nil, fmt.Errorf("message chatId cannot be 0")
+	}
+	if m.Id == 0 {
+		return nil, fmt.Errorf("message chatId and Id cannot be 0")
+	}
+	return &template.MessageTemplate{
+		ChatId:           m.ChatId,
+		MsgId:            m.Id,
+		ViewerId:         viewer.Id,
+		OwnerId:          owner.Id,
+		AuthorId:         m.Author.Id,
+		AuthorName:       m.Author.Name,
+		Text:             m.Text,
+		MessageDropEvent: event.MessageDrop.FormatEventName(m.ChatId, m.Author.Id, m.Id),
+	}, nil
 }

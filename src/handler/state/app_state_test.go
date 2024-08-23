@@ -10,19 +10,29 @@ import (
 	h "prplchat/src/utils/http"
 )
 
-// CONN
+func TestStateDefaults(t *testing.T) {
+	app1 := &GlobalAppState
+	app1.Init(utils.Config{})
+	if app1.isInit != true {
+		t.Errorf("TestStateDefaults expected isInit true, got [%v]", app1.isInit)
+	}
+	if app1.config.CacheSize != 1024 {
+		t.Errorf("TestStateDefaults expected cache size 1024, got [%d]", app1.config.CacheSize)
+	}
+}
+
 func TestAddConn(t *testing.T) {
 	t.Logf("TestAddConn started")
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeBasic)}
-	app1 := &Application
-	app1.Init(nil, utils.Config{})
-	conn1 := app1.AddConn(w, *r, &user)
+	app1 := &GlobalAppState
+	app1.Init(utils.Config{})
+	conn1 := app1.AddConn(w, *r, &user, nil)
 	if conn1 == nil {
 		t.Fatalf("TestAddConn expected a conn1, got nil")
 	}
-	conn2 := app1.AddConn(w, *r, &user)
+	conn2 := app1.AddConn(w, *r, &user, nil)
 	if conn2 == nil {
 		t.Fatalf("TestAddConn expected a conn2, got nil")
 	}
@@ -38,9 +48,9 @@ func TestGetConn(t *testing.T) {
 	reqId := "test-req-id"
 	reqId = h.SetReqId(r, &reqId)
 	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeBasic)}
-	app1 := &Application
-	app1.Init(nil, utils.Config{})
-	expect := app1.AddConn(w, *r, &user)
+	app1 := &GlobalAppState
+	app1.Init(utils.Config{})
+	expect := app1.AddConn(w, *r, &user, nil)
 	if expect == nil {
 		t.Fatalf("TestGetConn expected a conn, got nil")
 	}
@@ -79,9 +89,9 @@ func TestDropConn(t *testing.T) {
 	reqId := "test-req-id"
 	reqId = h.SetReqId(r, &reqId)
 	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeBasic)}
-	app1 := &Application
-	app1.Init(nil, utils.Config{})
-	expect := app1.AddConn(w, *r, &user)
+	app1 := &GlobalAppState
+	app1.Init(utils.Config{})
+	expect := app1.AddConn(w, *r, &user, nil)
 	if expect == nil {
 		t.Fatalf("TestDropConn expected a conn, got nil")
 	}
@@ -99,351 +109,97 @@ func TestDropConn(t *testing.T) {
 	}
 }
 
-// USER
-func TestInviteUser(t *testing.T) {
-	t.Logf("TestInviteUser started")
-	user := app.User{
-		Id:   uint(rand.Uint32()),
-		Name: "John",
-		Type: app.UserType(app.UserTypeBasic),
-	}
-	invitee := app.User{Id: uint(rand.Uint32()),
-		Name: "Jane",
-		Type: app.UserType(app.UserTypeBasic),
-	}
-	app1 := &Application
-	app1.Init(nil, utils.Config{})
-	chatId := app1.AddChat(&user, "TestChat")
-	err := app1.InviteUser(user.Id, chatId, &invitee)
-	if err != nil {
-		t.Fatalf("TestInviteUser failed to invite user[%d] into chat[%d], [%s]",
-			user.Id, chatId, err.Error())
-	}
-	chat, err := app1.GetChat(invitee.Id, chatId)
-	if err != nil {
-		t.Fatalf("TestInviteUser failed to get chat[%d] for user[%d], [%s]",
-			chatId, user.Id, err.Error())
-	}
-	if chat == nil || chat.Id != chatId {
-		t.Fatalf("TestInviteUser expected a chat[%d] for user[%d] got nil", chatId, user.Id)
-	}
-}
-
-func TestDropUser(t *testing.T) {
-	t.Logf("TestDropUser started")
-	user := app.User{
-		Id:   uint(rand.Uint32()),
-		Name: "John",
-		Type: app.UserType(app.UserTypeBasic),
-	}
-	invitee := app.User{Id: uint(rand.Uint32()),
-		Name: "Jane",
-		Type: app.UserType(app.UserTypeBasic),
-	}
-	app1 := &Application
-	app1.Init(nil, utils.Config{})
-	chatId := app1.AddChat(&user, "TestChat")
-	err := app1.InviteUser(user.Id, chatId, &invitee)
-	if err != nil {
-		t.Fatalf("TestDropUser failed to invite, %s", err.Error())
-	}
-	chat, err := app1.GetChat(invitee.Id, chatId)
-	if err != nil {
-		t.Fatalf("TestDropUser failed to get chat, %s", err.Error())
-	}
-	if chat == nil {
-		t.Fatalf("TestDropUser expected chat[%d], got nil", chatId)
-	}
-	if chat.Id != chatId {
-		t.Fatalf("TestDropUser expected chat[%d], got [%d]", chatId, chat.Id)
-	}
-	err = app1.DropUser(user.Id, chatId, invitee.Id)
-	if err != nil {
-		t.Fatalf("TestDropUser expected no error, %s", err.Error())
-	}
-	chat, err = app1.GetChat(invitee.Id, chatId)
-	if err == nil {
-		t.Fatalf("TestDropUser expected error, got chat[%v]", chat)
-	}
-	if chat != nil {
-		t.Fatalf("TestDropUser expected error, got chat[%d]", chat.Id)
-	}
-}
-
-func TestUpdateUser(t *testing.T) {
-	user := app.User{
-		Id:     uint(rand.Uint32()),
-		Name:   "John",
-		Email:  "aaa@aaa.aaa",
-		Type:   app.UserType(app.UserTypeBasic),
-		Status: app.UserStatusPending,
-	}
-	invitee := app.User{Id: uint(rand.Uint32()),
-		Name: "Jane",
-		Type: app.UserType(app.UserTypeBasic),
-	}
-	app1 := &Application
-	app1.Init(nil, utils.Config{})
-	chatId := app1.AddChat(&user, "TestChat")
-	_ = app1.InviteUser(user.Id, chatId, &invitee)
-	chat, err := app1.GetChat(user.Id, chatId)
-	if err != nil {
-		t.Fatalf("TestUpdateUser failed to get chat[%d] for user[%d], %s", chatId, user.Id, err.Error())
-	}
-	err = app1.UpdateUser(
-		user.Id,
-		app.User{
-			Id:     invitee.Id,
-			Name:   "Johnny",
-			Email:  "bbb@bbb.bbb",
-			Type:   app.UserType(app.UserTypeBasic),
-			Status: app.UserStatusActive,
-			Salt:   "CANNOT_CHANGE",
-		})
-	if err != nil {
-		t.Fatalf("TestUpdateUser failed to update user[%d], %s", user.Id, err.Error())
-	}
-	updatedUsers, err := chat.GetUsers(user.Id)
-	if err != nil {
-		t.Fatalf("TestUpdateUser failed to get users from chat[%d], %s", chatId, err.Error())
-	}
-	for _, uu := range updatedUsers {
-		if uu.Id == user.Id {
-			if uu != &user {
-				t.Fatalf("TestUpdateUser broken pointer user[%s] and user[%s] should be the same", uu.Name, user.Name)
-			}
-			if uu.Name != "Johnny" {
-				t.Fatalf("TestUpdateUser expected name[Johnny] got name[%s]", uu.Name)
-			}
-			if uu.Email != "bbb@bbb.bbb" {
-				t.Fatalf("TestUpdateUser expected name[Johnny] got name[%s]", uu.Name)
-			}
-			if uu.Salt != user.Salt {
-				t.Fatalf("TestUpdateUser expected salt[%s] changed[%s]", user.Salt, uu.Salt)
-			}
-			return
-		}
-	}
-	t.Fatalf("TestUpdateUser user[%d] not found", user.Id)
-}
-
-// CHAT
-func TestAddChat(t *testing.T) {
-	t.Logf("TestAddChat started")
-	user := app.User{
-		Id:   uint(rand.Uint32()),
-		Name: "John",
-		Type: app.UserType(app.UserTypeBasic),
-	}
-	app1 := &Application
-	app1.Init(nil, utils.Config{})
-	chatId := app1.AddChat(&user, "TestChat")
-	chat, err := app1.GetChat(user.Id, chatId)
-	if err != nil {
-		t.Fatalf("TestAddChat failed to get chat[%d] for user[%d], [%s]",
-			chatId, user.Id, err.Error())
-	}
-	if chat == nil || chat.Id != chatId {
-		t.Fatalf("TestAddChat expected a chat[%d] for user[%d] got nil", chatId, user.Id)
-	}
-}
-
-func TestGetChats(t *testing.T) {
-	t.Logf("TestGetChats started")
-	user := app.User{
-		Id:   uint(rand.Uint32()),
-		Name: "John",
-		Type: app.UserType(app.UserTypeBasic),
-	}
-	app1 := &Application
-	app1.Init(nil, utils.Config{})
-	chatId1 := app1.AddChat(&user, "TestChat1")
-	chatId2 := app1.AddChat(&user, "TestChat2")
-	chats := app1.GetChats(user.Id)
-	if len(chats) != 2 {
-		t.Fatalf("TestGetChats expected 2 chats, got [%d]", len(chats))
-	}
-	if chats[0].Id != chatId1 || chats[1].Id != chatId2 {
-		t.Fatalf("TestGetChats expected chat ids [%d, %d], got [%d, %d]",
-			chatId1, chatId2, chats[0].Id, chats[1].Id)
-	}
-}
-
-func TestGetChat(t *testing.T) {
-	t.Logf("TestGetChats started")
-	user := app.User{
-		Id:   uint(rand.Uint32()),
-		Name: "John",
-		Type: app.UserType(app.UserTypeBasic),
-	}
-	app1 := &Application
-	app1.Init(nil, utils.Config{})
-	chatId1 := app1.AddChat(&user, "TestChat1")
-	chat1, err := app1.GetChat(user.Id, chatId1)
-	if err != nil {
-		t.Fatalf("TestGetChat failed to get chat[%d] for user[%d], [%s]",
-			chatId1, user.Id, err.Error())
-	}
-	if chat1 == nil {
-		t.Fatalf("TestGetChat expected a chat[%d] for user[%d] got nil", chatId1, user.Id)
-	}
-	chatId2 := app1.AddChat(&user, "TestChat2")
-	chat2, err := app1.GetChat(user.Id, chatId2)
-	if err != nil {
-		t.Fatalf("TestGetChat failed to get chat[%d] for user[%d], %s",
-			chatId1, user.Id, err.Error())
-	}
-	if chat2 == nil {
-		t.Fatalf("TestGetChat expected a chat[%d] for user[%d] got nil", chatId1, user.Id)
-	}
-}
-
 func TestOpenChat(t *testing.T) {
 	t.Logf("TestOpenChat started")
 	user := app.User{
-		Id:   uint(rand.Uint32()),
-		Name: "John",
-		Type: app.UserType(app.UserTypeBasic),
+		Id: uint(rand.Uint32()),
+		// Name: "John",
+		// Type: app.UserType(app.UserTypeBasic),
 	}
-	app1 := &Application
-	app1.Init(nil, utils.Config{})
-	chatId1 := app1.AddChat(&user, "TestChat1")
-	chatId2 := app1.AddChat(&user, "TestChat2")
-	chatId3 := app1.AddChat(&user, "TestChat3")
-	open, err := app1.OpenChat(user.Id, chatId2)
+	app1 := &GlobalAppState
+	app1.Init(utils.Config{
+		Port:   0,
+		Sqlite: "",
+		Smtp: utils.SmtpConfig{
+			User: "",
+			Pass: "",
+			Host: "",
+			Port: "",
+		},
+		CacheSize: 0,
+	})
+	err := app1.OpenChat(user.Id, 22)
 	if err != nil {
 		t.Fatalf("TestOpenChat expected no error, %s", err.Error())
 	}
-	if open == nil {
-		t.Fatalf("TestOpenChat expected a chat, got nil")
-	}
-	if open.Id != chatId2 {
-		t.Fatalf("TestOpenChat expected chat[%d], got [%d]", chatId2, open.Id)
-	}
-	if open.Id == chatId1 || open.Id == chatId3 {
-		t.Fatalf("TestOpenChat expected open chat[%d] to be different from [%d, %d]",
-			chatId2, chatId1, chatId3)
+	openChatId := app1.GetOpenChat(user.Id)
+	if openChatId != 22 {
+		t.Fatalf("TestOpenChat expected chat[22], got [%d]", openChatId)
 	}
 }
 
 func TestGetOpenChatEmpty(t *testing.T) {
 	t.Logf("TestGetOpenChatEmpty started")
 	user := app.User{
-		Id:   uint(rand.Uint32()),
-		Name: "John",
-		Type: app.UserType(app.UserTypeBasic),
+		Id: uint(rand.Uint32()),
+		// Name: "John",
+		// Type: app.UserType(app.UserTypeBasic),
 	}
-	app1 := &Application
-	app1.Init(nil, utils.Config{})
+	app1 := &GlobalAppState
+	app1.Init(utils.Config{})
 	open := app1.GetOpenChat(user.Id)
-	if open != nil {
-		t.Fatalf("TestGetOpenChatEmpty expected nil, got [%v]", open)
+	if open != 0 {
+		t.Fatalf("TestGetOpenChatEmpty expected 0, got [%v]", open)
 	}
 }
 
 func TestGetOpenChat(t *testing.T) {
 	t.Logf("TestGetOpenChat started")
 	user := app.User{
-		Id:   uint(rand.Uint32()),
-		Name: "John",
-		Type: app.UserType(app.UserTypeBasic),
+		Id: uint(rand.Uint32()),
+		// Name: "John",
+		// Type: app.UserType(app.UserTypeBasic),
 	}
-	app1 := &Application
-	app1.Init(nil, utils.Config{})
-	_ = app1.AddChat(&user, "TestChat1")
-	chatId2 := app1.AddChat(&user, "TestChat2")
-	chatId3 := app1.AddChat(&user, "TestChat3")
+	app1 := &GlobalAppState
+	app1.Init(utils.Config{})
+	err := app1.OpenChat(user.Id, 33)
+	if err != nil {
+		t.Fatalf("TestGetOpenChat failed to open chat, %s", err.Error())
+	}
 	open3 := app1.GetOpenChat(user.Id)
-	if open3 == nil {
-		t.Fatalf("TestGetOpenChat expected a chat[%d], got nil", chatId3)
+	if open3 != 33 {
+		t.Fatalf("TestGetOpenChat expected open chat[0], got [%d]", open3)
 	}
-	if open3.Id != chatId3 {
-		t.Fatalf("TestGetOpenChat expected chat[%d], got [%d]", chatId3, open3.Id)
-	}
-	open2, err := app1.OpenChat(user.Id, chatId2)
+	err = app1.OpenChat(user.Id, 22)
 	if err != nil {
 		t.Fatalf("TestGetOpenChat expected no error, %s", err.Error())
 	}
-	if open2 == nil {
-		t.Fatalf("TestGetOpenChat expected a chat, got nil")
-	}
-	if open2.Id != chatId2 {
-		t.Fatalf("TestGetOpenChat expected chat[%d], got [%d]", chatId2, open2.Id)
-	}
 	open := app1.GetOpenChat(user.Id)
-	if open == nil {
-		t.Fatalf("TestGetOpenChat expected a chat[%d], got nil", chatId3)
-	}
-	if open.Id != chatId2 {
-		t.Fatalf("TestGetOpenChat expected chat[%d], got [%d]", chatId2, open.Id)
+	if open != 22 {
+		t.Fatalf("TestGetOpenChat expected chat[%d], got [%d]", 22, open)
 	}
 }
 
 func TestCloseChat(t *testing.T) {
 	t.Logf("TestCloseChat started")
 	user := app.User{
-		Id:   uint(rand.Uint32()),
-		Name: "John",
-		Type: app.UserType(app.UserTypeBasic),
+		Id: uint(rand.Uint32()),
+		// Name: "John",
+		// Type: app.UserType(app.UserTypeBasic),
 	}
-	app1 := &Application
-	app1.Init(nil, utils.Config{})
-	chatId := app1.AddChat(&user, "TestChat1")
+	app1 := &GlobalAppState
+	app1.Init(utils.Config{})
+	app1.OpenChat(user.Id, 11)
 	open := app1.GetOpenChat(user.Id)
-	if open == nil {
-		t.Fatalf("TestCloseChat expected chat[%d], got nil", chatId)
+	if open != 11 {
+		t.Fatalf("TestCloseChat expected chat[%d], got [%d]", 11, open)
 	}
-	if open.Id != chatId {
-		t.Fatalf("TestCloseChat expected chat[%d], got [%d]", chatId, open.Id)
-	}
-	err := app1.CloseChat(user.Id, chatId)
+	err := app1.CloseChat(user.Id, 11)
 	if err != nil {
 		t.Fatalf("TestCloseChat failed to close chat, %s", err.Error())
 	}
 	open = app1.GetOpenChat(user.Id)
-	if open != nil {
-		t.Fatalf("TestCloseChat expected chat[%d] to be closed, but got[%v]", chatId, open)
-	}
-}
-
-func TestDeleteChat(t *testing.T) {
-	t.Logf("TestDeleteChat started")
-	user := app.User{
-		Id:   uint(rand.Uint32()),
-		Name: "John",
-		Type: app.UserType(app.UserTypeBasic),
-	}
-	app1 := &Application
-	app1.Init(nil, utils.Config{})
-	chatId := app1.AddChat(&user, "TestChat1")
-	open := app1.GetOpenChat(user.Id)
-	if open == nil {
-		t.Fatalf("TestDeleteChat expected open chat[%d], got nil", chatId)
-	}
-	if open.Id != chatId {
-		t.Fatalf("TestDeleteChat expected open chat[%d], got [%d]", chatId, open.Id)
-	}
-	chat, err := app1.GetChat(user.Id, chatId)
-	if err != nil {
-		t.Fatalf("TestDeleteChat failed to get chat[%d] for user[%d], %s",
-			chatId, user.Id, err.Error())
-	}
-	if chat == nil {
-		t.Fatalf("TestDeleteChat got nil instead of chat[%d] for user[%d]", chatId, user.Id)
-	}
-	err = app1.DeleteChat(user.Id, open)
-	if err != nil {
-		t.Fatalf("TestDeleteChat failed to delete chat, %s", err.Error())
-	}
-	open = app1.GetOpenChat(user.Id)
-	if open != nil {
-		t.Fatalf("TestDeleteChat expected chat[%d] to be closed, but got[%v]", chatId, open)
-	}
-	chat, err = app1.GetChat(user.Id, chatId)
-	if err == nil {
-		t.Fatalf("TestDeleteChat expected nil but got chat[%d]", chatId)
-	}
-	if chat != nil {
-		t.Fatalf("TestDeleteChat expected nil but got chat[%d] for user[%d]", chatId, user.Id)
+	if open != 0 {
+		t.Fatalf("TestCloseChat expected chat[%d] to be closed, but got[%v]", 11, open)
 	}
 }

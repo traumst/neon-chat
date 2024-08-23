@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"prplchat/src/convert"
+	"prplchat/src/db"
 	"prplchat/src/handler/state"
 	"prplchat/src/model/app"
 	"prplchat/src/model/event"
@@ -12,10 +14,11 @@ import (
 // empty targetUser means all users in chat
 func DistributeChat(
 	state *state.State,
+	db *db.DBConn,
 	chat *app.Chat,
 	author *app.User, // who made the change
 	targetUser *app.User, // who to inform, nil for all users in chat
-	subjectUser *app.User, // user affected by change, nil for every user in chat
+	subjectUser *app.User, // viewer, user affected by change, nil for every user in chat
 	updateType event.EventType,
 ) error {
 	if author == nil {
@@ -28,20 +31,21 @@ func DistributeChat(
 		return fmt.Errorf("state is nil")
 	}
 
-	var err error
 	var targetUsers []*app.User
 	if targetUser != nil {
 		targetUsers = []*app.User{targetUser}
 	} else {
-		// have to get users by owner - author may have been removed
-		targetUsers, err = chat.GetUsers(chat.Owner.Id)
+		dbUsers, err := db.GetChatUsers(chat.Id)
+		if err != nil {
+			return fmt.Errorf("fail to get owner[%d] from chat[%d], %s", chat.OwnerId, chat.Id, err)
+		}
+		for _, dbUser := range dbUsers {
+			targetUsers = append(targetUsers, convert.UserDBToApp(&dbUser))
+		}
 	}
 
-	if err != nil {
-		return fmt.Errorf("fail to get users from chat[%d], %s", chat.Id, err)
-	}
 	if len(targetUsers) <= 0 {
-		return fmt.Errorf("chatUsers are empty in chat[%d], %s", chat.Id, err)
+		return fmt.Errorf("chatUsers are empty in chat[%d]", chat.Id)
 	}
 
 	return distributeToUsers(state, chat, author, targetUsers, subjectUser, updateType)
@@ -103,17 +107,17 @@ func distributeChatToUser(
 
 		switch updateType {
 		case event.ChatAdd:
-			connerr = chatCreate(conn, targetChat, author)
+			connerr = chatCreate(conn, targetChat)
 		case event.ChatInvite:
 			connerr = chatInvite(conn, targetChat, author.Id, subjectUser)
 		case event.ChatDrop:
-			connerr = chatDelete(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser.Id)
+			connerr = chatDelete(conn, targetChat.Id, targetChat.OwnerId, author.Id, targetUser.Id)
 		case event.ChatExpel:
-			connerr = chatExpel(conn, targetChat.Id, targetChat.Owner.Id, author.Id, subjectUser.Id)
+			connerr = chatExpel(conn, targetChat.Id, targetChat.OwnerId, author.Id, subjectUser.Id)
 		case event.ChatLeave:
-			connerr = chatLeave(conn, targetChat.Id, targetChat.Owner.Id, author.Id, subjectUser.Id)
+			connerr = chatLeave(conn, targetChat.Id, targetChat.OwnerId, author.Id, subjectUser.Id)
 		case event.ChatClose:
-			connerr = chatClose(conn, targetChat.Id, targetChat.Owner.Id, author.Id, targetUser)
+			connerr = chatClose(conn, targetChat.Id, targetChat.OwnerId, author.Id, targetUser)
 		default:
 			connerr = fmt.Errorf("unknown event type[%v]", updateType)
 		}

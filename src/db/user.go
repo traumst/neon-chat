@@ -2,10 +2,12 @@ package db
 
 import (
 	"fmt"
+
+	"github.com/jmoiron/sqlx"
 )
 
-const minAuthLen = 3
-const maxAuthLen = 64
+const minUserNameLen = 3
+const maxUserNameLen = 64
 
 type User struct {
 	Id     uint   `db:"id"`
@@ -16,7 +18,7 @@ type User struct {
 	Salt   string `db:"salt"`
 }
 
-const UserSchema string = `
+const UserSchema = `
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
 		name TEXT UNIQUE, 
@@ -25,7 +27,7 @@ const UserSchema string = `
 		status TEXT,
 		salt INTEGER
 	);`
-const UserIndex string = `CREATE INDEX IF NOT EXISTS idx_user_status ON users(status);`
+const UserIndex = `CREATE INDEX IF NOT EXISTS idx_user_status ON users(status);`
 
 func (db *DBConn) UserTableExists() bool {
 	return db.TableExists("users")
@@ -34,13 +36,13 @@ func (db *DBConn) UserTableExists() bool {
 func (db *DBConn) AddUser(user *User) (*User, error) {
 	if user.Id != 0 {
 		return nil, fmt.Errorf("user already has an id[%d]", user.Id)
-	} else if len(user.Name) < minAuthLen || len(user.Name) > maxAuthLen {
+	} else if len(user.Name) < minUserNameLen || len(user.Name) > maxUserNameLen {
 		return nil, fmt.Errorf("user has no name")
-	} else if len(user.Email) < minAuthLen || len(user.Email) > maxAuthLen {
+	} else if len(user.Email) < minUserNameLen || len(user.Email) > maxUserNameLen {
 		return nil, fmt.Errorf("user has no email")
-	} else if len(user.Type) < minAuthLen || len(user.Type) > maxAuthLen {
+	} else if len(user.Type) < minUserNameLen || len(user.Type) > maxUserNameLen {
 		return nil, fmt.Errorf("user has no type")
-	} else if len(user.Status) < minAuthLen || len(user.Status) > maxAuthLen {
+	} else if len(user.Status) < minUserNameLen || len(user.Status) > maxUserNameLen {
 		return nil, fmt.Errorf("user has no status")
 	} else if len(user.Salt) == 0 {
 		return nil, fmt.Errorf("user has no salt")
@@ -90,7 +92,7 @@ func (db *DBConn) SearchUser(login string) (*User, error) {
 	if !db.isConn || !db.isInit {
 		return nil, fmt.Errorf("db is not connected")
 	}
-	if len(login) < minAuthLen || len(login) > maxAuthLen {
+	if len(login) < minUserNameLen || len(login) > maxUserNameLen {
 		return nil, fmt.Errorf("login name/email was not provided")
 	}
 
@@ -112,7 +114,7 @@ func (db *DBConn) SearchUsers(name string) ([]*User, error) {
 	if !db.isConn || !db.isInit {
 		return nil, fmt.Errorf("db is not connected")
 	}
-	if len(name) < minAuthLen || len(name) > maxAuthLen {
+	if len(name) < minUserNameLen || len(name) > maxUserNameLen {
 		return nil, fmt.Errorf("name was not provided")
 	}
 	users := make([]*User, 0)
@@ -133,11 +135,8 @@ func (db *DBConn) GetUser(id uint) (*User, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
-	if !db.isConn || !db.isInit {
+	if !db.ConnIsActive() {
 		return nil, fmt.Errorf("db is not connected")
-	}
-	if id <= 0 {
-		return nil, fmt.Errorf("id was 0")
 	}
 
 	db.mu.Lock()
@@ -149,6 +148,31 @@ func (db *DBConn) GetUser(id uint) (*User, error) {
 		return nil, fmt.Errorf("userId[%d] not found: %s", id, err)
 	}
 	return &user, err
+}
+
+func (db *DBConn) GetUsers(userIds []uint) ([]User, error) {
+	if len(userIds) <= 0 {
+		return []User{}, nil
+	}
+	if !db.ConnIsActive() {
+		return nil, fmt.Errorf("db is not connected")
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	query, args, err := sqlx.In(`SELECT * FROM users WHERE id IN (?)`, userIds)
+	if err != nil {
+		return nil, fmt.Errorf("error preparing query with userIds[%v]: %s", userIds, err)
+	}
+	query = db.conn.Rebind(query)
+
+	var userChats []User
+	err = db.conn.Select(&userChats, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("error getting users[%v]: %s", userIds, err)
+	}
+	return userChats, nil
 }
 
 func (db *DBConn) UpdateUserName(userId uint, userName string) error {

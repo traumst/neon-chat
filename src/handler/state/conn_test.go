@@ -48,8 +48,8 @@ func TestChannels(t *testing.T) {
 
 func TestIsConnEmpty(t *testing.T) {
 	t.Logf("TestIsConnEmpty started")
-	uc := make(ActiveConnections, 0)
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeBasic)}
+	uc := make(OpenConnections, 0)
+	user := app.User{Id: 1 /*, Name: "John", Type: app.UserType(app.UserTypeBasic) */}
 	isConn := uc.IsConn(user.Id)
 	if isConn {
 		t.Errorf("TestIsConnEmpty user was not supposed to be connected")
@@ -60,7 +60,7 @@ func TestIsConn(t *testing.T) {
 	t.Logf("TestIsConn started")
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	w := httptest.NewRecorder()
-	uc := ActiveConnections{}
+	uc := OpenConnections{}
 	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeBasic)}
 	uc.Add(&user, "test_origin", w, *r)
 	isConn := uc.IsConn(user.Id)
@@ -73,7 +73,7 @@ func TestAdd(t *testing.T) {
 	t.Logf("TestAdd started")
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	w := httptest.NewRecorder()
-	uc := ActiveConnections{}
+	uc := OpenConnections{}
 	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeBasic)}
 	conn := uc.Add(&user, "test_origin", w, *r)
 	if conn == nil {
@@ -85,8 +85,8 @@ func TestAdd(t *testing.T) {
 
 func TestGetEmpty(t *testing.T) {
 	t.Logf("TestGetEmpty started")
-	uc := ActiveConnections{}
-	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeBasic)}
+	uc := OpenConnections{}
+	user := app.User{Id: uint(rand.Uint32()) /*Name: "John", Type: app.UserType(app.UserTypeBasic)*/}
 	conns := uc.Get(user.Id)
 	if len(conns) != 0 {
 		t.Errorf("TestGetEmpty expected empty, got [%+v]", conns)
@@ -99,7 +99,7 @@ func TestGet(t *testing.T) {
 	reqId := "test-req-id"
 	h.SetReqId(r, &reqId)
 	w := httptest.NewRecorder()
-	uc := ActiveConnections{}
+	uc := OpenConnections{}
 	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeBasic)}
 	conn := uc.Add(&user, "test_origin", w, *r)
 	if conn == nil {
@@ -121,7 +121,7 @@ func TestGet(t *testing.T) {
 
 func TestDropEmpty(t *testing.T) {
 	t.Logf("TestDropEmpty started")
-	uc := ActiveConnections{}
+	uc := OpenConnections{}
 	conn := Conn{}
 	uc.Drop(&conn)
 }
@@ -135,7 +135,7 @@ func TestDrop(t *testing.T) {
 		t.Fatal(err)
 	}
 	w := httptest.NewRecorder()
-	uc := make(ActiveConnections, 0)
+	uc := make(OpenConnections, 0)
 	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeBasic)}
 	addedConn := uc.Add(&user, "test_origin", w, *r)
 	if addedConn == nil {
@@ -156,7 +156,7 @@ func TestUserConns(t *testing.T) {
 	t.Logf("TestUserConns started")
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	w := httptest.NewRecorder()
-	uc := ActiveConnections{}
+	uc := OpenConnections{}
 	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeBasic)}
 	conn1 := uc.Add(&user, "test_origin_1", w, *r)
 	if conn1 == nil {

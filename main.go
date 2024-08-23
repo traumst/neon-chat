@@ -2,70 +2,22 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"os"
-	"strings"
-	"time"
 
-	"prplchat/src/controller"
-	"prplchat/src/db"
-	"prplchat/src/handler/state"
-	"prplchat/src/utils"
+	"prplchat/src"
 )
 
 func main() {
 	log.Println("Application is starting...")
-	// init log
-	log.Println("setting up logger...")
-	now := time.Now()
-	timestamp := now.Format(time.RFC3339)
-	date := strings.Split(timestamp, "T")[0]
-	logPath := fmt.Sprintf("log/from-%s.log", date)
-	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer logFile.Close()
-	multi := io.MultiWriter(logFile, os.Stderr)
-	log.SetOutput(multi)
+	src.SetupGlobalLogger()
+	config := src.ReadEnvConfig()
+	db := src.ConnectDB(config)
+	app := src.InitAppState(config)
 
-	// parse args
-	log.Println("parsing config...")
-	//config, err := utils.ArgsRead()
-	config, err := utils.EnvRead()
-	if err != nil {
-		log.Printf("Error parsing config: %s\n", err)
-		log.Println(utils.ConfigHelp())
-		os.Exit(13)
-	}
-	log.Printf("\tparsed config: %s\n", config)
+	src.SetupControllers(app, db)
 
-	log.Println("connecting db...")
-	db, err := db.ConnectDB(config.Sqlite)
-	if err != nil {
-		log.Fatalf("Error opening db at [%s]: %s", config.Sqlite, err)
-	}
-
-	log.Println("init app state...")
-	app := &state.Application
-	app.Init(db, utils.Config{
-		CacheSize: config.CacheSize,
-		Port:      config.Port,
-		Sqlite:    config.Sqlite,
-		Smtp: utils.SmtpConfig{
-			User: config.Smtp.User,
-			Pass: config.Smtp.Pass,
-			Host: config.Smtp.Host,
-			Port: config.Smtp.Port,
-		},
-	})
-
-	log.Println("init controllers...")
-	controller.Setup(app, db)
-
-	log.Printf("Starting server at port [%d]\n", config.Port)
+	log.Printf("Listening at port [%d]\n", config.Port)
 	runtineErr := http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil)
 	log.Fatal(runtineErr)
 }

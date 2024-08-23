@@ -2,40 +2,75 @@ package store
 
 import (
 	"fmt"
+	"math"
 	"sync"
 )
 
 type LRUCache struct {
 	mu   sync.Mutex
-	dict map[uint]*Node
+	dict map[uint]*node
 	list *DoublyLinkedList
+	// 0 to 1, defaults to 1/4 of keys will to be dropped when full
+	cleanupRatio float64
 }
 
 func NewLRUCache(size int) *LRUCache {
 	return &LRUCache{
-		dict: make(map[uint]*Node),
-		list: NewLinkedList(size),
+		dict:         make(map[uint]*node, size),
+		list:         NewLinkedList(size),
+		cleanupRatio: 0.25,
 	}
 }
 
 func (cache *LRUCache) Size() int {
+	if cache == nil {
+		panic("cache is nil")
+	}
+	if cache.list == nil {
+		panic("cache.list is nil")
+	}
 	return cache.list.Size()
 }
 
 func (cache *LRUCache) Count() int {
+	if cache == nil {
+		panic("cache is nil")
+	}
+	if cache.list == nil {
+		panic("cache.list is nil")
+	}
 	return cache.list.Count()
 }
 
+func (cache *LRUCache) CleanupRatio() int {
+	if cache == nil {
+		panic("cache is nil")
+	}
+	return int(math.Ceil(cache.cleanupRatio * float64(cache.Size())))
+}
+
 func (cache *LRUCache) Set(key uint, value interface{}) error {
+	if cache == nil {
+		panic("cache is nil")
+	}
 	if cache.Count()+1 > cache.Size() {
-		_, err := cache.Drop(1 + cache.Size()/8)
+		n := cache.CleanupRatio()
+		_, err := cache.Drop(n)
 		if err != nil {
-			return err
+			return fmt.Errorf("cache is full, failed to drop [%d] keys: %s", n, err.Error())
 		}
 	}
+	if _, ok := cache.dict[key]; ok {
+		_, err := cache.Take(key)
+		if err != nil {
+			return fmt.Errorf("failed to pop taken key[%d]: %s", key, err)
+		}
+	}
+
 	cache.mu.Lock()
 	defer cache.mu.Unlock()
-	newNode := Node{id: key, value: value}
+
+	newNode := node{id: key, value: value}
 	err := cache.list.AddHead(&newNode)
 	if err != nil {
 		return err
@@ -60,6 +95,17 @@ func (cache *LRUCache) Get(key uint) (interface{}, error) {
 		}
 	}
 	return node.value, err
+}
+
+// scans cache and returns all existing keys in no particular order
+func (cache *LRUCache) Keys() []uint {
+	cache.mu.Lock()
+	defer cache.mu.Unlock()
+	keys := make([]uint, 0)
+	for _, node := range cache.dict {
+		keys = append(keys, node.id)
+	}
+	return keys
 }
 
 // removes the value stored in cache and returns it

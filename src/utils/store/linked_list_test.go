@@ -22,7 +22,7 @@ func TestNewLinkedList(t *testing.T) {
 
 func TestAddHeadFirst(t *testing.T) {
 	ll := NewLinkedList(3)
-	new := Node{id: 1, value: "one"}
+	new := node{id: 1, value: "one"}
 	err := ll.AddHead(&new)
 	if err != nil {
 		t.Fatalf("Expected new head got NIL")
@@ -43,7 +43,7 @@ func TestAddHeadFirst(t *testing.T) {
 
 func TestAddHeadMultiple(t *testing.T) {
 	ll := NewLinkedList(3)
-	new1 := Node{id: 1, value: "one"}
+	new1 := node{id: 1, value: "one"}
 	err := ll.AddHead(&new1)
 	if err != nil {
 		t.Fatalf("Expected new head[%d] got NIL", new1.id)
@@ -51,7 +51,7 @@ func TestAddHeadMultiple(t *testing.T) {
 	if ll.head != ll.tail {
 		t.Fatalf("Expected first node should be both head[%v] and tail[%v]", ll.head, ll.tail)
 	}
-	new2 := Node{id: 2, value: "two"}
+	new2 := node{id: 2, value: "two"}
 	err = ll.AddHead(&new2)
 	if err != nil {
 		t.Fatalf("Expected new head[%d] got NIL", new2.id)
@@ -62,7 +62,7 @@ func TestAddHeadMultiple(t *testing.T) {
 	if ll.head != &new2 {
 		t.Fatalf("Expected head[%d] to be the new node", new2.id)
 	}
-	new3 := Node{id: 3, value: "three"}
+	new3 := node{id: 3, value: "three"}
 	err = ll.AddHead(&new3)
 	if err != nil {
 		t.Fatalf("Expected new head[%d] got NIL", new3.id)
@@ -76,17 +76,17 @@ func TestAddHeadMultiple(t *testing.T) {
 }
 func TestBump(t *testing.T) {
 	ll := NewLinkedList(3)
-	node1 := &Node{
+	node1 := &node{
 		id:    1,
 		value: "one",
 	}
 	_ = ll.AddHead(node1)
-	node2 := &Node{
+	node2 := &node{
 		id:    2,
 		value: "two",
 	}
 	_ = ll.AddHead(node2)
-	node3 := &Node{
+	node3 := &node{
 		id:    3,
 		value: "three",
 	}
@@ -114,11 +114,11 @@ func TestBump(t *testing.T) {
 
 func TestCrop(t *testing.T) {
 	ll := NewLinkedList(5)
-	_ = ll.AddHead(&Node{id: 1, value: "111"})
-	_ = ll.AddHead(&Node{id: 2, value: "222"})
-	_ = ll.AddHead(&Node{id: 3, value: "333"})
-	_ = ll.AddHead(&Node{id: 4, value: "444"})
-	_ = ll.AddHead(&Node{id: 5, value: "555"})
+	_ = ll.AddHead(&node{id: 1, value: "111"})
+	_ = ll.AddHead(&node{id: 2, value: "222"})
+	_ = ll.AddHead(&node{id: 3, value: "333"})
+	_ = ll.AddHead(&node{id: 4, value: "444"})
+	_ = ll.AddHead(&node{id: 5, value: "555"})
 	if ll.Count() != 5 {
 		t.Fatalf("Expected count to be 5")
 	}
@@ -135,7 +135,7 @@ func TestCrop(t *testing.T) {
 	if ll.Count() != 4 {
 		t.Fatalf("Expected count to be 4, but was [%d]", ll.Count())
 	}
-	var test *Node
+	var test *node
 	test, err = ll.Get(1)
 	if err == nil || test != nil {
 		t.Fatalf("Expected node[%d] to be removed", 1)
@@ -160,11 +160,11 @@ func TestCrop(t *testing.T) {
 
 func TestRemove(t *testing.T) {
 	ll := NewLinkedList(3)
-	node1 := &Node{id: 1, value: "one"}
+	node1 := &node{id: 1, value: "one"}
 	_ = ll.AddHead(node1)
-	node2 := &Node{id: 2, value: "two"}
+	node2 := &node{id: 2, value: "two"}
 	_ = ll.AddHead(node2)
-	node3 := &Node{id: 3, value: "three"}
+	node3 := &node{id: 3, value: "three"}
 	_ = ll.AddHead(node3)
 	test := ll.Remove(4)
 	if test != nil {
@@ -207,25 +207,25 @@ func TestRemoveStruct(t *testing.T) {
 	}
 
 	ll := NewLinkedList(3)
-	node1 := &Node{
+	node1 := &node{
 		id:    1,
 		value: TestyTest{1, "one", [4]string{"a", "b", "c", "d"}},
-		prev:  &Node{},
-		next:  &Node{},
+		prev:  &node{},
+		next:  &node{},
 	}
 	_ = ll.AddHead(node1)
-	node2 := &Node{
+	node2 := &node{
 		id:    2,
 		value: TestyTest{2, "two", [4]string{"k", "l", "m", "n"}},
-		prev:  &Node{},
-		next:  &Node{},
+		prev:  &node{},
+		next:  &node{},
 	}
 	_ = ll.AddHead(node2)
-	node3 := &Node{
+	node3 := &node{
 		id:    3,
 		value: TestyTest{3, "three", [4]string{"w", "x", "y", "z"}},
-		prev:  &Node{},
-		next:  &Node{},
+		prev:  &node{},
+		next:  &node{},
 	}
 	_ = ll.AddHead(node3)
 	test := ll.Remove(4)
@@ -278,11 +278,11 @@ func TestRemoveStruct(t *testing.T) {
 
 func TestRemoveHead(t *testing.T) {
 	ll := NewLinkedList(3)
-	node1 := &Node{id: 1, value: "one"}
+	node1 := &node{id: 1, value: "one"}
 	_ = ll.AddHead(node1)
-	node2 := &Node{id: 2, value: "two"}
+	node2 := &node{id: 2, value: "two"}
 	_ = ll.AddHead(node2)
-	node3 := &Node{id: 3, value: "three"}
+	node3 := &node{id: 3, value: "three"}
 	_ = ll.AddHead(node3)
 	test := ll.removeHead()
 	if test == nil {
@@ -298,11 +298,11 @@ func TestRemoveHead(t *testing.T) {
 
 func TestRemoveTail(t *testing.T) {
 	ll := NewLinkedList(3)
-	node1 := &Node{id: 1, value: "one"}
+	node1 := &node{id: 1, value: "one"}
 	_ = ll.AddHead(node1)
-	node2 := &Node{id: 2, value: "two"}
+	node2 := &node{id: 2, value: "two"}
 	_ = ll.AddHead(node2)
-	node3 := &Node{id: 3, value: "three"}
+	node3 := &node{id: 3, value: "three"}
 	_ = ll.AddHead(node3)
 	test := ll.removeTail()
 	if test == nil {
