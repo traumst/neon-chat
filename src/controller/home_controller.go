@@ -8,7 +8,7 @@ import (
 	"prplchat/src/handler"
 	"prplchat/src/handler/state"
 	a "prplchat/src/model/app"
-	"prplchat/src/model/template"
+	t "prplchat/src/model/template"
 	h "prplchat/src/utils/http"
 )
 
@@ -17,11 +17,11 @@ func RenderLogin(
 	r *http.Request,
 ) {
 	log.Printf("[%s] RenderLogin TRACE IN", h.GetReqId(r))
-	login := template.AuthTemplate{}
-	home := template.HomeTemplate{
+	login := t.AuthTemplate{}
+	home := t.HomeTemplate{
 		Chats:         nil,
 		OpenChat:      nil,
-		User:          template.UserTemplate{UserName: "anon"},
+		User:          t.UserTemplate{UserName: "anon"},
 		IsAuthorized:  false,
 		LoginTemplate: login,
 		Avatar:        nil,

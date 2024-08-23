@@ -7,7 +7,7 @@ import (
 	"prplchat/src/handler/state"
 	"prplchat/src/model/app"
 	"prplchat/src/model/event"
-	"prplchat/src/model/template"
+	t "prplchat/src/model/template"
 )
 
 func chatCreate(conn *state.Conn, targetChat *app.Chat) error {
@@ -123,7 +123,7 @@ func chatClose(conn *state.Conn, chatId uint, ownerId uint, authorId uint, targe
 	if target.Id != 0 && conn.User.Id != target.Id {
 		return fmt.Errorf("chatClose conn[%s] belongs to other user[%d]", conn.Origin, conn.User.Id)
 	}
-	welcome := template.WelcomeTemplate{User: template.UserTemplate{}}
+	welcome := t.WelcomeTemplate{User: t.UserTemplate{}}
 	data, err := welcome.HTML()
 	if err != nil {
 		return err

@@ -1,7 +1,7 @@
 package app
 
 import (
-	"prplchat/src/model/template"
+	t "prplchat/src/model/template"
 )
 
 // TODO add flags/permissions mapping
@@ -33,8 +33,8 @@ func (user *User) Template(
 	chatId uint,
 	chatOwnerId uint,
 	viewerId uint,
-) *template.UserTemplate {
-	return &template.UserTemplate{
+) t.UserTemplate {
+	return t.UserTemplate{
 		ChatId:      chatId,
 		ChatOwnerId: chatOwnerId,
 		UserId:      user.Id,

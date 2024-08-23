@@ -17,7 +17,7 @@ type MessageTemplate struct {
 	MessageDropEvent string
 }
 
-func (m *MessageTemplate) HTML() (string, error) {
+func (m MessageTemplate) HTML() (string, error) {
 	if err := m.validate(); err != nil {
 		return "", fmt.Errorf("cannot template, %s", err.Error())
 	}
@@ -29,7 +29,7 @@ func (m *MessageTemplate) HTML() (string, error) {
 	return buf.String(), nil
 }
 
-func (m *MessageTemplate) validate() error {
+func (m MessageTemplate) validate() error {
 	if m.ChatId < 1 {
 		return fmt.Errorf("MessageTemplate requires ChatId but is [%d]", m.ChatId)
 	}

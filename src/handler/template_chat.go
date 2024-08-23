@@ -5,10 +5,10 @@ import (
 	"prplchat/src/db"
 	"prplchat/src/handler/state"
 	"prplchat/src/model/app"
-	"prplchat/src/model/template"
+	ti "prplchat/src/model/template/interface"
 )
 
-func TemplateOpenChat(state *state.State, db *db.DBConn, user *app.User) *template.ChatTemplate {
+func TemplateOpenChat(state *state.State, db *db.DBConn, user *app.User) ti.Renderable {
 	openChatId := state.GetOpenChat(user.Id)
 	if openChatId == 0 {
 		log.Printf("templateOpenchat DEBUG, user[%d] has no open chat\n", user.Id)

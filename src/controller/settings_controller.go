@@ -39,7 +39,7 @@ func OpenSettings(state *state.State, db *d.DBConn, w http.ResponseWriter, r *ht
 		}
 	}
 
-	var avatarTmpl *t.AvatarTemplate
+	var avatarTmpl t.AvatarTemplate
 	if avatar, _ := db.GetAvatar(user.Id); avatar != nil {
 		appAvatar := convert.AvatarDBToApp(avatar)
 		avatarTmpl = appAvatar.Template(user)

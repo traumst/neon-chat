@@ -1,14 +1,14 @@
 package utils
 
 import (
-	"prplchat/src/utils/interfaces"
+	i "prplchat/src/utils/interface"
 )
 
 // arr is expected to be orderred by item id
 func BinarySearch(
-	arr []interfaces.Identifiable,
+	arr []i.Identifiable,
 	item_id uint,
-) (found interfaces.Identifiable, idx int) {
+) (found i.Identifiable, idx int) {
 	// //
 	// count := 0
 	// start := time.Now()

@@ -10,7 +10,7 @@ import (
 	"prplchat/src/handler/sse"
 	"prplchat/src/handler/state"
 	"prplchat/src/model/event"
-	"prplchat/src/model/template"
+	t "prplchat/src/model/template"
 	h "prplchat/src/utils/http"
 )
 
@@ -63,7 +63,7 @@ func InviteUser(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		return
 	}
 
-	template := template.UserTemplate{
+	template := t.UserTemplate{
 		ChatId:      chatId,
 		ChatOwnerId: appChat.OwnerId,
 		UserId:      appInvitee.Id,

@@ -9,10 +9,10 @@ type WelcomeTemplate struct {
 	User UserTemplate // default user will be served generic message
 }
 
-func (w *WelcomeTemplate) HTML() (string, error) {
+func (wt WelcomeTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
-	welcomeTmpl := template.Must(template.ParseFiles("static/html/chat/welcome_div.html"))
-	err := welcomeTmpl.Execute(&buf, w)
+	tmpl := template.Must(template.ParseFiles("static/html/chat/welcome_div.html"))
+	err := tmpl.Execute(&buf, wt)
 	if err != nil {
 		return "", err
 	}
