@@ -9,7 +9,6 @@ import (
 
 	d "prplchat/src/db"
 	"prplchat/src/handler"
-	"prplchat/src/handler/shared"
 	"prplchat/src/handler/state"
 	"prplchat/src/utils"
 	h "prplchat/src/utils/http"
@@ -19,7 +18,7 @@ func Welcome(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Re
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] Welcome TRACE\n", reqId)
 	user, _ := handler.ReadSession(state, db, w, r)
-	html, err := shared.TemplateWelcome(user)
+	html, err := handler.TemplateWelcome(user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("failed to template html, %s", err.Error())))
