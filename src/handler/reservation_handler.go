@@ -11,13 +11,13 @@ import (
 	"time"
 )
 
-func IssueReservationToken(state *state.State, db *d.DBConn, user *a.User) (*t.VerifyEmailTemplate, error) {
+func IssueReservationToken(state *state.State, db *d.DBConn, user *a.User) (t.VerifyEmailTemplate, error) {
 	token := utils.RandStringBytes(16)
 	expire := time.Now().Add(1 * time.Hour)
 	reserve, err := reserve(db, user, token, expire)
 	if err != nil {
 		log.Printf("IssueReservationToken ERROR reserving[%s], %s\n", user.Email, err.Error())
-		return nil, fmt.Errorf("")
+		return t.VerifyEmailTemplate{}, fmt.Errorf("failed to reserve token")
 	}
 	emailConfig, err := state.SmtpConfig()
 	if err != nil {
@@ -35,9 +35,9 @@ func IssueReservationToken(state *state.State, db *d.DBConn, user *a.User) (*t.V
 	if err != nil {
 		log.Printf("IssueReservationToken ERROR sending email from [%s] to [%s], %s\n",
 			emailConfig.User, user.Email, err.Error())
-		return nil, fmt.Errorf("failed to send email to[%s]", user.Email)
+		return t.VerifyEmailTemplate{}, fmt.Errorf("failed to send email to[%s]", user.Email)
 	}
-	return &tmpl, nil
+	return tmpl, nil
 }
 
 func reserve(db *d.DBConn, user *a.User, token string, expire time.Time) (*d.Reservation, error) {

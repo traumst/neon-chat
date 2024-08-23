@@ -6,6 +6,7 @@ import (
 	"html/template"
 
 	"prplchat/src/model/event"
+	ti "prplchat/src/model/template/interface"
 )
 
 type UserSettingsTemplate struct {
@@ -14,23 +15,23 @@ type UserSettingsTemplate struct {
 	UserId      uint
 	UserName    string
 	ViewerId    uint
-	Avatar      *AvatarTemplate
+	Avatar      ti.Renderable
 }
 
-func (c *UserSettingsTemplate) UserChangeEvent() string {
-	return event.UserChange.FormatEventName(0, c.UserId, 0)
+func (ust UserSettingsTemplate) UserChangeEvent() string {
+	return event.UserChange.FormatEventName(0, ust.UserId, 0)
 }
 
-func (c *UserSettingsTemplate) ChatExpelEvent() string {
-	return event.ChatExpel.FormatEventName(c.ChatId, c.UserId, 0)
+func (ust UserSettingsTemplate) ChatExpelEvent() string {
+	return event.ChatExpel.FormatEventName(ust.ChatId, ust.UserId, 0)
 }
 
-func (c *UserSettingsTemplate) ChatLeaveEvent() string {
-	return event.ChatLeave.FormatEventName(c.ChatId, c.UserId, 0)
+func (ust UserSettingsTemplate) ChatLeaveEvent() string {
+	return event.ChatLeave.FormatEventName(ust.ChatId, ust.UserId, 0)
 }
 
-func (h *UserSettingsTemplate) HTML() (string, error) {
-	if err := h.validate(); err != nil {
+func (ust UserSettingsTemplate) HTML() (string, error) {
+	if err := ust.validate(); err != nil {
 		return "", fmt.Errorf("cannot template, %s", err.Error())
 	}
 	var buf bytes.Buffer
@@ -38,23 +39,23 @@ func (h *UserSettingsTemplate) HTML() (string, error) {
 		"static/html/utils/user_settings_div.html",
 		"static/html/user_div.html",
 		"static/html/avatar_div.html"))
-	if err := tmpl.Execute(&buf, h); err != nil {
+	if err := tmpl.Execute(&buf, ust); err != nil {
 		return "", fmt.Errorf("failed to template, %s", err.Error())
 	}
 	return buf.String(), nil
 }
 
-func (c *UserSettingsTemplate) validate() error {
-	if c.UserId < 1 {
+func (ust UserSettingsTemplate) validate() error {
+	if ust.UserId < 1 {
 		return fmt.Errorf("UserSettingsTemplate user id cannot be 0")
 	}
-	if c.UserName == "" {
+	if ust.UserName == "" {
 		return fmt.Errorf("UserSettingsTemplate user name cannot be empty")
 	}
-	if c.ViewerId < 1 {
+	if ust.ViewerId < 1 {
 		return fmt.Errorf("UserSettingsTemplate viewer id cannot be 0")
 	}
-	if c.Avatar == nil {
+	if ust.Avatar == nil {
 		return fmt.Errorf("UserSettingsTemplate avatar cannot be nil")
 	}
 	return nil

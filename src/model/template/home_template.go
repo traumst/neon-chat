@@ -6,42 +6,43 @@ import (
 	"html/template"
 
 	"prplchat/src/model/event"
+	ti "prplchat/src/model/template/interface"
 )
 
 type HomeTemplate struct {
 	IsAuthorized  bool
-	Avatar        *AvatarTemplate
-	User          UserTemplate
-	Chats         []*ChatTemplate
-	OpenChat      *ChatTemplate
-	LoginTemplate AuthTemplate
+	Avatar        ti.Renderable
+	User          ti.Renderable
+	Chats         []ti.Renderable
+	OpenChat      ti.Renderable
+	LoginTemplate ti.Renderable
 }
 
-func (h *HomeTemplate) ChatAddEvent() string {
+func (h HomeTemplate) ChatAddEvent() string {
 	var openChatId uint = 0
 	if h.OpenChat != nil {
-		openChatId = h.OpenChat.ChatId
+		openChatId = h.OpenChat.(ChatTemplate).ChatId
 	}
-	return event.ChatAdd.FormatEventName(openChatId, h.User.UserId, 0)
+	return event.ChatAdd.FormatEventName(openChatId, h.User.(UserTemplate).UserId, 0)
 }
 
-func (h *HomeTemplate) ChatInviteEvent() string {
+func (h HomeTemplate) ChatInviteEvent() string {
 	return string(event.ChatInvite)
 }
 
-func (h *HomeTemplate) ChatCloseEvent() string {
+func (h HomeTemplate) ChatCloseEvent() string {
 	var openChatId uint = 0
 	if h.OpenChat != nil {
-		openChatId = h.OpenChat.ChatId
+		openChatId = h.OpenChat.(UserTemplate).ChatId
 	}
-	return event.ChatClose.FormatEventName(openChatId, h.User.UserId, 0)
+	return event.ChatClose.FormatEventName(openChatId, h.User.(UserTemplate).UserId, 0)
 }
 
-func (h *HomeTemplate) AvatarChangeEvent() string {
-	return event.AvatarChange.FormatEventName(0, h.User.UserId, 0)
+func (h HomeTemplate) AvatarChangeEvent() string {
+	return event.AvatarChange.FormatEventName(0, h.User.(UserTemplate).UserId, 0)
 }
 
-func (h *HomeTemplate) HTML() (string, error) {
+func (h HomeTemplate) HTML() (string, error) {
 	homeTmpl := template.Must(template.ParseFiles(
 		"static/html/home_page.html",
 		// left panel
@@ -64,9 +65,9 @@ func (h *HomeTemplate) HTML() (string, error) {
 }
 
 // called from template
-func (h *HomeTemplate) ReverseChats() []*ChatTemplate {
+func (h HomeTemplate) ReverseChats() []ti.Renderable {
 	len := len(h.Chats)
-	chats := make([]*ChatTemplate, len)
+	chats := make([]ti.Renderable, len)
 	for i := 0; i < len; i += 1 {
 		chats[i] = h.Chats[(len-1)-i]
 	}

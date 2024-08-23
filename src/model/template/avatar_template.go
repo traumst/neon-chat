@@ -16,39 +16,39 @@ type AvatarTemplate struct {
 	Mime   string
 }
 
-func (avatar *AvatarTemplate) Base64() string {
-	return base64.StdEncoding.EncodeToString(avatar.Image)
+func (at AvatarTemplate) Base64() string {
+	return base64.StdEncoding.EncodeToString(at.Image)
 }
 
-func (a *AvatarTemplate) HTML() (string, error) {
-	if err := a.validate(); err != nil {
+func (at AvatarTemplate) HTML() (string, error) {
+	if err := at.validate(); err != nil {
 		return "", fmt.Errorf("cannot template, %s", err.Error())
 	}
 	var buf bytes.Buffer
 	tmpl := template.Must(template.ParseFiles("static/html/avatar_div.html"))
-	if err := tmpl.Execute(&buf, a); err != nil {
+	if err := tmpl.Execute(&buf, at); err != nil {
 		return "", fmt.Errorf("failed to template, %s", err.Error())
 	}
 	return buf.String(), nil
 }
 
-func (a *AvatarTemplate) validate() error {
-	if a.Id < 1 {
+func (at AvatarTemplate) validate() error {
+	if at.Id < 1 {
 		return fmt.Errorf("AvatarTemplate id cannot be 0")
 	}
-	if a.Title == "" {
+	if at.Title == "" {
 		return fmt.Errorf("AvatarTemplate title cannot be empty")
 	}
-	if a.UserId < 1 {
+	if at.UserId < 1 {
 		return fmt.Errorf("AvatarTemplate user id cannot be 0")
 	}
-	if a.Size == "" {
+	if at.Size == "" {
 		return fmt.Errorf("AvatarTemplate size cannot be empty")
 	}
-	if len(a.Image) < 1 {
+	if len(at.Image) < 1 {
 		return fmt.Errorf("AvatarTemplate image cannot be empty")
 	}
-	if a.Mime == "" {
+	if at.Mime == "" {
 		return fmt.Errorf("AvatarTemplate mime cannot be empty")
 	}
 	return nil

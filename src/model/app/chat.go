@@ -3,6 +3,7 @@ package app
 import (
 	"log"
 	t "prplchat/src/model/template"
+	ti "prplchat/src/model/template/interface"
 )
 
 type Chat struct {
@@ -24,13 +25,13 @@ func (c *Chat) Template(
 	viewer *User,
 	members []*User,
 	msgs []*Message,
-) *t.ChatTemplate {
+) t.ChatTemplate {
 	// current viewer + chat owner
 	var usr t.UserTemplate
 	var ownr t.UserTemplate
 	if viewer == nil {
 		log.Printf("Chat.Template ERROR viewer cannot be nil\n")
-		return nil
+		return t.ChatTemplate{}
 	}
 	usr = t.UserTemplate{
 		ChatId:      c.Id,
@@ -49,7 +50,7 @@ func (c *Chat) Template(
 		ViewerId: viewer.Id,
 	}
 	// chat users
-	users := make([]t.UserTemplate, 0)
+	users := make([]ti.Renderable, 0)
 	if len(members) <= 0 {
 		log.Printf("Chat.Template INFO chat[%d] has no users\n", c.Id)
 	} else {
@@ -69,7 +70,7 @@ func (c *Chat) Template(
 		}
 	}
 	// chat messages
-	messages := make([]t.MessageTemplate, 0)
+	messages := make([]ti.Renderable, 0)
 	if len(msgs) > 0 {
 		for idx, msg := range msgs {
 			if msg == nil {
@@ -81,13 +82,13 @@ func (c *Chat) Template(
 				log.Printf("Chat.Template ERROR failed to create message template, %s\n", err)
 				continue
 			}
-			messages = append(messages, *msgTmpl)
+			messages = append(messages, msgTmpl)
 		}
 	} else {
 		log.Printf("Chat.Template INFO chat[%d] has no messages\n", c.Id)
 	}
 	// chat
-	return &t.ChatTemplate{
+	return t.ChatTemplate{
 		ChatId:   c.Id,
 		ChatName: c.Name,
 		User:     usr,

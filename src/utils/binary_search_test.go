@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"prplchat/src/utils/interfaces"
+	i "prplchat/src/utils/interface"
 	"testing"
 )
 
@@ -22,12 +22,12 @@ func (ti TestItem) GetId() uint {
 // 2024/08/04 id[91] isfound:false check took 125ns, 17 loops in 90910 items
 
 func TestBinarySearch(t *testing.T) {
-	items := make([]interfaces.Identifiable, 0)
+	items := make([]i.Identifiable, 0)
 	for i := 0; i < 1_000_000; i += 11 {
 		item := TestItem{Id: uint(i)}
 		items = append(items, item)
 	}
-	var found interfaces.Identifiable
+	var found i.Identifiable
 	var idx int
 	found, idx = BinarySearch(items, 0)
 	if found == nil {

@@ -10,7 +10,7 @@ import (
 
 func main() {
 	log.Println("Application is starting...")
-	src.SetupGlobalLogger()
+	src.SetupGlobalLogger(true, false)
 	config := src.ReadEnvConfig()
 	db := src.ConnectDB(config)
 	app := src.InitAppState(config)

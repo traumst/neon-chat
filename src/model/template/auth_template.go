@@ -7,10 +7,10 @@ import (
 
 type AuthTemplate struct{}
 
-func (lt *AuthTemplate) HTML() (string, error) {
+func (at AuthTemplate) HTML() (string, error) {
 	template := template.Must(template.ParseFiles("static/html/nav/auth_div.html"))
 	var buf bytes.Buffer
-	err := template.Execute(&buf, lt)
+	err := template.Execute(&buf, at)
 	if err != nil {
 		return "", err
 	}

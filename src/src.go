@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func SetupGlobalLogger() {
+func SetupGlobalLogger(toStderr bool, toFile bool) {
 	log.Println("setting up logger...")
 	now := time.Now()
 	timestamp := now.Format(time.RFC3339)
@@ -23,8 +23,16 @@ func SetupGlobalLogger() {
 		log.Fatal(err)
 	}
 	defer logFile.Close()
-	multi := io.MultiWriter(logFile, os.Stderr)
-	log.SetOutput(multi)
+	if toFile && toStderr {
+		log.SetOutput(io.MultiWriter(logFile, os.Stderr))
+		log.Printf("Logging to file [%s] and stderr\n", logPath)
+	} else if toFile {
+		log.SetOutput(logFile)
+		log.Printf("Logging to file [%s]\n", logPath)
+	} else {
+		log.SetOutput(os.Stderr)
+		log.Println("Logging to stderr")
+	}
 }
 
 func ReadEnvConfig() *utils.Config {
