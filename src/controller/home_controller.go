@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"prplchat/src/controller/shared"
 	"prplchat/src/db"
+	"prplchat/src/handler"
 	"prplchat/src/handler/state"
 	a "prplchat/src/model/app"
 	"prplchat/src/model/template"
@@ -53,7 +53,7 @@ func RenderHome(
 		panic("user is nil")
 	}
 	log.Printf("[%s] RenderHome TRACE IN", h.GetReqId(r))
-	html, err := shared.TemplateHome(state, db, r, user)
+	html, err := handler.TemplateHome(state, db, r, user)
 	if err != nil {
 		log.Printf("[%s] RenderHome ERROR failed to template home, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)

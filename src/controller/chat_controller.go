@@ -9,8 +9,8 @@ import (
 
 	d "prplchat/src/db"
 	"prplchat/src/handler"
+	"prplchat/src/handler/shared"
 	"prplchat/src/handler/state"
-	"prplchat/src/model/template"
 	"prplchat/src/utils"
 	h "prplchat/src/utils/http"
 )
@@ -18,16 +18,8 @@ import (
 func Welcome(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] Welcome TRACE\n", reqId)
-	user, err := handler.ReadSession(state, db, w, r)
-	var welcome template.WelcomeTemplate
-	if user == nil {
-		log.Printf("[%s] OpenChat TRACE user is not authorized, %s\n", h.GetReqId(r), err)
-		welcome = template.WelcomeTemplate{User: *user.Template(0, 0, 0)}
-	} else {
-		log.Printf("[%s] OpenChat TRACE user is authorized, %s\n", h.GetReqId(r), err)
-		welcome = template.WelcomeTemplate{User: *user.Template(0, 0, 0)}
-	}
-	html, err := welcome.HTML()
+	user, _ := handler.ReadSession(state, db, w, r)
+	html, err := shared.TemplateWelcome(user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("failed to template html, %s", err.Error())))

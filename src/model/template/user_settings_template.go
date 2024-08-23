@@ -45,12 +45,6 @@ func (h *UserSettingsTemplate) HTML() (string, error) {
 }
 
 func (c *UserSettingsTemplate) validate() error {
-	if c.ChatId < 1 {
-		return fmt.Errorf("UserSettingsTemplate chat id cannot be 0")
-	}
-	if c.ChatOwnerId < 1 {
-		return fmt.Errorf("UserSettingsTemplate chat owner id cannot be 0")
-	}
 	if c.UserId < 1 {
 		return fmt.Errorf("UserSettingsTemplate user id cannot be 0")
 	}

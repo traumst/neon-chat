@@ -1,11 +1,10 @@
-package shared
+package handler
 
 import (
 	"log"
 	"net/http"
 	"prplchat/src/convert"
 	"prplchat/src/db"
-	"prplchat/src/handler"
 	"prplchat/src/handler/state"
 	"prplchat/src/model/app"
 	"prplchat/src/model/template"
@@ -24,7 +23,7 @@ func TemplateHome(
 		avatarTmpl = avatar.Template(user)
 	}
 	openChatTemplate := TemplateOpenChat(state, db, user)
-	chats, err := handler.GetChats(state, db, user.Id)
+	chats, err := GetChats(state, db, user.Id)
 	if err != nil {
 		log.Printf("[%s] templateHome ERROR, failed getting chats for user[%d], %s\n",
 			h.GetReqId(r), user.Id, err.Error())

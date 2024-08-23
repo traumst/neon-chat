@@ -102,20 +102,25 @@ func distributeInCommonChat(
 		targetUsers = append(targetUsers, convert.UserDBToApp(&dbUser))
 	}
 	// inform if chat is open
+	var errs []string
 	for _, targetUser := range targetUsers {
 		if targetUser == nil {
 			continue
 		}
 		openChatId := state.GetOpenChat(targetUser.Id)
 		if openChatId == 0 || openChatId != chat.Id {
+			// TODO send unread counter update
 			continue
 		}
 		uErr := distributeUpdateOfUser(state, targetUser, subjectUser, updateType)
 		if uErr != nil {
-			err = fmt.Errorf("%s, %s", uErr.Error(), err.Error())
+			errs = append(errs, fmt.Sprintf("failed to distribute to user[%d], %s\n", targetUser.Id, uErr))
 		}
 	}
-	return err
+	if len(errs) > 0 {
+		return fmt.Errorf("failed to distribute in chat[%d], %v", chat.Id, errs)
+	}
+	return nil
 }
 
 func distributeUpdateOfUser(
@@ -152,13 +157,13 @@ func distributeUpdateOfUser(
 
 func userNameChanged(conn *state.Conn, subject *app.User) error {
 	if subject == nil {
-		return fmt.Errorf("subjectUser is nil for userChanged")
+		return fmt.Errorf("subject user is nil")
 	}
-	log.Printf("userChanged TRACE informing target[%d] about subject[%d] change\n", conn.User.Id, subject.Id)
+	log.Printf("userNameChanged TRACE informing target[%d] about subject[%d] name change\n", conn.User.Id, subject.Id)
 	tmpl := subject.Template(0, 0, conn.User.Id)
 	data, err := tmpl.HTML()
 	if err != nil {
-		return fmt.Errorf("failed to template user")
+		return fmt.Errorf("failed to template subject user")
 	}
 	conn.In <- event.LiveEvent{
 		Event:    event.UserChange,

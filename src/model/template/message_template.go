@@ -9,8 +9,9 @@ import (
 type MessageTemplate struct {
 	ChatId           uint
 	MsgId            uint
-	ViewerName       string
-	OwnerName        string
+	ViewerId         uint
+	OwnerId          uint
+	AuthorId         uint
 	AuthorName       string
 	Text             string
 	MessageDropEvent string
@@ -35,11 +36,14 @@ func (m *MessageTemplate) validate() error {
 	if m.MsgId < 1 {
 		return fmt.Errorf("MessageTemplate requires MsgId but is [%d]", m.MsgId)
 	}
-	if len(m.ViewerName) < 1 {
-		return fmt.Errorf("MessageTemplate requires ViewerName but is [%s]", m.ViewerName)
+	if m.ViewerId < 1 {
+		return fmt.Errorf("MessageTemplate requires ViewerId but is [%d]", m.ViewerId)
 	}
-	if len(m.OwnerName) < 1 {
-		return fmt.Errorf("MessageTemplate requires OwnerName but is [%s]", m.OwnerName)
+	if m.OwnerId < 1 {
+		return fmt.Errorf("MessageTemplate requires OwnerId but is [%d]", m.OwnerId)
+	}
+	if m.AuthorId < 1 {
+		return fmt.Errorf("MessageTemplate requires AuthorId but is [%d]", m.AuthorId)
 	}
 	if len(m.AuthorName) < 1 {
 		return fmt.Errorf("MessageTemplate requires AuthorName but is [%s]", m.AuthorName)

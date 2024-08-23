@@ -70,35 +70,23 @@ func (c *ChatTemplate) ShortHTML() (string, error) {
 }
 
 func (c *ChatTemplate) validate() error {
-	if c.ChatId < 1 {
-		return fmt.Errorf("ChatTemplate requires ChatId but is [%d], %v", c.ChatId, c)
-	}
-	if c.ChatName == "" {
-		return fmt.Errorf("ChatTemplate requires ChatName but is [%s], %v", c.ChatName, c)
-	}
 	if c.User.UserId < 1 {
 		return fmt.Errorf("ChatTemplate requires User.UserId but is [%d], %v", c.User.UserId, c)
 	}
 	if c.User.UserName == "" {
 		return fmt.Errorf("ChatTemplate requires User.UserName but is [%s], %v", c.User.UserName, c)
 	}
-	if c.Viewer.UserId < 1 {
-		return fmt.Errorf("ChatTemplate requires Viewer.UserId but is [%d], %v", c.Viewer.UserId, c)
-	}
-	if c.Viewer.UserName == "" {
-		return fmt.Errorf("ChatTemplate requires Viewer.UserName but is [%s], %v", c.Viewer.UserName, c)
-	}
-	if c.Owner.UserId < 1 {
-		return fmt.Errorf("ChatTemplate requires Owner.UserId but is [%d], %v", c.Owner.UserId, c)
-	}
-	// if c.Owner.UserName == "" {
-	// 	return fmt.Errorf("ChatTemplate requires Owner.UserName but is [%s], %v", c.Owner.UserName, c)
+	// if c.Viewer.UserId < 1 {
+	// 	return fmt.Errorf("ChatTemplate requires Viewer.UserId but is [%d], %v", c.Viewer.UserId, c)
 	// }
-	if len(c.Users) < 1 {
-		return fmt.Errorf("ChatTemplate requires Users but is empty, %v", c)
-	}
-	// if len(c.Messages) < 1 {
-	// 	return fmt.Errorf("ChatTemplate requires Messages but is empty, %v", c)
+	// if c.Viewer.UserName == "" {
+	// 	return fmt.Errorf("ChatTemplate requires Viewer.UserName but is [%s], %v", c.Viewer.UserName, c)
+	// }
+	// if c.Owner.UserId < 1 {
+	// 	return fmt.Errorf("ChatTemplate requires Owner.UserId but is [%d], %v", c.Owner.UserId, c)
+	// }
+	// if len(c.Users) < 1 {
+	// 	return fmt.Errorf("ChatTemplate requires Users but is empty, %v", c)
 	// }
 	return nil
 }

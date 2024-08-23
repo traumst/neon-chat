@@ -9,7 +9,6 @@ import (
 	"prplchat/src/handler/state"
 	a "prplchat/src/model/app"
 	"prplchat/src/model/event"
-	"prplchat/src/model/template"
 	"prplchat/src/utils"
 )
 
@@ -52,14 +51,12 @@ func HandleChatOpen(state *state.State, db *d.DBConn, user *a.User, chatId uint)
 	err := state.OpenChat(user.Id, chatId)
 	if err != nil {
 		log.Printf("HandleChatOpen ERROR opening chat[%d] for user[%d], %s\n", chatId, user.Id, err.Error())
-		welcome := template.WelcomeTemplate{User: *user.Template(0, 0, 0)}
-		return welcome.HTML()
+		return TemplateWelcome(user)
 	}
 	appChat, err := GetChat(state, db, user, chatId)
 	if err != nil {
 		log.Printf("HandleChatOpen ERROR opening chat[%d] for user[%d], %s\n", chatId, user.Id, err.Error())
-		welcome := template.WelcomeTemplate{User: *user.Template(0, 0, 0)}
-		return welcome.HTML()
+		return TemplateWelcome(user)
 	}
 	appChatUsers, err := GetChatUsers(db, chatId)
 	if err != nil {
@@ -78,8 +75,7 @@ func HandleChatClose(state *state.State, db *d.DBConn, user *a.User, chatId uint
 	if err != nil {
 		return "", fmt.Errorf("close chat[%d] for user[%d]: %s", chatId, user.Id, err)
 	}
-	welcome := template.WelcomeTemplate{User: *user.Template(0, 0, 0)}
-	return welcome.HTML()
+	return TemplateWelcome(user)
 }
 
 func HandleChatDelete(state *state.State, db *d.DBConn, user *a.User, chatId uint) error {

@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 
-	"prplchat/src/controller/shared"
 	"prplchat/src/convert"
 	d "prplchat/src/db"
 	"prplchat/src/handler"
@@ -80,13 +79,20 @@ func CloseSettings(state *state.State, db *d.DBConn, w http.ResponseWriter, r *h
 		w.Write([]byte("User is unauthorized"))
 		return
 	}
-	html, err := shared.TemplateHome(state, db, r, user)
+	var html string
+	openChat := handler.TemplateOpenChat(state, db, user)
+	if openChat == nil {
+		html, err = handler.TemplateWelcome(user)
+	} else {
+		html, err = openChat.HTML()
+	}
 	if err != nil {
-		log.Printf("[%s] CloseSettings ERROR  %s\n", h.GetReqId(r), err)
+		log.Printf("[%s] CloseSettings ERROR failed to template, chat[%t] %s\n", h.GetReqId(r), openChat == nil, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to template response"))
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }

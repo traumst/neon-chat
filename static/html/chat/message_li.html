@@ -9,7 +9,7 @@
         h-fit
         gap-1
         shadow
-        {{ if eq .AuthorName .ViewerName }}
+        {{ if eq .AuthorId .ViewerId }}
             ml-[17%]
             border-b-4 border-green-700 rounded-lg
             shadow shadow-green-800
@@ -24,7 +24,7 @@
         <pre class="mr-0">[{{ .AuthorName }}]</pre><pre>&nbsp;</pre>
         <div class="break-all">{{ .Text }}</div>
     </div>
-    {{ if or (eq .AuthorName .ViewerName) (eq .OwnerName .ViewerName) }}
+    {{ if or (eq .AuthorId .ViewerId) (eq .OwnerId .ViewerId) }}
         <form id="delete-message"
             title="delete message from {{ .AuthorName }}"
             hx-post="/message/delete" 

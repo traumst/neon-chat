@@ -32,8 +32,9 @@ func (m *Message) Template(viewer *User, owner *User) (*template.MessageTemplate
 	return &template.MessageTemplate{
 		ChatId:           m.ChatId,
 		MsgId:            m.Id,
-		ViewerName:       viewer.Name,
-		OwnerName:        owner.Name,
+		ViewerId:         viewer.Id,
+		OwnerId:          owner.Id,
+		AuthorId:         m.Author.Id,
 		AuthorName:       m.Author.Name,
 		Text:             m.Text,
 		MessageDropEvent: event.MessageDrop.FormatEventName(m.ChatId, m.Author.Id, m.Id),
