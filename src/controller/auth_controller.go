@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"prplchat/src/convert"
 	d "prplchat/src/db"
 	"prplchat/src/handler"
 	"prplchat/src/handler/state"
@@ -19,7 +20,7 @@ const (
 	EmailAuthType = a.AuthTypeEmail
 )
 
-func Login(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func Login(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] Login TRACE IN\n", h.GetReqId(r))
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -67,9 +68,9 @@ func Login(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusOK)
 }
 
-func Logout(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func Logout(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] Logout TRACE \n", h.GetReqId(r))
-	user, err := handler.ReadSession(app, db, w, r)
+	user, err := handler.ReadSession(state, db, w, r)
 	if user == nil {
 		log.Printf("[%s] Logout INFO user is not authorized, %s\n", h.GetReqId(r), err.Error())
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
@@ -80,7 +81,7 @@ func Logout(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusOK)
 }
 
-func SignUp(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func SignUp(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] SignUp TRACE IN\n", h.GetReqId(r))
 	if r.Method != "PUT" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -147,7 +148,7 @@ func SignUp(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Reque
 		// }
 	}()
 	log.Printf("[%s] SignUp TRACE issuing reservation to [%s]\n", h.GetReqId(r), user.Email)
-	sentEmail, err := handler.IssueReservationToken(app, db, user)
+	sentEmail, err := handler.IssueReservationToken(state, db, user)
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR failed to issue reservation token to email[%s], %s\n",
 			h.GetReqId(r), user.Email, err.Error())
@@ -173,7 +174,7 @@ func SignUp(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Reque
 	w.Write([]byte(html))
 }
 
-func ConfirmEmail(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func ConfirmEmail(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] ConfirmEmail TRACE IN\n", h.GetReqId(r))
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -218,7 +219,7 @@ func ConfirmEmail(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		w.Write([]byte("corrupted token"))
 		return
 	}
-	user := handler.UserFromDB(*dbUser)
+	user := convert.UserDBToApp(dbUser)
 	if user.Status != a.UserStatusPending {
 		log.Printf("[%s] ConfirmEmail ERROR user[%d] status[%s] is not pending\n", h.GetReqId(r), user.Id, user.Status)
 		w.WriteHeader(http.StatusBadRequest)
@@ -233,11 +234,6 @@ func ConfirmEmail(app *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		w.Write([]byte("failed to update user status"))
 		return
 	}
-	// &template.InfoMessage{
-	// 	Header: "Congrats! " + user.Email + " is confirmed",
-	// 	Body:   "Your user name is " + user.Name + " until you decide to change it",
-	// 	Footer: "Please, login using your signup credentials",
-	// }
 	http.Header.Add(w.Header(), "HX-Refresh", "true")
 	w.WriteHeader(http.StatusOK)
 }

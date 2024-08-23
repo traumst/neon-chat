@@ -79,7 +79,7 @@
                 hx-after-swap="scrollToLastChild"
                 class="flex-row flex-shrink border-2 rounded border-emerald-400"
             >
-                <input type="hidden" name="chatId" value="{{ .ChatId }}">
+                <input type="hidden" name="chatid" value="{{ .ChatId }}">
                 <input list="userList" id="inviteUser" name="invitee" 
                     hx-post="/user/search" 
                     hx-trigger="keyup delay:500ms" 
@@ -156,10 +156,10 @@
     hx-trigger="submit" 
     hx-target=".message-list" 
     hx-swap="beforeend"
-    hx-include="[name='chatId'],[name='msg']"
+    hx-include="[name='chatid'],[name='msg']"
     class="flex mt-auto border-2 rounded border-emerald-400"
 >
-    <input type="hidden" name="chatId" value="{{ .ChatId }}">
+    <input type="hidden" name="chatid" value="{{ .ChatId }}">
     <input id="newMsgText" type="text" name="msg" 
         placeholder="type message" 
         title="enter to send"

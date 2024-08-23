@@ -12,3 +12,4 @@ log/*
 *.db-journal
 .env
 prplchat
+launch.json

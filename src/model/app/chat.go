@@ -1,165 +1,92 @@
 package app
 
 import (
-	"fmt"
-	"sync"
-
+	"log"
 	t "prplchat/src/model/template"
 )
 
 type Chat struct {
-	Id      uint
-	Name    string
-	Owner   *User
-	users   []*User
-	history MessageStore
-	mu      sync.Mutex
+	Id        uint
+	Name      string
+	OwnerId   uint
+	OwnerName string
 }
 
-func (c *Chat) isOwner(userId uint) bool {
-	return c.Owner.Id == userId
-}
-
-func (c *Chat) isAuthor(userId uint, msgId uint) bool {
-	msg, _ := c.history.Get(msgId)
-	if msg != nil && msg.Id == msgId {
-		return msg.Author.Id == userId
+// Short html template does not require members or messages
+//
+// Parameters:
+//
+//	user: user who triggered state change
+//	viewer: user who is viewing the chat
+//	members: slice of users in chat
+func (c *Chat) Template(
+	user *User,
+	viewer *User,
+	members []*User,
+	msgs []*Message,
+) *t.ChatTemplate {
+	// current viewer + chat owner
+	var usr t.UserTemplate
+	var ownr t.UserTemplate
+	if viewer == nil {
+		log.Printf("Chat.Template ERROR viewer cannot be nil\n")
+		return nil
 	}
-	return false
-}
-
-func (c *Chat) isUserInChat(userId uint) bool {
-	for _, u := range c.users {
-		if u.Id == userId {
-			return true
-		}
-	}
-	return false
-}
-
-func (c *Chat) AddUser(ownerId uint, user *User) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if !c.isOwner(ownerId) {
-		return fmt.Errorf("only the owner can invite users")
-	}
-	if c.isUserInChat(user.Id) {
-		return fmt.Errorf("user already in chat")
-	}
-	c.users = append(c.users, user)
-	return nil
-}
-
-func (c *Chat) GetUsers(userId uint) ([]*User, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if !c.isUserInChat(userId) {
-		return nil, fmt.Errorf("user[%d] is not in chat[%d]", userId, c.Id)
-	}
-	return c.users, nil
-}
-
-func (c *Chat) SyncUser(userId uint, template *User) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	for _, u := range c.users {
-		if u.Id == userId {
-			u.Name = template.Name
-			u.Email = template.Email
-			u.Type = template.Type
-			u.Status = template.Status
-			return nil
-		}
-	}
-	return nil
-}
-
-func (c *Chat) RemoveUser(ownerId uint, userId uint) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if !c.isOwner(ownerId) && ownerId != userId {
-		return fmt.Errorf("only the owner can remove users from chat")
-	}
-	if !c.isUserInChat(userId) {
-		return fmt.Errorf("only invited users can be removed from chat")
-	}
-	for i, u := range c.users {
-		if u.Id == userId {
-			c.users = append(c.users[:i], c.users[i+1:]...)
-			break
-		}
-	}
-	return nil
-}
-
-func (c *Chat) AddMessage(userId uint, message Message) (*Message, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if !c.isUserInChat(userId) {
-		return nil, fmt.Errorf("only invited users can add messages")
-	}
-
-	return c.history.Add(&message)
-}
-
-func (c *Chat) GetMessage(userId uint, msgId uint) (*Message, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if !c.isUserInChat(userId) {
-		return nil, fmt.Errorf("only invited users can get messages")
-	}
-	return c.history.Get(msgId)
-}
-
-func (c *Chat) DropMessage(userId uint, msgId uint) (*Message, error) {
-	msg, err := c.GetMessage(userId, msgId)
-	if err != nil {
-		return nil, err
-	}
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if !c.isUserInChat(userId) {
-		return msg, fmt.Errorf("only invited users can delete messages")
-	}
-	if !c.isAuthor(userId, msgId) && !c.isOwner(userId) {
-		return msg, fmt.Errorf("only user that sent the original message or chat owner can delete messages")
-	}
-	return msg, c.history.Delete(msg)
-}
-
-func (c *Chat) Template(user *User, viewer *User) *t.ChatTemplate {
-	var messages []t.MessageTemplate
-	for _, msg := range c.history.GetAll() {
-		if msg == nil {
-			continue
-		}
-		messages = append(messages, *msg.Template(user))
-	}
-	users := make([]t.UserTemplate, len(c.users))
-	for i, u := range c.users {
-		users[i] = t.UserTemplate{
-			ChatId:      c.Id,
-			ChatOwnerId: c.Owner.Id,
-			UserId:      u.Id,
-			UserName:    u.Name,
-			UserEmail:   u.Email,
-			ViewerId:    viewer.Id,
-		}
-	}
-	usr := t.UserTemplate{
+	usr = t.UserTemplate{
 		ChatId:      c.Id,
-		ChatOwnerId: c.Owner.Id,
-		UserId:      user.Id,
-		UserName:    user.Name,
+		ChatOwnerId: c.OwnerId,
+		UserId:      viewer.Id,
+		UserName:    viewer.Name,
+		UserEmail:   viewer.Email,
 		ViewerId:    viewer.Id,
 	}
-	ownr := t.UserTemplate{
+	ownr = t.UserTemplate{
 		ChatId:      c.Id,
-		ChatOwnerId: c.Owner.Id,
-		UserId:      c.Owner.Id,
-		UserName:    c.Owner.Name,
-		ViewerId:    viewer.Id,
+		ChatOwnerId: c.OwnerId,
+		UserId:      c.OwnerId,
+		UserName:    c.OwnerName,
+		//UserEmail:   c.OwnerEmail,
+		ViewerId: viewer.Id,
 	}
+	// chat users
+	users := make([]t.UserTemplate, 0)
+	if len(members) <= 0 {
+		log.Printf("Chat.Template INFO chat[%d] has no users\n", c.Id)
+	} else {
+		for _, member := range members {
+			if member == nil {
+				log.Printf("Chat.Template TRACE skip nil member in chat[%d]\n", c.Id)
+				continue
+			}
+			users = append(users, t.UserTemplate{
+				ChatId:      c.Id,
+				ChatOwnerId: c.OwnerId,
+				UserId:      member.Id,
+				UserName:    member.Name,
+				UserEmail:   member.Email,
+				ViewerId:    viewer.Id,
+			})
+		}
+	}
+	// chat messages
+	messages := make([]t.MessageTemplate, 0)
+	if len(msgs) > 0 {
+		for idx, msg := range msgs {
+			if msg == nil {
+				log.Printf("Chat.Template TRACE skip nil msg on index[%d] in chat[%d]\n", idx, c.Id)
+				continue
+			}
+			msgTmpl, err := msg.Template(viewer, &User{Id: c.OwnerId, Name: c.OwnerName})
+			if err != nil {
+				log.Printf("Chat.Template ERROR failed to create message template, %s\n", err)
+				continue
+			}
+			messages = append(messages, *msgTmpl)
+		}
+	} else {
+		log.Printf("Chat.Template INFO chat[%d] has no messages\n", c.Id)
+	}
+	// chat
 	return &t.ChatTemplate{
 		ChatId:   c.Id,
 		ChatName: c.Name,

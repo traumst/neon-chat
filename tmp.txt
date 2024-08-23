@@ -1,0 +1,7 @@
+.Author 
+.ActiveUser
+.ChatId
+.MsgId
+.Text
+.Owner
+.MessageDropEvent

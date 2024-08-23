@@ -2,6 +2,15 @@ package utils
 
 import "strings"
 
+func Contains[T comparable](arr []T, item T) bool {
+	for _, a := range arr {
+		if a == item {
+			return true
+		}
+	}
+	return false
+}
+
 // applies all other trims
 func SanitizeInput(s string) string {
 	s = ReplaceWithSingleSpace(s)

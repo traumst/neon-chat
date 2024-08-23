@@ -73,6 +73,40 @@ func TestSet(t *testing.T) {
 	}
 }
 
+func TestSetNumericValue(t *testing.T) {
+	cache := NewLRUCache(3)
+	err := cache.Set(1, uint(1))
+	if err != nil {
+		t.Fatalf("Expected no error, %s", err.Error())
+	}
+	if cache.Count() != 1 {
+		t.Fatalf("Expected count to be 1")
+	}
+	storedInMap := cache.dict[1]
+	if storedInMap == nil {
+		t.Fatalf("Expected storedInMap dict is empty")
+	}
+	if storedInMap.id != 1 {
+		t.Fatalf("Expected storedInMap id to be 1")
+	}
+	if storedInMap.value != uint(1) {
+		t.Fatalf("Expected storedInMap value to be 1")
+	}
+	storedInList, err := cache.list.Get(1)
+	if err != nil {
+		t.Fatalf("Expected node to be in list, %s", err.Error())
+	}
+	if storedInList.id != 1 {
+		t.Fatalf("Expected storedInList id to be 1")
+	}
+	if storedInList.value != uint(1) {
+		t.Fatalf("Expected value to be 1")
+	}
+	if storedInList != storedInMap {
+		t.Fatalf("Expected storedInList to be storedInMap")
+	}
+}
+
 func TestSetMultiple(t *testing.T) {
 	cache := NewLRUCache(3)
 	err := cache.Set(1, "one")
@@ -142,6 +176,33 @@ func TestGet(t *testing.T) {
 	}
 	if value != "" {
 		t.Fatalf("Expected value to be empty string, but was [%s]", value)
+	}
+}
+
+func TestScan(t *testing.T) {
+	cache := NewLRUCache(3)
+	_ = cache.Set(1, "one")
+	_ = cache.Set(2, "two")
+	_ = cache.Set(3, "three")
+	keys := cache.Keys()
+	if len(keys) != 3 {
+		t.Fatalf("Expected keys to be 3 but was [%d]", len(keys))
+	}
+	i1 := false
+	i2 := false
+	i3 := false
+	for i := 0; i < 3; i++ {
+		switch keys[i] {
+		case 1:
+			i1 = true
+		case 2:
+			i2 = true
+		case 3:
+			i3 = true
+		}
+	}
+	if !i1 || !i2 || !i3 {
+		t.Fatalf("Unexpected set of keys %v", keys)
 	}
 }
 
