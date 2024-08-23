@@ -35,8 +35,6 @@ Starting server...
 And the app should be available at http://localhost:8080
 
 ## TODOs
-+ Bugz after persistence changes
-+ Introduce Tmpl
 
 ### Message Broadcasting: 
 - msg should distribute to user connection, even if chat is closed
@@ -63,6 +61,7 @@ And the app should be available at http://localhost:8080
 - @users in chat
 - @messages in chat
 - *web call*
+- introduce Tmpl to replace default templating engine
 
 ### User Notifications
 - setting on/off
