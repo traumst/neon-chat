@@ -36,6 +36,9 @@ And the app should be available at http://localhost:8080
 
 ## TODOs
 
++ Bugs
+    * User name change should update left panel
+
 + UI improvements
     * collapsible menus
     * avatars on messages

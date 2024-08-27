@@ -126,6 +126,16 @@ func GetChatMessages(db *d.DBConn, chatId uint) ([]*a.Message, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed getting chat[%d] users[%v], %s", chatId, authorIds, err.Error())
 	}
+	authorAvatars := make(map[uint]*a.Avatar)
+	dbAvatars, err := db.GetAvatars(authorIds)
+	if err == nil {
+		for _, dbAvatar := range dbAvatars {
+			if authorAvatars[dbAvatar.UserId] != nil {
+				continue
+			}
+			authorAvatars[dbAvatar.UserId] = convert.AvatarDBToApp(dbAvatar)
+		}
+	}
 	msgAuthors := make(map[uint]*a.User)
 	for _, dbUser := range dbUsers {
 		msgAuthors[dbUser.Id] = convert.UserDBToApp(&dbUser)
@@ -136,6 +146,9 @@ func GetChatMessages(db *d.DBConn, chatId uint) ([]*a.Message, error) {
 		if !ok {
 			log.Printf("GetChatMessages ERROR author[%d] of message[%d] is not mapped\n", dbMsg.AuthorId, dbMsg.Id)
 			continue
+		}
+		if authorAvatars[author.Id] != nil {
+			author.Avatar = authorAvatars[author.Id]
 		}
 		appMsg := convert.MessageDBToApp(&dbMsg, author)
 		appChatMsgs = append(appChatMsgs, &appMsg)

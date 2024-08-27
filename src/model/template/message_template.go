@@ -13,6 +13,7 @@ type MessageTemplate struct {
 	OwnerId          uint
 	AuthorId         uint
 	AuthorName       string
+	AuthorAvatar     AvatarTemplate
 	Text             string
 	MessageDropEvent string
 }
@@ -22,7 +23,9 @@ func (m MessageTemplate) HTML() (string, error) {
 		return "", fmt.Errorf("cannot template, %s", err.Error())
 	}
 	var buf bytes.Buffer
-	msgTmpl := template.Must(template.ParseFiles("static/html/chat/message_li.html"))
+	msgTmpl := template.Must(template.ParseFiles(
+		"static/html/chat/message_li.html",
+		"static/html/avatar_div.html"))
 	if err := msgTmpl.Execute(&buf, m); err != nil {
 		return "", fmt.Errorf("failed to template, %s", err.Error())
 	}

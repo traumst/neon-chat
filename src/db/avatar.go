@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"prplchat/src/utils"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type Avatar struct {
@@ -15,6 +17,8 @@ type Avatar struct {
 	Image  []byte `db:"image"`
 	Mime   string `db:"mime"`
 }
+
+const AvatarMaxUploadBytesSize int64 = 50 * utils.KB
 
 const AvatarSchema = `
 	CREATE TABLE IF NOT EXISTS avatars (
@@ -42,9 +46,8 @@ func (db *DBConn) AddAvatar(userId uint, title string, image []byte, mime string
 	if size <= 0 {
 		return nil, fmt.Errorf("avatar requires an image")
 	}
-	limit := 10 * utils.KB
-	if size > limit {
-		return nil, fmt.Errorf("avatar image size[%d] is over limit[%d]", size, limit)
+	if int64(size) > AvatarMaxUploadBytesSize {
+		return nil, fmt.Errorf("avatar image size[%d] is over limit[%d]", size, AvatarMaxUploadBytesSize)
 	}
 	if !db.ConnIsActive() {
 		return nil, fmt.Errorf("db is not connected")
@@ -92,7 +95,36 @@ func (db *DBConn) GetAvatar(userId uint) (*Avatar, error) {
 	return &avatar, nil
 }
 
-func (db *DBConn) GetAvatars(userId uint) ([]*Avatar, error) {
+func (db *DBConn) GetAvatars(userIds []uint) ([]*Avatar, error) {
+	if !db.isConn {
+		return nil, fmt.Errorf("db is not connected")
+	}
+	if len(userIds) <= 0 {
+		return nil, fmt.Errorf("empty input userIds")
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	query, args, err := sqlx.In(`SELECT * FROM avatars WHERE user_id IN (?)`, userIds)
+	if err != nil {
+		return nil, fmt.Errorf("error preparing select avatars query for userIds %v, %s", userIds, err)
+	}
+	query = db.conn.Rebind(query)
+
+	var avatars []Avatar
+	err = db.conn.Select(&avatars, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("error getting avatars for userIds %v: %s", userIds, err)
+	}
+	var avatarsPtrs []*Avatar
+	for i := range avatars {
+		avatarsPtrs = append(avatarsPtrs, &avatars[i])
+	}
+	return avatarsPtrs, nil
+}
+
+func (db *DBConn) GetUserAvatars(userId uint) ([]*Avatar, error) {
 	if !db.isConn {
 		return nil, fmt.Errorf("db is not connected")
 	}

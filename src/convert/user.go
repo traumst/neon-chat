@@ -24,5 +24,6 @@ func UserDBToApp(user *db.User) *app.User {
 		Type:   app.UserType(user.Type),
 		Status: app.UserStatus(user.Status),
 		Salt:   user.Salt,
+		Avatar: nil,
 	}
 }

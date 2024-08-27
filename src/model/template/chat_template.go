@@ -51,7 +51,8 @@ func (c ChatTemplate) HTML() (string, error) {
 	chatTmpl := template.Must(template.ParseFiles(
 		"static/html/chat/chat_div.html",
 		"static/html/user_div.html",
-		"static/html/chat/message_li.html"))
+		"static/html/chat/message_li.html",
+		"static/html/avatar_div.html"))
 	if err := chatTmpl.Execute(&buf, c); err != nil {
 		return "", fmt.Errorf("failed to template, %s", err.Error())
 	}
