@@ -27,6 +27,7 @@ type User struct {
 	Type   UserType
 	Status UserStatus
 	Salt   string
+	Avatar *Avatar
 }
 
 func (user *User) Template(

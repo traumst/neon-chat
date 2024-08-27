@@ -35,26 +35,28 @@
         <div>
             {{ template "user_div.html" .User }}
         </div>
-        <sub id="logoutButton" 
-            title="log out {{ .User.UserName }}"
-            hx-trigger="click" 
-            hx-post="/logout" 
-            hx-target="body"
-            class="other-info flex hover:text-amber-700"
-        >
-            [logout]
-        </sub>
-        <!-- repeated clicks here should cycle between open/close settings -->
-        <sub id="openSettingButton" 
-            title="open settings" 
-            hx-trigger="click" 
-            hx-get="/settings" 
-            hx-target=".open-chat" 
-            hx-swap="innerHTML"
-            class="other-info flex hover:text-green-700"
-        >
-            [settings]
-        </sub>
+        <div class="flex hover:target:">
+            <sub id="logoutButton" 
+                title="log out {{ .User.UserName }}"
+                hx-trigger="click" 
+                hx-post="/logout" 
+                hx-target="body"
+                class="other-info flex flex-col hover:text-amber-700"
+            >
+                [logout]
+            </sub>
+            <!-- repeated clicks here should cycle between open/close settings -->
+            <sub id="openSettingButton" 
+                title="open settings" 
+                hx-trigger="click" 
+                hx-get="/settings" 
+                hx-target=".open-chat" 
+                hx-swap="innerHTML"
+                class="other-info flex flex-col hover:text-green-700"
+            >
+                [settings]
+            </sub>
+        </div>
     </div>
 
     <div class="add-chat 
@@ -141,9 +143,4 @@
         scrollToFirstChild(chatHeaders);
         </script>
     </div>
-<!-- <div id="left-panel-toggle">
-    <button onclick="togglePanel()" 
-        class="default-transition mt-auto">
-    </button>
-</div> -->
 </div>

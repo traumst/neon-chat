@@ -1,8 +1,8 @@
-{{ if . }}
+{{ if ne .UserId 0 }}
     <img id="user-{{ .UserId }}-avatar-{{ .Id }}" 
         title="{{ .Title }}, {{ .Size }}" 
         src="data:{{ .Mime }};base64,{{ .Base64 }}"
-        class="user-avatar w-[2em] h-[2em]"
+        class="user-avatar rounded-lg"
     >
 {{ else }}
     <img title="default anon avatar"  

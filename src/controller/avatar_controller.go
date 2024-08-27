@@ -7,6 +7,7 @@ import (
 
 	"prplchat/src/convert"
 	"prplchat/src/db"
+	d "prplchat/src/db"
 	"prplchat/src/handler"
 	"prplchat/src/handler/sse"
 	"prplchat/src/handler/state"
@@ -16,7 +17,7 @@ import (
 	h "prplchat/src/utils/http"
 )
 
-func AddAvatar(state *state.State, db *db.DBConn, w http.ResponseWriter, r *http.Request) {
+func AddAvatar(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := h.GetReqId(r)
 	log.Printf("[%s] AddAvatar\n", reqId)
 	if r.Method != "POST" {
@@ -31,7 +32,7 @@ func AddAvatar(state *state.State, db *db.DBConn, w http.ResponseWriter, r *http
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
-	err = r.ParseMultipartForm(handler.MaxUploadSize)
+	err = r.ParseMultipartForm(d.AvatarMaxUploadBytesSize)
 	if err != nil {
 		log.Printf("[%s] AddAvatar ERROR multipart failed, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)

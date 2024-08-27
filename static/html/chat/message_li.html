@@ -21,7 +21,14 @@
         hover:shadow-green-500
         hover:text-green-500">
     <div class="chat-message-content flex flex-row overflow-hidden">
-        <pre class="mr-0">[{{ .AuthorName }}]</pre><pre>&nbsp;</pre>
+        <style>
+            .chat-message-avatar {
+                width: 1.5em; /* 1.5 times the size of a lowercase letter */
+                height: 1.5em; /* Maintain aspect ratio */
+            }
+        </style>
+        <div class="chat-message-avatar ml-0 mr-1">{{ template "avatar_div.html" .AuthorAvatar }}</div>
+        <div class="mr-0">[{{ .AuthorName }}]</div><div>&nbsp;</div>
         <div class="break-all">{{ .Text }}</div>
     </div>
     {{ if or (eq .AuthorId .ViewerId) (eq .OwnerId .ViewerId) }}

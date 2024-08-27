@@ -13,7 +13,7 @@ type Message struct {
 	Text   string
 }
 
-func (m *Message) Template(viewer *User, owner *User) (t.MessageTemplate, error) {
+func (m *Message) Template(viewer *User, owner *User, avatar *Avatar) (t.MessageTemplate, error) {
 	if viewer == nil || viewer.Id == 0 {
 		return t.MessageTemplate{}, fmt.Errorf("viewer cannot be nil or blank")
 	}
@@ -36,6 +36,7 @@ func (m *Message) Template(viewer *User, owner *User) (t.MessageTemplate, error)
 		OwnerId:          owner.Id,
 		AuthorId:         m.Author.Id,
 		AuthorName:       m.Author.Name,
+		AuthorAvatar:     avatar.Template(viewer),
 		Text:             m.Text,
 		MessageDropEvent: event.MessageDrop.FormatEventName(m.ChatId, m.Author.Id, m.Id),
 	}, nil

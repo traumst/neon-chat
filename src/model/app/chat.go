@@ -51,10 +51,11 @@ func (c *Chat) Template(
 	}
 	// chat users
 	users := make([]ti.Renderable, 0)
+	userIds := make([]uint, len(members))
 	if len(members) <= 0 {
 		log.Printf("Chat.Template INFO chat[%d] has no users\n", c.Id)
 	} else {
-		for _, member := range members {
+		for i, member := range members {
 			if member == nil {
 				log.Printf("Chat.Template TRACE skip nil member in chat[%d]\n", c.Id)
 				continue
@@ -67,6 +68,7 @@ func (c *Chat) Template(
 				UserEmail:   member.Email,
 				ViewerId:    viewer.Id,
 			})
+			userIds[i] = member.Id
 		}
 	}
 	// chat messages
@@ -77,7 +79,7 @@ func (c *Chat) Template(
 				log.Printf("Chat.Template TRACE skip nil msg on index[%d] in chat[%d]\n", idx, c.Id)
 				continue
 			}
-			msgTmpl, err := msg.Template(viewer, &User{Id: c.OwnerId, Name: c.OwnerName})
+			msgTmpl, err := msg.Template(viewer, &User{Id: c.OwnerId, Name: c.OwnerName}, msg.Author.Avatar)
 			if err != nil {
 				log.Printf("Chat.Template ERROR failed to create message template, %s\n", err)
 				continue

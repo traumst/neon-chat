@@ -6,11 +6,9 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
-	"prplchat/src/db"
-	"prplchat/src/utils"
+	d "prplchat/src/db"
 )
 
-const MaxUploadSize int64 = 10 * utils.KB
 const MaxFileName int = 120
 
 var allowedImageFormats = []string{
@@ -30,13 +28,13 @@ func isAllowedImageFormat(mime string) bool {
 }
 
 func UpdateAvatar(
-	db *db.DBConn,
+	db *d.DBConn,
 	userId uint,
 	file *multipart.File,
 	info *multipart.FileHeader,
-) (*db.Avatar, error) {
-	if info.Size > MaxUploadSize {
-		return nil, fmt.Errorf("file too large %d, limit is %d", info.Size, MaxUploadSize)
+) (*d.Avatar, error) {
+	if info.Size > d.AvatarMaxUploadBytesSize {
+		return nil, fmt.Errorf("file too large %d, limit is %d", info.Size, d.AvatarMaxUploadBytesSize)
 	} else if len(info.Filename) == 0 {
 		return nil, fmt.Errorf("file lacks name")
 	} else if len(info.Filename) > MaxFileName {
@@ -50,7 +48,7 @@ func UpdateAvatar(
 	if !isAllowedImageFormat(mime) {
 		return nil, fmt.Errorf("file type is not supported[%s]", mime)
 	}
-	oldAvatars, err := db.GetAvatars(userId)
+	oldAvatars, err := db.GetUserAvatars(userId)
 	if err != nil {
 		return nil, fmt.Errorf("fail to get avatar for user[%d]", userId)
 	}

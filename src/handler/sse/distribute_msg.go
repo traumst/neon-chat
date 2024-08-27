@@ -39,6 +39,12 @@ func DistributeMsg(
 		return fmt.Errorf("chatUsers are empty, chat[%d], %s", chat.Id, err)
 	}
 
+	dbAvatar, err := db.GetAvatar(msg.Author.Id)
+	if err != nil {
+		return fmt.Errorf("failed to get avatars, %s", err)
+	}
+	appAvatar := convert.AvatarDBToApp(dbAvatar)
+
 	var wg sync.WaitGroup
 	var errors []string
 	for _, user := range users {
@@ -46,7 +52,7 @@ func DistributeMsg(
 		go func(viewer app.User, msg app.Message) {
 			defer wg.Done()
 			log.Printf("DistributeMsg TRACE event[%s] will be sent to user[%d]\n", updateType, viewer.Id)
-			msgTmpl, err := msg.Template(&viewer, owner)
+			msgTmpl, err := msg.Template(&viewer, owner, appAvatar)
 			if err != nil {
 				errors = append(errors, fmt.Sprintf("template:%s", err.Error()))
 				return
