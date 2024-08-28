@@ -40,10 +40,17 @@ And the app should be available at http://localhost:8080
     * User name change should update left panel
 
 + UI improvements
-    * collapsible menus
-    * avatars on messages
     * @ other messages
+        - "reply to" option on message
+            + click should paste into input at carret
+        - update text processing
+            + define quote message FK
+        - add quote message html template
+            + like message_li but lighter
+        - click on quoted message
+            + scroll original message into view if available
     * @ other users
+    * collapsible menus
 
 + Fuzzy search
     * messages by author
