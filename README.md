@@ -1,27 +1,62 @@
 # Neon chat
 
 Minimalistic chat app built using server-components on go + htmx.
-Default colorscheme is a personal preference, with light/dark mode on the horizon.
+Default colorscheme is a personal preference, and light/dark mode are... khm... on the horizon.
 This app is being build as an excercise for me to 
 - learn go
 - try sqlx
-- further explore htmx abilities
-- explore server sent events as websocket alternative
+- further explore htmx
+- explore server sent events for live messaging
 - fiddle with tailwind
-- <s>prove react is overrated</s>
+- <s>prove react is so over</s>
 - finish a project for a change
 
 ## How to run
 
-1. I assume you already have golang installed.
-    You can check if it is by running `go version` in a terminal.
-    If not, you can refer to [official instruction](https://go.dev/doc/install) for you pc/mac/linux
-2. Create `.env` file in the root of the project.
-    An example for available values can be found in `.env.template`
-3. Make `run.sh` executable by running `chmod +x run.sh` in the terminal.
-4. Execute `sh run.sh` in the terminal.
+### Prerequisites
 
-You should then see output similar to:
+First run is special. We're going to do a couple of special things now, that we would not have to do on subsequent. At least not entirely.
+
+I assume you already have golang installed.
+You can check if it is by running `go version` in a terminal.
+If not, you can refer to [official istallation instruction](https://go.dev/doc/install) for you pc/mac/linux.
+
+There's [tailwind.config.js](./tailwind.config.js) in the root, but it's not in use YET. Technically we can just serve the min script of current version. And we do by setting `LOCAL=false` in the `.env` file. Still, in the current setup we built tailwind file to produce minimal required css. [Compiled css](./static/css/tailwind.css) is roughly 1/20 of the default minified [cdn provided talwindcss.js](https://cdn.tailwindcss.com/3.4.5) and works exactly the same.
+
+App expects to have `.env` file in the root directory, which you have to create. There's `.env.template` file that you can easily copy-paste and fill up. App may still start without this file, as some defaults. behaviour in this case is unpredicable and thus is a broken state and should fatal exit.
+
+### Preparing run script
+
+Successfull launch of the app requires:
+* passing tests
+* compiling tailwind
+* (optional) purging the db
+* launching the app
+* etc.
+
+`run.sh` file is just a plaintext shell script. We need to make it executable by running `chmod +x run.sh` in project root in terminal. From now on, to run the app we can just run `sh run.sh` or `./run.sh`.
+
+Contents of [run.sh](./run.sh) is more or less:
+```
+> cat run.sh
+echo "Running tests"
+time go test ./...
+
+# for dev purposes
+#echo "Dropping db file..."
+# rm chat.db
+# (la chat.db && echo "...Dropped db successfully.") || echo "...Data not dropped."
+
+echo "Building tailwind..."
+~/code/bin/tailwindcss -i static/css/input.css -o static/css/tailwind.css
+
+echo "Starting server..."
+go run main.go
+```
+
+### Run script
+
+Executing a script from the terminal, you should then see output similar to:
 ```
 > sh run.sh
 Running tests
@@ -32,30 +67,38 @@ Starting server...
 ...
 2024/05/01 00:07:58 Starting server at port [8080]
 ```
-And the app should be available at http://localhost:8080
+App should now be available at http://localhost:8080
+
+> <b><u>Note</u></b><br>After initial successfull run there's no real reason to execute run script. Unless css is messed up or db is corrupted I just use `go run main.go` or `go test ./...` directly.
 
 ## TODOs
 
-+ Bugs
-    * User name change should update left panel
+### Bugs
+
+* User name change should update active user info on left panel
+* UI errored on user search, when after successfullt adding user to a chat
+
+### Next up
 
 + UI improvements
     * @ other messages
-        - "reply to" option on message
-            + click should paste into input at carret
+        - "reply" button on message
+            + click should paste quote into input at carret
         - update text processing
-            + define quote message FK
+            + quote source FK relationship
+            + link to messages:
+                + all or nothing when editing
+                + removing any char from quote removes entire quote
+                + default unavailable message
         - add quote message html template
             + like message_li but lighter
         - click on quoted message
             + scroll original message into view if available
-    * @ other users
+    * user info card - avatar, name, email?, mutual chats?, 
+    * @ other users - display user card on hover
     * collapsible menus
 
-+ Fuzzy search
-    * messages by author
-    * messages by content
-    * in chat
+## Backlog
 
 ### Message Broadcasting: 
 - msg should distribute to user connection, even if chat is closed
@@ -79,9 +122,8 @@ And the app should be available at http://localhost:8080
 - *2FA / MFA*
 
 ### Extend functionality
-- @users in chat
-- @messages in chat
-- *web call*
+- address book
+- zoom, web calls
 - introduce Tmpl to replace default templating engine
 
 ### User Notifications
@@ -90,14 +132,16 @@ And the app should be available at http://localhost:8080
 - new chat invite
 - new msg in chat
 
-### Search
+### Fuzzy search
 - search chats by: 
-    - chat name
-    - message content
-- search messages by:
-    - content
-    - author
-- fuzzy search methods:
+    - by chat name
+    - by members
+    - by message content
+- search messages:
+    - by messages content
+    - by messages author
+    - in chat
+- approaches
     - common key [C530, V500] - fast - mostly latin
         - https://www.sqlite.org/lang_corefunc.html#soundex
     - word embeding - %VALUE%
@@ -123,7 +167,7 @@ And the app should be available at http://localhost:8080
     * chat members
     * msg options
 
-## Later
+## Never gonna happen, but sounds nice
 
 ### Client storage
 - local / innodb
