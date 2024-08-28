@@ -9,4 +9,5 @@ const (
 	GB                       = 1024 * MB
 	MaxFileName        int   = 120
 	MaxUploadBytesSize int64 = 50 * KB
+	MaxCacheSize       int   = 1024
 )

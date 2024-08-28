@@ -23,8 +23,8 @@ type State struct {
 }
 
 func (state *State) Init(config utils.Config) {
-	if config.CacheSize <= 0 {
-		config.CacheSize = 1024
+	if config.CacheSize <= 0 || config.CacheSize > utils.MaxCacheSize {
+		config.CacheSize = utils.MaxCacheSize
 	}
 	GlobalAppState = State{
 		isInit: true,
