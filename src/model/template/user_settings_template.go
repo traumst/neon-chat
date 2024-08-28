@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"html/template"
 
+	ti "prplchat/src/interface"
 	"prplchat/src/model/event"
-	ti "prplchat/src/model/template/interface"
 )
 
 type UserSettingsTemplate struct {

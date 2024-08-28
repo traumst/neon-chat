@@ -6,9 +6,9 @@ import (
 	"prplchat/src/convert"
 	"prplchat/src/db"
 	"prplchat/src/handler/state"
+	ti "prplchat/src/interface"
 	"prplchat/src/model/app"
 	t "prplchat/src/model/template"
-	ti "prplchat/src/model/template/interface"
 	h "prplchat/src/utils/http"
 )
 
