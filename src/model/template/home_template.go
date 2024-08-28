@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"log"
 
 	ti "prplchat/src/interface"
 	"prplchat/src/model/event"
@@ -39,6 +40,10 @@ func (h HomeTemplate) ChatCloseEvent() string {
 }
 
 func (h HomeTemplate) AvatarChangeEvent() string {
+	if h.User.(UserTemplate).UserId <= 0 {
+		log.Printf("AvatarChangeEvent cannot format due to owner id=0, may be wrong type[%T], expected [UserTemplate]", h.User)
+		return ""
+	}
 	return event.AvatarChange.FormatEventName(0, h.User.(UserTemplate).UserId, 0)
 }
 

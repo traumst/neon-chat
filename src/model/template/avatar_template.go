@@ -16,6 +16,10 @@ type AvatarTemplate struct {
 	Mime   string
 }
 
+func (at AvatarTemplate) GetId() uint {
+	return at.Id
+}
+
 func (at AvatarTemplate) Base64() string {
 	return base64.StdEncoding.EncodeToString(at.Image)
 }

@@ -7,6 +7,10 @@ import (
 
 type AuthTemplate struct{}
 
+func (at AuthTemplate) GetId() uint {
+	return 0 // ie no user id here
+}
+
 func (at AuthTemplate) HTML() (string, error) {
 	template := template.Must(template.ParseFiles("static/html/nav/auth_div.html"))
 	var buf bytes.Buffer
