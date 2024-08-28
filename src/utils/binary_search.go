@@ -1,7 +1,7 @@
 package utils
 
 import (
-	i "prplchat/src/utils/interface"
+	i "prplchat/src/interface"
 )
 
 // arr is expected to be orderred by item id

@@ -2,8 +2,8 @@ package app
 
 import (
 	"log"
+	ti "prplchat/src/interface"
 	t "prplchat/src/model/template"
-	ti "prplchat/src/model/template/interface"
 )
 
 type Chat struct {
