@@ -18,8 +18,6 @@ type Avatar struct {
 	Mime   string `db:"mime"`
 }
 
-const AvatarMaxUploadBytesSize int64 = 50 * utils.KB
-
 const AvatarSchema = `
 	CREATE TABLE IF NOT EXISTS avatars (
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
@@ -46,8 +44,8 @@ func (db *DBConn) AddAvatar(userId uint, title string, image []byte, mime string
 	if size <= 0 {
 		return nil, fmt.Errorf("avatar requires an image")
 	}
-	if int64(size) > AvatarMaxUploadBytesSize {
-		return nil, fmt.Errorf("avatar image size[%d] is over limit[%d]", size, AvatarMaxUploadBytesSize)
+	if int64(size) > utils.MaxUploadBytesSize {
+		return nil, fmt.Errorf("avatar image size[%d] is over limit[%d]", size, utils.MaxUploadBytesSize)
 	}
 	if !db.ConnIsActive() {
 		return nil, fmt.Errorf("db is not connected")

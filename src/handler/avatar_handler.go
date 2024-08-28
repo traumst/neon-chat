@@ -7,9 +7,8 @@ import (
 	"mime/multipart"
 	"net/http"
 	d "prplchat/src/db"
+	"prplchat/src/utils"
 )
-
-const MaxFileName int = 120
 
 var allowedImageFormats = []string{
 	"image/svg+xml",
@@ -33,11 +32,11 @@ func UpdateAvatar(
 	file *multipart.File,
 	info *multipart.FileHeader,
 ) (*d.Avatar, error) {
-	if info.Size > d.AvatarMaxUploadBytesSize {
-		return nil, fmt.Errorf("file too large %d, limit is %d", info.Size, d.AvatarMaxUploadBytesSize)
+	if info.Size > utils.MaxUploadBytesSize {
+		return nil, fmt.Errorf("file too large %d, limit is %d", info.Size, utils.MaxUploadBytesSize)
 	} else if len(info.Filename) == 0 {
 		return nil, fmt.Errorf("file lacks name")
-	} else if len(info.Filename) > MaxFileName {
+	} else if len(info.Filename) > utils.MaxFileName {
 		return nil, fmt.Errorf("file name is too long")
 	}
 	fileBytes, err := io.ReadAll(*file)
