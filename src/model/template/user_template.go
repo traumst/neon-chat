@@ -18,6 +18,10 @@ type UserTemplate struct {
 	ViewerId uint
 }
 
+func (ut UserTemplate) GetId() uint {
+	return ut.UserId
+}
+
 func (ut UserTemplate) UserChangeEvent() string {
 	return event.UserChange.FormatEventName(0, ut.UserId, 0)
 }

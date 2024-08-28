@@ -19,6 +19,10 @@ type ChatTemplate struct {
 	Messages []ti.Renderable
 }
 
+func (c ChatTemplate) GetId() uint {
+	return c.ChatId
+}
+
 func (c ChatTemplate) UserChangeEvent() string {
 	return event.UserChange.FormatEventName(0, c.User.(UserTemplate).UserId, 0)
 }

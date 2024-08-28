@@ -18,6 +18,10 @@ type MessageTemplate struct {
 	MessageDropEvent string
 }
 
+func (m MessageTemplate) GetId() uint {
+	return m.MsgId
+}
+
 func (m MessageTemplate) HTML() (string, error) {
 	if err := m.validate(); err != nil {
 		return "", fmt.Errorf("cannot template, %s", err.Error())
