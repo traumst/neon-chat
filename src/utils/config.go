@@ -60,7 +60,7 @@ func EnvRead() (*Config, error) {
 		return nil, fmt.Errorf("failed to create scanner")
 	}
 
-	envConf, err := readEnv(scanner)
+	envConf, err := readEnvFile(scanner)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read env file: %s", err.Error())
 	}
@@ -71,7 +71,7 @@ func EnvRead() (*Config, error) {
 	return envConf, nil
 }
 
-func readEnv(scanner *bufio.Scanner) (*Config, error) {
+func readEnvFile(scanner *bufio.Scanner) (*Config, error) {
 	envConf := Config{Smtp: SmtpConfig{}}
 	for scanner.Scan() {
 		line := scanner.Text()
