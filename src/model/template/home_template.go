@@ -50,17 +50,19 @@ func (h HomeTemplate) AvatarChangeEvent() string {
 func (h HomeTemplate) HTML() (string, error) {
 	homeTmpl := template.Must(template.ParseFiles(
 		"static/html/home_page.html",
+		"static/html/user_div.html",
+		"static/html/avatar_div.html",
 		// left panel
 		"static/html/left_panel.html",
-		"static/html/avatar_div.html",
 		"static/html/nav/auth_div.html",
 		"static/html/nav/chat_li.html",
 		// right panel
 		"static/html/utils/user_settings_div.html",
 		"static/html/chat/welcome_div.html",
 		"static/html/chat/chat_div.html",
-		"static/html/user_div.html",
+		"static/html/chat/message_history_ul.html",
 		"static/html/chat/message_li.html",
+		"static/html/chat/message_submit_div.html",
 	))
 	var buf bytes.Buffer
 	if err := homeTmpl.Execute(&buf, h); err != nil {

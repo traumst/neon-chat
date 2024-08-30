@@ -100,86 +100,9 @@
         {{ end }}
     </div>
     <div class="chat-content flex flex-col p-2 grow overflow-y-auto">
-        {{ template "messageHistoryList" . }}
+        {{ template "message_history_ul.html" . }}
     </div>
     <div class="chat-footer flex flex-col">
-        {{ template "sendMessageForm" . }}
+        {{ template "message_submit_div.html" . }}
     </div>
 </div>
-
-{{ define "messageHistoryList" }}
-<ul hx-target=".message-list" 
-    sse-swap="{{ .MessageAddEvent }}" 
-    hx-swap="beforeend"
-    class="message-list" 
->
-    {{ with $chatMsgs := .Messages }}
-        {{ range $index, $msg := $chatMsgs }} 
-            {{ template "message_li.html" $msg }}
-        {{ end }}
-    {{ else }}
-        <li id="noMsgs" sse-swap="{{ .MessageAddEvent }}" hx-swap="delete" hx-target="#noMsgs">
-            No previous messages...
-        </li>
-    {{ end }}
-</ul>
-<script>
-    function scrollToLastChild(parent) {
-        const lastElement = parent.children[parent.children.length-1];
-        lastElement?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'end'
-        });
-    }
-    messageListObserver = null;
-    messageListObserver = new MutationObserver(mutations => {
-        mutations.forEach(mutation => {
-            if (mutation.type === 'childList' || mutation.type === 'characterData') {
-                scrollToLastChild(mutation.target);
-            }
-        });
-    });
-    msgList = null;
-    msgList = document.querySelector(".message-list");
-    if (msgList) {
-        messageListObserverOptions = null;
-        messageListObserverOptions = { childList: true, subtree: true, characterData: true };
-        messageListObserver.observe(msgList, messageListObserverOptions);
-    }
-    scrollToLastChild(msgList);
-</script>
-{{ end }}
-
-{{ define "sendMessageForm" }}
-<form
-    hx-post="/message" 
-    hx-trigger="submit" 
-    hx-target=".message-list" 
-    hx-swap="beforeend"
-    hx-include="[name='chatid'],[name='msg']"
-    class="flex mt-auto border-2 rounded border-emerald-400"
->
-    <input type="hidden" name="chatid" value="{{ .ChatId }}">
-    <input id="newMsgText" type="text" name="msg" 
-        placeholder="type message" 
-        title="enter to send"
-        class="w-full
-        text-center
-        rounded-md
-        bg-gradient-to-br from-green-800 to-indigo-800
-        text-gray-400
-        shadow shadow-zinc-700
-        hover:shadow-lg hover:shadow-zinc-500">
-    <button type="submit" class="hidden">
-        Send Message
-    </button>
-</form>
-<script>
-    document.body.addEventListener('htmx:afterSwap', event => {
-        const newMsgText = document.getElementById('newMsgText');
-        if (newMsgText) {
-            newMsgText.value = '';
-        }
-    });
-</script>
-{{ end }}

@@ -1,0 +1,33 @@
+<div>
+    <form
+        hx-post="/message" 
+        hx-trigger="submit" 
+        hx-target=".message-list" 
+        hx-swap="beforeend"
+        hx-include="[name='chatid'],[name='msg']"
+        class="flex mt-auto border-2 rounded border-emerald-400"
+    >
+        <input type="hidden" name="chatid" value="{{ .ChatId }}">
+        <input id="newMsgText" type="text" name="msg" 
+            placeholder="type message" 
+            title="enter to send"
+            class="w-full
+            text-center
+            rounded-md
+            bg-gradient-to-br from-green-800 to-indigo-800
+            text-gray-400
+            shadow shadow-zinc-700
+            hover:shadow-lg hover:shadow-zinc-500">
+        <button type="submit" class="hidden">
+            Send Message
+        </button>
+    </form>
+    <script>
+        document.body.addEventListener('htmx:afterSwap', event => {
+            const newMsgText = document.getElementById('newMsgText');
+            if (newMsgText) {
+                newMsgText.value = '';
+            }
+        });
+    </script>
+</div>

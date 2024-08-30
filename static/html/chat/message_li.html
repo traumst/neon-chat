@@ -21,15 +21,16 @@
         hover:shadow-green-500
         hover:text-green-500">
     <div class="chat-message-content flex flex-row overflow-hidden">
-        <style>
-            .chat-message-avatar {
-                width: 1.5em; /* 1.5 times the size of a lowercase letter */
-                height: 1.5em; /* Maintain aspect ratio */
-            }
-        </style>
-        <div class="chat-message-avatar ml-0 mr-1">{{ template "avatar_div.html" .AuthorAvatar }}</div>
-        <div class="mr-0">[{{ .AuthorName }}]</div><div>&nbsp;</div>
-        <div class="break-all">{{ .Text }}</div>
+        <div class="w-[1.5em] h-[1.5em] ml-0 mr-1">
+            {{ template "avatar_div.html" .AuthorAvatar }}
+        </div>
+        <div class="mr-0">
+            [{{ .AuthorName }}]
+        </div>
+        <div>&nbsp;</div>
+        <div class="break-all">
+            {{ .Text }}
+        </div>
     </div>
     {{ if or (eq .AuthorId .ViewerId) (eq .OwnerId .ViewerId) }}
         <form id="delete-message"
@@ -38,17 +39,13 @@
             hx-trigger="click" 
             hx-swap="innerHTML" 
             hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
-            hx-include=".chat-message-delete"
             class="flex ml-auto"
         >
             <input type="hidden" name="msgid" value="{{ .MsgId }}">
             <input type="hidden" name="chatid" value="{{ .ChatId }}">
-            <div hx-trigger="click" 
-                hx-action="chat-message-delete-{{ .MsgId }}.submit()"
-                class="chat-message-delete hover:text-amber-700"
-            >
-                <sub title="delete message">[delete]</sub>
-            </div>
+                <sup title="delete this message" class="hover:text-amber-700">
+                    [delete]
+                </sup>
         </form>
     {{ end }}
 </li>

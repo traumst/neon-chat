@@ -1,0 +1,40 @@
+<ul hx-target=".message-list" 
+    sse-swap="{{ .MessageAddEvent }}" 
+    hx-swap="beforeend"
+    class="message-list" 
+>
+    {{ with $chatMsgs := .Messages }}
+        {{ range $index, $msg := $chatMsgs }} 
+            {{ template "message_li.html" $msg }}
+        {{ end }}
+    {{ else }}
+        <li id="noMsgs" sse-swap="{{ .MessageAddEvent }}" hx-swap="delete" hx-target="#noMsgs">
+            No previous messages...
+        </li>
+    {{ end }}
+</ul>
+<script>
+    function scrollToLastChild(parent) {
+        const lastElement = parent.children[parent.children.length-1];
+        lastElement?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'end'
+        });
+    }
+    messageListObserver = null;
+    messageListObserver = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                scrollToLastChild(mutation.target);
+            }
+        });
+    });
+    msgList = null;
+    msgList = document.querySelector(".message-list");
+    if (msgList) {
+        messageListObserverOptions = null;
+        messageListObserverOptions = { childList: true, subtree: true, characterData: true };
+        messageListObserver.observe(msgList, messageListObserverOptions);
+    }
+    scrollToLastChild(msgList);
+</script>
