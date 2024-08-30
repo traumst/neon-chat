@@ -84,6 +84,8 @@ App should now be available at http://localhost:8080
 
 * User name change should update active user info on left panel
 * UI errored on user search, when after successfullt adding user to a chat
+* controllers should only touch templates, never models
+* fucking session transactions
 
 ### Next up
 
