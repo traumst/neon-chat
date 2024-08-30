@@ -23,7 +23,9 @@ If not, you can refer to [official istallation instruction](https://go.dev/doc/i
 
 There's [tailwind.config.js](./tailwind.config.js) in the root, but it's not in use YET. Technically we can just serve the min script of current version. And we do by setting `LOCAL=false` in the `.env` file. Still, in the current setup we built tailwind file to produce minimal required css. [Compiled css](./static/css/tailwind.css) is roughly 1/20 of the default minified [cdn provided talwindcss.js](https://cdn.tailwindcss.com/3.4.5) and works exactly the same.
 
-App expects to have `.env` file in the root directory, which you have to create. There's `.env.template` file that you can easily copy-paste and fill up. App may still start without this file, as some defaults. behaviour in this case is unpredicable and thus is a broken state and should fatal exit.
+To actually compile this, you'd need to install tailwind. There's plenty of options. I recommend downloading the (stadalone tailwind cli)[https://tailwindcss.com/blog/standalone-cli] and avoiding npm completely. But if you have nodejs installed and feel more comfortable with it, you can (install tailwind via npm)[https://tailwindcss.com/docs/installation]. Note that (run.sh script)[./run.sh] specifies path to tailwind executable. That line may need to be updated to match your system.
+
+Finally, app expects to have `.env` file in the root directory, which you have to create. There's `.env.template` file that you can easily copy-paste and fill up. App may still start without this file, as some defaults are provided. Behaviour in this case is unpredicable and thus is a broken state and should fatal exit at some point.
 
 ### Preparing run script
 
@@ -53,6 +55,11 @@ echo "Building tailwind..."
 echo "Starting server..."
 go run main.go
 ```
+
+Notes:
+1. by default, db file is created in the root folder where executable runs
+2. for db file to be deleted on start, must uncomment appropriate lines
+3. tailwind executable call will need to be updated to match your system
 
 ### Run script
 

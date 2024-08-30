@@ -28,6 +28,15 @@
                 //console.log('enterSubmit key', event.key)
             }
         }
+        function scrollIntoView(elemId) {
+            try {
+                document.getElementById(elemId).scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                console.error(`cannot scroll elemement[${elemId}] into view, err: ${error}`);
+                // TODO dialog - can't scroll to original
+            }
+        }
+        /* collapsible left panel TBD 
         function togglePanel() {
             const panel = document.querySelector('.left-panel');
             const isOpen = panel.classList.contains('open');
@@ -65,6 +74,7 @@
                 panel.classList.add('closed');
             }
         }
+        */
     </script>
     <style>
         body {
