@@ -9,6 +9,7 @@ import (
 type MessageTemplate struct {
 	ChatId           uint
 	MsgId            uint
+	Quotes           []MessageTemplate
 	ViewerId         uint
 	OwnerId          uint
 	AuthorId         uint
@@ -32,6 +33,20 @@ func (m MessageTemplate) HTML() (string, error) {
 		"static/html/avatar_div.html"))
 	if err := msgTmpl.Execute(&buf, m); err != nil {
 		return "", fmt.Errorf("failed to template, %s", err.Error())
+	}
+	return buf.String(), nil
+}
+
+func (m MessageTemplate) ShortHTML() (string, error) {
+	if m.AuthorAvatar.Title == "" {
+		return "", fmt.Errorf("short template requires avatar but was [%s]", m.AuthorAvatar.Title)
+	}
+	var buf bytes.Buffer
+	msgTmpl := template.Must(template.ParseFiles(
+		"static/html/chat/message_quote_div.html",
+		"static/html/avatar_div.html"))
+	if err := msgTmpl.Execute(&buf, m); err != nil {
+		return "", fmt.Errorf("failed to short template, %s", err.Error())
 	}
 	return buf.String(), nil
 }

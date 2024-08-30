@@ -3,12 +3,86 @@ package controller
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
 	"neon-chat/src/handler/state"
 	h "neon-chat/src/utils/http"
 )
+
+func QuoteMessage(
+	state *state.State,
+	db *d.DBConn,
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	log.Printf("[%s] QuoteMessage TRACE\n", h.GetReqId(r))
+	if r.Method != "GET" {
+		log.Printf("[%s] QuoteMessage ERROR request method\n", h.GetReqId(r))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("action not allowed"))
+		return
+	}
+	user, _ := handler.ReadSession(state, db, w, r)
+	if user == nil {
+		log.Printf("[%s] QuoteMessage ERROR user has no session\n", h.GetReqId(r))
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
+		return
+	}
+	var err error
+	var chatId uint
+	var msgId uint
+	// supports multiple values for the same key, ie delete in bulk, etc
+	args := r.URL.Query()
+	for k, v := range args {
+		switch k {
+		case "chatid":
+			c, e := strconv.Atoi(v[0])
+			if e != nil {
+				err = e
+			} else {
+				chatId = uint(c)
+			}
+		case "msgid":
+			m, e := strconv.Atoi(v[0])
+			if e != nil {
+				err = e
+			} else {
+				msgId = uint(m)
+			}
+		}
+		if err != nil {
+			log.Printf("[%s] QuoteMessage WARN bad argument - [%s]\n", h.GetReqId(r), v)
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("invalid chat id"))
+			return
+		}
+	}
+	if chatId == 0 || msgId == 0 {
+		log.Printf("[%s] QuoteMessage WARN missing arguments %v\n", h.GetReqId(r), args)
+	}
+	tmplMsg, err := handler.HandleGetMessage(state, db, user, chatId, msgId)
+	if err != nil {
+		log.Printf("[%s] QuoteMessage ERROR quoting message, %s\n", h.GetReqId(r), err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to quote message"))
+		return
+	}
+	html, err := tmplMsg.ShortHTML()
+	if err != nil {
+		log.Printf("[%s] QuoteMessage ERROR templating quote, %s\n", h.GetReqId(r), err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to template message"))
+		return
+	}
+	log.Printf("[%s] QuoteMessage done\n", h.GetReqId(r))
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(html))
+
+	log.Printf("[%s] QuoteMessage TRACE serving html\n", h.GetReqId(r))
+	w.WriteHeader(http.StatusOK)
+}
 
 func AddMessage(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] AddMessage TRACE\n", h.GetReqId(r))

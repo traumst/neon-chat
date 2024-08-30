@@ -7,9 +7,55 @@ import (
 	d "neon-chat/src/db"
 	"neon-chat/src/handler/sse"
 	"neon-chat/src/handler/state"
+	i "neon-chat/src/interface"
 	a "neon-chat/src/model/app"
 	"neon-chat/src/model/event"
 )
+
+func HandleGetMessage(
+	state *state.State,
+	db *d.DBConn,
+	user *a.User,
+	chatId uint,
+	msgId uint,
+) (i.Renderable, error) {
+	log.Printf("HandleGetMessage TRACE opening current chat for user[%d]\n", user.Id)
+	canChat, err := db.UserCanChat(chatId, user.Id)
+	if err != nil {
+		log.Printf("HandleGetMessage ERROR checking user[%d] can chat[%d], %s\n", user.Id, chatId, err)
+		return nil, fmt.Errorf("failed to check whether user can chat: %s", err.Error())
+	} else if !canChat {
+		log.Printf("HandleGetMessage ERROR user[%d] is not in chat[%d]\n", user.Id, chatId)
+		return nil, fmt.Errorf("user is not in chat")
+	}
+
+	dbOwner, err := db.GetOwner(msgId)
+	if err != nil {
+		log.Printf("HandleGetMessage ERROR getting ownerfor chat[%d], %s\n", chatId, err.Error())
+		return nil, fmt.Errorf("failed to get message from db, %s", err.Error())
+	}
+	dbMsg, err := db.GetMessage(msgId)
+	if err != nil {
+		log.Printf("HandleGetMessage ERROR getting message[%d] from db, %s\n", msgId, err)
+		return nil, fmt.Errorf("failed to get message from db: %s", err.Error())
+	}
+	dbAvatar, err := db.GetAvatar(dbMsg.AuthorId)
+	if err != nil {
+		log.Printf("HandleGetMessage ERROR getting author[%d] avatar from db, %s\n", dbMsg.AuthorId, err)
+		return nil, fmt.Errorf("failed to get author avatar from db: %s", err.Error())
+	}
+
+	appOwner := convert.UserDBToApp(dbOwner)
+	appMsg := convert.MessageDBToApp(dbMsg, user)
+	appAvatar := convert.AvatarDBToApp(dbAvatar)
+	tmplMsg, err := appMsg.Template(user, appOwner, appAvatar)
+	if err != nil {
+		log.Printf("HandleGetMessage ERROR generating message template, %s\n", err)
+		return nil, fmt.Errorf("failed to generate message template: %s", err.Error())
+	}
+
+	return tmplMsg, nil
+}
 
 func HandleMessageAdd(
 	state *state.State,
@@ -30,6 +76,7 @@ func HandleMessageAdd(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get chat[%d] from db: %s", chatId, err.Error())
 	}
+	//userInput := tokenizer.ParsedUserInput(msg)
 	dbMsg, err := db.AddMessage(&d.Message{
 		Id:       0,
 		ChatId:   chatId,

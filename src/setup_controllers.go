@@ -88,6 +88,10 @@ func handleMsgs(state *state.State, db *db.DBConn, allMiddleware []controller.Mi
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.AddMessage(state, db, w, r)
 		}), allMiddleware))
+	http.Handle("/message/quote", controller.ChainMiddleware(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			controller.QuoteMessage(state, db, w, r)
+		}), allMiddleware))
 }
 
 func handleChat(state *state.State, db *db.DBConn, allMiddleware []controller.Middleware) {

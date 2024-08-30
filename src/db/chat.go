@@ -72,6 +72,28 @@ func (db *DBConn) GetChat(chatId uint) (*Chat, error) {
 	return &chat, nil
 }
 
+func (db *DBConn) GetOwner(chatId uint) (*User, error) {
+	if chatId == 0 {
+		return nil, fmt.Errorf("bad input: chatId[%d]", chatId)
+	}
+	if !db.ConnIsActive() {
+		return nil, fmt.Errorf("db is not connected")
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	var user User
+	err := db.conn.Get(&user, `
+SELECT TOP 1 * FROM users WHERE id in (
+	SELECT owner_id FROM chats WHERE id = ?
+)`, chatId)
+	if err != nil {
+		return nil, fmt.Errorf("error getting chat[%d] owner: %s", chatId, err.Error())
+	}
+	return &user, nil
+}
+
 func (db *DBConn) UserCanChat(chatId uint, userId uint) (bool, error) {
 	if !db.ConnIsActive() {
 		return false, fmt.Errorf("db is not connected")

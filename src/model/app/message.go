@@ -17,9 +17,6 @@ func (m *Message) Template(viewer *User, owner *User, avatar *Avatar) (t.Message
 	if viewer == nil || viewer.Id == 0 {
 		return t.MessageTemplate{}, fmt.Errorf("viewer cannot be nil or blank")
 	}
-	if owner == nil || owner.Id == 0 {
-		return t.MessageTemplate{}, fmt.Errorf("owner cannot be nil or blank")
-	}
 	if m.Author == nil || m.Author.Id == 0 || m.Author.Name == "" {
 		return t.MessageTemplate{}, fmt.Errorf("message author cannot be nil or blank")
 	}

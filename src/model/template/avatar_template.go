@@ -20,6 +20,10 @@ func (at AvatarTemplate) GetId() uint {
 	return at.Id
 }
 
+func (at AvatarTemplate) ShortHTML() (string, error) {
+	return "", fmt.Errorf("not implemented")
+}
+
 func (at AvatarTemplate) Base64() string {
 	return base64.StdEncoding.EncodeToString(at.Image)
 }

@@ -40,11 +40,7 @@ func OpenChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 	user, err := handler.ReadSession(state, db, w, r)
 	if err != nil || user == nil {
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
-		var msg string
-		if err != nil {
-			msg = err.Error()
-		}
-		log.Printf("[%s] OpenChat INFO user is not authorized, %s\n", h.GetReqId(r), msg)
+		log.Printf("[%s] OpenChat INFO user is not authorized, %s\n", h.GetReqId(r), err)
 		return
 	}
 

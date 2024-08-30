@@ -2,6 +2,7 @@ package template
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 )
 
@@ -19,4 +20,8 @@ func (at AuthTemplate) HTML() (string, error) {
 		return "", err
 	}
 	return buf.String(), nil
+}
+
+func (at AuthTemplate) ShortHTML() (string, error) {
+	return "", fmt.Errorf("not implemented")
 }
