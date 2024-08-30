@@ -126,8 +126,17 @@ func GetChatUsers(db *d.DBConn, chatId uint) ([]*a.User, error) {
 
 func ExpelUser(state *state.State, db *d.DBConn, user *a.User, chatId uint, expelledId uint) (*a.User, error) {
 	log.Printf("ExpelUser TRACE expelling[%d] from chat[%d]\n", expelledId, chatId)
-	if user.Id == expelledId {
-		return nil, fmt.Errorf("user[%d] cannot expel itself", user.Id)
+	// veryfy user can only either leave themselves or be expelled by the owner
+	if user.Id != expelledId {
+		chat, err := GetChat(state, db, user, chatId)
+		if err != nil {
+			log.Printf("ExpelUser ERROR user[%d] cannot find chat[%d], %s\n", user.Id, chatId, err.Error())
+			return nil, fmt.Errorf("user cannot find chat, %s", err.Error())
+		}
+		if user.Id != chat.OwnerId {
+			log.Printf("ExpelUser ERROR user[%d] cannot expel user[%d] from chat[%d]\n", user.Id, expelledId, chatId)
+			return nil, fmt.Errorf("failed to expel user from chat")
+		}
 	}
 	dbExpelled, err := db.GetUser(expelledId)
 	if err != nil || dbExpelled == nil {
@@ -139,7 +148,7 @@ func ExpelUser(state *state.State, db *d.DBConn, user *a.User, chatId uint, expe
 	}
 	err = state.CloseChat(expelledId, chatId)
 	if err != nil {
-		log.Printf("ExpelUser TRACE user[%d] did not have chat[%d]: %s", expelledId, chatId, err.Error())
+		log.Printf("ExpelUser TRACE user[%d] did not have chat[%d] open: %s", expelledId, chatId, err.Error())
 	}
 	appExpelled := convert.UserDBToApp(dbExpelled)
 	return appExpelled, nil
