@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -138,6 +139,7 @@ func (db *DBConn) GetChatUsers(chatId uint) ([]User, error) {
 }
 
 func (db *DBConn) RemoveChatUser(chatId uint, userId uint) error {
+	log.Printf("TRACE removing user[%d] from chat[%d]\n", userId, chatId)
 	if chatId == 0 || userId == 0 {
 		return fmt.Errorf("bad input: chatId[%d], userId[%d]", chatId, userId)
 	}
