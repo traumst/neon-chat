@@ -32,23 +32,25 @@
             {{ .Text }}
         </div>
     </div>
-    {{ if or (eq .AuthorId .ViewerId) (eq .OwnerId .ViewerId) }}
-        <form id="delete-message"
-            title="delete message from {{ .AuthorName }}"
-            hx-post="/message/delete" 
+    <div class="chat-msg-options flex ml-auto">
+        <sup title="respond to this message" 
+            hx-get="/message/quote?chatid={{ .ChatId }}&msgid={{ .MsgId }}" 
+            hx-trigger="click" 
+            hx-swap="beforebegin" 
+            hx-target="#chat-{{.ChatId}}-msg-form"
+            class="hover:text-green-800">
+            [reply]
+        </sup>
+        {{ if or (eq .AuthorId .ViewerId) (eq .OwnerId .ViewerId) }}
+        <sup title="delete this message" 
+            hx-post="/message/delete?chatid={{ .ChatId }}&msgid={{ .MsgId }}"
+            DISABLED-hx-vals='{"chatId":"{{ .ChatId }},"msgId":"{{ .MsgId }}"}'
             hx-trigger="click" 
             hx-swap="innerHTML" 
             hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
-            class="flex ml-auto"
-        >
-            <input type="hidden" name="msgid" value="{{ .MsgId }}">
-            <input type="hidden" name="chatid" value="{{ .ChatId }}">
-                <sup title="delete this message" class="hover:text-amber-700">
-                    [delete]
-                </sup>
-                <sup title="quote this message is response" class="hover:text-green-800">
-                    [reply]
-                </sup>
-        </form>
-    {{ end }}
+            class="hover:text-amber-700">
+            [delete]
+        </sup>
+        {{ end }}
+    </div>
 </li>

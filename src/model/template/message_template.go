@@ -4,9 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"neon-chat/src/utils"
+	"sync"
 )
 
 type MessageTemplate struct {
+	mu               sync.Mutex
+	IntermediateId   string
 	ChatId           uint
 	MsgId            uint
 	Quotes           []MessageTemplate
@@ -19,11 +23,20 @@ type MessageTemplate struct {
 	MessageDropEvent string
 }
 
-func (m MessageTemplate) GetId() uint {
+func (m *MessageTemplate) getIntermediateId() string {
+	if m.IntermediateId == "" {
+		m.mu.Lock()
+		defer m.mu.Unlock()
+		m.IntermediateId = utils.RandStringBytes(5)
+	}
+	return m.IntermediateId
+}
+
+func (m *MessageTemplate) GetId() uint {
 	return m.MsgId
 }
 
-func (m MessageTemplate) HTML() (string, error) {
+func (m *MessageTemplate) HTML() (string, error) {
 	if err := m.validate(); err != nil {
 		return "", fmt.Errorf("cannot template, %s", err.Error())
 	}
@@ -31,13 +44,26 @@ func (m MessageTemplate) HTML() (string, error) {
 	msgTmpl := template.Must(template.ParseFiles(
 		"static/html/chat/message_li.html",
 		"static/html/avatar_div.html"))
-	if err := msgTmpl.Execute(&buf, m); err != nil {
+	err := msgTmpl.Execute(&buf, MessageTemplate{
+		IntermediateId:   m.getIntermediateId(),
+		ChatId:           m.ChatId,
+		MsgId:            m.MsgId,
+		Quotes:           m.Quotes,
+		ViewerId:         m.ViewerId,
+		OwnerId:          m.OwnerId,
+		AuthorId:         m.AuthorId,
+		AuthorName:       m.AuthorName,
+		AuthorAvatar:     m.AuthorAvatar,
+		Text:             m.Text,
+		MessageDropEvent: m.MessageDropEvent,
+	})
+	if err != nil {
 		return "", fmt.Errorf("failed to template, %s", err.Error())
 	}
 	return buf.String(), nil
 }
 
-func (m MessageTemplate) ShortHTML() (string, error) {
+func (m *MessageTemplate) ShortHTML() (string, error) {
 	if m.AuthorAvatar.Title == "" {
 		return "", fmt.Errorf("short template requires avatar but was [%s]", m.AuthorAvatar.Title)
 	}
@@ -45,13 +71,26 @@ func (m MessageTemplate) ShortHTML() (string, error) {
 	msgTmpl := template.Must(template.ParseFiles(
 		"static/html/chat/message_quote_div.html",
 		"static/html/avatar_div.html"))
-	if err := msgTmpl.Execute(&buf, m); err != nil {
+	err := msgTmpl.Execute(&buf, MessageTemplate{
+		IntermediateId:   m.getIntermediateId(),
+		ChatId:           m.ChatId,
+		MsgId:            m.MsgId,
+		Quotes:           m.Quotes,
+		ViewerId:         m.ViewerId,
+		OwnerId:          m.OwnerId,
+		AuthorId:         m.AuthorId,
+		AuthorName:       m.AuthorName,
+		AuthorAvatar:     m.AuthorAvatar,
+		Text:             m.Text,
+		MessageDropEvent: m.MessageDropEvent,
+	})
+	if err != nil {
 		return "", fmt.Errorf("failed to short template, %s", err.Error())
 	}
 	return buf.String(), nil
 }
 
-func (m MessageTemplate) validate() error {
+func (m *MessageTemplate) validate() error {
 	if m.ChatId < 1 {
 		return fmt.Errorf("MessageTemplate requires ChatId but is [%d]", m.ChatId)
 	}

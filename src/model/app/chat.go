@@ -84,7 +84,7 @@ func (c *Chat) Template(
 				log.Printf("Chat.Template ERROR failed to create message template, %s\n", err)
 				continue
 			}
-			messages = append(messages, msgTmpl)
+			messages = append(messages, &msgTmpl)
 		}
 	} else {
 		log.Printf("Chat.Template INFO chat[%d] has no messages\n", c.Id)

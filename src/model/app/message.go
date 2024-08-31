@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"neon-chat/src/model/event"
 	t "neon-chat/src/model/template"
+	"neon-chat/src/utils"
 )
 
 type Message struct {
@@ -27,8 +28,10 @@ func (m *Message) Template(viewer *User, owner *User, avatar *Avatar) (t.Message
 		return t.MessageTemplate{}, fmt.Errorf("message chatId and Id cannot be 0")
 	}
 	return t.MessageTemplate{
+		IntermediateId:   utils.RandStringBytes(5),
 		ChatId:           m.ChatId,
 		MsgId:            m.Id,
+		Quotes:           []t.MessageTemplate{}, // TODO
 		ViewerId:         viewer.Id,
 		OwnerId:          owner.Id,
 		AuthorId:         m.Author.Id,

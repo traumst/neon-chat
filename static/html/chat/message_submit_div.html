@@ -1,5 +1,5 @@
 <div>
-    <form
+    <form id="chat-{{.ChatId}}-msg-form"
         hx-post="/message" 
         hx-trigger="submit" 
         hx-target=".message-list" 
@@ -8,7 +8,7 @@
         class="flex mt-auto border-2 rounded border-emerald-400"
     >
         <input type="hidden" name="chatid" value="{{ .ChatId }}">
-        <input id="newMsgText" type="text" name="msg" 
+        <input id="chat-{{.ChatId}}-msg-text-input" type="text" name="msg" 
             placeholder="type message" 
             title="enter to send"
             class="w-full
@@ -24,7 +24,7 @@
     </form>
     <script>
         document.body.addEventListener('htmx:afterSwap', event => {
-            const newMsgText = document.getElementById('newMsgText');
+            const newMsgText = document.getElementById('chat-{{.ChatId}}-msg-text-input');
             if (newMsgText) {
                 newMsgText.value = '';
             }

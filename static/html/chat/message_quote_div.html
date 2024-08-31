@@ -1,8 +1,14 @@
 
-<div id="quote-chat-{{ .ChatId }}-msg-{{ .MsgId }}"
+<div id="quote-chat-{{ .ChatId }}-msg-{{ .MsgId }}-{{ .IntermediateId }}" 
     onclick="scrollIntoView('chat-{{ .ChatId }}-msg-{{ .MsgId }}')"
-    class="bg-opacity-50">
-    <div class="chat-message-content flex flex-row overflow-hidden">
+    class="quote-chat-message
+        flex flex-col 
+        ml-auto 
+        w-[80%] 
+        bg-opacity-10 bg-slate-500
+        border-2 border-black rounded-lg">
+    <i class="ml-0">replying to...</i>
+    <div class="chat-message-content  ml-3 flex flex-row overflow-hidden">
         <div class="w-[1.5em] h-[1.5em] ml-0 mr-1">
             {{ template "avatar_div.html" .AuthorAvatar }}
         </div>
@@ -17,3 +23,16 @@
         </div>
     </div>
 </div>
+<script>
+    (function removePreviousQuote(chatId, msgId) {
+        setTimeout(() => {
+            const quotes = document.querySelectorAll(`.quote-chat-message`);
+            console.log(`removing previous quotes...`);
+            for (i = 0; i < quotes.length; i++) {
+                if (quotes[i].id !== "quote-chat-{{ .ChatId }}-msg-{{ .MsgId }}-{{ .IntermediateId }}") {
+                    quotes[i].remove();
+                }
+            }
+        }, 100);
+    })()
+</script>
