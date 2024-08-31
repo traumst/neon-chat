@@ -13,7 +13,7 @@ import (
 )
 
 func SetupGlobalLogger(toStderr bool, toFile bool) {
-	log.Println("setting up logger...")
+	log.Println("TRACE IN SetupGlobalLogger")
 	now := time.Now()
 	timestamp := now.Format(time.RFC3339)
 	date := strings.Split(timestamp, "T")[0]
@@ -23,6 +23,8 @@ func SetupGlobalLogger(toStderr bool, toFile bool) {
 		log.Fatal(err)
 	}
 	defer logFile.Close()
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	// log.SetPrefix("CUSTOM_LOG: ")
 	if toFile && toStderr {
 		log.SetOutput(io.MultiWriter(logFile, os.Stderr))
 		log.Printf("Logging to file [%s] and stderr\n", logPath)
@@ -33,6 +35,7 @@ func SetupGlobalLogger(toStderr bool, toFile bool) {
 		log.SetOutput(os.Stderr)
 		log.Println("Logging to stderr")
 	}
+	log.Println("TRACE OUT SetupGlobalLogger")
 }
 
 func ReadEnvConfig() *utils.Config {

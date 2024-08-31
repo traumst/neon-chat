@@ -31,7 +31,7 @@ func (db *DBConn) MigrationsTableExists() bool {
 
 func (db *DBConn) ApplyMigrations() error {
 	log.Printf("applyMigrations TRACE IN")
-	utils.LS()
+	//utils.LS()
 	// TODO load "latest" subset
 	files, err := utils.GetFilenamesIn(migraitonsFolder)
 	if err != nil {
