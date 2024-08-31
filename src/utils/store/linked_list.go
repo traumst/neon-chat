@@ -3,7 +3,7 @@ package store
 import (
 	"fmt"
 	"log"
-	"prplchat/src/utils"
+	"neon-chat/src/utils"
 	"sync"
 )
 

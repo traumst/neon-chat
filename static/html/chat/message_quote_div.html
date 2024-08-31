@@ -1,0 +1,19 @@
+
+<div id="quote-chat-{{ .ChatId }}-msg-{{ .MsgId }}"
+    onclick="scrollIntoView('chat-{{ .ChatId }}-msg-{{ .MsgId }}')"
+    class="bg-opacity-50">
+    <div class="chat-message-content flex flex-row overflow-hidden">
+        <div class="w-[1.5em] h-[1.5em] ml-0 mr-1">
+            {{ template "avatar_div.html" .AuthorAvatar }}
+        </div>
+        <div class="mr-0">
+            [{{ .AuthorName }}]
+        </div>
+        
+        <div>&nbsp;</div>
+
+        <div class="break-all">
+            {{ .Text }}
+        </div>
+    </div>
+</div>
