@@ -87,16 +87,17 @@ func HandleUserLeaveChat(state *state.State, db *d.DBConn, user *a.User, chatId 
 		log.Printf("HandleUserLeaveChat ERROR cannot find chat[%d], %s\n", chatId, err.Error())
 		return fmt.Errorf("failed to leave chat: %s", err.Error())
 	}
-	log.Printf("HandleUserLeaveChat TRACE removing[%d] from chat[%d]\n", user.Id, chat.Id)
 	if user.Id == chat.OwnerId {
 		log.Printf("HandleUserLeaveChat ERROR cannot leave chat[%d] as owner\n", chatId)
 		return fmt.Errorf("creator cannot leave chat")
 	}
+	log.Printf("HandleUserLeaveChat TRACE user[%d] leaves chat[%d]\n", user.Id, chatId)
 	expelled, err := ExpelUser(state, db, user, chatId, user.Id)
 	if err != nil {
-		log.Printf("HandleUserLeaveChat ERROR failed to expell, %s\n", err.Error())
-		return fmt.Errorf("failed to self-expel from chat: %s", err.Error())
+		log.Printf("HandleUserLeaveChat ERROR user[%d] failed to leave chat[%d], %s\n", user.Id, chatId, err.Error())
+		return fmt.Errorf("failed to leave from chat: %s", err.Error())
 	}
+	log.Printf("HandleUserLeaveChat TRACE informing users in chat[%d]\n", chat.Id)
 	err = sse.DistributeChat(state, db, chat, expelled, expelled, expelled, event.ChatClose)
 	if err != nil {
 		log.Printf("HandleUserLeaveChat ERROR cannot distribute chat close, %s\n", err.Error())
@@ -125,7 +126,13 @@ func GetChatUsers(db *d.DBConn, chatId uint) ([]*a.User, error) {
 }
 
 func ExpelUser(state *state.State, db *d.DBConn, user *a.User, chatId uint, expelledId uint) (*a.User, error) {
-	log.Printf("ExpelUser TRACE expelling[%d] from chat[%d]\n", expelledId, chatId)
+	log.Printf("ExpelUser TRACE user[%d] expells[%d] from chat[%d]\n", user.Id, expelledId, chatId)
+	bothCanChat, err := db.UsersCanChat(chatId, user.Id, expelledId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify users can chat, %s", err.Error())
+	} else if !bothCanChat {
+		return nil, fmt.Errorf("at least one of users can't chat, activeUser[%d], expelled[%d]", user.Id, expelledId)
+	}
 	// veryfy user can only either leave themselves or be expelled by the owner
 	if user.Id != expelledId {
 		chat, err := GetChat(state, db, user, chatId)
@@ -142,14 +149,18 @@ func ExpelUser(state *state.State, db *d.DBConn, user *a.User, chatId uint, expe
 	if err != nil || dbExpelled == nil {
 		return nil, fmt.Errorf("user[%d] not found in db", expelledId)
 	}
+	log.Printf("ExpelUser TRACE removing[%d] from chat[%d]\n", expelledId, chatId)
 	err = db.RemoveChatUser(chatId, expelledId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to remove user[%d] from chat[%d]: %s", expelledId, chatId, err.Error())
 	}
+	log.Printf("ExpelUser TRACE closing chat[%d]\n", chatId)
 	err = state.CloseChat(expelledId, chatId)
 	if err != nil {
 		log.Printf("ExpelUser TRACE user[%d] did not have chat[%d] open: %s", expelledId, chatId, err.Error())
+		return nil, fmt.Errorf("failed to close chat[%d]", chatId)
 	}
+	log.Printf("ExpelUser TRACE user[%d] has been expelled from chat[%d]\n", expelledId, chatId)
 	appExpelled := convert.UserDBToApp(dbExpelled)
 	return appExpelled, nil
 }

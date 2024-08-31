@@ -20,7 +20,7 @@ func HandleGetMessage(
 	msgId uint,
 ) (i.Renderable, error) {
 	log.Printf("HandleGetMessage TRACE opening current chat for user[%d]\n", user.Id)
-	canChat, err := db.UserCanChat(chatId, user.Id)
+	canChat, err := db.UsersCanChat(chatId, user.Id)
 	if err != nil {
 		log.Printf("HandleGetMessage ERROR checking user[%d] can chat[%d], %s\n", user.Id, chatId, err)
 		return nil, fmt.Errorf("failed to check whether user can chat: %s", err.Error())
@@ -65,7 +65,7 @@ func HandleMessageAdd(
 	msg string,
 ) (*a.Message, error) {
 	log.Printf("HandleMessageAdd TRACE opening current chat for user[%d]\n", author.Id)
-	canChat, err := db.UserCanChat(chatId, author.Id)
+	canChat, err := db.UsersCanChat(chatId, author.Id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check user[%d] can chat[%d]: %s", author.Id, chatId, err.Error())
 	}
