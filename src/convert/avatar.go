@@ -1,9 +1,9 @@
 package convert
 
 import (
-	"prplchat/src/db"
-	"prplchat/src/model/app"
-	"prplchat/src/utils"
+	"neon-chat/src/db"
+	"neon-chat/src/model/app"
+	"neon-chat/src/utils"
 )
 
 func AvatarAppToDB(avatar *app.Avatar) *db.Avatar {

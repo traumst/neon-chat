@@ -6,8 +6,8 @@ import (
 	"html/template"
 	"log"
 
-	ti "prplchat/src/interface"
-	"prplchat/src/model/event"
+	ti "neon-chat/src/interface"
+	"neon-chat/src/model/event"
 )
 
 type HomeTemplate struct {

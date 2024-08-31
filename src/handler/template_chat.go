@@ -2,10 +2,10 @@ package handler
 
 import (
 	"log"
-	"prplchat/src/db"
-	"prplchat/src/handler/state"
-	ti "prplchat/src/interface"
-	"prplchat/src/model/app"
+	"neon-chat/src/db"
+	"neon-chat/src/handler/state"
+	ti "neon-chat/src/interface"
+	"neon-chat/src/model/app"
 )
 
 func TemplateOpenChat(state *state.State, db *db.DBConn, user *app.User) ti.Renderable {

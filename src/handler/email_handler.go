@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	t "prplchat/src/model/template"
+	t "neon-chat/src/model/template"
 )
 
 func IsEmailValid(address string) bool {

@@ -5,13 +5,13 @@ import (
 	"log"
 	"net/http"
 
-	d "prplchat/src/db"
-	"prplchat/src/handler"
-	"prplchat/src/handler/sse"
-	"prplchat/src/handler/state"
-	"prplchat/src/model/event"
-	t "prplchat/src/model/template"
-	h "prplchat/src/utils/http"
+	d "neon-chat/src/db"
+	"neon-chat/src/handler"
+	"neon-chat/src/handler/sse"
+	"neon-chat/src/handler/state"
+	"neon-chat/src/model/event"
+	t "neon-chat/src/model/template"
+	h "neon-chat/src/utils/http"
 )
 
 func InviteUser(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {

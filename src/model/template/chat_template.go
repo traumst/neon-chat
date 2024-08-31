@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"html/template"
 
-	ti "prplchat/src/interface"
-	"prplchat/src/model/event"
+	ti "neon-chat/src/interface"
+	"neon-chat/src/model/event"
 )
 
 type ChatTemplate struct {

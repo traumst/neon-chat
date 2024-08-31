@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"sync"
 
-	d "prplchat/src/db"
-	"prplchat/src/handler"
-	"prplchat/src/handler/state"
-	h "prplchat/src/utils/http"
+	d "neon-chat/src/db"
+	"neon-chat/src/handler"
+	"neon-chat/src/handler/state"
+	h "neon-chat/src/utils/http"
 )
 
 func PollUpdates(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {

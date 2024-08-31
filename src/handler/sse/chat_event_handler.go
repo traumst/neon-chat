@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	"prplchat/src/handler/state"
-	"prplchat/src/model/app"
-	"prplchat/src/model/event"
-	t "prplchat/src/model/template"
+	"neon-chat/src/handler/state"
+	"neon-chat/src/model/app"
+	"neon-chat/src/model/event"
+	t "neon-chat/src/model/template"
 )
 
 func chatCreate(conn *state.Conn, targetChat *app.Chat) error {

@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"prplchat/src"
+	"neon-chat/src"
 )
 
 func main() {

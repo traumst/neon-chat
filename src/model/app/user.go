@@ -1,7 +1,7 @@
 package app
 
 import (
-	t "prplchat/src/model/template"
+	t "neon-chat/src/model/template"
 )
 
 // TODO add flags/permissions mapping

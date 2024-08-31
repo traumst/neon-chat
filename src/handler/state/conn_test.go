@@ -8,8 +8,8 @@ import (
 	"sync"
 	"testing"
 
-	"prplchat/src/model/app"
-	h "prplchat/src/utils/http"
+	"neon-chat/src/model/app"
+	h "neon-chat/src/utils/http"
 )
 
 func TestChannels(t *testing.T) {

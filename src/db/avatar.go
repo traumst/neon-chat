@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"prplchat/src/utils"
+	"neon-chat/src/utils"
 
 	"github.com/jmoiron/sqlx"
 )

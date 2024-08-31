@@ -2,8 +2,8 @@ package handler
 
 import (
 	"fmt"
+	"neon-chat/src/utils"
 	"net/http"
-	"prplchat/src/utils"
 	"strconv"
 )
 

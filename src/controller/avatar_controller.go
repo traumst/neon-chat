@@ -5,15 +5,15 @@ import (
 	"log"
 	"net/http"
 
-	"prplchat/src/convert"
-	d "prplchat/src/db"
-	"prplchat/src/handler"
-	"prplchat/src/handler/sse"
-	"prplchat/src/handler/state"
-	a "prplchat/src/model/app"
-	"prplchat/src/model/event"
-	"prplchat/src/utils"
-	h "prplchat/src/utils/http"
+	"neon-chat/src/convert"
+	d "neon-chat/src/db"
+	"neon-chat/src/handler"
+	"neon-chat/src/handler/sse"
+	"neon-chat/src/handler/state"
+	a "neon-chat/src/model/app"
+	"neon-chat/src/model/event"
+	"neon-chat/src/utils"
+	h "neon-chat/src/utils/http"
 )
 
 func AddAvatar(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {

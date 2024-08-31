@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"sync"
 
-	"prplchat/src/convert"
-	d "prplchat/src/db"
-	"prplchat/src/handler/state"
-	a "prplchat/src/model/app"
-	"prplchat/src/utils"
-	h "prplchat/src/utils/http"
+	"neon-chat/src/convert"
+	d "neon-chat/src/db"
+	"neon-chat/src/handler/state"
+	a "neon-chat/src/model/app"
+	"neon-chat/src/utils"
+	h "neon-chat/src/utils/http"
 )
 
 func ReadSession(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) (*a.User, error) {

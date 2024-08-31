@@ -2,8 +2,8 @@ package app
 
 import (
 	"fmt"
-	"prplchat/src/model/event"
-	t "prplchat/src/model/template"
+	"neon-chat/src/model/event"
+	t "neon-chat/src/model/template"
 )
 
 type Message struct {

@@ -1,8 +1,8 @@
 package convert
 
 import (
-	"prplchat/src/db"
-	"prplchat/src/model/app"
+	"neon-chat/src/db"
+	"neon-chat/src/model/app"
 )
 
 func AuthAppToDB(auth *app.Auth) *db.Auth {

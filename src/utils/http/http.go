@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 
-	"prplchat/src/utils"
+	"neon-chat/src/utils"
 )
 
 func SetReqId(r *http.Request, s *string) string {

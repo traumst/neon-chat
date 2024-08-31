@@ -3,11 +3,11 @@ package handler
 import (
 	"fmt"
 	"log"
-	d "prplchat/src/db"
-	"prplchat/src/handler/state"
-	a "prplchat/src/model/app"
-	t "prplchat/src/model/template"
-	"prplchat/src/utils"
+	d "neon-chat/src/db"
+	"neon-chat/src/handler/state"
+	a "neon-chat/src/model/app"
+	t "neon-chat/src/model/template"
+	"neon-chat/src/utils"
 	"time"
 )
 

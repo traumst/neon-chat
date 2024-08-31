@@ -5,9 +5,9 @@ import (
 	"io"
 	"log"
 	"mime/multipart"
+	d "neon-chat/src/db"
+	"neon-chat/src/utils"
 	"net/http"
-	d "prplchat/src/db"
-	"prplchat/src/utils"
 )
 
 var allowedImageFormats = []string{

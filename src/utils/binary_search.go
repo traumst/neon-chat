@@ -1,7 +1,7 @@
 package utils
 
 import (
-	i "prplchat/src/interface"
+	i "neon-chat/src/interface"
 )
 
 // arr is expected to be orderred by item id
