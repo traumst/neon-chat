@@ -85,7 +85,7 @@ func (db *DBConn) GetOwner(chatId uint) (*User, error) {
 
 	var user User
 	err := db.conn.Get(&user, `
-SELECT TOP 1 * FROM users WHERE id in (
+SELECT * FROM users WHERE id in (
 	SELECT owner_id FROM chats WHERE id = ?
 )`, chatId)
 	if err != nil {

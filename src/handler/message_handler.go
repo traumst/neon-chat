@@ -29,9 +29,9 @@ func HandleGetMessage(
 		return nil, fmt.Errorf("user is not in chat")
 	}
 
-	dbOwner, err := db.GetOwner(msgId)
+	dbOwner, err := db.GetOwner(chatId)
 	if err != nil {
-		log.Printf("HandleGetMessage ERROR getting ownerfor chat[%d], %s\n", chatId, err.Error())
+		log.Printf("HandleGetMessage ERROR getting owner for chat[%d], %s\n", chatId, err.Error())
 		return nil, fmt.Errorf("failed to get message from db, %s", err.Error())
 	}
 	dbMsg, err := db.GetMessage(msgId)
@@ -54,7 +54,7 @@ func HandleGetMessage(
 		return nil, fmt.Errorf("failed to generate message template: %s", err.Error())
 	}
 
-	return tmplMsg, nil
+	return &tmplMsg, nil
 }
 
 func HandleMessageAdd(

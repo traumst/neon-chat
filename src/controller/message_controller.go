@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -30,37 +31,12 @@ func QuoteMessage(
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
-	var err error
-	var chatId uint
-	var msgId uint
-	// supports multiple values for the same key, ie delete in bulk, etc
-	args := r.URL.Query()
-	for k, v := range args {
-		switch k {
-		case "chatid":
-			c, e := strconv.Atoi(v[0])
-			if e != nil {
-				err = e
-			} else {
-				chatId = uint(c)
-			}
-		case "msgid":
-			m, e := strconv.Atoi(v[0])
-			if e != nil {
-				err = e
-			} else {
-				msgId = uint(m)
-			}
-		}
-		if err != nil {
-			log.Printf("[%s] QuoteMessage WARN bad argument - [%s]\n", h.GetReqId(r), v)
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("invalid chat id"))
-			return
-		}
-	}
-	if chatId == 0 || msgId == 0 {
-		log.Printf("[%s] QuoteMessage WARN missing arguments %v\n", h.GetReqId(r), args)
+	chatId, msgId, err := parseQuotedMessageArgs(r)
+	if err != nil || chatId == 0 || msgId == 0 {
+		log.Printf("[%s] QuoteMessage ERROR parsing arguments, %s\n", h.GetReqId(r), err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid arguments"))
+		return
 	}
 	tmplMsg, err := handler.HandleGetMessage(state, db, user, chatId, msgId)
 	if err != nil {
@@ -84,8 +60,38 @@ func QuoteMessage(
 	w.WriteHeader(http.StatusOK)
 }
 
+func parseQuotedMessageArgs(r *http.Request) (chatId uint, msgId uint, err error) {
+	// supports multiple values for the same key, ie delete in bulk, etc
+	args := r.URL.Query()
+	for k, v := range args {
+		switch k {
+		case "chatid":
+			c, e := strconv.Atoi(v[0])
+			if e != nil {
+				err = e
+			} else {
+				chatId = uint(c)
+			}
+		case "msgid":
+			m, e := strconv.Atoi(v[0])
+			if e != nil {
+				err = e
+			} else {
+				msgId = uint(m)
+			}
+		default:
+			log.Printf("[%s] WARN parseQuotedMessageArgs unknown argument - [%s:%s]\n", h.GetReqId(r), k, v[0])
+		}
+		if err != nil {
+			log.Printf("[%s] ERROR parseQuotedMessageArgs bad argument - [%s:%s]\n", h.GetReqId(r), k, v[0])
+			return 0, 0, fmt.Errorf("invalid argument")
+		}
+	}
+	return chatId, msgId, err
+}
+
 func AddMessage(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
-	log.Printf("[%s] AddMessage TRACE\n", h.GetReqId(r))
+	log.Printf("[%s] TRACE AddMessage \n", h.GetReqId(r))
 	if r.Method != "POST" {
 		log.Printf("[%s] AddMessage ERROR request method\n", h.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
@@ -100,14 +106,14 @@ func AddMessage(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 
 	chatId, err := handler.FormValueUint(r, "chatid")
 	if err != nil {
-		log.Printf("[%s] AddMessage WARN bad argument - chatid\n", h.GetReqId(r))
+		log.Printf("[%s] WARN AddMessage bad argument - chatid\n", h.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid chat id"))
 		return
 	}
 	msg, err := handler.FormValueString(r, "msg")
 	if err != nil || len(msg) < 1 {
-		log.Printf("[%s] AddMessage WARN bad argument - msg\n", h.GetReqId(r))
+		log.Printf("[%s] WARN AddMessage bad argument - msg\n", h.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("message too short"))
 		return
