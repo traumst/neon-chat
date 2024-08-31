@@ -21,7 +21,7 @@ I assume you already have golang installed.
 You can check if it is by running `go version` in a terminal.
 If not, you can refer to [official istallation instruction](https://go.dev/doc/install) for you pc/mac/linux.
 
-There's [tailwind.config.js](./tailwind.config.js) in the root, but it's not in use YET. Meaning we don't have custom tailwind definition, only relying on built-in utility classes. Technically we can simply make a 3rd party call and get entire tailwindcss.min.js from a CDN. And we do that by setting `LOCAL=false` in the `.env` file. Still, in the current setup we built tailwind file to produce minimal required css. [Compiled css](./static/css/tailwind.css) comes out at roughly 15kb, about 1/20 of the default minified [cdn provided talwindcss.js](https://cdn.tailwindcss.com/3.4.5) wich is around 300k and works exactly the same.
+There's [tailwind.config.js](./tailwind.config.js) in the root, but it's not in use YET. Meaning we don't have custom tailwind definition, only relying on built-in utility classes. Technically we can simply make a 3rd party call and get entire tailwindcss.min.js from a CDN. Still, in the current setup we built tailwind file to produce minimal required css. [Compiled css](./static/css/tailwind.css) comes out at roughly 15kb, about 1/20 of the default minified [cdn provided talwindcss.js](https://cdn.tailwindcss.com/3.4.5) wich is around 300k and works exactly the same.
 
 To actually compile this, you'd need to install tailwind. There's plenty of options. I recommend downloading the [stadalone tailwind cli](https://tailwindcss.com/blog/standalone-cli) and avoiding npm completely. But if you have nodejs installed and feel more comfortable with it, you can [install tailwind via npm](https://tailwindcss.com/docs/installation). Note that [run.sh script](./run.sh) specifies path to tailwind executable. That line may need to be updated to match your setup.
 
@@ -82,8 +82,7 @@ App should now be available at http://localhost:8080
 
 ### Bugs
 
-* User name change should update active user info on left panel
-* UI errored on user search, when after successfullt adding user to a chat
+* user name change should update active user info on left panel
 * controllers should only touch templates, never models
 * fucking session transactions
 
