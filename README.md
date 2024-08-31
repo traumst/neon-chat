@@ -82,11 +82,14 @@ App should now be available at http://localhost:8080
 
 ### Bugs
 
+* support ALLOW_UNSAFE_ACCESS for dev and test
 * user name change should update active user info on left panel
 * controllers should only touch templates, never models
 * fucking session transactions
 
 ### Next up
+
++ introduce ctx
 
 + UI improvements
     * @ other messages
@@ -134,7 +137,8 @@ App should now be available at http://localhost:8080
 - change chat title
 - add contacts page / address book
 - limit who invites to contacts
-- black and whitelist
+- black and white lists
+- 
 - zoom, web calls
 - introduce Tmpl to replace default templating engine
 
