@@ -4,12 +4,12 @@ import (
 	"log"
 	"net/http"
 
-	"prplchat/src/db"
-	"prplchat/src/handler"
-	"prplchat/src/handler/state"
-	a "prplchat/src/model/app"
-	t "prplchat/src/model/template"
-	h "prplchat/src/utils/http"
+	"neon-chat/src/db"
+	"neon-chat/src/handler"
+	"neon-chat/src/handler/state"
+	a "neon-chat/src/model/app"
+	t "neon-chat/src/model/template"
+	h "neon-chat/src/utils/http"
 )
 
 func RenderLogin(

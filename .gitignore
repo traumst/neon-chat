@@ -11,5 +11,5 @@ log/*
 *.db
 *.db-journal
 .env
-prplchat
+neon-chat
 launch.json

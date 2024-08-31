@@ -7,11 +7,11 @@ import (
 	"strconv"
 	"strings"
 
-	d "prplchat/src/db"
-	"prplchat/src/handler"
-	"prplchat/src/handler/state"
-	"prplchat/src/utils"
-	h "prplchat/src/utils/http"
+	d "neon-chat/src/db"
+	"neon-chat/src/handler"
+	"neon-chat/src/handler/state"
+	"neon-chat/src/utils"
+	h "neon-chat/src/utils/http"
 )
 
 func Welcome(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {

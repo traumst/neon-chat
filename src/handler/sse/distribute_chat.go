@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log"
 
-	"prplchat/src/convert"
-	"prplchat/src/db"
-	"prplchat/src/handler/state"
-	"prplchat/src/model/app"
-	"prplchat/src/model/event"
+	"neon-chat/src/convert"
+	"neon-chat/src/db"
+	"neon-chat/src/handler/state"
+	"neon-chat/src/model/app"
+	"neon-chat/src/model/event"
 )
 
 // empty targetUser means all users in chat

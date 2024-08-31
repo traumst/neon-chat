@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"prplchat/src/model/app"
-	"prplchat/src/utils"
+	"neon-chat/src/model/app"
+	"neon-chat/src/utils"
 )
 
 var sessions map[uint]Session = map[uint]Session{}

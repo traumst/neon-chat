@@ -3,13 +3,13 @@ package handler
 import (
 	"fmt"
 	"log"
-	"prplchat/src/convert"
-	d "prplchat/src/db"
-	"prplchat/src/handler/sse"
-	"prplchat/src/handler/state"
-	a "prplchat/src/model/app"
-	"prplchat/src/model/event"
-	"prplchat/src/utils"
+	"neon-chat/src/convert"
+	d "neon-chat/src/db"
+	"neon-chat/src/handler/sse"
+	"neon-chat/src/handler/state"
+	a "neon-chat/src/model/app"
+	"neon-chat/src/model/event"
+	"neon-chat/src/utils"
 )
 
 func HandleChatAdd(state *state.State, db *d.DBConn, user *a.User, chatName string) (string, error) {

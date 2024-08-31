@@ -1,4 +1,4 @@
-module prplchat
+module neon-chat
 
 go 1.22
 

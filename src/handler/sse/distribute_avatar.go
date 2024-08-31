@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"prplchat/src/handler/state"
-	"prplchat/src/model/app"
-	"prplchat/src/model/event"
+	"neon-chat/src/handler/state"
+	"neon-chat/src/model/app"
+	"neon-chat/src/model/event"
 )
 
 func DistributeAvatarChange(

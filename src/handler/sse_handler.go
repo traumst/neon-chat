@@ -2,7 +2,7 @@ package handler
 
 import (
 	"log"
-	"prplchat/src/handler/state"
+	"neon-chat/src/handler/state"
 )
 
 // TODO queue mechanism for delta updates

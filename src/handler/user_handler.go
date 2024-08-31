@@ -3,10 +3,10 @@ package handler
 import (
 	"fmt"
 	"log"
-	"prplchat/src/convert"
-	d "prplchat/src/db"
-	"prplchat/src/handler/state"
-	a "prplchat/src/model/app"
+	"neon-chat/src/convert"
+	d "neon-chat/src/db"
+	"neon-chat/src/handler/state"
+	a "neon-chat/src/model/app"
 )
 
 func GetUser(db *d.DBConn, userId uint) (*a.User, error) {

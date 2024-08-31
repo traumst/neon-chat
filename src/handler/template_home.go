@@ -2,14 +2,14 @@ package handler
 
 import (
 	"log"
+	"neon-chat/src/convert"
+	"neon-chat/src/db"
+	"neon-chat/src/handler/state"
+	ti "neon-chat/src/interface"
+	"neon-chat/src/model/app"
+	t "neon-chat/src/model/template"
+	h "neon-chat/src/utils/http"
 	"net/http"
-	"prplchat/src/convert"
-	"prplchat/src/db"
-	"prplchat/src/handler/state"
-	ti "prplchat/src/interface"
-	"prplchat/src/model/app"
-	t "prplchat/src/model/template"
-	h "prplchat/src/utils/http"
 )
 
 func TemplateHome(

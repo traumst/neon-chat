@@ -2,8 +2,8 @@ package app
 
 import (
 	"log"
-	ti "prplchat/src/interface"
-	t "prplchat/src/model/template"
+	ti "neon-chat/src/interface"
+	t "neon-chat/src/model/template"
 )
 
 type Chat struct {

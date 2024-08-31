@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"prplchat/src/utils"
+	"neon-chat/src/utils"
 )
 
 type Migration struct {

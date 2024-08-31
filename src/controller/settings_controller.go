@@ -4,12 +4,12 @@ import (
 	"log"
 	"net/http"
 
-	"prplchat/src/convert"
-	d "prplchat/src/db"
-	"prplchat/src/handler"
-	"prplchat/src/handler/state"
-	t "prplchat/src/model/template"
-	h "prplchat/src/utils/http"
+	"neon-chat/src/convert"
+	d "neon-chat/src/db"
+	"neon-chat/src/handler"
+	"neon-chat/src/handler/state"
+	t "neon-chat/src/model/template"
+	h "neon-chat/src/utils/http"
 )
 
 func OpenSettings(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {

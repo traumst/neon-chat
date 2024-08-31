@@ -4,11 +4,11 @@ import (
 	"log"
 	"net/http"
 
-	"prplchat/src/controller"
-	"prplchat/src/db"
-	"prplchat/src/handler"
-	"prplchat/src/handler/state"
-	h "prplchat/src/utils/http"
+	"neon-chat/src/controller"
+	"neon-chat/src/db"
+	"neon-chat/src/handler"
+	"neon-chat/src/handler/state"
+	h "neon-chat/src/utils/http"
 )
 
 func SetupControllers(state *state.State, db *db.DBConn) {

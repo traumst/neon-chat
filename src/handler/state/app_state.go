@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"sync"
 
-	"prplchat/src/model/app"
-	"prplchat/src/utils"
-	h "prplchat/src/utils/http"
-	"prplchat/src/utils/store"
+	"neon-chat/src/model/app"
+	"neon-chat/src/utils"
+	h "neon-chat/src/utils/http"
+	"neon-chat/src/utils/store"
 )
 
 var GlobalAppState State

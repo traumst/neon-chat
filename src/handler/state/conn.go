@@ -5,9 +5,9 @@ import (
 	"log"
 	"net/http"
 
-	"prplchat/src/model/app"
-	"prplchat/src/model/event"
-	"prplchat/src/utils"
+	"neon-chat/src/model/app"
+	"neon-chat/src/model/event"
+	"neon-chat/src/utils"
 )
 
 type Conn struct {

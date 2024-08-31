@@ -5,9 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"prplchat/src/model/app"
-	"prplchat/src/utils"
-	h "prplchat/src/utils/http"
+	"neon-chat/src/model/app"
+	"neon-chat/src/utils"
+	h "neon-chat/src/utils/http"
 )
 
 func TestStateDefaults(t *testing.T) {

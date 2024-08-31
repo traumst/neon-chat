@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"html/template"
 
-	"prplchat/src/model/event"
+	"neon-chat/src/model/event"
 )
 
 type UserTemplate struct {
