@@ -142,7 +142,7 @@ func ExpelUser(state *state.State, db *d.DBConn, user *a.User, chatId uint, expe
 	if err != nil || dbExpelled == nil {
 		return nil, fmt.Errorf("user[%d] not found in db", expelledId)
 	}
-	err = db.RemoveChatUser(expelledId, chatId)
+	err = db.RemoveChatUser(chatId, expelledId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to remove user[%d] from chat[%d]: %s", expelledId, chatId, err.Error())
 	}
