@@ -29,10 +29,10 @@
                 newMsgText.value = '';
             }
            
-            // clear any active quotes on any chage in chat *TODO ANY CHANGE*
-            // should be
-            //  type: "htmx:afterSwap"
-            //  
+            // clear any active quotes on any chage in chat
+            // it works for 2 reasons:
+            // 1. embeded script is local to the file
+            // 2. there aren't too many event sources in scope
             if (event.target.id !== 'chat-{{.ChatId}}-msg-form') {
                 console.log('69696969', event)
                 setTimeout(() => {
