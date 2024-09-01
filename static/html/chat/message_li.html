@@ -11,13 +11,11 @@
         shadow
         {{ if eq .AuthorId .ViewerId }}
             ml-[17%]
-            border-b-4 border-green-700 rounded-lg
-            shadow shadow-green-800
         {{ else }}
             mr-[17%]
-            border-b-4 border-indigo-700 rounded-lg
-            shadow shadow-green-800
         {{ end }}
+        border-b-4 border-indigo-700 rounded-lg
+        shadow shadow-green-800
         hover:shadow-green-500
         hover:text-green-500">
     <div class="chat-message-content flex flex-row overflow-hidden">
@@ -36,7 +34,7 @@
         <sup title="respond to this message" 
             hx-get="/message/quote?chatid={{ .ChatId }}&msgid={{ .MsgId }}" 
             hx-trigger="click" 
-            hx-swap="beforebegin" 
+            hx-swap="afterbegin" 
             hx-target="#chat-{{.ChatId}}-msg-form"
             class="hover:text-green-800">
             [reply]

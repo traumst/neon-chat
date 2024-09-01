@@ -1,6 +1,11 @@
-
+<!-- originally provided to work with message_submit_div -->
+<input id="quote-chat-{{ .ChatId }}-msg-{{ .MsgId }}" 
+    type="hidden" 
+    name="quoteid" 
+    value="{{ .MsgId }}"
+    class="quote-chat-msg-input" />
 <div id="quote-chat-{{ .ChatId }}-msg-{{ .MsgId }}-{{ .IntermediateId }}" 
-    onclick="scrollIntoView('chat-{{ .ChatId }}-msg-{{ .MsgId }}')"
+    onclick="scrollIntoView('#chat-{{ .ChatId }}-msg-{{ .MsgId }}')"
     class="quote-chat-message
         flex flex-col 
         ml-auto 
@@ -24,13 +29,16 @@
     </div>
 </div>
 <script>
-    setTimeout(() => {
-        const quotes = document.querySelectorAll(`.quote-chat-message`);
-        console.log('removing previous quotes from chatId[{{ .ChatId }}] except msgId[{{.MsgId}}]');
-        for (i = 0; i < quotes.length; i++) {
-            if (quotes[i].id !== "quote-chat-{{ .ChatId }}-msg-{{ .MsgId }}-{{ .IntermediateId }}") {
-                quotes[i].remove();
-            }
-        }
-    }, 100);
+(function () {
+    const staleQuote = document.querySelectorAll(`.quote-chat-message`);
+    console.log('removing previous quotes from chatId[{{ .ChatId }}] except for msgId[{{.MsgId}}]');
+    for (i = 1; i < staleQuote.length; i++) {
+        staleQuote[i].remove();
+    }
+    const staleQuoteIdInputs = document.querySelectorAll(`.quote-chat-msg-input`);
+    console.log('removing stale inputs from chatId[{{ .ChatId }}] except for msgId[{{.MsgId}}]');
+    for (i = 1; i < staleQuoteIdInputs.length; i++) {
+        staleQuoteIdInputs[i].remove();
+    }
+})()
 </script>
