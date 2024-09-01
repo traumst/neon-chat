@@ -23,18 +23,20 @@
         </button>
     </form>
     <script>
-        // TODO clear any active quotes
         document.body.addEventListener('htmx:afterSwap', event => {
             const newMsgText = document.getElementById('chat-{{.ChatId}}-msg-text-input');
             if (newMsgText) {
                 newMsgText.value = '';
             }
            
+            // clear any active quotes on any chage in chat *TODO ANY CHANGE*
+            // should be
+            //  type: "htmx:afterSwap"
+            //  
             if (event.target.id !== 'chat-{{.ChatId}}-msg-form') {
+                console.log('69696969', event)
                 setTimeout(() => {
-                    console.log('removing all previous quotes from chatId[{{ .ChatId }}]');
                     const quotes = document.querySelectorAll(`.quote-chat-message`);
-                    console.log('removing previous quotes in chat[{{ .ChatId }}]');
                     for (i = 0; i < quotes.length; i++) {
                         quotes[i].remove();
                     }
