@@ -41,6 +41,15 @@
         .default-transition {
             animation: fadeInFromLeft .17s ease forwards;
         }
+        /*  */
+        @keyframes flash {
+            0%, 100% { box-shadow: 0 0 10px 5px gold; }
+            50% { box-shadow: 0 0 20px 10px gold; }
+        }
+        .flash-golden {
+            animation: flash 1s ease-in-out 3;
+        }
+        /*  */
         .left-panel.closed {
             width: 9%;
         }
