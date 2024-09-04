@@ -1,10 +1,8 @@
 package controller
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
@@ -31,14 +29,14 @@ func QuoteMessage(
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
-	chatId, msgId, err := parseQuotedMessageArgs(r)
-	if err != nil || chatId == 0 || msgId == 0 {
+	args, err := handler.QueryStringArgs(r)
+	if err != nil {
 		log.Printf("[%s] QuoteMessage ERROR parsing arguments, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid arguments"))
 		return
 	}
-	tmplMsg, err := handler.HandleGetMessage(state, db, user, chatId, msgId)
+	tmplMsg, err := handler.HandleGetMessage(state, db, user, args.ChatId, args.MsgId)
 	if err != nil {
 		log.Printf("[%s] QuoteMessage ERROR quoting message, %s\n", h.GetReqId(r), err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -52,42 +50,9 @@ func QuoteMessage(
 		w.Write([]byte("failed to template message"))
 		return
 	}
-	log.Printf("[%s] QuoteMessage done\n", h.GetReqId(r))
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(html))
-
 	log.Printf("[%s] QuoteMessage TRACE serving html\n", h.GetReqId(r))
 	w.WriteHeader(http.StatusOK)
-}
-
-func parseQuotedMessageArgs(r *http.Request) (chatId uint, msgId uint, err error) {
-	// supports multiple values for the same key, ie delete in bulk, etc
-	args := r.URL.Query()
-	for k, v := range args {
-		switch k {
-		case "chatid":
-			c, e := strconv.Atoi(v[0])
-			if e != nil {
-				err = e
-			} else {
-				chatId = uint(c)
-			}
-		case "msgid":
-			m, e := strconv.Atoi(v[0])
-			if e != nil {
-				err = e
-			} else {
-				msgId = uint(m)
-			}
-		default:
-			log.Printf("[%s] WARN parseQuotedMessageArgs unknown argument - [%s:%s]\n", h.GetReqId(r), k, v[0])
-		}
-		if err != nil {
-			log.Printf("[%s] ERROR parseQuotedMessageArgs bad argument - [%s:%s]\n", h.GetReqId(r), k, v[0])
-			return 0, 0, fmt.Errorf("invalid argument")
-		}
-	}
-	return chatId, msgId, err
+	w.Write([]byte(html))
 }
 
 func AddMessage(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
@@ -118,8 +83,8 @@ func AddMessage(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		w.Write([]byte("message too short"))
 		return
 	}
-
-	message, err := handler.HandleMessageAdd(state, db, chatId, author, msg)
+	quoteId, _ := handler.FormValueUint(r, "quoteid")
+	message, err := handler.HandleMessageAdd(state, db, chatId, author, msg, quoteId)
 	if err != nil || message == nil {
 		log.Printf("[%s] AddMessage ERROR while handing, %s, %v\n", h.GetReqId(r), err.Error(), message)
 		w.WriteHeader(http.StatusInternalServerError)
