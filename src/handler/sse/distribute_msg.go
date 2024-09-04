@@ -52,7 +52,7 @@ func DistributeMsg(
 		go func(viewer app.User, msg app.Message) {
 			defer wg.Done()
 			log.Printf("DistributeMsg TRACE event[%s] will be sent to user[%d]\n", updateType, viewer.Id)
-			msgTmpl, err := msg.Template(&viewer, owner, appAvatar)
+			msgTmpl, err := msg.Template(&viewer, owner, appAvatar, msg.Quote)
 			if err != nil {
 				errors = append(errors, fmt.Sprintf("template:%s", err.Error()))
 				return

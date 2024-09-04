@@ -12,6 +12,7 @@ import (
 	"neon-chat/src/model/event"
 )
 
+// TODO consider adding quote thread with depth limit
 func HandleGetMessage(
 	state *state.State,
 	db *d.DBConn,
@@ -44,11 +45,26 @@ func HandleGetMessage(
 		log.Printf("HandleGetMessage ERROR getting author[%d] avatar from db, %s\n", dbMsg.AuthorId, err)
 		return nil, fmt.Errorf("failed to get author avatar from db: %s", err.Error())
 	}
+	dbQuote, err := db.GetQuote(msgId)
+	if err != nil {
+		log.Printf("HandleGetMessage ERROR getting quotes for message[%d], %s\n", msgId, err)
+		return nil, fmt.Errorf("failed to get quotes for message: %s", err.Error())
+	}
+	var appQuote *a.Message
+	if dbQuote != nil {
+		dbMsg, err := db.GetMessage(dbQuote.QuoteId)
+		if err != nil {
+			log.Printf("HandleGetMessage ERROR getting quote message[%d] from db, %s\n", dbQuote.QuoteId, err)
+			return nil, fmt.Errorf("failed to get quote message from db: %s", err.Error())
+		}
+		quoteMsg := convert.MessageDBToApp(dbMsg, user, nil)
+		appQuote = &quoteMsg
+	}
 
 	appOwner := convert.UserDBToApp(dbOwner)
-	appMsg := convert.MessageDBToApp(dbMsg, user)
+	appMsg := convert.MessageDBToApp(dbMsg, user, appQuote)
 	appAvatar := convert.AvatarDBToApp(dbAvatar)
-	tmplMsg, err := appMsg.Template(user, appOwner, appAvatar)
+	tmplMsg, err := appMsg.Template(user, appOwner, appAvatar, appQuote)
 	if err != nil {
 		log.Printf("HandleGetMessage ERROR generating message template, %s\n", err)
 		return nil, fmt.Errorf("failed to generate message template: %s", err.Error())
@@ -57,12 +73,14 @@ func HandleGetMessage(
 	return &tmplMsg, nil
 }
 
+// TODO has partial success state - if fail of saving quote
 func HandleMessageAdd(
 	state *state.State,
 	db *d.DBConn,
 	chatId uint,
 	author *a.User,
 	msg string,
+	quoteId uint,
 ) (*a.Message, error) {
 	log.Printf("HandleMessageAdd TRACE opening current chat for user[%d]\n", author.Id)
 	canChat, err := db.UsersCanChat(chatId, author.Id)
@@ -76,22 +94,38 @@ func HandleMessageAdd(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get chat[%d] from db: %s", chatId, err.Error())
 	}
-	//userInput := tokenizer.ParsedUserInput(msg)
 	dbMsg, err := db.AddMessage(&d.Message{
 		Id:       0,
 		ChatId:   chatId,
 		AuthorId: author.Id,
-		Text:     msg, // TODO: sanitize
+		Text:     msg,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to add message to chat[%d]: %s", chatId, err.Error())
+	}
+	// quoteId 0 means message has no quote attached
+	var appQuote *a.Message
+	if quoteId != 0 {
+		_, err = db.AddQuote(&d.Quote{
+			MsgId:   dbMsg.Id,
+			QuoteId: quoteId,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to add quote[%d] to message[%d]: %s", quoteId, dbMsg.Id, err.Error())
+		}
+		dbQuote, err := db.GetMessage(quoteId)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get quote[%d] from db: %s", quoteId, err.Error())
+		}
+		quote := convert.MessageDBToApp(dbQuote, author, nil)
+		appQuote = &quote
 	}
 	dbOwner, err := db.GetUser(dbChat.OwnerId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get chat[%d] owner[%d] from db: %s", chatId, dbChat.OwnerId, err.Error())
 	}
 	appChat := convert.ChatDBToApp(dbChat, convert.UserDBToApp(dbOwner))
-	appMsg := convert.MessageDBToApp(dbMsg, author)
+	appMsg := convert.MessageDBToApp(dbMsg, author, appQuote)
 	err = sse.DistributeMsg(state, db, appChat, &appMsg, event.MessageAdd)
 	if err != nil {
 		log.Printf("HandleMessageAdd ERROR distributing msg update, %s\n", err)
@@ -146,7 +180,7 @@ func HandleMessageDelete(
 	if appChat == nil {
 		return nil, fmt.Errorf("cannot convert chat[%d] for app, owner[%v]", dbChat.Id, appChatOwner)
 	}
-	appMsg := convert.MessageDBToApp(dbMsg, appMsgAuthor) // TODO bad user
+	appMsg := convert.MessageDBToApp(dbMsg, appMsgAuthor, nil) // TODO bad user
 	err = sse.DistributeMsg(state, db, appChat, &appMsg, event.MessageDrop)
 	if err != nil {
 		log.Printf("HandleMessageDelete ERROR distributing msg update, %s\n", err)
@@ -155,50 +189,61 @@ func HandleMessageDelete(
 }
 
 func GetChatMessages(db *d.DBConn, chatId uint) ([]*a.Message, error) {
+	dbUsers, err := db.GetChatUsers(chatId)
+	if err != nil {
+		return nil, fmt.Errorf("failed getting chat[%d] users, %s", chatId, err.Error())
+	}
+	userIds := make([]uint, 0)
+	appUsers := make(map[uint]*a.User)
+	for _, dbUser := range dbUsers {
+		appUsers[dbUser.Id] = convert.UserDBToApp(&dbUser)
+		userIds = append(userIds, dbUser.Id)
+	}
+	appAvatars := make(map[uint]*a.Avatar)
+	dbAvatars, err := db.GetAvatars(userIds)
+	if err == nil {
+		for _, dbAvatar := range dbAvatars {
+			if appAvatars[dbAvatar.UserId] != nil {
+				continue
+			}
+			appAvatars[dbAvatar.UserId] = convert.AvatarDBToApp(dbAvatar)
+		}
+	}
 	// TODO offset := 0 means no offset, ie get entire chat history
 	dbMsgs, err := db.GetMessages(chatId, 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting chat[%d] messages, %s", chatId, err.Error())
 	}
-	msgAuthorIds := make(map[uint]bool)
-	authorIds := make([]uint, 0)
+	appMsgs := make([]*a.Message, 0)
+	appMsgIdMap := make(map[uint]*a.Message, 0)
+	msgIds := make([]uint, len(dbMsgs))
 	for _, dbMsg := range dbMsgs {
-		if msgAuthorIds[dbMsg.AuthorId] {
-			continue
-		}
-		msgAuthorIds[dbMsg.AuthorId] = true
-		authorIds = append(authorIds, dbMsg.AuthorId)
-	}
-	dbUsers, err := db.GetUsers(authorIds)
-	if err != nil {
-		return nil, fmt.Errorf("failed getting chat[%d] users[%v], %s", chatId, authorIds, err.Error())
-	}
-	authorAvatars := make(map[uint]*a.Avatar)
-	dbAvatars, err := db.GetAvatars(authorIds)
-	if err == nil {
-		for _, dbAvatar := range dbAvatars {
-			if authorAvatars[dbAvatar.UserId] != nil {
-				continue
-			}
-			authorAvatars[dbAvatar.UserId] = convert.AvatarDBToApp(dbAvatar)
-		}
-	}
-	msgAuthors := make(map[uint]*a.User)
-	for _, dbUser := range dbUsers {
-		msgAuthors[dbUser.Id] = convert.UserDBToApp(&dbUser)
-	}
-	appChatMsgs := make([]*a.Message, 0)
-	for _, dbMsg := range dbMsgs {
-		author, ok := msgAuthors[dbMsg.AuthorId]
+		author, ok := appUsers[dbMsg.AuthorId]
 		if !ok {
 			log.Printf("GetChatMessages ERROR author[%d] of message[%d] is not mapped\n", dbMsg.AuthorId, dbMsg.Id)
 			continue
 		}
-		if authorAvatars[author.Id] != nil {
-			author.Avatar = authorAvatars[author.Id]
+		if appAvatars[author.Id] != nil {
+			author.Avatar = appAvatars[author.Id]
 		}
-		appMsg := convert.MessageDBToApp(&dbMsg, author)
-		appChatMsgs = append(appChatMsgs, &appMsg)
+		// ignore quote for now
+		appMsg := convert.MessageDBToApp(&dbMsg, author, nil)
+		// sort the data on the way
+		appMsgs = append(appMsgs, &appMsg)
+		msgIds = append(msgIds, dbMsg.Id)
+		appMsgIdMap[dbMsg.Id] = &appMsg
 	}
-	return appChatMsgs, nil
+	dbQuotes, err := db.GetQuotes(msgIds)
+	if err != nil {
+		return nil, fmt.Errorf("failed getting chat[%d] quotes, %s", chatId, err.Error())
+	}
+	for _, dbQuote := range dbQuotes {
+		appMsg, ok1 := appMsgIdMap[dbQuote.MsgId]
+		appQuote, ok2 := appMsgIdMap[dbQuote.QuoteId]
+		if ok1 && ok2 {
+			appMsg.Quote = appQuote
+		}
+	}
+
+	return appMsgs, nil
 }

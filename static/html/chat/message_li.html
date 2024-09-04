@@ -3,7 +3,7 @@
     hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
     hx-swap="innerHTML" 
     class="chat-message-li default-transition
-        flex flex-row justify-between
+        flex flex-col justify-between
         p-2
         m-2
         h-fit
@@ -18,37 +18,44 @@
         shadow shadow-green-800
         hover:shadow-green-500
         hover:text-green-500">
-    <div class="chat-message-content flex flex-row overflow-hidden">
-        <div class="w-[1.5em] h-[1.5em] ml-0 mr-1">
-            {{ template "avatar_div.html" .AuthorAvatar }}
-        </div>
-        <div class="mr-0">
-            [{{ .AuthorName }}]
-        </div>
-        <div>&nbsp;</div>
-        <div class="break-all">
-            {{ .Text }}
-        </div>
-    </div>
-    <div class="chat-msg-options flex ml-auto">
-        <sup title="respond to this message" 
-            hx-get="/message/quote?chatid={{ .ChatId }}&msgid={{ .MsgId }}" 
-            hx-trigger="click" 
-            hx-swap="afterbegin" 
-            hx-target="#chat-{{.ChatId}}-msg-form"
-            class="hover:text-green-800">
-            [reply]
-        </sup>
-        {{ if or (eq .AuthorId .ViewerId) (eq .OwnerId .ViewerId) }}
-        <sup title="delete this message" 
-            hx-post="/message/delete?chatid={{ .ChatId }}&msgid={{ .MsgId }}"
-            DISABLED-hx-vals='{"chatId":"{{ .ChatId }},"msgId":"{{ .MsgId }}"}'
-            hx-trigger="click" 
-            hx-swap="innerHTML" 
-            hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
-            class="hover:text-amber-700">
-            [delete]
-        </sup>
+    <div class="chat-message-content flex flex-col overflow-hidden">
+        {{ with .Quote }}
+            {{ template "message_quote_div.html" . }}
         {{ end }}
+        <div class="flex flex-row m-r-auto">
+            <div class="w-[1.5em] h-[1.5em] ml-0 mr-1">
+                {{ template "avatar_div.html" .AuthorAvatar }}
+            </div>
+            <div class="mr-0">
+                [{{ .AuthorName }}]
+            </div>
+        </div>
+        <div class="mt-2 ml-1 flex flex-col">
+            <div class="break-all">
+                {{ .Text }}
+            </div>
+        </div>
+        <div class="chat-msg-options flex ml-auto">
+            <div title="respond to this message" 
+                hx-get="/message/quote?chatid={{ .ChatId }}&msgid={{ .MsgId }}" 
+                hx-trigger="click" 
+                hx-swap="afterbegin" 
+                hx-target="#chat-{{.ChatId}}-msg-form"
+                class="hover:text-green-800">
+                [reply]
+            </div>
+            {{ if or (eq .AuthorId .ViewerId) (eq .OwnerId .ViewerId) }}
+            <div title="delete this message" 
+                hx-post="/message/delete"
+                hx-trigger="click" 
+                hx-swap="innerHTML" 
+                hx-headers='{"Content-Type": "application/x-www-form-urlencoded"}'
+                hx-vals='{"chatid":{{ .ChatId }},"msgid":{{ .MsgId }}}'
+                hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
+                class="hover:text-amber-700">
+                [delete]
+            </div>
+            {{ end }}
+        </div>
     </div>
 </li>

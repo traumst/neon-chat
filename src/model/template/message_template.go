@@ -13,13 +13,14 @@ type MessageTemplate struct {
 	IntermediateId   string
 	ChatId           uint
 	MsgId            uint
-	Quotes           []MessageTemplate
+	Quote            *MessageTemplate
 	ViewerId         uint
 	OwnerId          uint
 	AuthorId         uint
 	AuthorName       string
 	AuthorAvatar     AvatarTemplate
 	Text             string
+	TextIntro        string
 	MessageDropEvent string
 }
 
@@ -36,6 +37,10 @@ func (m *MessageTemplate) GetId() uint {
 	return m.MsgId
 }
 
+func (m *MessageTemplate) Shorten() uint {
+	return m.ChatId
+}
+
 func (m *MessageTemplate) HTML() (string, error) {
 	if err := m.validate(); err != nil {
 		return "", fmt.Errorf("cannot template, %s", err.Error())
@@ -43,18 +48,20 @@ func (m *MessageTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
 	msgTmpl := template.Must(template.ParseFiles(
 		"static/html/chat/message_li.html",
+		"static/html/chat/message_quote_div.html",
 		"static/html/avatar_div.html"))
 	err := msgTmpl.Execute(&buf, MessageTemplate{
 		IntermediateId:   m.getIntermediateId(),
 		ChatId:           m.ChatId,
 		MsgId:            m.MsgId,
-		Quotes:           m.Quotes,
+		Quote:            m.Quote,
 		ViewerId:         m.ViewerId,
 		OwnerId:          m.OwnerId,
 		AuthorId:         m.AuthorId,
 		AuthorName:       m.AuthorName,
 		AuthorAvatar:     m.AuthorAvatar,
 		Text:             m.Text,
+		TextIntro:        m.TextIntro,
 		MessageDropEvent: m.MessageDropEvent,
 	})
 	if err != nil {
@@ -63,25 +70,27 @@ func (m *MessageTemplate) HTML() (string, error) {
 	return buf.String(), nil
 }
 
+// intended for use in chat msg submition
 func (m *MessageTemplate) ShortHTML() (string, error) {
 	if m.AuthorAvatar.Title == "" {
 		return "", fmt.Errorf("short template requires avatar but was [%s]", m.AuthorAvatar.Title)
 	}
 	var buf bytes.Buffer
 	msgTmpl := template.Must(template.ParseFiles(
-		"static/html/chat/message_quote_div.html",
+		"static/html/chat/message_submit_quote_div.html",
 		"static/html/avatar_div.html"))
 	err := msgTmpl.Execute(&buf, MessageTemplate{
 		IntermediateId:   m.getIntermediateId(),
 		ChatId:           m.ChatId,
 		MsgId:            m.MsgId,
-		Quotes:           m.Quotes,
+		Quote:            m.Quote,
 		ViewerId:         m.ViewerId,
 		OwnerId:          m.OwnerId,
 		AuthorId:         m.AuthorId,
 		AuthorName:       m.AuthorName,
 		AuthorAvatar:     m.AuthorAvatar,
 		Text:             m.Text,
+		TextIntro:        m.TextIntro,
 		MessageDropEvent: m.MessageDropEvent,
 	})
 	if err != nil {

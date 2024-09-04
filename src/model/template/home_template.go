@@ -62,7 +62,9 @@ func (h HomeTemplate) HTML() (string, error) {
 		"static/html/chat/chat_div.html",
 		"static/html/chat/message_history_ul.html",
 		"static/html/chat/message_li.html",
+		"static/html/chat/message_quote_div.html",
 		"static/html/chat/message_submit_div.html",
+		"static/html/chat/message_submit_quote_div.html",
 	))
 	var buf bytes.Buffer
 	if err := homeTmpl.Execute(&buf, h); err != nil {

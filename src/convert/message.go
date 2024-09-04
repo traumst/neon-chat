@@ -14,11 +14,12 @@ func MessageAppToDB(message *app.Message) db.Message {
 	}
 }
 
-func MessageDBToApp(message *db.Message, author *app.User) app.Message {
+func MessageDBToApp(message *db.Message, author *app.User, quote *app.Message) app.Message {
 	return app.Message{
 		Id:     message.Id,
 		ChatId: message.ChatId,
 		Author: author,
 		Text:   message.Text,
+		Quote:  quote,
 	}
 }

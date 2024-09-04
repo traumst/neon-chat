@@ -56,7 +56,9 @@ func (c ChatTemplate) HTML() (string, error) {
 		"static/html/chat/chat_div.html",
 		"static/html/chat/message_history_ul.html",
 		"static/html/chat/message_li.html",
+		"static/html/chat/message_quote_div.html",
 		"static/html/chat/message_submit_div.html",
+		"static/html/chat/message_submit_quote_div.html",
 		"static/html/user_div.html",
 		"static/html/avatar_div.html",
 	))

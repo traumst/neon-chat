@@ -47,3 +47,10 @@ func RemoveSpecialChars(s string) string {
 	res = strings.ReplaceAll(res, "]", "")
 	return res
 }
+
+func Shorten(s string, l int) string {
+	if len(s) < l {
+		return s
+	}
+	return s[:l] + "..."
+}
