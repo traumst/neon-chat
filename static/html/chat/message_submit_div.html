@@ -5,7 +5,7 @@
         hx-target=".message-list" 
         hx-swap="beforeend"
         hx-include="[name='chatid'],[name='msg'],[name='quoteId']"
-        class="flex flex-col ml-auto mt-auto p-auto max-w-[80%]"
+        class="flex flex-col ml-auto mt-auto p-auto"
     >
         <input type="hidden" name="chatid" value="{{ .ChatId }}">
         <input id="chat-{{.ChatId}}-msg-text-input" type="text" name="msg" 
@@ -24,24 +24,25 @@
     </form>
     <script>
         document.body.addEventListener('htmx:afterSwap', event => {
+            // ignore events that modify this form
+            if (event.target.id === 'chat-{{.ChatId}}-msg-form') {
+                return;
+            }
+            clearSubmitForm();
+        });
+        function clearSubmitForm() {
             const newMsgText = document.getElementById('chat-{{.ChatId}}-msg-text-input');
             if (newMsgText) {
                 newMsgText.value = '';
             }
-           
-            // clear any active quotes on any chage in chat
-            // it works for 2 reasons:
-            // 1. embeded script is local to the file
-            // 2. there aren't too many event sources in scope
-            if (event.target.id !== 'chat-{{.ChatId}}-msg-form') {
-                console.log('69696969', event)
-                setTimeout(() => {
-                    const quotes = document.querySelectorAll(`.quote-chat-message`);
-                    for (i = 0; i < quotes.length; i++) {
-                        quotes[i].remove();
-                    }
-                }, 100);     
-            }
-        });
+            removeElements({ 
+                classSelector: ".quote-chat-message", 
+                idSelectorException: null
+            })
+            removeElements({ 
+                classSelector: ".quote-chat-msg-input", 
+                idSelectorException: null
+            })
+        }
     </script>
 </div>

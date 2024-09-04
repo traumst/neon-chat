@@ -5,6 +5,7 @@ tmp/build-errors.log
 tmp/main
 main
 static/script/*
+!static/script/utils.js
 static/css/*
 log/*
 .DS_Store

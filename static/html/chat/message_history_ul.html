@@ -14,13 +14,6 @@
     {{ end }}
 </ul>
 <script>
-    function scrollToLastChild(parent) {
-        const lastElement = parent.children[parent.children.length-1];
-        lastElement?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'end'
-        });
-    }
     messageListObserver = null;
     messageListObserver = new MutationObserver(mutations => {
         mutations.forEach(mutation => {

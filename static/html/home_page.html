@@ -10,78 +10,17 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap">
     <script src="/script/htmx.min.1.9.12.js"></script>
     <script src="/script/htmx.sse.1.9.12.js"></script>
+    <script src="/script/utils.js"></script>
     <!-- Need to build tailwind to minimize it and apply custom styles -->
-    <script src="/script/tailwindcss.3.4.3.js"></script>
+    <!-- <script src="/script/tailwindcss.3.4.3.js"></script> -->
     <link href="/css/tailwind.css" rel="stylesheet">
-    <script>
-        function escFocus(event) {
-            if (event.key === 'Escape') {
-                event.target.blur();
-            } else {
-                //console.log('escFocus key', event.key)
-            }
-        }
-        function enterSubmit(event) {
-            if (event.key === 'Enter') {
-                event.target.submit();
-            } else {
-                //console.log('enterSubmit key', event.key)
-            }
-        }
-        function scrollIntoView(elemId) {
-            try {
-                document.getElementById(elemId).scrollIntoView({ behavior: 'smooth' });
-            } catch (error) {
-                console.error(`cannot scroll elemement[${elemId}] into view, err: ${error}`);
-                // TODO dialog - can't scroll to original
-            }
-        }
-        /* collapsible left panel TBD 
-        function togglePanel() {
-            const panel = document.querySelector('.left-panel');
-            const isOpen = panel.classList.contains('open');
-            if (isOpen) {
-                return closePanel(panel);
-            }
-            return openPanel(panel);
-
-            function openPanel(panel) {
-                openLeftPanel(panel);
-                [...panel.children].forEach(element => {
-                    openLeftPanel(element);
-                    if (element.id === 'left-panel-toggle') {
-                        element.innerHTML = '⇾  ⇽';
-                    }
-                });
-                return '⇾  ⇽';
-            }
-            function closePanel(panel) {
-                closeLeftPanel(panel);
-                [...panel.children].forEach(element => {
-                    closeLeftPanel(element);
-                    if (element.id === 'left-panel-toggle') {
-                        element.innerHTML = '⇽⇾';
-                    }
-                });
-                return '⇽⇾';
-            }
-            function openLeftPanel(panel) {
-                panel.classList.remove('closed');
-                panel.classList.add('open');
-            }
-            function closeLeftPanel(panel) {
-                panel.classList.remove('open');
-                panel.classList.add('closed');
-            }
-        }
-        */
-    </script>
     <style>
         body {
             font: inherit;
             font-size: .8rem;
             font-family: 'JetBrains Mono', sans-serif;
         }
+        /*  */
         @keyframes fadeInFromLeft {
             0% {
                 opacity: 0;
@@ -196,12 +135,21 @@
     </div>
     <script>
         document.body.addEventListener('htmx:beforeOnLoad', function handleServerError(event) {
-            if (event.detail.xhr.status >= 400) {
-                alert(`Action failed ${event.detail.xhr.status} ${event.detail.xhr.responseText}`)
-                console.debug("err xhr response:", 
-                    event.detail.xhr.responseText, 
+            if (event.detail.xhr.status > 399 || /^[45]\d\d$/g.test(event.detail.xhr.status)) {
+                alert("Action failed!\nresponse details:\n" + 
+                    `[${event.detail.xhr.status}:${event.detail.xhr.statusText}]` +
+                    `${event.detail.xhr.responseText}`);
+                console.error("bad int handleServerError", 
+                    event.detail.xhr.responseURL, 
                     event.detail.xhr.status, 
-                    event.detail.xhr.statusText)
+                    event.detail.xhr.statusText,
+                    event.detail.xhr.responseText);
+            } else {
+                // console.log("good handleServerError", 
+                //     event.detail.xhr.responseURL, 
+                //     event.detail.xhr.status, 
+                //     event.detail.xhr.statusText,
+                //     event.detail.xhr.responseText);
             }
         });
     </script>

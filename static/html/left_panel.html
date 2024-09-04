@@ -1,28 +1,6 @@
 
 <div class="flex flex-col h-screen">
     <script>
-        function scrollToFirstChild(parent) {
-            const firstElement = parent.children[0];
-            firstElement?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
-        chatHeaderObserver = null;
-        chatHeaderObserver = new MutationObserver(mutations => {
-            mutations.forEach(mutation => {
-                if (mutation.type === 'childList' || mutation.type === 'characterData') {
-                    scrollToFirstChild(mutation.target);
-                }
-            });
-        });
-        chatHeaders = null;
-        chatHeaders = document.querySelector(".chat-headers");
-        if (chatHeaders) {
-            chatHeaderObserverOptions = null;
-            chatHeaderObserverOptions = { childList: true, subtree: true, characterData: true };
-            chatHeaderObserver.observe(chatHeaders, chatHeaderObserverOptions);
-        }
     </script>
     <div class="active-user default-transition
         flex flex-row justify-end
@@ -118,29 +96,23 @@
         {{ end }}
         </ul>
         <script>
-        function scrollToFirstChild(parent) {
-            const firstElement = parent.children[0];
-            firstElement?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
+            chatHeaderObserver = null;
+            chatHeaderObserver = new MutationObserver(mutations => {
+                mutations.forEach(mutation => {
+                    if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                        scrollToFirstChild(mutation.target);
+                    }
+                });
             });
-        }
-        chatHeaderObserver = null;
-        chatHeaderObserver = new MutationObserver(mutations => {
-            mutations.forEach(mutation => {
-                if (mutation.type === 'childList' || mutation.type === 'characterData') {
-                    scrollToFirstChild(mutation.target);
-                }
-            });
-        });
-        chatHeaders = null;
-        chatHeaders = document.querySelector(".chat-headers");
-        if (chatHeaders) {
-            chatHeaderObserverOptions = null;
-            chatHeaderObserverOptions = { childList: true, subtree: true, characterData: true };
-            chatHeaderObserver.observe(chatHeaders, chatHeaderObserverOptions);
-        }
-        scrollToFirstChild(chatHeaders);
+
+            chatHeaders = null;
+            chatHeaders = document.querySelector(".chat-headers");
+            if (chatHeaders) {
+                chatHeaderObserverOptions = null;
+                chatHeaderObserverOptions = { childList: true, subtree: true, characterData: true };
+                chatHeaderObserver.observe(chatHeaders, chatHeaderObserverOptions);
+            }
+            scrollToFirstChild(chatHeaders);
         </script>
     </div>
 </div>
