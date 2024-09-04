@@ -13,3 +13,4 @@ log/*
 .env
 neon-chat
 launch.json
+_bugz/

@@ -82,6 +82,7 @@ App should now be available at http://localhost:8080
 
 ### Bugs
 
+
 * support ALLOW_UNSAFE_ACCESS for dev and test
 * user name change should update active user info on left panel
 * controllers should only touch templates, never models
@@ -89,25 +90,15 @@ App should now be available at http://localhost:8080
 
 ### Next up
 
++ log levels with [slog in GO 1.23](https://pkg.go.dev/log/slog#Debug)
++ auth middleware
 + introduce ctx
-
-+ UI improvements
-    * @ other messages
-        - "reply" button on message
-            + click should paste quote into input at carret
-        - update text processing
-            + quote source FK relationship
-            + link to messages:
-                + all or nothing when editing
-                + removing any char from quote removes entire quote
-                + default unavailable message
-        - add quote message html template
-            + like message_li but lighter
-        - click on quoted message
-            + scroll original message into view if available
-    * user info card - avatar, name, email?, mutual chats?, 
-    * @ other users - display user card on hover
-    * collapsible menus
+- replace all `<form>` tags with with
+```
+<div hx-ACTION="/endpoint"
+    hx-headers='{"Content-Type": "application/x-www-form-urlencoded"}'
+    hx-vals='{"chatid":{{ .ChatId }},"msgid":{{ .MsgId }}},"userid":{{ .UserId }}}'
+```
 
 ## Backlog
 
@@ -135,18 +126,19 @@ App should now be available at http://localhost:8080
 
 ### Extend functionality
 - change chat title
+* user info card - avatar, name, contact, mutual chats
 - add contacts page / address book
 - limit who invites to contacts
-- black and white lists
-- 
 - zoom, web calls
 - introduce Tmpl to replace default templating engine
 
 ### User Notifications
-- setting on/off
-    - mute / unmute chat
 - new chat invite
 - new msg in chat
+- @user - display user card on hover
+- setting on/off
+    - mute / unmute chat
+    - blacklist / whitelist users
 
 ### Fuzzy search
 - search chats by: 
@@ -180,6 +172,7 @@ App should now be available at http://localhost:8080
     * open chat - close, delete
     * chat members - expel
     * msg options - delete, reply
+    
 
 ## Never gonna happen, but sounds nice
 
