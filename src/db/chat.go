@@ -20,7 +20,9 @@ const ChatSchema = `
 		owner_id INTEGER,
 		FOREIGN KEY(owner_id) REFERENCES users(id)
 	);`
-const ChatIndex = `CREATE INDEX IF NOT EXISTS idx_chat_owner_id ON chats(owner_id);`
+
+// TODO chat search
+const ChatIndex = `CREATE INDEX IF NOT EXISTS idx_chat_title ON chats(title);`
 
 func (db *DBConn) ChatTableExists() bool {
 	return db.TableExists("chats")
