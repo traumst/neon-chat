@@ -72,6 +72,7 @@ func (state *State) DropConn(conn *Conn) error {
 	return state.conns.Drop(conn)
 }
 
+// CHAT
 func (state *State) OpenChat(userId uint, chatId uint) error {
 	if !state.isInit {
 		log.Printf("OpenChat ERROR state is not initialized")

@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"fmt"
+	"io"
 	"log"
 	"os"
 )
@@ -33,4 +35,19 @@ func LS() {
 	} else {
 		log.Println("LS content of", dir, "is", files)
 	}
+}
+
+func ReadFileContent(filePath string) (string, error) {
+	fileContent, err := os.OpenFile(filePath, os.O_RDONLY, 0)
+	if err != nil {
+		return "", fmt.Errorf("failed to open .env file from [%s]: %s", filePath, err)
+	}
+	defer fileContent.Close()
+
+	contentBytes, err := io.ReadAll(fileContent)
+	if err != nil {
+		return "", fmt.Errorf("failed to read content from file[%s]: %s", filePath, err)
+	}
+	content := string(contentBytes)
+	return content, nil
 }
