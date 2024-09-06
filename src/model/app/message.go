@@ -33,19 +33,28 @@ func (m *Message) Template(
 	if m.Id == 0 {
 		return t.MessageTemplate{}, fmt.Errorf("message chatId and Id cannot be 0")
 	}
-	var quoteTmpl *t.MessageTemplate
+	var quoteTmpl t.QuoteTemplate
 	if quote != nil {
-		quoteTmplVal, err := quote.Template(viewer, owner, avatar, nil)
+		tmpl, err := quote.Template(viewer, owner, avatar, nil)
 		if err != nil {
 			return t.MessageTemplate{}, fmt.Errorf("failed to template quote: %s", err)
 		}
-		quoteTmpl = &quoteTmplVal
+		quoteTmpl = t.QuoteTemplate{
+			IntermediateId: tmpl.IntermediateId,
+			ChatId:         tmpl.ChatId,
+			MsgId:          tmpl.MsgId,
+			AuthorId:       tmpl.AuthorId,
+			AuthorName:     tmpl.AuthorName,
+			AuthorAvatar:   tmpl.AuthorAvatar,
+			Text:           tmpl.Text,
+			TextIntro:      tmpl.TextIntro,
+		}
 	}
 	return t.MessageTemplate{
 		IntermediateId:   utils.RandStringBytes(5),
 		ChatId:           m.ChatId,
 		MsgId:            m.Id,
-		Quote:            quoteTmpl,
+		Quote:            &quoteTmpl,
 		ViewerId:         viewer.Id,
 		OwnerId:          owner.Id,
 		AuthorId:         m.Author.Id,

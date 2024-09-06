@@ -1,5 +1,4 @@
-<div hx-on:click="scrollIntoView('#chat-{{ .ChatId }}-msg-{{ .MsgId }}')" 
-class="flex flex-col
+<div class="flex flex-col
     pb-2
     mb-3
     bg-opacity-10 bg-slate-500
@@ -7,10 +6,8 @@ class="flex flex-col
     shadow shadow-green-800
     hover:shadow-green-500
     hover:text-green-500">
-<div>
-    <div class="ml-0">replying to...</div>
-</div>
-<div class="ml-3 flex flex-row overflow-hidden">
+<div hx-on:click="scrollIntoView('#chat-{{ .ChatId }}-msg-{{ .MsgId }}')" 
+    class="ml-3 flex flex-row overflow-hidden">
     <div class="w-[1.5em] h-[1.5em] ml-0 mr-1">
         {{ template "avatar_div.html" .AuthorAvatar }}
     </div>

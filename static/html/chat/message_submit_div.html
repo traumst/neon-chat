@@ -23,12 +23,11 @@
         </button>
     </form>
     <script>
-        document.body.addEventListener('htmx:afterSwap', event => {
-            // ignore events that modify this form
+        document.addEventListener('htmx:afterRequest', function(event) {
+            //console.log('submitDiv - htmx:afterRequest', event);
             if (event.target.id === 'chat-{{.ChatId}}-msg-form') {
-                return;
+                clearSubmitForm();
             }
-            clearSubmitForm();
         });
         function clearSubmitForm() {
             const newMsgText = document.getElementById('chat-{{.ChatId}}-msg-text-input');

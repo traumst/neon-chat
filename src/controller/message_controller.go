@@ -7,6 +7,7 @@ import (
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
 	"neon-chat/src/handler/state"
+	t "neon-chat/src/model/template"
 	h "neon-chat/src/utils/http"
 )
 
@@ -36,14 +37,26 @@ func QuoteMessage(
 		w.Write([]byte("invalid arguments"))
 		return
 	}
-	tmplMsg, err := handler.HandleGetMessage(state, db, user, args.ChatId, args.MsgId)
+	tmpl, err := handler.HandleGetMessage(state, db, user, args.ChatId, args.MsgId)
 	if err != nil {
-		log.Printf("[%s] QuoteMessage ERROR quoting message, %s\n", h.GetReqId(r), err.Error())
+		log.Printf("[%s] QuoteMessage ERROR quoting message[%d] in chat[%d], %s\n",
+			h.GetReqId(r), args.ChatId, args.MsgId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to quote message"))
 		return
 	}
-	html, err := tmplMsg.ShortHTML()
+	msgTmpl := tmpl.(*t.MessageTemplate)
+	quoteTmpl := t.QuoteTemplate{
+		IntermediateId: msgTmpl.IntermediateId,
+		ChatId:         msgTmpl.ChatId,
+		MsgId:          msgTmpl.MsgId,
+		AuthorId:       msgTmpl.AuthorId,
+		AuthorName:     msgTmpl.AuthorName,
+		AuthorAvatar:   msgTmpl.AuthorAvatar,
+		Text:           msgTmpl.Text,
+		TextIntro:      msgTmpl.TextIntro,
+	}
+	html, err := quoteTmpl.HTML()
 	if err != nil {
 		log.Printf("[%s] QuoteMessage ERROR templating quote, %s\n", h.GetReqId(r), err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

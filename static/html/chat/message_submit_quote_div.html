@@ -5,7 +5,6 @@
     value="{{ .MsgId }}"
     class="quote-chat-msg-input opacity-100"/>
 <div id="quote-chat-{{ .ChatId }}-msg-{{ .MsgId }}-{{ .IntermediateId }}" 
-    hx-on:click="scrollIntoView('#chat-{{ .ChatId }}-msg-{{ .MsgId }}')"
     class="quote-chat-message
         flex flex-col 
         mr-auto
@@ -23,7 +22,8 @@
             [X]
         </div>
     </div>
-    <div class="chat-message-content flex flex-row pl-6 pr-6 pb-2">
+    <div hx-on:click="scrollIntoView('#chat-{{ .ChatId }}-msg-{{ .MsgId }}')"
+        class="chat-message-content flex flex-row pl-6 pr-6 pb-2">
         <div class="w-[1.5em] h-[1.5em] ml-0 mr-1">
             {{ template "avatar_div.html" .AuthorAvatar }}
         </div>

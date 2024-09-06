@@ -10,9 +10,40 @@ import (
 	i "neon-chat/src/interface"
 	a "neon-chat/src/model/app"
 	"neon-chat/src/model/event"
+	t "neon-chat/src/model/template"
 )
 
 // TODO consider adding quote thread with depth limit
+func HandleGetQuote(
+	state *state.State,
+	db *d.DBConn,
+	user *a.User,
+	chatId uint,
+	msgId uint,
+) (i.Renderable, error) {
+	log.Printf("HandleGetQuote TRACE opening current chat for user[%d]\n", user.Id)
+	tmpl, err := HandleGetMessage(state, db, user, chatId, msgId)
+	if err != nil {
+		log.Printf("HandleGetQuote ERROR getting message[%d] for user[%d], %s\n", msgId, user.Id, err)
+		return nil, fmt.Errorf("failed to get quote for message: %s", err.Error())
+	}
+	msgTmpl := tmpl.(*t.MessageTemplate)
+	if msgTmpl == nil {
+		log.Printf("HandleGetQuote ERROR message[%d] template is nil\n", msgId)
+		return nil, fmt.Errorf("message template not")
+	}
+	return &t.QuoteTemplate{
+		IntermediateId: msgTmpl.IntermediateId,
+		ChatId:         msgTmpl.ChatId,
+		MsgId:          msgTmpl.MsgId,
+		AuthorId:       msgTmpl.AuthorId,
+		AuthorName:     msgTmpl.AuthorName,
+		AuthorAvatar:   msgTmpl.AuthorAvatar,
+		Text:           msgTmpl.Text,
+		TextIntro:      msgTmpl.TextIntro,
+	}, nil
+}
+
 func HandleGetMessage(
 	state *state.State,
 	db *d.DBConn,
@@ -20,10 +51,10 @@ func HandleGetMessage(
 	chatId uint,
 	msgId uint,
 ) (i.Renderable, error) {
-	log.Printf("HandleGetMessage TRACE opening current chat for user[%d]\n", user.Id)
+	log.Printf("HandleGetMessage TRACE getting message[%d] from chat[%d]\n", msgId, chatId)
 	canChat, err := db.UsersCanChat(chatId, user.Id)
 	if err != nil {
-		log.Printf("HandleGetMessage ERROR checking user[%d] can chat[%d], %s\n", user.Id, chatId, err)
+		log.Printf("HandleGetMessage ERROR checking whether user[%d] can chat[%d], %s\n", user.Id, chatId, err)
 		return nil, fmt.Errorf("failed to check whether user can chat: %s", err.Error())
 	} else if !canChat {
 		log.Printf("HandleGetMessage ERROR user[%d] is not in chat[%d]\n", user.Id, chatId)
@@ -45,17 +76,12 @@ func HandleGetMessage(
 		log.Printf("HandleGetMessage ERROR getting author[%d] avatar from db, %s\n", dbMsg.AuthorId, err)
 		return nil, fmt.Errorf("failed to get author avatar from db: %s", err.Error())
 	}
-	dbQuote, err := db.GetQuote(msgId)
-	if err != nil {
-		log.Printf("HandleGetMessage ERROR getting quotes for message[%d], %s\n", msgId, err)
-		return nil, fmt.Errorf("failed to get quotes for message: %s", err.Error())
-	}
 	var appQuote *a.Message
-	if dbQuote != nil {
+	if dbQuote, _ := db.GetQuote(msgId); dbQuote != nil {
 		dbMsg, err := db.GetMessage(dbQuote.QuoteId)
 		if err != nil {
-			log.Printf("HandleGetMessage ERROR getting quote message[%d] from db, %s\n", dbQuote.QuoteId, err)
-			return nil, fmt.Errorf("failed to get quote message from db: %s", err.Error())
+			log.Printf("HandleGetMessage warn getting quote message[%d] from db, %s\n", dbQuote.QuoteId, err)
+			//return nil, fmt.Errorf("failed to get quote message[%d] from db: %s", dbQuote.QuoteId, err.Error())
 		}
 		quoteMsg := convert.MessageDBToApp(dbMsg, user, nil)
 		appQuote = &quoteMsg
@@ -106,19 +132,19 @@ func HandleMessageAdd(
 	// quoteId 0 means message has no quote attached
 	var appQuote *a.Message
 	if quoteId != 0 {
-		_, err = db.AddQuote(&d.Quote{
+		quote, err := db.AddQuote(&d.Quote{
 			MsgId:   dbMsg.Id,
 			QuoteId: quoteId,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to add quote[%d] to message[%d]: %s", quoteId, dbMsg.Id, err.Error())
 		}
-		dbQuote, err := db.GetMessage(quoteId)
+		dbQuote, err := db.GetMessage(quote.QuoteId)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get quote[%d] from db: %s", quoteId, err.Error())
 		}
-		quote := convert.MessageDBToApp(dbQuote, author, nil)
-		appQuote = &quote
+		tmp := convert.MessageDBToApp(dbQuote, author, nil)
+		appQuote = &tmp
 	}
 	dbOwner, err := db.GetUser(dbChat.OwnerId)
 	if err != nil {

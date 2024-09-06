@@ -20,7 +20,9 @@
         hover:text-green-500">
     <div class="chat-message-content flex flex-col overflow-hidden">
         {{ with .Quote }}
-            {{ template "message_quote_div.html" . }}
+            {{ if ne .MsgId 0 }}
+                {{ template "message_quote_div.html" . }}
+            {{ end }}
         {{ end }}
         <div class="flex flex-row m-r-auto">
             <div class="w-[1.5em] h-[1.5em] ml-0 mr-1">
@@ -57,5 +59,13 @@
             </div>
             {{ end }}
         </div>
+        <script>
+            document.addEventListener('htmx:afterOnLoad', function(evt) {
+                if (!evt.detail.target.id === 'chat-{{.ChatId}}-msg-form') {
+                    return
+                }
+                evt.detail.target.querySelector('input[type="text"], textarea')?.focus();
+            });
+        </script>
     </div>
 </li>

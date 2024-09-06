@@ -15,6 +15,7 @@ function enterSubmit(event) {
 }
 
 function removeElements({classSelector, idSelectorException}) {
+    //console.log('removeElements', classSelector, "except", idSelectorException)
     const removeTargets = document.querySelectorAll(classSelector);
     for (const removeTarget of removeTargets) {
         if (!idSelectorException || removeTarget.id !== idSelectorException) {
@@ -48,6 +49,9 @@ var scrollIntoView = async (elemId) => {
 };
 
 var scrollToFirstChild = (parent) => {
+    if (!parent || !parent.children.length) {
+        return;
+    }
     const firstChild = parent.children[0];
     if (firstChild) {
         // console.log(`scrollToFirstChild: scrolling child ${firstChild.id} into view`);
@@ -61,6 +65,9 @@ var scrollToFirstChild = (parent) => {
 };
 
 var scrollToLastChild = (parent) => {
+    if (!parent || !parent.children.length) {
+        return;
+    }
     const lastChild = parent.children[parent.children.length-1];
     if (lastChild) {
         // console.log('scrollToLastChild: scrolling to child', lastChild.id);

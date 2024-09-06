@@ -48,15 +48,15 @@
             hx-target=".open-chat" 
             hx-swap="innerHTML"
             class="w-full border-2 rounded border-emerald-400">
-        <input id="newChatName" type="text" name="chatName" placeholder="new chat name" title="enter to send"
-            class="w-full justify-center text-center rounded-md
-                bg-gradient-to-br from-green-800 to-indigo-800
-                text-gray-400
-                shadow shadow-zinc-700
-                hover:shadow-lg hover:shadow-zinc-500">
-        <button type="submit" class="hidden">
-            Create Chat
-        </button>
+            <input id="newChatName" type="text" name="chatName" placeholder="new chat name" title="enter to send"
+                class="w-full justify-center text-center rounded-md
+                    bg-gradient-to-br from-green-800 to-indigo-800
+                    text-gray-400
+                    shadow shadow-zinc-700
+                    hover:shadow-lg hover:shadow-zinc-500">
+            <button type="submit" class="hidden">
+                Create Chat
+            </button>
         </form>
         <script>
             document.body.addEventListener('htmx:afterSwap', event => {

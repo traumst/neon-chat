@@ -53,6 +53,10 @@ func HandleChatOpen(state *state.State, db *d.DBConn, user *a.User, chatId uint)
 		log.Printf("HandleChatOpen ERROR opening chat[%d] for user[%d], %s\n", chatId, user.Id, err.Error())
 		return TemplateWelcome(user)
 	}
+	openChatId := state.GetOpenChat(user.Id)
+	if openChatId != chatId {
+		panic(fmt.Errorf("chat[%d] should have been open for user[%d]", chatId, user.Id))
+	}
 	appChat, err := GetChat(state, db, user, chatId)
 	if err != nil {
 		log.Printf("HandleChatOpen ERROR opening chat[%d] for user[%d], %s\n", chatId, user.Id, err.Error())

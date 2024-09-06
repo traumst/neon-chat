@@ -66,6 +66,8 @@ func (db *DBConn) GetQuote(msgId uint) (*Quote, error) {
 		return nil, fmt.Errorf("error getting quote: %s", err)
 	} else if quote.MsgId != msgId {
 		return nil, fmt.Errorf("error getting quote: expected[%d] different from actual[%d]", msgId, quote.MsgId)
+	} else if quote.QuoteId == 0 {
+		return nil, nil
 	}
 
 	return &quote, nil
@@ -75,7 +77,7 @@ func (db *DBConn) GetQuotes(msgIds []uint) ([]*Quote, error) {
 	if msgIds == nil {
 		return nil, fmt.Errorf("bad input: msgIds[%v]", msgIds)
 	} else if len(msgIds) == 0 {
-		return nil, fmt.Errorf("msgIds are empty")
+		return nil, nil
 	}
 	if !db.ConnIsActive() {
 		return nil, fmt.Errorf("db is not connected")
