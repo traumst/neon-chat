@@ -108,11 +108,6 @@ Making changes to tailwind classes requires rerun to display properly.
 + user name change should update active user info on left panel
 + fucking session transactions
 
-### Bugs
-
-2024-09-04 20.50.33 chat name 4th 500 - should be 400/200
-[screenshot](./_bugz/2024-09-04T20.50.33_chat_name_4th_500.png "Screenshot")
-
 ### Next up
 
 + support ALLOW_UNSAFE_ACCESS for dev and test
