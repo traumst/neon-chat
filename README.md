@@ -5,9 +5,9 @@ Default colorscheme is a personal preference, and light/dark mode are... khm... 
 This app is being build as an excercise for me to 
 - learn go practically
 - try sqlite db via sqlx, write custom migration module
-- further explore htmx, locality of behaviour for the win
 - explore server sent events for live messaging
-- familiarize with tailwind
+- further explore htmx, locality of behaviour, etc
+- <s>familiarize with </s>tailwind - surprisingly good, pointless for animations
 - <s>prove react is overrated</s>
 - <s>finish a project for a change</s>
 - maintain project over time, extend functionality, fix bugs
@@ -103,6 +103,7 @@ Making changes to tailwind classes requires rerun to display properly.
 
 ## TODOs
 
++ add license in preparation to publication
 + handler should abstract app and db models completely, only expose templates
 + user name change should update active user info on left panel
 + fucking session transactions
@@ -129,33 +130,9 @@ Making changes to tailwind classes requires rerun to display properly.
 
 ### Message Broadcasting: 
 - msg should distribute to user connection, even if chat is closed
-- track user deltas: chats, messages
-- only serve deltas
-- buffer for unstable connection/s
-
-### Testing
-- extend unit tests
-- add integration tests
-
-### Moderation
-- Add ability for users to mute/report other users
-- Add ability to ban users from chat
-
-### User Authentication
-- throttling api actions - 10x exec time
-- middleware auth
-- provide authType as form input
-- google auth
-- *2FA / MFA*
-- *crypto wallet*
-
-### Extend functionality
-- change chat title
-* user info card - avatar, name, contact, mutual chats
-- add contacts page / address book
-- limit who invites to contacts
-- zoom, web calls
-- introduce Tmpl to replace default templating engine
+    - relates to 
+- pagination, track user deltas in chats and messages
+- buffer outgoing events for unstable connection/s
 
 ### User Notifications
 - new chat invite
@@ -181,8 +158,33 @@ Making changes to tailwind classes requires rerun to display properly.
     - edit distance [cindy-cindi=1] - only latin - in-memory
     - statistical similarity - slow
 
+### Testing
+- extend unit tests
+- add integration tests
+
+### Moderation
+- Add ability for users to mute/report other users
+- Add ability to ban users from chat
+
+### User Authentication
+- throttling api actions - 10x exec time
+- middleware auth
+- provide authType as form input
+- google auth
+- *2FA / MFA*
+- *crypto wallet*
+
+### Web Calls
+- voice chat
+- video chat
+- effects
+
 ### GUI
+- change chat title
 - collapsible / resizable left panel
+- add contacts page / address book
+    * limit who can invite add / you
+- user info card - avatar, name, contact, mutual chats
 - user settings page
     * add alternative auth
     * light/dark mode
@@ -201,6 +203,9 @@ Making changes to tailwind classes requires rerun to display properly.
     
 
 ## Never gonna happen, but sounds nice
+
+### Use better templating lib
+- switch to Tmpl
 
 ### Client storage
 - local / innodb
