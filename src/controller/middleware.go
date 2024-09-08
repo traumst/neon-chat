@@ -1,10 +1,15 @@
 package controller
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
 
+	"neon-chat/src/db"
+	"neon-chat/src/handler"
+	"neon-chat/src/handler/state"
+	"neon-chat/src/utils"
 	h "neon-chat/src/utils/http"
 )
 
@@ -29,13 +34,27 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func ReqIdMiddleware(next http.Handler) http.Handler {
-	//log.Printf("ReqIdMiddleware TRACE")
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = h.SetReqId(r, nil)
-		//log.Printf("ReqIdMiddleware TRACE reqId set to [%s]", reqId)
-		next.ServeHTTP(w, r)
-	})
+func ContextMiddleware(state *state.State, db *db.DBConn) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			log.Printf("SessionMiddleware TRACE IN")
+
+			user, err := handler.ReadSession(state, db, w, r)
+			if err != nil || user == nil {
+				log.Printf("ContextMiddleware ERROR reading user session, %s\n", err)
+				return
+			}
+
+			reqId := h.SetReqId(r, nil)
+			ctx := context.WithValue(r.Context(), utils.ReqIdKey, reqId)
+			ctx = context.WithValue(ctx, utils.ActiveUser, user)
+			ctx = context.WithValue(ctx, utils.AppState, state)
+			ctx = context.WithValue(ctx, utils.DBConn, db)
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+			log.Printf("SessionMiddleware TRACE OUT")
+		})
+	}
 }
 
 func LoggerMiddleware(next http.Handler) http.Handler {
@@ -53,18 +72,3 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 			time.Since(startTime))
 	})
 }
-
-// func AuthMiddleware(next http.HandlerFunc) http.Handler {
-// 	log.Printf("AuthMiddleware TRACE")
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		rec := utils.StatefulWriter{ResponseWriter: w}
-// 		user, err := handler.ReadSession(app, w, r)
-// 		if err != nil || user == nil {
-// 			log.Printf("[%s] AuthMiddleware WARN user, %s\n", utils.GetReqId(r), err)
-// 			w.WriteHeader(http.StatusMethodNotAllowed)
-// 			w.Write([]byte("User is unauthorized"))
-// 			return
-// 		}
-// 		next(w, r)
-// 	})
-// }
