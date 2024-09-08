@@ -36,8 +36,9 @@ There's plenty of options.
 I recommend downloading the [stadalone tailwind cli](https://tailwindcss.com/blog/standalone-cli) and avoiding npm completely. 
 But if you have nodejs installed and feel more comfortable with it, 
 you can [install tailwind via npm](https://tailwindcss.com/docs/installation). 
-Note that [run.sh script](./run.sh) specifies path to tailwind executable. 
-**That line needs to be updated to match your setup**.
+
+> <b><u>Note</u></b><br>
+[run.sh script](./run.sh) specifies path to tailwind executable, and needs to be updated.
 
 Finally, app expects to have `.env` file in the root directory, which you have to create. 
 There's `.env.template` file that you can easily copy-paste and fill up. 
@@ -74,10 +75,14 @@ echo "Starting server..."
 go run main.go
 ```
 
-Notes:
-1. by default, db file is created in the root folder where executable runs
-2. for db file to be deleted on start, must uncomment appropriate lines
-3. tailwind executable call will need to be updated to match your system
+> <b><u>Note</u></b><br>
+by default, db file is created in the root folder where executable runs
+
+> <b><u>Note</u></b><br>
+for db file to be deleted on start, must uncomment appropriate lines
+
+> <b><u>Note</u></b><br>
+tailwind executable path will need to be updated to match your system
 
 ### Run script
 
@@ -103,7 +108,6 @@ Making changes to tailwind classes requires rerun to display properly.
 
 ## TODOs
 
-+ add license in preparation to publication
 + handler should abstract app and db models completely, only expose templates
 + user name change should update active user info on left panel
 + fucking session transactions
@@ -220,3 +224,6 @@ Making changes to tailwind classes requires rerun to display properly.
 ### *GPTs*:
 - Consider for content moderation assistance
 - Consider for chat participant - query, image, auto-response
+
+## License
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
