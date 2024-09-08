@@ -114,7 +114,7 @@ func (cache *LRUCache) Take(key uint) (interface{}, error) {
 	defer cache.mu.Unlock()
 	node, ok := cache.dict[key]
 	if !ok {
-		return nil, fmt.Errorf("key not found")
+		return nil, nil
 	}
 	removed := cache.list.Remove(node.id)
 	if removed == nil {

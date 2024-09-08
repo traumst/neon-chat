@@ -3,6 +3,7 @@ package store
 import (
 	"fmt"
 	"log"
+	"neon-chat/src/utils"
 	"sync"
 )
 
@@ -21,14 +22,11 @@ type node struct {
 	next  *node
 }
 
-const (
-	MinSize = 1
-	MaxSize = 1024
-)
-
 func NewLinkedList(size int) *DoublyLinkedList {
-	if MinSize > size || size > MaxSize {
-		panic(fmt.Sprintf("Invalid size[%d] should be [%d <= size < %d]", size, MinSize, MaxSize))
+	if size < 1 || utils.MaxCacheSize < size {
+		log.Printf("DoublyLinkedList.NewLinkedList WARN overriding stupid size[%d] to default[%d]",
+			size, utils.MaxCacheSize)
+		size = utils.MaxCacheSize
 	}
 	return &DoublyLinkedList{head: nil, tail: nil, size: size, count: 0}
 }
@@ -120,10 +118,10 @@ func (ll *DoublyLinkedList) Bump(node *node) ([]uint, error) {
 
 // removes n nodes from tail, defaults to 1 + (ll.size / 8)
 func (ll *DoublyLinkedList) Prune(drop int) (int, []uint, error) {
-	if drop < 1 || drop > MaxSize {
+	if drop < 1 || drop > utils.MaxCacheSize {
 		def := 1 + (ll.Size() / 8)
-		log.Printf("DoublyLinkedList.Prune WARN Invalid prune size, should be [1 <= %d <= %d], using default[%d]",
-			drop, MaxSize, def)
+		log.Printf("DoublyLinkedList.Prune WARN stupid prune size, should fulfill [1 <= %d <= %d], using default[%d]",
+			drop, utils.MaxCacheSize, def)
 		drop = def
 	}
 	ll.mu.Lock()

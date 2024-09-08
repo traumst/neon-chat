@@ -1,4 +1,4 @@
-package handler
+package shared
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-func FormValueUint(r *http.Request, key string) (uint, error) {
+func ReadFormValueUint(r *http.Request, key string) (uint, error) {
 	rawVal := r.PostFormValue(key)
 	if rawVal == "" {
 		return 0, fmt.Errorf("failed to read key[%s]", key)
@@ -19,7 +19,7 @@ func FormValueUint(r *http.Request, key string) (uint, error) {
 	return uint(val), nil
 }
 
-func FormValueString(r *http.Request, key string) (string, error) {
+func ReadFormValueString(r *http.Request, key string) (string, error) {
 	rawVal := r.PostFormValue(key)
 	if rawVal == "" {
 		return "", fmt.Errorf("failed to read key[%s]", key)

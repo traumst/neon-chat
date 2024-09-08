@@ -15,12 +15,11 @@ const MessageSchema = `
 		chat_id INTEGER, 
 		author_id INTEGER,
 		text TEXT,
-		FOREIGN KEY(chat_id) REFERENCES chats(id)
+		FOREIGN KEY(chat_id) REFERENCES chats(id),
 		FOREIGN KEY(author_id) REFERENCES users(id)
 	);`
 
-const MessageIndex = `CREATE INDEX IF NOT EXISTS idx_message_chat_id ON messages(chat_id);
-CREATE INDEX IF NOT EXISTS idx_message_author_id ON messages(author_id);`
+const MessageIndex = `CREATE INDEX IF NOT EXISTS idx_message_text ON messages(text);`
 
 func (db *DBConn) MessageTableExists() bool {
 	return db.TableExists("messages")
@@ -41,6 +40,7 @@ func (db *DBConn) AddMessage(msg *Message) (*Message, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
+	// TODO open transaction
 	result, err := db.conn.Exec(`INSERT INTO messages (chat_id, author_id, text) VALUES (?, ?, ?)`,
 		msg.ChatId, msg.AuthorId, msg.Text)
 	if err != nil {
@@ -51,6 +51,8 @@ func (db *DBConn) AddMessage(msg *Message) (*Message, error) {
 		return nil, fmt.Errorf("error getting last insert id: %s", err)
 	}
 	msg.Id = uint(lastId)
+
+	// TODO close transaction
 	return msg, nil
 }
 

@@ -71,6 +71,7 @@ func (c *Chat) Template(
 			userIds[i] = member.Id
 		}
 	}
+	chatOwner := &User{Id: c.OwnerId, Name: c.OwnerName}
 	// chat messages
 	messages := make([]ti.Renderable, 0)
 	if len(msgs) > 0 {
@@ -79,12 +80,12 @@ func (c *Chat) Template(
 				log.Printf("Chat.Template TRACE skip nil msg on index[%d] in chat[%d]\n", idx, c.Id)
 				continue
 			}
-			msgTmpl, err := msg.Template(viewer, &User{Id: c.OwnerId, Name: c.OwnerName}, msg.Author.Avatar)
+			msgTmpl, err := msg.Template(viewer, chatOwner, msg.Quote)
 			if err != nil {
 				log.Printf("Chat.Template ERROR failed to create message template, %s\n", err)
 				continue
 			}
-			messages = append(messages, msgTmpl)
+			messages = append(messages, &msgTmpl)
 		}
 	} else {
 		log.Printf("Chat.Template INFO chat[%d] has no messages\n", c.Id)

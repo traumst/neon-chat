@@ -19,29 +19,45 @@ const ChatUserSchema = `
 		FOREIGN KEY(chat_id) REFERENCES chats(id),
 		FOREIGN KEY(user_id) REFERENCES users(id)
 	);`
-const ChatUserIndex = `CREATE INDEX IF NOT EXISTS idx_chat_users_chat_id ON chat_users(chat_id);
-CREATE INDEX IF NOT EXISTS idx_chat_users_user_id ON chat_users(user_id);`
+const ChatUserIndex = `CREATE INDEX IF NOT EXISTS idx_chat_users_chatid_userid ON chat_users(chat_id, user_id);`
 
 func (db *DBConn) ChatUserTableExists() bool {
 	return db.TableExists("chat_users")
 }
 
-func (db *DBConn) IsUserInChat(chatId uint, userId uint) error {
-	if chatId == 0 || userId == 0 {
-		return fmt.Errorf("bad input: chatId[%d], userId[%d]", chatId, userId)
-	}
+func (db *DBConn) UsersCanChat(chatId uint, userIds ...uint) (bool, error) {
 	if !db.ConnIsActive() {
-		return fmt.Errorf("db is not connected")
+		return false, fmt.Errorf("db is not connected")
 	}
 
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	_, err := db.conn.Exec(`INSERT INTO chat_users (chat_id, user_id) VALUES (?, ?)`, chatId, userId)
+	query, args, err := sqlx.In(`SELECT * FROM chat_users WHERE chat_id = ? AND user_id IN (?)`, chatId, userIds)
 	if err != nil {
-		return fmt.Errorf("error adding user: %s", err.Error())
+		return false, fmt.Errorf("error preparing query, %s", err)
 	}
-	return nil
+	query = db.conn.Rebind(query)
+
+	var chatUser []ChatUser
+	err = db.conn.Select(&chatUser, query, args...)
+	if err != nil {
+		return false, fmt.Errorf("error getting chats for userIds[%v]: %s", userIds, err)
+	}
+	misses := make([]uint, 0)
+	for _, uid := range userIds {
+		for _, cu := range chatUser {
+			if cu.UserId == uid {
+				break
+			}
+
+			misses = append(misses, uid)
+		}
+	}
+	if len(misses) > 0 {
+		return false, fmt.Errorf("some users are not in chat, userIds[%v], misses[%v]", userIds, misses)
+	}
+	return true, nil
 }
 
 func (db *DBConn) AddChatUser(chatId uint, userId uint) error {
@@ -126,18 +142,6 @@ func (db *DBConn) GetChatUserIds(chatId uint) ([]uint, error) {
 	return userIds, nil
 }
 
-func (db *DBConn) GetChatUsers(chatId uint) ([]User, error) {
-	userIds, err := db.GetChatUserIds(chatId)
-	if err != nil {
-		return nil, fmt.Errorf("error getting user ids in chat[%d]: %s", chatId, err)
-	}
-	if len(userIds) == 0 {
-		return []User{}, nil
-	}
-
-	return db.GetUsers(userIds)
-}
-
 func (db *DBConn) RemoveChatUser(chatId uint, userId uint) error {
 	log.Printf("TRACE removing user[%d] from chat[%d]\n", userId, chatId)
 	if chatId == 0 || userId == 0 {
@@ -150,9 +154,16 @@ func (db *DBConn) RemoveChatUser(chatId uint, userId uint) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	_, err := db.conn.Exec(`DELETE FROM chat_users WHERE chat_id = ? AND user_id = ?`, chatId, userId)
+	res, err := db.conn.Exec(`DELETE FROM chat_users WHERE chat_id = ? AND user_id = ?`, chatId, userId)
 	if err != nil {
 		return fmt.Errorf("error removing user: %s", err.Error())
+	}
+	count, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("error rows affected, %s", err.Error())
+	}
+	if count != 1 {
+		return fmt.Errorf("error rows affected, expected to affect 1 row but affected %d", count)
 	}
 	return nil
 }

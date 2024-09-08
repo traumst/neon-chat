@@ -1,29 +1,4 @@
-
 <div class="flex flex-col h-screen">
-    <script>
-        function scrollToFirstChild(parent) {
-            const firstElement = parent.children[0];
-            firstElement?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
-        chatHeaderObserver = null;
-        chatHeaderObserver = new MutationObserver(mutations => {
-            mutations.forEach(mutation => {
-                if (mutation.type === 'childList' || mutation.type === 'characterData') {
-                    scrollToFirstChild(mutation.target);
-                }
-            });
-        });
-        chatHeaders = null;
-        chatHeaders = document.querySelector(".chat-headers");
-        if (chatHeaders) {
-            chatHeaderObserverOptions = null;
-            chatHeaderObserverOptions = { childList: true, subtree: true, characterData: true };
-            chatHeaderObserver.observe(chatHeaders, chatHeaderObserverOptions);
-        }
-    </script>
     <div class="active-user default-transition
         flex flex-row justify-end
         p-2
@@ -70,15 +45,15 @@
             hx-target=".open-chat" 
             hx-swap="innerHTML"
             class="w-full border-2 rounded border-emerald-400">
-        <input id="newChatName" type="text" name="chatName" placeholder="new chat name" title="enter to send"
-            class="w-full justify-center text-center rounded-md
-                bg-gradient-to-br from-green-800 to-indigo-800
-                text-gray-400
-                shadow shadow-zinc-700
-                hover:shadow-lg hover:shadow-zinc-500">
-        <button type="submit" class="hidden">
-            Create Chat
-        </button>
+            <input id="newChatName" type="text" name="chatName" placeholder="new chat name" title="enter to send"
+                class="w-full justify-center text-center rounded-md
+                    bg-gradient-to-br from-green-800 to-indigo-800
+                    text-gray-400
+                    shadow shadow-zinc-700
+                    hover:shadow-lg hover:shadow-zinc-500">
+            <button type="submit" class="hidden">
+                Create Chat
+            </button>
         </form>
         <script>
             document.body.addEventListener('htmx:afterSwap', event => {
@@ -118,29 +93,23 @@
         {{ end }}
         </ul>
         <script>
-        function scrollToFirstChild(parent) {
-            const firstElement = parent.children[0];
-            firstElement?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
+            chatHeaderObserver = null;
+            chatHeaderObserver = new MutationObserver(mutations => {
+                mutations.forEach(mutation => {
+                    if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                        scrollToFirstChild(mutation.target);
+                    }
+                });
             });
-        }
-        chatHeaderObserver = null;
-        chatHeaderObserver = new MutationObserver(mutations => {
-            mutations.forEach(mutation => {
-                if (mutation.type === 'childList' || mutation.type === 'characterData') {
-                    scrollToFirstChild(mutation.target);
-                }
-            });
-        });
-        chatHeaders = null;
-        chatHeaders = document.querySelector(".chat-headers");
-        if (chatHeaders) {
-            chatHeaderObserverOptions = null;
-            chatHeaderObserverOptions = { childList: true, subtree: true, characterData: true };
-            chatHeaderObserver.observe(chatHeaders, chatHeaderObserverOptions);
-        }
-        scrollToFirstChild(chatHeaders);
+
+            chatHeaders = null;
+            chatHeaders = document.querySelector(".chat-headers");
+            if (chatHeaders) {
+                chatHeaderObserverOptions = null;
+                chatHeaderObserverOptions = { childList: true, subtree: true, characterData: true };
+                chatHeaderObserver.observe(chatHeaders, chatHeaderObserverOptions);
+            }
+            scrollToFirstChild(chatHeaders);
         </script>
     </div>
 </div>

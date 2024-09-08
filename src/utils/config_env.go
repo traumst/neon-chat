@@ -28,8 +28,7 @@ func (a *Config) String() string {
 }
 
 func ConfigHelp() string {
-	return `By default, the application will read the config from the .env file in the root directory. 
-	To set them:
+	return `Application expects the config from the .env file in the root directory. 
 		* find .env.template
 		* copy it to .env
 		* set desired values`
