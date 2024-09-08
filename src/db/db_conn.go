@@ -89,9 +89,10 @@ func (db *DBConn) init() error {
 }
 
 func (db *DBConn) createIndex() (err error) {
+	// Note: update when adding new tables
 	indecies := MigrationIndex +
 		UserIndex + AuthIndex + AvatarSchema + ReservationIndex +
-		ChatIndex + ChatUserIndex + MessageIndex
+		ChatIndex + ChatUserIndex + MessageIndex + QuoteIndex
 	if indecies == "" {
 		log.Println("createIndex TRACE no indexes to create")
 		return nil
@@ -124,6 +125,7 @@ func (db *DBConn) createTables() (shouldMigrate bool, err error) {
 	return shouldMigrate, err
 }
 
+// Note: update when adding new tables
 func (db *DBConn) concatSchema() (schema string, shouldMigrate bool) {
 	if db.MigrationsTableExists() {
 		log.Println("concatSchema TRACE migration table exists")
@@ -187,6 +189,14 @@ func (db *DBConn) concatSchema() (schema string, shouldMigrate bool) {
 	} else {
 		log.Println("concatSchema TRACE messages table will be created")
 		schema += MessageSchema + "\n"
+	}
+
+	if db.QuoteTableExists() {
+		log.Println("concatSchema TRACE quotes table exists")
+		shouldMigrate = true
+	} else {
+		log.Println("concatSchema TRACE quotes table will be created")
+		schema += QuoteSchema + "\n"
 	}
 
 	return schema, shouldMigrate

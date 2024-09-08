@@ -20,7 +20,9 @@ const ChatSchema = `
 		owner_id INTEGER,
 		FOREIGN KEY(owner_id) REFERENCES users(id)
 	);`
-const ChatIndex = `CREATE INDEX IF NOT EXISTS idx_chat_owner_id ON chats(owner_id);`
+
+// TODO chat search
+const ChatIndex = `CREATE INDEX IF NOT EXISTS idx_chat_title ON chats(title);`
 
 func (db *DBConn) ChatTableExists() bool {
 	return db.TableExists("chats")
@@ -72,20 +74,26 @@ func (db *DBConn) GetChat(chatId uint) (*Chat, error) {
 	return &chat, nil
 }
 
-func (db *DBConn) UserCanChat(chatId uint, userId uint) (bool, error) {
+func (db *DBConn) GetOwner(chatId uint) (*User, error) {
+	if chatId == 0 {
+		return nil, fmt.Errorf("bad input: chatId[%d]", chatId)
+	}
 	if !db.ConnIsActive() {
-		return false, fmt.Errorf("db is not connected")
+		return nil, fmt.Errorf("db is not connected")
 	}
 
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	var chatUser ChatUser
-	err := db.conn.Get(&chatUser, `SELECT * FROM chat_users where chat_id = ? and user_id = ?`, chatId, userId)
+	var user User
+	err := db.conn.Get(&user, `
+SELECT * FROM users WHERE id in (
+	SELECT owner_id FROM chats WHERE id = ?
+)`, chatId)
 	if err != nil {
-		return false, fmt.Errorf("error getting chats: %s", err)
+		return nil, fmt.Errorf("error getting chat[%d] owner: %s", chatId, err.Error())
 	}
-	return true, nil
+	return &user, nil
 }
 
 func (db *DBConn) DeleteChat(chatId uint) error {

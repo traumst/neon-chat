@@ -59,20 +59,11 @@ func (ut UserTemplate) ShortHTML() (string, error) {
 }
 
 func (ut UserTemplate) validate() error {
-	if ut.ChatId < 1 {
-		return fmt.Errorf("UserTemplate chat id cannot be 0")
-	}
-	if ut.ChatOwnerId < 1 {
-		return fmt.Errorf("UserTemplate chat owner id cannot be 0")
-	}
 	if ut.UserId < 1 {
 		return fmt.Errorf("UserTemplate user id cannot be 0")
 	}
 	if ut.UserName == "" {
 		return fmt.Errorf("UserTemplate user name cannot be empty")
-	}
-	if ut.UserEmail == "" {
-		return fmt.Errorf("UserTemplate user email cannot be empty")
 	}
 	if ut.ViewerId < 1 {
 		return fmt.Errorf("UserTemplate viewer id cannot be 0")

@@ -72,6 +72,7 @@ func (state *State) DropConn(conn *Conn) error {
 	return state.conns.Drop(conn)
 }
 
+// CHAT
 func (state *State) OpenChat(userId uint, chatId uint) error {
 	if !state.isInit {
 		log.Printf("OpenChat ERROR state is not initialized")
@@ -109,17 +110,17 @@ func (state *State) CloseChat(userId uint, chatId uint) error {
 	defer state.mu.Unlock()
 	removedIdWrap, err := state.chats.Take(userId)
 	if err != nil {
-		return err
+		log.Printf("CloseChat ERROR failed to close open chat for user[%d], %s\n", userId, err.Error())
+		return fmt.Errorf("failed to close open chat, %s", err.Error())
 	}
 	if removedIdWrap == nil {
 		return nil
 	}
 	removedId, ok := removedIdWrap.(uint)
-	if removedId != 0 && removedId != chatId {
+	if !ok || removedId != 0 && removedId != chatId {
+		log.Printf("CloseChat WARN failed to close chat[%d] for user[%d], checked[%d]\n", chatId, userId, removedId)
 		state.chats.Set(userId, removedId)
-	}
-	if !ok {
-		return fmt.Errorf("failed to remove chat[%d] for user[%d], checked[%d]", chatId, userId, removedId)
+		return fmt.Errorf("failed to remove open chat for user[%d]", userId)
 	}
 	return nil
 }

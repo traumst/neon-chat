@@ -5,8 +5,8 @@ import (
 	"log"
 	"sync"
 
-	"neon-chat/src/convert"
 	"neon-chat/src/db"
+	"neon-chat/src/handler/shared"
 	"neon-chat/src/handler/state"
 	"neon-chat/src/model/app"
 	"neon-chat/src/model/event"
@@ -22,28 +22,20 @@ func DistributeMsg(
 	if chat == nil || msg == nil {
 		return fmt.Errorf("mandatory argument/s cannot be nil")
 	}
-	dbUsers, err := db.GetChatUsers(chat.Id)
+	users, err := shared.GetChatUsers(db, chat.Id)
 	if err != nil {
 		return fmt.Errorf("failed to get users in chat[%d], %s", chat.Id, err)
-	}
-	var owner *app.User
-	var users []*app.User
-	for _, dbUser := range dbUsers {
-		appUser := convert.UserDBToApp(&dbUser)
-		users = append(users, appUser)
-		if owner == nil && dbUser.Id == chat.OwnerId {
-			owner = appUser
-		}
 	}
 	if len(users) <= 0 {
 		return fmt.Errorf("chatUsers are empty, chat[%d], %s", chat.Id, err)
 	}
-
-	dbAvatar, err := db.GetAvatar(msg.Author.Id)
-	if err != nil {
-		return fmt.Errorf("failed to get avatars, %s", err)
+	var owner *app.User
+	for _, user := range users {
+		if owner == nil && user.Id == chat.OwnerId {
+			owner = user
+			break
+		}
 	}
-	appAvatar := convert.AvatarDBToApp(dbAvatar)
 
 	var wg sync.WaitGroup
 	var errors []string
@@ -52,7 +44,7 @@ func DistributeMsg(
 		go func(viewer app.User, msg app.Message) {
 			defer wg.Done()
 			log.Printf("DistributeMsg TRACE event[%s] will be sent to user[%d]\n", updateType, viewer.Id)
-			msgTmpl, err := msg.Template(&viewer, owner, appAvatar)
+			msgTmpl, err := msg.Template(&viewer, owner, msg.Quote)
 			if err != nil {
 				errors = append(errors, fmt.Sprintf("template:%s", err.Error()))
 				return

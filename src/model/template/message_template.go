@@ -4,39 +4,60 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"neon-chat/src/utils"
+	"sync"
 )
 
 type MessageTemplate struct {
+	mu               sync.Mutex
+	IntermediateId   string
 	ChatId           uint
 	MsgId            uint
+	Quote            *QuoteTemplate
 	ViewerId         uint
 	OwnerId          uint
 	AuthorId         uint
 	AuthorName       string
 	AuthorAvatar     AvatarTemplate
 	Text             string
+	TextIntro        string
 	MessageDropEvent string
 }
 
-func (m MessageTemplate) GetId() uint {
+func (m *MessageTemplate) getIntermediateId() string {
+	if m.IntermediateId == "" {
+		m.mu.Lock()
+		defer m.mu.Unlock()
+		m.IntermediateId = utils.RandStringBytes(5)
+	}
+	return m.IntermediateId
+}
+
+func (m *MessageTemplate) GetId() uint {
 	return m.MsgId
 }
 
-func (m MessageTemplate) HTML() (string, error) {
+func (m *MessageTemplate) Shorten() uint {
+	return m.ChatId
+}
+
+func (m *MessageTemplate) HTML() (string, error) {
 	if err := m.validate(); err != nil {
 		return "", fmt.Errorf("cannot template, %s", err.Error())
 	}
 	var buf bytes.Buffer
 	msgTmpl := template.Must(template.ParseFiles(
 		"static/html/chat/message_li.html",
+		"static/html/chat/message_quote_div.html",
 		"static/html/avatar_div.html"))
-	if err := msgTmpl.Execute(&buf, m); err != nil {
+	err := msgTmpl.Execute(&buf, m)
+	if err != nil {
 		return "", fmt.Errorf("failed to template, %s", err.Error())
 	}
 	return buf.String(), nil
 }
 
-func (m MessageTemplate) validate() error {
+func (m *MessageTemplate) validate() error {
 	if m.ChatId < 1 {
 		return fmt.Errorf("MessageTemplate requires ChatId but is [%d]", m.ChatId)
 	}

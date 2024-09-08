@@ -40,7 +40,6 @@ func SetupGlobalLogger(toStderr bool, toFile bool) {
 
 func ReadEnvConfig() *utils.Config {
 	log.Println("parsing config...")
-	//config, err := utils.ArgsRead()
 	config, err := utils.EnvRead()
 	if err != nil {
 		log.Printf("Error parsing config: %s\n", err)

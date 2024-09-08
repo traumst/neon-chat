@@ -3,49 +3,81 @@
     hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
     hx-swap="innerHTML" 
     class="chat-message-li default-transition
-        flex flex-row justify-between
-        p-2
+        flex flex-col justify-between
+        p-1
+        pl-3
         m-2
         h-fit
         gap-1
         shadow
         {{ if eq .AuthorId .ViewerId }}
             ml-[17%]
-            border-b-4 border-green-700 rounded-lg
-            shadow shadow-green-800
         {{ else }}
             mr-[17%]
-            border-b-4 border-indigo-700 rounded-lg
-            shadow shadow-green-800
         {{ end }}
+        border-b-4 border-indigo-700 rounded-lg
+        shadow shadow-green-800
         hover:shadow-green-500
         hover:text-green-500">
-    <div class="chat-message-content flex flex-row overflow-hidden">
-        <div class="w-[1.5em] h-[1.5em] ml-0 mr-1">
-            {{ template "avatar_div.html" .AuthorAvatar }}
+    <div class="chat-message-content 
+        flex flex-col 
+        overflow-hidden">
+        {{ with $quote := .Quote }}
+            {{ if ne $quote.MsgId 0 }}
+                <div class="flex flex-col
+                    text-xs
+                    ml-auto
+                    p-2
+                    bg-opacity-10 bg-slate-500
+                    border-4 border-indigo-700 rounded-3xl
+                    shadow shadow-green-800
+                    hover:text-green-500">
+                {{ template "message_quote_div.html" $quote }}
+                </div>
+            {{ end }}
+        {{ end }}
+        <div class="flex flex-row m-r-auto">
+            <div class="w-[1.5em] h-[1.5em] ml-0 mr-1">
+                {{ template "avatar_div.html" .AuthorAvatar }}
+            </div>
+            <div class="mr-0">
+                [{{ .AuthorName }}]
+            </div>
         </div>
-        <div class="mr-0">
-            [{{ .AuthorName }}]
+        <div class="mt-2 ml-1 flex flex-col">
+            <div class="break-all">
+                {{ .Text }}
+            </div>
         </div>
-        <div>&nbsp;</div>
-        <div class="break-all">
-            {{ .Text }}
+        <div class="chat-msg-options flex text-xs ml-auto">
+            <div title="respond to this message" 
+                hx-get="/message/quote?chatid={{ .ChatId }}&msgid={{ .MsgId }}" 
+                hx-trigger="click" 
+                hx-swap="afterbegin" 
+                hx-target="#chat-{{.ChatId}}-msg-form"
+                class="hover:text-green-800">
+                [reply]
+            </div>
+            {{ if or (eq .AuthorId .ViewerId) (eq .OwnerId .ViewerId) }}
+            <div title="delete this message" 
+                hx-post="/message/delete"
+                hx-trigger="click" 
+                hx-swap="innerHTML" 
+                hx-headers='{"Content-Type": "application/x-www-form-urlencoded"}'
+                hx-vals='{"chatid":{{ .ChatId }},"msgid":{{ .MsgId }}}'
+                hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
+                class="hover:text-amber-700">
+                [delete]
+            </div>
+            {{ end }}
         </div>
+        <script>
+            document.addEventListener('htmx:afterOnLoad', function(evt) {
+                if (!evt.detail.target.id === 'chat-{{.ChatId}}-msg-form') {
+                    return
+                }
+                evt.detail.target.querySelector('input[type="text"], textarea')?.focus();
+            });
+        </script>
     </div>
-    {{ if or (eq .AuthorId .ViewerId) (eq .OwnerId .ViewerId) }}
-        <form id="delete-message"
-            title="delete message from {{ .AuthorName }}"
-            hx-post="/message/delete" 
-            hx-trigger="click" 
-            hx-swap="innerHTML" 
-            hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
-            class="flex ml-auto"
-        >
-            <input type="hidden" name="msgid" value="{{ .MsgId }}">
-            <input type="hidden" name="chatid" value="{{ .ChatId }}">
-                <sup title="delete this message" class="hover:text-amber-700">
-                    [delete]
-                </sup>
-        </form>
-    {{ end }}
 </li>

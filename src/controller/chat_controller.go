@@ -9,6 +9,7 @@ import (
 
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
+	"neon-chat/src/handler/shared"
 	"neon-chat/src/handler/state"
 	"neon-chat/src/utils"
 	h "neon-chat/src/utils/http"
@@ -40,11 +41,7 @@ func OpenChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 	user, err := handler.ReadSession(state, db, w, r)
 	if err != nil || user == nil {
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
-		var msg string
-		if err != nil {
-			msg = err.Error()
-		}
-		log.Printf("[%s] OpenChat INFO user is not authorized, %s\n", h.GetReqId(r), msg)
+		log.Printf("[%s] OpenChat INFO user is not authorized, %s\n", h.GetReqId(r), err)
 		return
 	}
 
@@ -132,7 +129,7 @@ func CloseChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.
 		return
 	}
 
-	chatId, err := handler.FormValueUint(r, "chatid")
+	chatId, err := shared.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] CloseChat ERROR chat id, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -165,7 +162,7 @@ func DeleteChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		return
 	}
 
-	chatId, err := handler.FormValueUint(r, "chatid")
+	chatId, err := shared.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] DeleteChat ERROR chat id, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)

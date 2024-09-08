@@ -4,6 +4,7 @@ import (
 	"log"
 	"neon-chat/src/convert"
 	"neon-chat/src/db"
+	"neon-chat/src/handler/shared"
 	"neon-chat/src/handler/state"
 	ti "neon-chat/src/interface"
 	"neon-chat/src/model/app"
@@ -24,7 +25,7 @@ func TemplateHome(
 		avatarTmpl = avatar.Template(user)
 	}
 	openChatTemplate := TemplateOpenChat(state, db, user)
-	chats, err := GetChats(state, db, user.Id)
+	chats, err := shared.GetChats(db, user.Id)
 	if err != nil {
 		log.Printf("[%s] templateHome ERROR, failed getting chats for user[%d], %s\n",
 			h.GetReqId(r), user.Id, err.Error())

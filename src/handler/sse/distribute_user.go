@@ -5,8 +5,8 @@ import (
 	"log"
 	"sync"
 
-	"neon-chat/src/convert"
 	"neon-chat/src/db"
+	"neon-chat/src/handler/shared"
 	"neon-chat/src/handler/state"
 	"neon-chat/src/model/app"
 	"neon-chat/src/model/event"
@@ -26,11 +26,10 @@ func DistributeUserChange(
 	if targetUser != nil {
 		return distributeUpdateOfUser(state, targetUser, subjectUser, updateType)
 	}
-	dbChats, err := db.GetUserChats(subjectUser.Id)
+	appChats, err := shared.GetChats(db, subjectUser.Id)
 	if err != nil {
 		return fmt.Errorf("failed to get chats for user[%d], %s", subjectUser.Id, err)
 	}
-	appChats, err := convertToApp(db, dbChats)
 	if len(appChats) <= 0 {
 		log.Printf("userChanged WARN user[%d] has no chats\n", subjectUser.Id)
 		return fmt.Errorf("user[%d] has no chats", subjectUser.Id)
@@ -53,39 +52,6 @@ func DistributeUserChange(
 	return err
 }
 
-func convertToApp(db *db.DBConn, dbChats []db.Chat) ([]*app.Chat, error) {
-	// chatId by userId
-	chatIdToOwnerId := make(map[uint]uint)
-	// owners by userId
-	ownerIdSet := make(map[uint]bool)
-	ownerIds := make([]uint, 0)
-	for _, dbChat := range dbChats {
-		chatIdToOwnerId[dbChat.Id] = dbChat.OwnerId
-		if _, ok := ownerIdSet[dbChat.OwnerId]; !ok {
-			ownerIdSet[dbChat.OwnerId] = true
-			ownerIds = append(ownerIds, dbChat.OwnerId)
-		}
-	}
-	dbChatOwners, err := db.GetUsers(ownerIds)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get chat owners[%v], %s", ownerIds, err)
-	}
-	ownerMap := make(map[uint]*app.User)
-	for _, dbChatOwner := range dbChatOwners {
-		ownerMap[dbChatOwner.Id] = convert.UserDBToApp(&dbChatOwner)
-	}
-	var chats []*app.Chat
-	for _, dbChat := range dbChats {
-		owner, ok := ownerMap[dbChat.OwnerId]
-		if !ok {
-			log.Printf("userChanged WARN chat[%d] skipped due to owner[%d] not found\n", dbChat.Id, dbChat.OwnerId)
-			continue
-		}
-		chats = append(chats, convert.ChatDBToApp(&dbChat, owner))
-	}
-	return chats, nil
-}
-
 func distributeInCommonChat(
 	db *db.DBConn,
 	chat *app.Chat,
@@ -93,13 +59,9 @@ func distributeInCommonChat(
 	subjectUser *app.User,
 	updateType event.EventType,
 ) error {
-	dbUsers, err := db.GetChatUsers(chat.Id)
+	targetUsers, err := shared.GetChatUsers(db, chat.Id)
 	if err != nil {
 		return fmt.Errorf("failed to get users in chat[%d], %s", chat.Id, err)
-	}
-	var targetUsers []*app.User
-	for _, dbUser := range dbUsers {
-		targetUsers = append(targetUsers, convert.UserDBToApp(&dbUser))
 	}
 	// inform if chat is open
 	var errs []string

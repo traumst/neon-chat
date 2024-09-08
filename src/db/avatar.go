@@ -28,7 +28,7 @@ const AvatarSchema = `
 		mime TEXT,
 		FOREIGN KEY(user_id) REFERENCES users(id)
 	);`
-const AvatarIndex = `CREATE INDEX IF NOT EXISTS idx_avatar_user_id ON avatars(user_id);`
+const AvatarIndex = ``
 
 func (db *DBConn) AvatarTableExists() bool {
 	return db.TableExists("avatars")

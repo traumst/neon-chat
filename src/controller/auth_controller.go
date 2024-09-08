@@ -148,7 +148,7 @@ func SignUp(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Req
 		// }
 	}()
 	log.Printf("[%s] SignUp TRACE issuing reservation to [%s]\n", h.GetReqId(r), user.Email)
-	sentEmail, err := handler.IssueReservationToken(state, db, user)
+	sentEmail, err := handler.ReserveUserName(state, db, user)
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR failed to issue reservation token to email[%s], %s\n",
 			h.GetReqId(r), user.Email, err.Error())
@@ -219,7 +219,7 @@ func ConfirmEmail(state *state.State, db *d.DBConn, w http.ResponseWriter, r *ht
 		w.Write([]byte("corrupted token"))
 		return
 	}
-	user := convert.UserDBToApp(dbUser)
+	user := convert.UserDBToApp(dbUser, nil)
 	if user.Status != a.UserStatusPending {
 		log.Printf("[%s] ConfirmEmail ERROR user[%d] status[%s] is not pending\n", h.GetReqId(r), user.Id, user.Status)
 		w.WriteHeader(http.StatusBadRequest)

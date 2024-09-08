@@ -5,12 +5,11 @@ import (
 	"log"
 	"net/http"
 
-	"neon-chat/src/convert"
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
+	"neon-chat/src/handler/shared"
 	"neon-chat/src/handler/sse"
 	"neon-chat/src/handler/state"
-	a "neon-chat/src/model/app"
 	"neon-chat/src/model/event"
 	"neon-chat/src/utils"
 	h "neon-chat/src/utils/http"
@@ -46,13 +45,12 @@ func AddAvatar(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.
 		return
 	}
 	defer file.Close()
-	saved, err := handler.UpdateAvatar(db, user.Id, &file, info)
+	avatar, err := handler.UpdateAvatar(db, user.Id, &file, info)
 	if err != nil {
 		log.Printf("controller.AddAvatar ERROR failed to update to avatar[%s], %s", info.Filename, err.Error())
 		http.Error(w, "[fail]", http.StatusBadRequest)
 		return
 	}
-	avatar := convert.AvatarDBToApp(saved)
 	tmpl := avatar.Template(user)
 	html, err := tmpl.HTML()
 	if err != nil {
@@ -83,19 +81,11 @@ func GetAvatar(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
-	dbAvatar, err := db.GetAvatar(user.Id)
+	avatar, err := shared.GetAvatar(db, user.Id)
 	if err != nil {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(""))
 		return
-	}
-	avatar := &a.Avatar{
-		Id:     dbAvatar.Id,
-		UserId: dbAvatar.UserId,
-		Title:  dbAvatar.Title,
-		Size:   fmt.Sprintf("%dKB", dbAvatar.Size/utils.KB),
-		Image:  dbAvatar.Image,
-		Mime:   dbAvatar.Mime,
 	}
 	tmpl := avatar.Template(user)
 	html, err := tmpl.HTML()

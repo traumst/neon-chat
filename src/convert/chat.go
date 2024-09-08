@@ -16,7 +16,7 @@ func ChatAppToDB(chat *app.Chat) *db.Chat {
 	}
 }
 
-func ChatDBToApp(chat *db.Chat, owner *app.User) *app.Chat {
+func ChatDBToApp(chat *db.Chat, owner *db.User) *app.Chat {
 	if chat == nil {
 		return nil
 	}

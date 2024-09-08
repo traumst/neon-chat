@@ -1,0 +1,13 @@
+<div hx-on:click="scrollIntoView('#chat-{{ .ChatId }}-msg-{{ .MsgId }}')" 
+    class="ml-3 flex flex-row overflow-hidden">
+    <div class="w-[1.5em] h-[1.5em] ml-0 mr-1">
+        {{ template "avatar_div.html" .AuthorAvatar }}
+    </div>
+    <div class="mr-0">
+        [{{ .AuthorName }}]
+    </div>
+    <div>&nbsp;</div>
+    <div class="break-all">
+        {{ .TextIntro }}
+    </div>
+</div>

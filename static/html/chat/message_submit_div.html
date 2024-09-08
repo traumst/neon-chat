@@ -1,33 +1,47 @@
 <div>
-    <form
+    <form id="chat-{{.ChatId}}-msg-form"
         hx-post="/message" 
         hx-trigger="submit" 
         hx-target=".message-list" 
         hx-swap="beforeend"
-        hx-include="[name='chatid'],[name='msg']"
-        class="flex mt-auto border-2 rounded border-emerald-400"
+        hx-include="[name='chatid'],[name='msg'],[name='quoteId']"
+        class="flex flex-col ml-auto mt-auto p-auto"
     >
         <input type="hidden" name="chatid" value="{{ .ChatId }}">
-        <input id="newMsgText" type="text" name="msg" 
+        <input id="chat-{{.ChatId}}-msg-text-input" type="text" name="msg" 
             placeholder="type message" 
             title="enter to send"
             class="w-full
             text-center
-            rounded-md
             bg-gradient-to-br from-green-800 to-indigo-800
             text-gray-400
             shadow shadow-zinc-700
+            border-2 rounded border-emerald-400
             hover:shadow-lg hover:shadow-zinc-500">
         <button type="submit" class="hidden">
             Send Message
         </button>
     </form>
     <script>
-        document.body.addEventListener('htmx:afterSwap', event => {
-            const newMsgText = document.getElementById('newMsgText');
+        document.addEventListener('htmx:afterRequest', function(event) {
+            //console.log('submitDiv - htmx:afterRequest', event);
+            if (event.target.id === 'chat-{{.ChatId}}-msg-form') {
+                clearSubmitForm();
+            }
+        });
+        function clearSubmitForm() {
+            const newMsgText = document.getElementById('chat-{{.ChatId}}-msg-text-input');
             if (newMsgText) {
                 newMsgText.value = '';
             }
-        });
+            removeElements({ 
+                classSelector: ".quote-chat-message", 
+                idSelectorException: null
+            })
+            removeElements({ 
+                classSelector: ".quote-chat-msg-input", 
+                idSelectorException: null
+            })
+        }
     </script>
 </div>

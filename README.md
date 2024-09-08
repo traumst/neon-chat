@@ -4,28 +4,45 @@ Minimalistic chat app built using server-components on go + htmx.
 Default colorscheme is a personal preference, and light/dark mode are... khm... on the horizon.
 This app is being build as an excercise for me to 
 - learn go practically
-- try sqlite db via sqlx
-- further explore htmx
+- try sqlite db via sqlx, write custom migration module
+- further explore htmx, locality of behaviour for the win
 - explore server sent events for live messaging
 - familiarize with tailwind
-- <s>prove react is overrate</s>
-- finish a project for a change
+- <s>prove react is overrated</s>
+- <s>finish a project for a change</s>
+- maintain project over time, extend functionality, fix bugs
 
 ## How to run
 
 ### Prerequisites
 
-First run is special. We're now going to do a couple of things that we would not have to do on subsequent runs. At least not entirely.
+First run is special. 
+We're now going to do a couple of things that we would not have to do on subsequent runs. 
+At least not entirely.
 
 I assume you already have golang installed.
 You can check if it is by running `go version` in a terminal.
 If not, you can refer to [official istallation instruction](https://go.dev/doc/install) for you pc/mac/linux.
 
-There's [tailwind.config.js](./tailwind.config.js) in the root, but it's not in use YET. Meaning we don't have custom tailwind definition, only relying on built-in utility classes. Technically we can simply make a 3rd party call and get entire tailwindcss.min.js from a CDN. Still, in the current setup we built tailwind file to produce minimal required css. [Compiled css](./static/css/tailwind.css) comes out at roughly 15kb, about 1/20 of the default minified [cdn provided talwindcss.js](https://cdn.tailwindcss.com/3.4.5) wich is around 300k and works exactly the same.
+There's [tailwind.config.js](./tailwind.config.js) in the root, but it's content is not in use YET. 
+Meaning we don't have custom tailwind definition, only relying on built-in utility classes. 
+Technically we can simply make a 3rd party call and get entire tailwindcss.min.js from a CDN. 
+Still, in the current setup we built tailwind file to produce minimal css. 
+[Compiled css](./static/css/tailwind.css) comes out at roughly 15kb, 
+about 1/20 of the default minified [cdn provided talwindcss.js](https://cdn.tailwindcss.com/3.4.5) wich is around 300kb.
 
-To actually compile this, you'd need to install tailwind. There's plenty of options. I recommend downloading the [stadalone tailwind cli](https://tailwindcss.com/blog/standalone-cli) and avoiding npm completely. But if you have nodejs installed and feel more comfortable with it, you can [install tailwind via npm](https://tailwindcss.com/docs/installation). Note that [run.sh script](./run.sh) specifies path to tailwind executable. That line may need to be updated to match your setup.
+To actually compile this, you'd need to install tailwind. 
+There's plenty of options. 
+I recommend downloading the [stadalone tailwind cli](https://tailwindcss.com/blog/standalone-cli) and avoiding npm completely. 
+But if you have nodejs installed and feel more comfortable with it, 
+you can [install tailwind via npm](https://tailwindcss.com/docs/installation). 
+Note that [run.sh script](./run.sh) specifies path to tailwind executable. 
+**That line needs to be updated to match your setup**.
 
-Finally, app expects to have `.env` file in the root directory, which you have to create. There's `.env.template` file that you can easily copy-paste and fill up. App may still start without this file, as some defaults are provided. But the behaviour in this case is unpredicable, thus is a broken state and should fatal exit at some point.
+Finally, app expects to have `.env` file in the root directory, which you have to create. 
+There's `.env.template` file that you can easily copy-paste and fill up. 
+App may still start without this file, as some defaults are provided. 
+But the behaviour in this case is unpredicable, thus is a broken state and should fatal exit at some point.
 
 ### Preparing run script
 
@@ -36,7 +53,8 @@ Successfull launch of the app requires:
 * launching the app
 * etc.
 
-`run.sh` file is just a plaintext shell script. We need to make it executable by running `chmod +x run.sh` in project root in terminal. After that, we can start the app by running `sh run.sh` or `./run.sh`.
+`run.sh` file is just a plaintext shell script. We need to make it executable by running 
+`chmod +x run.sh` in project root in terminal. After that, we can start the app by running `sh run.sh` or `./run.sh`.
 
 Contents of [run.sh](./run.sh) is more or less:
 ```
@@ -65,7 +83,7 @@ Notes:
 
 Executing a script from the terminal, you should then see output similar to:
 ```
-> sh run.sh
+> ./run.sh
 Running tests
 ok      neon-chat/src/handler     (cached)
 ok      neon-chat/src/model/app   (cached)
@@ -76,38 +94,33 @@ Starting server...
 ```
 App should now be available at http://localhost:8080
 
-> <b><u>Note</u></b><br>After initial successfull run there's no real reason to execute run script. Unless css is messed up or db is corrupted I just use `go run main.go` or `go test ./...` directly.
+> <b><u>Note</u></b><br>
+After initial successfull run, we will not need to go through any of the setup steps again.
+
+> <b><u>Note</u></b><br>
+Executing `./run.sh` also builds the short tailwind.css. 
+Making changes to tailwind classes requires rerun to display properly.
 
 ## TODOs
 
 ### Bugs
 
-* support ALLOW_UNSAFE_ACCESS for dev and test
-* user name change should update active user info on left panel
-* controllers should only touch templates, never models
-* fucking session transactions
++ user name change should update active user info on left panel
++ fucking session transactions
 
 ### Next up
 
++ controllers should only touch templates, never models
++ support ALLOW_UNSAFE_ACCESS for dev and test
++ log levels with [slog in GO 1.23](https://pkg.go.dev/log/slog#Debug)
++ auth middleware
 + introduce ctx
-
-+ UI improvements
-    * @ other messages
-        - "reply" button on message
-            + click should paste quote into input at carret
-        - update text processing
-            + quote source FK relationship
-            + link to messages:
-                + all or nothing when editing
-                + removing any char from quote removes entire quote
-                + default unavailable message
-        - add quote message html template
-            + like message_li but lighter
-        - click on quoted message
-            + scroll original message into view if available
-    * user info card - avatar, name, email?, mutual chats?, 
-    * @ other users - display user card on hover
-    * collapsible menus
+- replace all `<form>` tags with with
+```
+<div hx-ACTION="/endpoint"
+    hx-headers='{"Content-Type": "application/x-www-form-urlencoded"}'
+    hx-vals='{"chatid":{{ .ChatId }},"msgid":{{ .MsgId }}},"userid":{{ .UserId }}}'
+```
 
 ## Backlog
 
@@ -135,18 +148,19 @@ App should now be available at http://localhost:8080
 
 ### Extend functionality
 - change chat title
+* user info card - avatar, name, contact, mutual chats
 - add contacts page / address book
 - limit who invites to contacts
-- black and white lists
-- 
 - zoom, web calls
 - introduce Tmpl to replace default templating engine
 
 ### User Notifications
-- setting on/off
-    - mute / unmute chat
 - new chat invite
 - new msg in chat
+- @user - display user card on hover
+- setting on/off
+    - mute / unmute chat
+    - blacklist / whitelist users
 
 ### Fuzzy search
 - search chats by: 
@@ -165,6 +179,7 @@ App should now be available at http://localhost:8080
     - statistical similarity - slow
 
 ### GUI
+- collapsible / resizable left panel
 - user settings page
     * add alternative auth
     * light/dark mode
@@ -180,6 +195,7 @@ App should now be available at http://localhost:8080
     * open chat - close, delete
     * chat members - expel
     * msg options - delete, reply
+    
 
 ## Never gonna happen, but sounds nice
 
