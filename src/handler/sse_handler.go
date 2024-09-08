@@ -6,7 +6,7 @@ import (
 )
 
 // TODO queue mechanism for delta updates
-func PollUpdatesForUser(state *state.State, conn *state.Conn, pollingUserId uint) {
+func PollLiveUpdates(state *state.State, conn *state.Conn, pollingUserId uint) {
 	log.Printf("[%s] APP.PollUpdatesForUser TRACE IN, triggered by [%d]\n",
 		conn.Origin, conn.User.Id)
 	done := false

@@ -38,7 +38,7 @@ func (m *QuoteTemplate) HTML() (string, error) {
 		return "", fmt.Errorf("failed to validate QuoteTemplate, %s", err.Error())
 	}
 	if m.AuthorAvatar.Title == "" {
-		return "", fmt.Errorf("short template requires avatar but was [%s]", m.AuthorAvatar.Title)
+		return "", fmt.Errorf("template requires avatar but was [%s]", m.AuthorAvatar.Title)
 	}
 	var buf bytes.Buffer
 	msgTmpl := template.Must(template.ParseFiles(

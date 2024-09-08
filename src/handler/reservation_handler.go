@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func IssueReservationToken(state *state.State, db *d.DBConn, user *a.User) (t.VerifyEmailTemplate, error) {
+func ReserveUserName(state *state.State, db *d.DBConn, user *a.User) (t.VerifyEmailTemplate, error) {
 	token := utils.RandStringBytes(16)
 	expire := time.Now().Add(1 * time.Hour)
 	reserve, err := reserve(db, user, token, expire)

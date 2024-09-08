@@ -50,20 +50,7 @@ func (m *MessageTemplate) HTML() (string, error) {
 		"static/html/chat/message_li.html",
 		"static/html/chat/message_quote_div.html",
 		"static/html/avatar_div.html"))
-	err := msgTmpl.Execute(&buf, MessageTemplate{
-		IntermediateId:   m.getIntermediateId(),
-		ChatId:           m.ChatId,
-		MsgId:            m.MsgId,
-		Quote:            m.Quote,
-		ViewerId:         m.ViewerId,
-		OwnerId:          m.OwnerId,
-		AuthorId:         m.AuthorId,
-		AuthorName:       m.AuthorName,
-		AuthorAvatar:     m.AuthorAvatar,
-		Text:             m.Text,
-		TextIntro:        m.TextIntro,
-		MessageDropEvent: m.MessageDropEvent,
-	})
+	err := msgTmpl.Execute(&buf, m)
 	if err != nil {
 		return "", fmt.Errorf("failed to template, %s", err.Error())
 	}
