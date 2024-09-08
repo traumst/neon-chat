@@ -178,6 +178,7 @@ Making changes to tailwind classes requires rerun to display properly.
     - statistical similarity - slow
 
 ### GUI
+- collapsible / resizable left panel
 - user settings page
     * add alternative auth
     * light/dark mode
