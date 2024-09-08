@@ -10,11 +10,23 @@ import (
 
 type Middleware func(http.Handler) http.Handler
 
-func ChainMiddleware(h http.Handler, middleware []Middleware) http.Handler {
+func ChainMiddlewares(h http.Handler, middleware []Middleware) http.Handler {
 	for _, m := range middleware {
 		h = m(h)
 	}
 	return h
+}
+
+func RecoveryMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				log.Printf("Recovered from panic: %v", err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
 }
 
 func ReqIdMiddleware(next http.Handler) http.Handler {
