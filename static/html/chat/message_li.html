@@ -4,7 +4,8 @@
     hx-swap="innerHTML" 
     class="chat-message-li default-transition
         flex flex-col justify-between
-        p-2
+        p-1
+        pl-3
         m-2
         h-fit
         gap-1
@@ -18,10 +19,21 @@
         shadow shadow-green-800
         hover:shadow-green-500
         hover:text-green-500">
-    <div class="chat-message-content flex flex-col overflow-hidden">
-        {{ with .Quote }}
-            {{ if ne .MsgId 0 }}
-                {{ template "message_quote_div.html" . }}
+    <div class="chat-message-content 
+        flex flex-col 
+        overflow-hidden">
+        {{ with $quote := .Quote }}
+            {{ if ne $quote.MsgId 0 }}
+                <div class="flex flex-col
+                    text-xs
+                    ml-auto
+                    p-2
+                    bg-opacity-10 bg-slate-500
+                    border-4 border-indigo-700 rounded-3xl
+                    shadow shadow-green-800
+                    hover:text-green-500">
+                {{ template "message_quote_div.html" $quote }}
+                </div>
             {{ end }}
         {{ end }}
         <div class="flex flex-row m-r-auto">
@@ -37,7 +49,7 @@
                 {{ .Text }}
             </div>
         </div>
-        <div class="chat-msg-options flex ml-auto">
+        <div class="chat-msg-options flex text-xs ml-auto">
             <div title="respond to this message" 
                 hx-get="/message/quote?chatid={{ .ChatId }}&msgid={{ .MsgId }}" 
                 hx-trigger="click" 

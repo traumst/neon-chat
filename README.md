@@ -4,12 +4,13 @@ Minimalistic chat app built using server-components on go + htmx.
 Default colorscheme is a personal preference, and light/dark mode are... khm... on the horizon.
 This app is being build as an excercise for me to 
 - learn go practically
-- try sqlite db via sqlx
-- further explore htmx
+- try sqlite db via sqlx, write custom migration module
+- further explore htmx, locality of behaviour for the win
 - explore server sent events for live messaging
 - familiarize with tailwind
 - <s>prove react is overrated</s>
-- finish a project for a change
+- <s>finish a project for a change</s>
+- maintain project over time, extend functionality, fix bugs
 
 ## How to run
 
