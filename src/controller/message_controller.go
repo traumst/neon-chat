@@ -6,6 +6,7 @@ import (
 
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
+	"neon-chat/src/handler/shared"
 	"neon-chat/src/handler/state"
 	t "neon-chat/src/model/template"
 	h "neon-chat/src/utils/http"
@@ -30,7 +31,7 @@ func QuoteMessage(
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
-	args, err := handler.QueryStringArgs(r)
+	args, err := shared.ParseQueryString(r)
 	if err != nil {
 		log.Printf("[%s] QuoteMessage ERROR parsing arguments, %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -82,21 +83,21 @@ func AddMessage(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		return
 	}
 
-	chatId, err := handler.FormValueUint(r, "chatid")
+	chatId, err := shared.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] WARN AddMessage bad argument - chatid\n", h.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid chat id"))
 		return
 	}
-	msg, err := handler.FormValueString(r, "msg")
+	msg, err := shared.ReadFormValueString(r, "msg")
 	if err != nil || len(msg) < 1 {
 		log.Printf("[%s] WARN AddMessage bad argument - msg\n", h.GetReqId(r))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("message too short"))
 		return
 	}
-	quoteId, _ := handler.FormValueUint(r, "quoteid")
+	quoteId, _ := shared.ReadFormValueUint(r, "quoteid")
 	message, err := handler.HandleMessageAdd(state, db, chatId, author, msg, quoteId)
 	if err != nil || message == nil {
 		log.Printf("[%s] AddMessage ERROR while handing, %s, %v\n", h.GetReqId(r), err.Error(), message)
@@ -122,13 +123,13 @@ func DeleteMessage(state *state.State, db *d.DBConn, w http.ResponseWriter, r *h
 		return
 	}
 
-	chatId, err := handler.FormValueUint(r, "chatid")
+	chatId, err := shared.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] DeleteMessage ERROR bad arg - chatid, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	msgId, err := handler.FormValueUint(r, "msgid")
+	msgId, err := shared.ReadFormValueUint(r, "msgid")
 	if err != nil {
 		log.Printf("[%s] DeleteMessage ERROR bad arg - msgid, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)

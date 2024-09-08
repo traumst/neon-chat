@@ -143,7 +143,11 @@ func HandleMessageAdd(
 		if err != nil {
 			return nil, fmt.Errorf("failed to get quote[%d] from db: %s", quoteId, err.Error())
 		}
-		tmp := convert.MessageDBToApp(dbQuote, author, nil)
+		quoteAuthor, err := shared.GetUser(db, dbQuote.AuthorId)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get quote[%d] author[%d] avatar from db: %s", quoteId, dbQuote.AuthorId, err.Error())
+		}
+		tmp := convert.MessageDBToApp(dbQuote, quoteAuthor, nil)
 		appQuote = &tmp
 	}
 	dbOwner, err := db.GetUser(dbChat.OwnerId)
@@ -212,64 +216,4 @@ func HandleMessageDelete(
 		log.Printf("HandleMessageDelete ERROR distributing msg update, %s\n", err)
 	}
 	return &appMsg, err
-}
-
-func GetChatMessages(db *d.DBConn, chatId uint) ([]*a.Message, error) {
-	dbUsers, err := db.GetChatUsers(chatId)
-	if err != nil {
-		return nil, fmt.Errorf("failed getting chat[%d] users, %s", chatId, err.Error())
-	}
-	userIds := make([]uint, 0)
-	appUsers := make(map[uint]*a.User)
-	for _, dbUser := range dbUsers {
-		appUsers[dbUser.Id] = convert.UserDBToApp(&dbUser)
-		userIds = append(userIds, dbUser.Id)
-	}
-	appAvatars := make(map[uint]*a.Avatar)
-	dbAvatars, err := db.GetAvatars(userIds)
-	if err == nil {
-		for _, dbAvatar := range dbAvatars {
-			if appAvatars[dbAvatar.UserId] != nil {
-				continue
-			}
-			appAvatars[dbAvatar.UserId] = convert.AvatarDBToApp(dbAvatar)
-		}
-	}
-	// TODO offset := 0 means no offset, ie get entire chat history
-	dbMsgs, err := db.GetMessages(chatId, 0)
-	if err != nil {
-		return nil, fmt.Errorf("failed getting chat[%d] messages, %s", chatId, err.Error())
-	}
-	appMsgs := make([]*a.Message, 0)
-	appMsgIdMap := make(map[uint]*a.Message, 0)
-	msgIds := make([]uint, len(dbMsgs))
-	for _, dbMsg := range dbMsgs {
-		author, ok := appUsers[dbMsg.AuthorId]
-		if !ok {
-			log.Printf("GetChatMessages ERROR author[%d] of message[%d] is not mapped\n", dbMsg.AuthorId, dbMsg.Id)
-			continue
-		}
-		if appAvatars[author.Id] != nil {
-			author.Avatar = appAvatars[author.Id]
-		}
-		// ignore quote for now
-		appMsg := convert.MessageDBToApp(&dbMsg, author, nil)
-		// sort the data on the way
-		appMsgs = append(appMsgs, &appMsg)
-		msgIds = append(msgIds, dbMsg.Id)
-		appMsgIdMap[dbMsg.Id] = &appMsg
-	}
-	dbQuotes, err := db.GetQuotes(msgIds)
-	if err != nil {
-		return nil, fmt.Errorf("failed getting chat[%d] quotes, %s", chatId, err.Error())
-	}
-	for _, dbQuote := range dbQuotes {
-		appMsg, ok1 := appMsgIdMap[dbQuote.MsgId]
-		appQuote, ok2 := appMsgIdMap[dbQuote.QuoteId]
-		if ok1 && ok2 {
-			appMsg.Quote = appQuote
-		}
-	}
-
-	return appMsgs, nil
 }

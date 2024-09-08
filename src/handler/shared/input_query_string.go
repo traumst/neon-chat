@@ -1,12 +1,12 @@
-package handler
+package shared
 
 import (
 	"fmt"
 	"log"
-	"neon-chat/src/utils"
-	h "neon-chat/src/utils/http"
 	"net/http"
 	"strconv"
+
+	h "neon-chat/src/utils/http"
 )
 
 type QueryArgs struct {
@@ -14,7 +14,7 @@ type QueryArgs struct {
 	MsgId  uint
 }
 
-func QueryStringArgs(r *http.Request) (parsed QueryArgs, err error) {
+func ParseQueryString(r *http.Request) (parsed QueryArgs, err error) {
 	args := r.URL.Query()
 	// v is []string, but we only support one value per key
 	for k, v := range args {
@@ -42,26 +42,4 @@ func QueryStringArgs(r *http.Request) (parsed QueryArgs, err error) {
 		}
 	}
 	return parsed, err
-}
-
-func FormValueUint(r *http.Request, key string) (uint, error) {
-	rawVal := r.PostFormValue(key)
-	if rawVal == "" {
-		return 0, fmt.Errorf("failed to read key[%s]", key)
-	}
-	val, err := strconv.Atoi(rawVal)
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse key[%s] value[%s]", key, rawVal)
-	}
-	return uint(val), nil
-}
-
-func FormValueString(r *http.Request, key string) (string, error) {
-	rawVal := r.PostFormValue(key)
-	if rawVal == "" {
-		return "", fmt.Errorf("failed to read key[%s]", key)
-	}
-	rawVal = utils.ReplaceWithSingleSpace(rawVal)
-	rawVal = utils.RemoveSpecialChars(rawVal)
-	return rawVal, nil
 }

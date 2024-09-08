@@ -9,6 +9,7 @@ import (
 
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
+	"neon-chat/src/handler/shared"
 	"neon-chat/src/handler/state"
 	"neon-chat/src/utils"
 	h "neon-chat/src/utils/http"
@@ -128,7 +129,7 @@ func CloseChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.
 		return
 	}
 
-	chatId, err := handler.FormValueUint(r, "chatid")
+	chatId, err := shared.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] CloseChat ERROR chat id, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -161,7 +162,7 @@ func DeleteChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		return
 	}
 
-	chatId, err := handler.FormValueUint(r, "chatid")
+	chatId, err := shared.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] DeleteChat ERROR chat id, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)

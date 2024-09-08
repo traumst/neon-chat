@@ -8,6 +8,7 @@ import (
 
 	"neon-chat/src/convert"
 	d "neon-chat/src/db"
+	"neon-chat/src/handler/shared"
 	"neon-chat/src/handler/state"
 	a "neon-chat/src/model/app"
 	"neon-chat/src/utils"
@@ -85,16 +86,16 @@ func Register(db *d.DBConn, newUser *a.User, pass string, authType a.AuthType) (
 	if newUser.Id != 0 {
 		appUser = newUser
 	} else {
-		appUser, err = createUser(db, newUser)
+		appUser, err = shared.CreateUser(db, newUser)
 		if err != nil || appUser == nil {
 			return nil, nil, fmt.Errorf("failed to create user[%v], %s", newUser, err)
 		} else {
 			log.Printf("Register TRACE user[%s] created\n", appUser.Name)
 		}
 	}
-	auth, err := createAuth(db, appUser, pass, authType)
+	auth, err := shared.CreateAuth(db, appUser, pass, authType)
 	if err != nil || auth == nil {
-		if recoverErr := deleteUser(db, appUser); recoverErr != nil {
+		if recoverErr := shared.DeleteUser(db, appUser); recoverErr != nil {
 			panic(fmt.Sprintf("failed to recovery-delete user[%d][%s], %s", appUser.Id, appUser.Name, err))
 		}
 
@@ -102,65 +103,4 @@ func Register(db *d.DBConn, newUser *a.User, pass string, authType a.AuthType) (
 	}
 	log.Printf("Register TRACE user[%d] auth[%v] created\n", appUser.Id, auth)
 	return appUser, auth, nil
-}
-
-func createUser(db *d.DBConn, user *a.User) (*a.User, error) {
-	if user.Id != 0 && user.Salt != "" {
-		log.Printf("createUser TRACE completing user[%s] signup\n", user.Name)
-		return user, nil
-	}
-	log.Printf("createUser TRACE creating user[%s]\n", user.Name)
-	dbUser := convert.UserAppToDB(user)
-	created, err := db.AddUser(dbUser)
-	if err != nil || created == nil {
-		return nil, fmt.Errorf("failed to add user[%v], %s", created, err)
-	}
-	if created.Id <= 0 {
-		return nil, fmt.Errorf("user[%s] was not created", created.Name)
-	}
-	appUser := convert.UserDBToApp(created)
-	return appUser, err
-}
-
-func deleteUser(db *d.DBConn, user *a.User) error {
-	if user.Id < 1 {
-		log.Printf("deleteUser TRACE completing user[%s] signup\n", user.Name)
-		return nil
-	}
-	log.Printf("deleteUser TRACE creating user[%s]\n", user.Name)
-	err := db.DropUser(user.Id)
-	if err != nil {
-		return fmt.Errorf("failed to delete, %s", err)
-	}
-	return nil
-}
-
-func createAuth(db *d.DBConn, user *a.User, pass string, authType a.AuthType) (*a.Auth, error) {
-	log.Printf("createAuth TRACE IN user[%d] auth[%s]\n", user.Id, authType)
-	hash, err := utils.HashPassword(pass, user.Salt)
-	if err != nil {
-		return nil, fmt.Errorf("error hashing pass, %s", err)
-	}
-	log.Printf("createAuth TRACE adding user[%d] auth[%s] hash[%s]\n", user.Id, authType, hash)
-	dbAuth := &d.Auth{
-		Id:     0,
-		UserId: user.Id,
-		Type:   string(authType),
-		Hash:   hash,
-	}
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		dbAuth, err = db.AddAuth(*dbAuth)
-	}()
-	wg.Wait()
-	if err != nil || dbAuth == nil {
-		return nil, fmt.Errorf("fail to add auth to user[%d][%s], %s", user.Id, user.Name, err)
-	}
-	if dbAuth.Id <= 0 {
-		return nil, fmt.Errorf("user[%d][%s] auth was not created", user.Id, user.Name)
-	}
-	appAuth := convert.AuthDBToApp(dbAuth)
-	return appAuth, err
 }
