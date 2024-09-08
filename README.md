@@ -103,14 +103,17 @@ Making changes to tailwind classes requires rerun to display properly.
 
 ## TODOs
 
-### Bugs
-
++ handler should abstract app and db models completely, only expose templates
 + user name change should update active user info on left panel
 + fucking session transactions
 
+### Bugs
+
+2024-09-04 20.50.33 chat name 4th 500 - should be 400/200
+[screenshot](./_bugz/2024-09-04T20.50.33_chat_name_4th_500.png "Screenshot")
+
 ### Next up
 
-+ controllers should only touch templates, never models
 + support ALLOW_UNSAFE_ACCESS for dev and test
 + log levels with [slog in GO 1.23](https://pkg.go.dev/log/slog#Debug)
 + auth middleware
