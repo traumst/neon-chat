@@ -150,6 +150,6 @@ func ExpelUser(state *state.State, db *d.DBConn, user *a.User, chatId uint, expe
 		return nil, fmt.Errorf("failed to close chat[%d]", chatId)
 	}
 	log.Printf("ExpelUser TRACE user[%d] has been expelled from chat[%d]\n", expelledId, chatId)
-	appExpelled := convert.UserDBToApp(dbExpelled)
+	appExpelled := convert.UserDBToApp(dbExpelled, nil)
 	return appExpelled, nil
 }

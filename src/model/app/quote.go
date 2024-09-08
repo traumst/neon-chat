@@ -11,14 +11,9 @@ type Quote struct {
 	ChatId uint
 	Author *User
 	Text   string
-	Quote  *Message
 }
 
-func (m *Quote) Template(
-	viewer *User,
-	owner *User,
-	avatar *Avatar,
-) (t.QuoteTemplate, error) {
+func (m *Quote) Template(viewer *User, owner *User) (t.QuoteTemplate, error) {
 	if viewer == nil || viewer.Id == 0 {
 		return t.QuoteTemplate{}, fmt.Errorf("viewer cannot be nil or blank")
 	}
@@ -37,7 +32,7 @@ func (m *Quote) Template(
 		MsgId:          m.Id,
 		AuthorId:       m.Author.Id,
 		AuthorName:     m.Author.Name,
-		AuthorAvatar:   avatar.Template(viewer),
+		AuthorAvatar:   m.Author.Avatar.Template(viewer),
 		Text:           m.Text,
 		TextIntro:      utils.Shorten(m.Text, 69),
 	}, nil

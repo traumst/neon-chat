@@ -142,18 +142,6 @@ func (db *DBConn) GetChatUserIds(chatId uint) ([]uint, error) {
 	return userIds, nil
 }
 
-func (db *DBConn) GetChatUsers(chatId uint) ([]User, error) {
-	userIds, err := db.GetChatUserIds(chatId)
-	if err != nil {
-		return nil, fmt.Errorf("error getting user ids in chat[%d]: %s", chatId, err)
-	}
-	if len(userIds) == 0 {
-		return []User{}, nil
-	}
-
-	return db.GetUsers(userIds)
-}
-
 func (db *DBConn) RemoveChatUser(chatId uint, userId uint) error {
 	log.Printf("TRACE removing user[%d] from chat[%d]\n", userId, chatId)
 	if chatId == 0 || userId == 0 {

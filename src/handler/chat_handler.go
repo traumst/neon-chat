@@ -10,7 +10,6 @@ import (
 	"neon-chat/src/handler/state"
 	a "neon-chat/src/model/app"
 	"neon-chat/src/model/event"
-	"neon-chat/src/utils"
 )
 
 func HandleChatAdd(state *state.State, db *d.DBConn, user *a.User, chatName string) (string, error) {
@@ -30,7 +29,14 @@ func HandleChatAdd(state *state.State, db *d.DBConn, user *a.User, chatName stri
 	if err != nil {
 		return "", fmt.Errorf("failed to get chat[%d] from db: %s", dbChat.Id, err)
 	}
-	appChat := convert.ChatDBToApp(openChat, user)
+	appChat := convert.ChatDBToApp(openChat, &d.User{
+		Id:     user.Id,
+		Name:   user.Name,
+		Email:  user.Email,
+		Type:   string(user.Type),
+		Status: string(user.Status),
+		Salt:   user.Salt,
+	})
 	err = sse.DistributeChat(state, db, appChat, user, user, user, event.ChatAdd)
 	if err != nil {
 		log.Printf("HandleChatAdd ERROR cannot distribute chat[%d] creation to user[%d]: %s",
@@ -39,10 +45,6 @@ func HandleChatAdd(state *state.State, db *d.DBConn, user *a.User, chatName stri
 	appChatUsers, err := shared.GetChatUsers(db, dbChat.Id)
 	if err != nil {
 		log.Printf("HandleChatAdd ERROR getting chat[%d] users: %s", dbChat.Id, err)
-	}
-	appChatUsers := make([]*a.User, 0)
-	for _, dbChatUser := range dbChatUsers {
-		appChatUsers = append(appChatUsers, convert.UserDBToApp(&dbChatUser))
 	}
 	appChatMsgs := make([]*a.Message, 0)
 	return appChat.Template(user, user, appChatUsers, appChatMsgs).HTML()
@@ -66,7 +68,7 @@ func HandleChatOpen(state *state.State, db *d.DBConn, user *a.User, chatId uint)
 	appChatUsers, err := shared.GetChatUsers(db, chatId)
 	if err != nil {
 		log.Printf("HandleChatOpen ERROR getting chat[%d] users for user[%d], %s\n", chatId, user.Id, err.Error())
-		return appChat.Template(user, user, nil, nil).HTML()
+		return TemplateWelcome(user)
 	}
 	appChatMsgs, err := shared.GetChatMessages(db, chatId)
 	if err != nil {
@@ -96,7 +98,14 @@ func HandleChatDelete(state *state.State, db *d.DBConn, user *a.User, chatId uin
 	if err != nil {
 		return fmt.Errorf("error deleting chat in db: %s", err.Error())
 	}
-	chat := convert.ChatDBToApp(dbChat, user)
+	chat := convert.ChatDBToApp(dbChat, &d.User{
+		Id:     user.Id,
+		Name:   user.Name,
+		Email:  user.Email,
+		Type:   string(user.Type),
+		Status: string(user.Status),
+		Salt:   user.Salt,
+	})
 	err = sse.DistributeChat(state, db, chat, user, nil, user, event.ChatClose)
 	if err != nil {
 		log.Printf("HandleChatDelete ERROR cannot distribute chat close, %s", err.Error())

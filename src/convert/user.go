@@ -16,8 +16,8 @@ func UserAppToDB(user *app.User) *db.User {
 	}
 }
 
-func UserDBToApp(user *db.User) *app.User {
-	return &app.User{
+func UserDBToApp(user *db.User, avatar *db.Avatar) *app.User {
+	u := &app.User{
 		Id:     user.Id,
 		Name:   user.Name,
 		Email:  user.Email,
@@ -26,4 +26,8 @@ func UserDBToApp(user *db.User) *app.User {
 		Salt:   user.Salt,
 		Avatar: nil,
 	}
+	if avatar != nil {
+		u.Avatar = AvatarDBToApp(avatar)
+	}
+	return u
 }

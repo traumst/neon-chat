@@ -24,12 +24,11 @@ func MessageDBToApp(message *db.Message, author *app.User, quote *app.Message) a
 	}
 }
 
-func MessageDBToQuoteApp(message *db.Message, author *app.User, quote *app.Message) app.Quote {
+func MessageDBToQuoteApp(message *db.Message, author *app.User) app.Quote {
 	return app.Quote{
 		Id:     message.Id,
 		ChatId: message.ChatId,
 		Author: author,
 		Text:   message.Text,
-		Quote:  quote,
 	}
 }

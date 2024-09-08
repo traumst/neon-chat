@@ -36,7 +36,8 @@ func ReadSession(state *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 		} else {
 			log.Printf("[%s] ReadSession TRACE session user[%d][%s], err[%s]\n",
 				h.GetReqId(r), dbUser.Id, dbUser.Name, err1)
-			appUser = convert.UserDBToApp(dbUser)
+			dbAvatar, _ := db.GetAvatar(dbUser.Id)
+			appUser = convert.UserDBToApp(dbUser, dbAvatar)
 		}
 	}()
 	wg.Wait()
@@ -54,7 +55,8 @@ func Authenticate(db *d.DBConn, username string, pass string, authType a.AuthTyp
 		log.Printf("Authenticate TRACE user[%s] not found, result[%v], %s\n", username, dbUser, err)
 		return nil, nil, nil
 	}
-	appUser := convert.UserDBToApp(dbUser)
+	dbAvatar, _ := db.GetAvatar(dbUser.Id)
+	appUser := convert.UserDBToApp(dbUser, dbAvatar)
 	if appUser.Status != a.UserStatusActive {
 		log.Printf("Authenticate WARN user[%d] status[%s] is inactive\n", dbUser.Id, dbUser.Status)
 		return appUser, nil, nil

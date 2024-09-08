@@ -2,6 +2,7 @@ package handler
 
 import (
 	"log"
+	"neon-chat/src/convert"
 	"neon-chat/src/db"
 	"neon-chat/src/handler/shared"
 	"neon-chat/src/handler/state"
@@ -29,6 +30,12 @@ func TemplateOpenChat(state *state.State, db *db.DBConn, user *app.User) ti.Rend
 	if err != nil {
 		log.Printf("templateOpenChat ERROR, failed getting chat[%d] messages, %s\n", openChatId, err.Error())
 		return nil
+	}
+	if user.Avatar == nil {
+		dbAvatar, err := db.GetAvatar(user.Id)
+		if dbAvatar != nil && err == nil {
+			user.Avatar = convert.AvatarDBToApp(dbAvatar)
+		}
 	}
 	return openChat.Template(user, user, appChatUsers, appMsgs)
 }

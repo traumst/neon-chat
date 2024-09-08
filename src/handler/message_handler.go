@@ -5,6 +5,7 @@ import (
 	"log"
 	"neon-chat/src/convert"
 	d "neon-chat/src/db"
+	"neon-chat/src/handler/shared"
 	"neon-chat/src/handler/sse"
 	"neon-chat/src/handler/state"
 	i "neon-chat/src/interface"
@@ -20,19 +21,50 @@ func HandleGetQuote(
 	user *a.User,
 	chatId uint,
 	msgId uint,
-) (i.Renderable, error) {
-	log.Printf("HandleGetQuote TRACE opening current chat for user[%d]\n", user.Id)
-	tmpl, err := HandleGetMessage(state, db, user, chatId, msgId)
+) (string, error) {
+	log.Printf("HandleGetQuote TRACE quoting message[%d] of chat[%d]\n", msgId, chatId)
+	canChat, err := db.UsersCanChat(chatId, user.Id)
 	if err != nil {
-		log.Printf("HandleGetQuote ERROR getting message[%d] for user[%d], %s\n", msgId, user.Id, err)
-		return nil, fmt.Errorf("failed to get quote for message: %s", err.Error())
+		log.Printf("HandleGetQuote ERROR checking whether user[%d] can chat[%d], %s\n", user.Id, chatId, err)
+		return "", fmt.Errorf("failed to check whether user can chat: %s", err.Error())
+	} else if !canChat {
+		log.Printf("HandleGetQuote ERROR user[%d] is not in chat[%d]\n", user.Id, chatId)
+		return "", fmt.Errorf("user is not in chat")
 	}
-	msgTmpl := tmpl.(*t.MessageTemplate)
-	if msgTmpl == nil {
-		log.Printf("HandleGetQuote ERROR message[%d] template is nil\n", msgId)
-		return nil, fmt.Errorf("message template not")
+	//
+	dbOwner, err := db.GetOwner(chatId)
+	if err != nil {
+		log.Printf("HandleGetQuote ERROR getting owner for chat[%d], %s\n", chatId, err.Error())
+		return "", fmt.Errorf("failed to get message from db, %s", err.Error())
 	}
-	return &t.QuoteTemplate{
+	appOwner := convert.UserDBToApp(dbOwner, nil)
+	//
+	dbMsg, err := db.GetMessage(msgId)
+	if err != nil {
+		log.Printf("HandleGetQuote ERROR getting message[%d] from db, %s\n", msgId, err)
+		return "", fmt.Errorf("failed to get message from db: %s", err.Error())
+	}
+	appQuote := convert.MessageDBToQuoteApp(dbMsg, user)
+	//
+	dbAvatar, err := db.GetAvatar(dbMsg.AuthorId)
+	if err != nil {
+		log.Printf("HandleGetQuote ERROR getting author[%d] avatar from db, %s\n", dbMsg.AuthorId, err)
+		return "nil", fmt.Errorf("failed to get author avatar from db: %s", err.Error())
+	}
+	//
+	dbAuthor, err := db.GetUser(dbMsg.AuthorId)
+	if err != nil {
+		log.Printf("HandleGetQuote ERROR getting author[%d] from db, %s\n", dbMsg.AuthorId, err)
+		return "", fmt.Errorf("failed to get author from db: %s", err.Error())
+	}
+	appQuote.Author = convert.UserDBToApp(dbAuthor, dbAvatar)
+	//
+	msgTmpl, err := appQuote.Template(user, appOwner)
+	if err != nil {
+		log.Printf("HandleGetQuote ERROR generating message template, %s\n", err)
+		return "nil", fmt.Errorf("failed to generate message template: %s", err.Error())
+	}
+	quoteTmpl := &t.QuoteTemplate{
 		IntermediateId: msgTmpl.IntermediateId,
 		ChatId:         msgTmpl.ChatId,
 		MsgId:          msgTmpl.MsgId,
@@ -41,7 +73,8 @@ func HandleGetQuote(
 		AuthorAvatar:   msgTmpl.AuthorAvatar,
 		Text:           msgTmpl.Text,
 		TextIntro:      msgTmpl.TextIntro,
-	}, nil
+	}
+	return quoteTmpl.HTML()
 }
 
 func HandleGetMessage(
@@ -83,14 +116,20 @@ func HandleGetMessage(
 			log.Printf("HandleGetMessage warn getting quote message[%d] from db, %s\n", dbQuote.QuoteId, err)
 			//return nil, fmt.Errorf("failed to get quote message[%d] from db: %s", dbQuote.QuoteId, err.Error())
 		}
+		dbAvatar, err := db.GetAvatar(dbMsg.AuthorId)
+		if err != nil {
+			log.Printf("HandleGetMessage ERROR getting author[%d] avatar from db, %s\n", dbMsg.AuthorId, err)
+			return nil, fmt.Errorf("failed to get author avatar from db: %s", err.Error())
+		}
+		user.Avatar = convert.AvatarDBToApp(dbAvatar)
 		quoteMsg := convert.MessageDBToApp(dbMsg, user, nil)
 		appQuote = &quoteMsg
 	}
 
-	appOwner := convert.UserDBToApp(dbOwner)
+	appOwner := convert.UserDBToApp(dbOwner, nil)
 	appMsg := convert.MessageDBToApp(dbMsg, user, appQuote)
-	appAvatar := convert.AvatarDBToApp(dbAvatar)
-	tmplMsg, err := appMsg.Template(user, appOwner, appAvatar, appQuote)
+	appMsg.Author.Avatar = convert.AvatarDBToApp(dbAvatar)
+	tmplMsg, err := appMsg.Template(user, appOwner, appQuote)
 	if err != nil {
 		log.Printf("HandleGetMessage ERROR generating message template, %s\n", err)
 		return nil, fmt.Errorf("failed to generate message template: %s", err.Error())
@@ -154,7 +193,7 @@ func HandleMessageAdd(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get chat[%d] owner[%d] from db: %s", chatId, dbChat.OwnerId, err.Error())
 	}
-	appChat := convert.ChatDBToApp(dbChat, convert.UserDBToApp(dbOwner))
+	appChat := convert.ChatDBToApp(dbChat, dbOwner)
 	appMsg := convert.MessageDBToApp(dbMsg, author, appQuote)
 	err = sse.DistributeMsg(state, db, appChat, &appMsg, event.MessageAdd)
 	if err != nil {
@@ -194,10 +233,10 @@ func HandleMessageDelete(
 	var appMsgAuthor *a.User
 	for _, dbSpecialUser := range dbSpecialUsers {
 		if dbSpecialUser.Id == dbChat.OwnerId {
-			appChatOwner = convert.UserDBToApp(&dbSpecialUser)
+			appChatOwner = convert.UserDBToApp(&dbSpecialUser, nil)
 		}
 		if dbSpecialUser.Id == dbMsg.AuthorId {
-			appMsgAuthor = convert.UserDBToApp(&dbSpecialUser)
+			appMsgAuthor = convert.UserDBToApp(&dbSpecialUser, nil)
 		}
 	}
 	if appChatOwner == nil {
@@ -206,7 +245,14 @@ func HandleMessageDelete(
 	if appMsgAuthor == nil {
 		return nil, fmt.Errorf("message[%d] author[%d] not found", dbMsg.Id, dbMsg.AuthorId)
 	}
-	appChat := convert.ChatDBToApp(dbChat, appChatOwner)
+	appChat := convert.ChatDBToApp(dbChat, &d.User{
+		Id:     appChatOwner.Id,
+		Name:   appChatOwner.Name,
+		Email:  appChatOwner.Email,
+		Type:   string(appChatOwner.Type),
+		Status: string(appChatOwner.Status),
+		Salt:   appChatOwner.Salt,
+	})
 	if appChat == nil {
 		return nil, fmt.Errorf("cannot convert chat[%d] for app, owner[%v]", dbChat.Id, appChatOwner)
 	}

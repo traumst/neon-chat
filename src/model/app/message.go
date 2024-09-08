@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"log"
 	"neon-chat/src/model/event"
 	t "neon-chat/src/model/template"
 	"neon-chat/src/utils"
@@ -18,7 +19,6 @@ type Message struct {
 func (m *Message) Template(
 	viewer *User,
 	owner *User,
-	avatar *Avatar,
 	quote *Message,
 ) (t.MessageTemplate, error) {
 	if viewer == nil || viewer.Id == 0 {
@@ -35,7 +35,7 @@ func (m *Message) Template(
 	}
 	var quoteTmpl t.QuoteTemplate
 	if quote != nil {
-		tmpl, err := quote.Template(viewer, owner, avatar, nil)
+		tmpl, err := quote.Template(viewer, owner, nil)
 		if err != nil {
 			return t.MessageTemplate{}, fmt.Errorf("failed to template quote: %s", err)
 		}
@@ -50,6 +50,13 @@ func (m *Message) Template(
 			TextIntro:      tmpl.TextIntro,
 		}
 	}
+	var avatarTmpl t.AvatarTemplate
+	if m.Author.Avatar != nil {
+		avatarTmpl = m.Author.Avatar.Template(viewer)
+	}
+	if avatarTmpl.Title == "" {
+		log.Printf("WARN message avatar title is empty: %v", m.Author.Avatar)
+	}
 	return t.MessageTemplate{
 		IntermediateId:   utils.RandStringBytes(5),
 		ChatId:           m.ChatId,
@@ -59,7 +66,7 @@ func (m *Message) Template(
 		OwnerId:          owner.Id,
 		AuthorId:         m.Author.Id,
 		AuthorName:       m.Author.Name,
-		AuthorAvatar:     avatar.Template(viewer),
+		AuthorAvatar:     avatarTmpl,
 		Text:             m.Text,
 		TextIntro:        utils.Shorten(m.Text, 69),
 		MessageDropEvent: event.MessageDrop.FormatEventName(m.ChatId, m.Author.Id, m.Id),
