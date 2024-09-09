@@ -13,7 +13,6 @@ import (
 	a "neon-chat/src/model/app"
 	"neon-chat/src/model/event"
 	"neon-chat/src/utils"
-	h "neon-chat/src/utils/http"
 )
 
 func AddAvatar(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +39,7 @@ func AddAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	db := r.Context().Value(utils.ActiveUser).(*d.DBConn)
+	db := r.Context().Value(utils.DBConn).(*d.DBConn)
 	user := r.Context().Value(utils.ActiveUser).(*a.User)
 	avatar, err := handler.UpdateAvatar(db, user.Id, &file, info)
 	if err != nil {
@@ -65,7 +64,7 @@ func AddAvatar(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAvatar(w http.ResponseWriter, r *http.Request) {
-	reqId := h.GetReqId(r)
+	reqId := r.Context().Value(utils.ReqIdKey).(string)
 	log.Printf("[%s] GetAvatar\n", reqId)
 	if r.Method != "GET" {
 		log.Printf("[%s] GetAvatar TRACE auth does not allow %s\n", reqId, r.Method)

@@ -5,8 +5,8 @@ type CtxKey string
 const (
 	ReqIdKey           CtxKey = "X-Request-Id"
 	ActiveUser         CtxKey = "X-Active-User"
-	AppState           CtxKey = "X-Active-User"
-	DBConn             CtxKey = "X-Active-User"
+	AppState           CtxKey = "X-App-State"
+	DBConn             CtxKey = "X-DB-Conn"
 	SessionCookie             = "session"
 	LetterBytes               = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	Byte                      = 1

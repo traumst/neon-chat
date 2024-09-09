@@ -37,22 +37,22 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 func ContextMiddleware(state *state.State, db *db.DBConn) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Printf("SessionMiddleware TRACE IN")
-
-			user, err := handler.ReadSession(state, db, w, r)
-			if err != nil || user == nil {
-				log.Printf("ContextMiddleware ERROR reading user session, %s\n", err)
-				return
-			}
+			log.Printf("ContextMiddleware TRACE IN")
 
 			reqId := h.SetReqId(r, nil)
 			ctx := context.WithValue(r.Context(), utils.ReqIdKey, reqId)
-			ctx = context.WithValue(ctx, utils.ActiveUser, user)
 			ctx = context.WithValue(ctx, utils.AppState, state)
 			ctx = context.WithValue(ctx, utils.DBConn, db)
 
+			user, err := handler.ReadSession(state, db, w, r)
+			if err != nil || user == nil {
+				log.Printf("ContextMiddleware INFO user has no session, %s\n", err)
+			} else {
+				ctx = context.WithValue(ctx, utils.ActiveUser, user)
+			}
+
 			next.ServeHTTP(w, r.WithContext(ctx))
-			log.Printf("SessionMiddleware TRACE OUT")
+			log.Printf("ContextMiddleware TRACE OUT")
 		})
 	}
 }
