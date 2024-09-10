@@ -8,26 +8,23 @@ import (
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
 	"neon-chat/src/handler/state"
+	a "neon-chat/src/model/app"
 	t "neon-chat/src/model/template"
-	h "neon-chat/src/utils/http"
+	"neon-chat/src/utils"
 )
 
-func OpenSettings(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
-	reqId := h.GetReqId(r)
+func OpenSettings(w http.ResponseWriter, r *http.Request) {
+	reqId := r.Context().Value(utils.ReqIdKey).(string)
 	log.Printf("[%s] OpenSettings\n", reqId)
 	if r.Method != "GET" {
 		log.Printf("[%s] OpenSettings TRACE auth does not allow %s\n", reqId, r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	user, err := handler.ReadSession(state, db, w, r)
-	if err != nil || user == nil {
-		log.Printf("[%s] OpenSettings WARN user, %s\n", h.GetReqId(r), err)
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("User is not authorized"))
-		return
-	}
 
+	user := r.Context().Value(utils.ActiveUser).(*a.User)
+	state := r.Context().Value(utils.AppState).(*state.State)
+	db := r.Context().Value(utils.DBConn).(*d.DBConn)
 	openChatId := state.GetOpenChat(user.Id)
 	chatOwnerId := uint(0)
 	if openChatId > 0 {
@@ -63,23 +60,23 @@ func OpenSettings(state *state.State, db *d.DBConn, w http.ResponseWriter, r *ht
 	w.Write([]byte(html))
 }
 
-func CloseSettings(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
-	reqId := h.GetReqId(r)
+func CloseSettings(w http.ResponseWriter, r *http.Request) {
+	reqId := r.Context().Value(utils.ReqIdKey).(string)
 	log.Printf("[%s] CloseSettings\n", reqId)
 	if r.Method != "GET" {
 		log.Printf("[%s] CloseSettings TRACE auth does not allow %s\n", reqId, r.Method)
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
+		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("User is unauthorized"))
 		return
 	}
-	user, err := handler.ReadSession(state, db, w, r)
-	if err != nil || user == nil {
-		log.Printf("[%s] CloseSettings WARN user, %s\n", h.GetReqId(r), err)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte("User is unauthorized"))
-		return
-	}
+
+	user := r.Context().Value(utils.ActiveUser).(*a.User)
+	state := r.Context().Value(utils.AppState).(*state.State)
+	db := r.Context().Value(utils.DBConn).(*d.DBConn)
+
 	var html string
+	var err error
 	openChat := handler.TemplateOpenChat(state, db, user)
 	if openChat == nil {
 		html, err = handler.TemplateWelcome(user)
@@ -87,7 +84,7 @@ func CloseSettings(state *state.State, db *d.DBConn, w http.ResponseWriter, r *h
 		html, err = openChat.HTML()
 	}
 	if err != nil {
-		log.Printf("[%s] CloseSettings ERROR failed to template, chat[%t] %s\n", h.GetReqId(r), openChat == nil, err)
+		log.Printf("[%s] CloseSettings ERROR failed to template, chat[%t] %s\n", reqId, openChat == nil, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to template response"))
 		return

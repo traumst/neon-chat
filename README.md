@@ -114,10 +114,9 @@ Making changes to tailwind classes requires rerun to display properly.
 
 ### Next up
 
++ resource consumption log - cpu/ram/network
 + support ALLOW_UNSAFE_ACCESS for dev and test
 + log levels with [slog in GO 1.23](https://pkg.go.dev/log/slog#Debug)
-+ auth middleware
-+ introduce ctx
 - replace all `<form>` tags with with
 ```
 <div hx-ACTION="/endpoint"
@@ -167,7 +166,6 @@ Making changes to tailwind classes requires rerun to display properly.
 
 ### User Authentication
 - throttling api actions - 10x exec time
-- middleware auth
 - provide authType as form input
 - google auth
 - *2FA / MFA*

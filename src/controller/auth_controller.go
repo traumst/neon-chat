@@ -20,8 +20,9 @@ const (
 	EmailAuthType = a.AuthTypeEmail
 )
 
-func Login(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
-	log.Printf("[%s] Login TRACE IN\n", h.GetReqId(r))
+func Login(w http.ResponseWriter, r *http.Request) {
+	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	log.Printf("[%s] Login TRACE IN\n", reqId)
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("action not allowed"))
@@ -30,49 +31,51 @@ func Login(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Requ
 	loginUser := utils.SanitizeInput(r.FormValue("login-user"))
 	loginPass := utils.SanitizeInput(r.FormValue("login-pass"))
 	if len(loginUser) < 4 || len(loginPass) < 4 {
-		log.Printf("[%s] Login TRACE empty user[%s]", h.GetReqId(r), loginUser)
+		log.Printf("[%s] Login TRACE empty user[%s]", reqId, loginUser)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("bad login credentials"))
 		return
 	}
 	log.Printf("[%s] Login TRACE authentication check for user[%s] auth[%s]\n",
-		h.GetReqId(r), loginUser, EmailAuthType)
+		reqId, loginUser, EmailAuthType)
+	db := r.Context().Value(utils.DBConn).(*d.DBConn)
 	user, auth, err := handler.Authenticate(db, loginUser, loginPass, EmailAuthType)
 	if err != nil {
-		log.Printf("[%s] Login ERROR unauth user[%s], %s\n", h.GetReqId(r), loginUser, err.Error())
+		log.Printf("[%s] Login ERROR unauth user[%s], %s\n", reqId, loginUser, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("authentication failed"))
 		return
 	}
 	if user == nil {
-		log.Printf("[%s] Login ERROR unknown user[%s]\n", h.GetReqId(r), loginUser)
+		log.Printf("[%s] Login ERROR unknown user[%s]\n", reqId, loginUser)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("unknown user"))
 		return
 	} else if user.Status != a.UserStatusActive {
-		log.Printf("[%s] Login ERROR inactive user[%d] status[%s]\n", h.GetReqId(r), user.Id, user.Status)
+		log.Printf("[%s] Login ERROR inactive user[%d] status[%s]\n", reqId, user.Id, user.Status)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("inactive user"))
 		return
 	}
 	if auth == nil {
-		log.Printf("[%s] Login ERROR user password mismatched [%s]\n", h.GetReqId(r), loginUser)
+		log.Printf("[%s] Login ERROR user password mismatched [%s]\n", reqId, loginUser)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("user password mismatched"))
 		return
 	}
 	cookie := h.SetSessionCookie(w, user, auth)
 	log.Printf("[%s] Login TRACE user[%d] authenticated until [%s]\n",
-		h.GetReqId(r), user.Id, cookie.Expire.Format(time.RFC1123Z))
+		reqId, user.Id, cookie.Expire.Format(time.RFC1123Z))
 	http.Header.Add(w.Header(), "HX-Refresh", "true")
 	w.WriteHeader(http.StatusOK)
 }
 
-func Logout(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
-	log.Printf("[%s] Logout TRACE \n", h.GetReqId(r))
-	user, err := handler.ReadSession(state, db, w, r)
+func Logout(w http.ResponseWriter, r *http.Request) {
+	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	log.Printf("[%s] Logout TRACE \n", reqId)
+	user := r.Context().Value(utils.ActiveUser).(*a.User)
 	if user == nil {
-		log.Printf("[%s] Logout INFO user is not authorized, %s\n", h.GetReqId(r), err.Error())
+		log.Printf("[%s] Logout INFO user is unauthorized\n", reqId)
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
@@ -81,8 +84,9 @@ func Logout(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Req
 	w.WriteHeader(http.StatusOK)
 }
 
-func SignUp(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
-	log.Printf("[%s] SignUp TRACE IN\n", h.GetReqId(r))
+func SignUp(w http.ResponseWriter, r *http.Request) {
+	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	log.Printf("[%s] SignUp TRACE IN\n", reqId)
 	if r.Method != "PUT" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("This shouldn't happen"))
@@ -92,15 +96,16 @@ func SignUp(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Req
 	signupEmail := utils.SanitizeInput(r.FormValue("signup-email"))
 	signupPass := utils.SanitizeInput(r.FormValue("signup-pass"))
 	log.Printf("[%s] SignUp TRACE authentication check for user[%s] auth[%s]\n",
-		h.GetReqId(r), signupUser, EmailAuthType)
+		reqId, signupUser, EmailAuthType)
 	if len(signupUser) < 4 || len(signupEmail) < 4 || len(signupPass) < 4 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("bad signup credentials"))
 		return
 	}
+	db := r.Context().Value(utils.DBConn).(*d.DBConn)
 	user, auth, _ := handler.Authenticate(db, signupUser, signupPass, EmailAuthType)
 	if user != nil && user.Status == a.UserStatusActive && auth != nil {
-		log.Printf("[%s] SignUp TRACE signedIn instead of signUp user[%s]\n", h.GetReqId(r), signupUser)
+		log.Printf("[%s] SignUp TRACE signedIn instead of signUp user[%s]\n", reqId, signupUser)
 		h.SetSessionCookie(w, user, auth)
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		w.WriteHeader(http.StatusOK)
@@ -108,18 +113,18 @@ func SignUp(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Req
 	}
 	if user != nil {
 		log.Printf("[%s] SignUp ERROR there is already name[%s] taken by user[%d] in status[%s]\n",
-			h.GetReqId(r), signupUser, user.Id, user.Status)
+			reqId, signupUser, user.Id, user.Status)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("username is already taken"))
 		return
 	}
 	if !handler.IsEmailValid(signupEmail) {
-		log.Printf("[%s] SignUp ERROR invalid email[%s]\n", h.GetReqId(r), signupEmail)
+		log.Printf("[%s] SignUp ERROR invalid email[%s]\n", reqId, signupEmail)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid email"))
 		return
 	}
-	log.Printf("[%s] SignUp TRACE register new user[%s]\n", h.GetReqId(r), signupUser)
+	log.Printf("[%s] SignUp TRACE register new user[%s]\n", reqId, signupUser)
 	salt := utils.GenerateSalt(signupUser, string(LocalUserType))
 	user = &a.User{
 		Id:     0,
@@ -131,12 +136,12 @@ func SignUp(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Req
 	}
 	user, auth, err := handler.Register(db, user, signupPass, EmailAuthType)
 	if err != nil {
-		log.Printf("[%s] SignUp ERROR on register user[%s][%s], %s\n", h.GetReqId(r), signupUser, signupEmail, err.Error())
+		log.Printf("[%s] SignUp ERROR on register user[%s][%s], %s\n", reqId, signupUser, signupEmail, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", LocalUserType, signupUser)))
 		return
 	} else if user == nil || auth == nil {
-		log.Printf("[%s] SignUp ERROR to register user[%v]\n", h.GetReqId(r), user)
+		log.Printf("[%s] SignUp ERROR to register user[%v]\n", reqId, user)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", LocalUserType, signupUser)))
 		return
@@ -147,11 +152,12 @@ func SignUp(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Req
 		// 	handler.DeleteUser()
 		// }
 	}()
-	log.Printf("[%s] SignUp TRACE issuing reservation to [%s]\n", h.GetReqId(r), user.Email)
+	log.Printf("[%s] SignUp TRACE issuing reservation to [%s]\n", reqId, user.Email)
+	state := r.Context().Value(utils.AppState).(*state.State)
 	sentEmail, err := handler.ReserveUserName(state, db, user)
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR failed to issue reservation token to email[%s], %s\n",
-			h.GetReqId(r), user.Email, err.Error())
+			reqId, user.Email, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to issue reservation token"))
 		return
@@ -164,18 +170,19 @@ func SignUp(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Req
 	}()
 	html, err := sentEmail.HTML()
 	if err != nil {
-		log.Printf("[%s] SignUp ERROR templating result html[%v], %s\n", h.GetReqId(r), sentEmail, err.Error())
+		log.Printf("[%s] SignUp ERROR templating result html[%v], %s\n", reqId, sentEmail, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to template response"))
 		return
 	}
-	log.Printf("[%s] SignUp TRACE OUT\n", h.GetReqId(r))
+	log.Printf("[%s] SignUp TRACE OUT\n", reqId)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }
 
-func ConfirmEmail(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
-	log.Printf("[%s] ConfirmEmail TRACE IN\n", h.GetReqId(r))
+func ConfirmEmail(w http.ResponseWriter, r *http.Request) {
+	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	log.Printf("[%s] ConfirmEmail TRACE IN\n", reqId)
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("This shouldn't happen"))
@@ -183,30 +190,31 @@ func ConfirmEmail(state *state.State, db *d.DBConn, w http.ResponseWriter, r *ht
 	}
 	signupToken := r.URL.Query().Get("token")
 	if signupToken == "" {
-		log.Printf("[%s] ConfirmEmail ERROR missing token\n", h.GetReqId(r))
+		log.Printf("[%s] ConfirmEmail ERROR missing token\n", reqId)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("missing token"))
 		return
 	}
 
+	db := r.Context().Value(utils.DBConn).(*d.DBConn)
 	reserve, err := db.GetReservation(signupToken)
 	if err != nil {
-		log.Printf("[%s] ConfirmEmail ERROR error reading reservation, %s\n", h.GetReqId(r), err.Error())
+		log.Printf("[%s] ConfirmEmail ERROR error reading reservation, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("missing token"))
 		return
 	} else if reserve == nil {
-		log.Printf("[%s] ConfirmEmail WARN reservation not found\n", h.GetReqId(r))
+		log.Printf("[%s] ConfirmEmail WARN reservation not found\n", reqId)
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("not found"))
 		return
 	} else if reserve.Expire.Before(time.Now()) {
-		log.Printf("[%s] ConfirmEmail WARN reservation[%d] expired\n", h.GetReqId(r), reserve.Id)
+		log.Printf("[%s] ConfirmEmail WARN reservation[%d] expired\n", reqId, reserve.Id)
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("token expired"))
 		return
 	} else if reserve.UserId <= 0 {
-		log.Printf("[%s] ConfirmEmail WARN reservation[%d] corrupted, userId[%d]\n", h.GetReqId(r), reserve.Id, reserve.UserId)
+		log.Printf("[%s] ConfirmEmail WARN reservation[%d] corrupted, userId[%d]\n", reqId, reserve.Id, reserve.UserId)
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("corrupted token"))
 		return
@@ -214,14 +222,14 @@ func ConfirmEmail(state *state.State, db *d.DBConn, w http.ResponseWriter, r *ht
 
 	dbUser, err := db.GetUser(reserve.UserId)
 	if err != nil {
-		log.Printf("[%s] ConfirmEmail ERROR retrieving user[%d], %s\n", h.GetReqId(r), reserve.UserId, err.Error())
+		log.Printf("[%s] ConfirmEmail ERROR retrieving user[%d], %s\n", reqId, reserve.UserId, err.Error())
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("corrupted token"))
 		return
 	}
 	user := convert.UserDBToApp(dbUser, nil)
 	if user.Status != a.UserStatusPending {
-		log.Printf("[%s] ConfirmEmail ERROR user[%d] status[%s] is not pending\n", h.GetReqId(r), user.Id, user.Status)
+		log.Printf("[%s] ConfirmEmail ERROR user[%d] status[%s] is not pending\n", reqId, user.Id, user.Status)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid user status"))
 		return
@@ -229,7 +237,7 @@ func ConfirmEmail(state *state.State, db *d.DBConn, w http.ResponseWriter, r *ht
 
 	err = db.UpdateUserStatus(user.Id, string(a.UserStatusActive))
 	if err != nil {
-		log.Printf("[%s] ConfirmEmail ERROR failed to update user[%d] status\n", h.GetReqId(r), user.Id)
+		log.Printf("[%s] ConfirmEmail ERROR failed to update user[%d] status\n", reqId, user.Id)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to update user status"))
 		return
