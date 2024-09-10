@@ -12,33 +12,34 @@ import (
 )
 
 func SetupControllers(state *state.State, db *db.DBConn) {
-	ctxMiddleware := controller.ContextMiddleware(state, db)
+	// auth by nature prevents anything except recovery
+	handleAuth([]controller.Middleware{controller.RecoveryMiddleware})
 
-	//
-	minMiddleware := []controller.Middleware{
-		controller.ContextMiddleware(state, db),
-	}
-	handleStaticFiles(minMiddleware)
-
-	// loaded in reverse order - lifo
-	allMiddleware := []controller.Middleware{
-		ctxMiddleware,
-		controller.LoggerMiddleware,
+	// middleware is loaded in reverse order - lifo
+	requiredMiddlewares := []controller.Middleware{
+		controller.StatefulWriterMiddleware,
+		controller.StampMiddleware,
+		controller.AuthMiddleware(state, db),
 		controller.RecoveryMiddleware,
 	}
+	handleStaticFiles(requiredMiddlewares)
 
-	handleAvatar(allMiddleware)
-	handleAuth(allMiddleware)
-	handleUser(allMiddleware)
-	handleChat(allMiddleware)
-	handleMsgs(allMiddleware)
-	handleSettings(allMiddleware)
+	// middleware is loaded in reverse order - lifo
+	extendedMiddleware := append([]controller.Middleware{
+		controller.DBConnMiddleware(db),
+		controller.AppStateMiddleware(state),
+	}, requiredMiddlewares...)
+	handleAvatar(extendedMiddleware)
+	handleUser(extendedMiddleware)
+	handleChat(extendedMiddleware)
+	handleMsgs(extendedMiddleware)
+	handleSettings(extendedMiddleware)
 
 	// live updates
 	http.Handle("/poll", controller.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.PollUpdates(state, db, w, r)
-		}), allMiddleware))
+		}), extendedMiddleware))
 
 	// home, default
 	http.Handle("/", controller.ChainMiddlewares(
@@ -50,7 +51,7 @@ func SetupControllers(state *state.State, db *db.DBConn) {
 				return
 			}
 			controller.RenderHome(state, db, w, r, user)
-		}), allMiddleware))
+		}), extendedMiddleware))
 }
 
 func handleStaticFiles(middleware []controller.Middleware) {

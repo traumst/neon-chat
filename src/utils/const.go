@@ -7,8 +7,8 @@ const (
 	ActiveUser         CtxKey = "X-Active-User"
 	AppState           CtxKey = "X-App-State"
 	DBConn             CtxKey = "X-DB-Conn"
-	SessionCookie             = "session"
-	LetterBytes               = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	SessionCookie      string = "session"
+	LetterBytes        string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	Byte                      = 1
 	KB                        = 1024 * Byte
 	MB                        = 1024 * KB
