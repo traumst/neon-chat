@@ -29,7 +29,7 @@ func SetupControllers(state *state.State, db *db.DBConn) {
 		controller.AuthMiddleware(state, db),
 		controller.StatefulWriterMiddleware,
 		controller.StampMiddleware,
-		controller.RecoveryMiddleware,
+		//controller.RecoveryMiddleware,
 	}
 	handleAvatar(maxMiddleware)
 	handleUser(maxMiddleware)
