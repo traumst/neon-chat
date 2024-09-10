@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"log"
+	"fmt"
 	"neon-chat/src/convert"
 	d "neon-chat/src/db"
 	"neon-chat/src/handler/shared"
@@ -9,15 +9,9 @@ import (
 	ti "neon-chat/src/interface"
 	a "neon-chat/src/model/app"
 	t "neon-chat/src/model/template"
-	"neon-chat/src/utils"
-	"net/http"
 )
 
-func TemplateHome(r *http.Request) (string, error) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
-	state := r.Context().Value(utils.AppState).(*state.State)
-	db := r.Context().Value(utils.DBConn).(*d.DBConn)
-	user := r.Context().Value(utils.ActiveUser).(*a.User)
+func TemplateHome(state *state.State, db *d.DBConn, user *a.User) (string, error) {
 	var avatarTmpl t.AvatarTemplate
 	if dbAvatar, err := db.GetAvatar(user.Id); dbAvatar != nil && err == nil {
 		avatar := convert.AvatarDBToApp(dbAvatar)
@@ -26,9 +20,7 @@ func TemplateHome(r *http.Request) (string, error) {
 	openChatTemplate := TemplateOpenChat(state, db, user)
 	chats, err := shared.GetChats(db, user.Id)
 	if err != nil {
-		log.Printf("[%s] templateHome ERROR, failed getting chats for user[%d], %s\n",
-			reqId, user.Id, err.Error())
-		return "", err
+		return "", fmt.Errorf("failed getting chats for user, %s", err)
 	}
 	var chatTemplates []ti.Renderable
 	for _, chat := range chats {
