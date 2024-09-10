@@ -18,6 +18,12 @@ type DBConn struct {
 	isInit bool
 }
 
+// type DBTx struct {
+// 	mu   sync.Mutex
+// 	conn *sqlx.Tx
+// 	err  error
+// }
+
 const migraitonsFolder string = "./src/db/migrations"
 
 func ConnectDB(dbPath string) (*DBConn, error) {
@@ -43,6 +49,27 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 	err = db.init()
 	return &db, err
 }
+
+// func (db *DBConn) OpenTx() (*DBTx, error) {
+// 	db.mu.Lock()
+// 	defer db.mu.Unlock()
+
+// 	tx, err := db.conn.Beginx()
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to begin transaction, %s", err)
+// 	}
+// 	return &DBTx{conn: tx}, nil
+// }
+
+// func (db *DBConn) CloseTx(tx *DBTx) error {
+// 	tx.mu.Lock()
+// 	defer tx.mu.Unlock()
+
+// 	if err := tx.conn.Rollback(); err != nil {
+// 		return fmt.Errorf("failed to rollback transaction, %s", err)
+// 	}
+// 	return nil
+// }
 
 func (db *DBConn) ConnClose() {
 	db.mu.Lock()

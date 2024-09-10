@@ -7,6 +7,7 @@ const (
 	ActiveUser         CtxKey = "X-Active-User"
 	AppState           CtxKey = "X-App-State"
 	DBConn             CtxKey = "X-DB-Conn"
+	DBTx               CtxKey = "X-DB-Transaction"
 	SessionCookie      string = "session"
 	LetterBytes        string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	Byte                      = 1
