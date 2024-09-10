@@ -4,19 +4,45 @@ import (
 	"log"
 	"net/http"
 
-	"neon-chat/src/db"
+	d "neon-chat/src/db"
 	"neon-chat/src/handler"
 	"neon-chat/src/handler/state"
 	a "neon-chat/src/model/app"
 	t "neon-chat/src/model/template"
-	h "neon-chat/src/utils/http"
+	"neon-chat/src/utils"
 )
 
-func RenderLogin(
-	w http.ResponseWriter,
-	r *http.Request,
-) {
-	log.Printf("[%s] RenderLogin TRACE IN", h.GetReqId(r))
+func NavigateHome(w http.ResponseWriter, r *http.Request) {
+	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	log.Printf("TRACE [%s] NavigateHome\n", reqId)
+	user := r.Context().Value(utils.ActiveUser)
+	if user != nil {
+		RenderHome(w, r)
+	} else {
+		RenderLogin(w, r)
+	}
+}
+
+func RenderHome(w http.ResponseWriter, r *http.Request) {
+	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	log.Printf("TRACE [%s] RenderHome\n", reqId)
+	ctx := r.Context()
+	html, err := handler.TemplateHome(
+		ctx.Value(utils.AppState).(*state.State),
+		ctx.Value(utils.DBConn).(*d.DBConn),
+		ctx.Value(utils.ActiveUser).(*a.User),
+	)
+	if err != nil {
+		log.Printf("[%s] RenderHome ERROR failed to template home, %s\n", reqId, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to render home page"))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(html))
+}
+
+func RenderLogin(w http.ResponseWriter, r *http.Request) {
 	login := t.AuthTemplate{}
 	home := t.HomeTemplate{
 		Chats:         nil,
@@ -26,41 +52,12 @@ func RenderLogin(
 		LoginTemplate: login,
 		Avatar:        nil,
 	}
-	log.Printf("[%s] RenderLogin TRACE templating", h.GetReqId(r))
 	html, err := home.HTML()
 	if err != nil {
-		log.Printf("[%s] RenderLogin ERROR login %s\n", h.GetReqId(r), err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to render home login"))
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(html))
-}
-
-func RenderHome(
-	state *state.State,
-	db *db.DBConn,
-	w http.ResponseWriter,
-	r *http.Request,
-	user *a.User,
-) {
-	if state == nil {
-		panic("app is nil")
-	} else if db == nil {
-		panic("db is nil")
-	} else if user == nil {
-		panic("user is nil")
-	}
-	log.Printf("[%s] RenderHome TRACE IN", h.GetReqId(r))
-	html, err := handler.TemplateHome(state, db, r, user)
-	if err != nil {
-		log.Printf("[%s] RenderHome ERROR failed to template home, %s\n", h.GetReqId(r), err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Failed to render home page"))
-		return
-	}
-	log.Printf("[%s] RenderHome TRACE, user[%d] gets content\n", h.GetReqId(r), user.Id)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }

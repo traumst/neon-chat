@@ -11,14 +11,14 @@ import (
 	"neon-chat/src/handler"
 	"neon-chat/src/handler/shared"
 	"neon-chat/src/handler/state"
+	a "neon-chat/src/model/app"
 	"neon-chat/src/utils"
-	h "neon-chat/src/utils/http"
 )
 
-func Welcome(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
-	reqId := h.GetReqId(r)
+func Welcome(w http.ResponseWriter, r *http.Request) {
+	reqId := r.Context().Value(utils.ReqIdKey).(string)
 	log.Printf("[%s] Welcome TRACE\n", reqId)
-	user, _ := handler.ReadSession(state, db, w, r)
+	user := r.Context().Value(utils.ActiveUser).(*a.User)
 	html, err := handler.TemplateWelcome(user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -29,19 +29,13 @@ func Welcome(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Re
 	w.Write([]byte(html))
 }
 
-func OpenChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
-	reqId := h.GetReqId(r)
+func OpenChat(w http.ResponseWriter, r *http.Request) {
+	reqId := r.Context().Value(utils.ReqIdKey).(string)
 	log.Printf("[%s] OpenChat TRACE\n", reqId)
 	if r.Method != "GET" {
 		log.Printf("[%s] OpenChat TRACE auth does not allow %s\n", reqId, r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("Only GET method is allowed"))
-		return
-	}
-	user, err := handler.ReadSession(state, db, w, r)
-	if err != nil || user == nil {
-		http.Header.Add(w.Header(), "HX-Refresh", "true")
-		log.Printf("[%s] OpenChat INFO user is not authorized, %s\n", h.GetReqId(r), err)
 		return
 	}
 
@@ -50,7 +44,7 @@ func OpenChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 	chatId, err := strconv.Atoi(path[2])
 	if err != nil {
 		log.Printf("[%s] OpenChat INFO invalid chat-id, %s\n", reqId, err)
-		Welcome(state, db, w, r)
+		Welcome(w, r)
 		return
 	}
 	if chatId < 0 {
@@ -60,7 +54,9 @@ func OpenChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 		return
 	}
 
-	log.Printf("[%s] OpenChat TRACE chat[%d]\n", reqId, chatId)
+	user := r.Context().Value(utils.ActiveUser).(*a.User)
+	state := r.Context().Value(utils.AppState).(*state.State)
+	db := r.Context().Value(utils.DBConn).(*d.DBConn)
 	html, err := handler.HandleChatOpen(state, db, user, uint(chatId))
 	if err != nil {
 		log.Printf("[%s] OpenChat ERROR cannot open chat[%d], %s\n", reqId, chatId, err)
@@ -74,20 +70,13 @@ func OpenChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.R
 	w.Write([]byte(html))
 }
 
-func AddChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
-	reqId := h.GetReqId(r)
+func AddChat(w http.ResponseWriter, r *http.Request) {
+	reqId := r.Context().Value(utils.ReqIdKey).(string)
 	log.Printf("[%s] AddChat TRACE\n", reqId)
 	if r.Method != "POST" {
 		log.Printf("[%s] AddChat TRACE auth does not allow %s\n", reqId, r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("action not allowed"))
-		return
-	}
-	user, err := handler.ReadSession(state, db, w, r)
-	if user == nil {
-		log.Printf("[%s] AddChat INFO user is not authorized, %s\n", h.GetReqId(r), err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("user is not authorized"))
 		return
 	}
 
@@ -101,7 +90,9 @@ func AddChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	log.Printf("[%s] AddChat TRACE adding user[%d] chat[%s]\n", reqId, user.Id, chatName)
+	user := r.Context().Value(utils.ActiveUser).(*a.User)
+	state := r.Context().Value(utils.AppState).(*state.State)
+	db := r.Context().Value(utils.DBConn).(*d.DBConn)
 	html, err := handler.HandleChatAdd(state, db, user, chatName)
 	if err != nil {
 		log.Printf("sendChat ERROR cannot template chat[%s], %s", chatName, err)
@@ -115,17 +106,11 @@ func AddChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Re
 	w.Write([]byte(html))
 }
 
-func CloseChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
-	reqId := h.GetReqId(r)
+func CloseChat(w http.ResponseWriter, r *http.Request) {
+	reqId := r.Context().Value(utils.ReqIdKey).(string)
 	log.Printf("[%s] CloseChat\n", reqId)
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-	user, err := handler.ReadSession(state, db, w, r)
-	if err != nil || user == nil {
-		log.Printf("[%s] CloseChat WARN user, %s\n", h.GetReqId(r), err)
-		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 
@@ -136,6 +121,9 @@ func CloseChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.
 		return
 	}
 
+	user := r.Context().Value(utils.ActiveUser).(*a.User)
+	state := r.Context().Value(utils.AppState).(*state.State)
+	db := r.Context().Value(utils.DBConn).(*d.DBConn)
 	html, err := handler.HandleChatClose(state, db, user, uint(chatId))
 	if err != nil {
 		log.Printf("[%s] CloseChat ERROR cannot template welcome page, %s\n", reqId, err)
@@ -148,17 +136,11 @@ func CloseChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.
 	w.Write([]byte(html))
 }
 
-func DeleteChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
-	reqId := h.GetReqId(r)
+func DeleteChat(w http.ResponseWriter, r *http.Request) {
+	reqId := r.Context().Value(utils.ReqIdKey).(string)
 	log.Printf("[%s] DeleteChat TRACE\n", reqId)
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-	user, err := handler.ReadSession(state, db, w, r)
-	if err != nil || user == nil {
-		log.Printf("[%s] DeleteChat WARN user, %s\n", h.GetReqId(r), err)
-		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		return
 	}
 
@@ -168,7 +150,9 @@ func DeleteChat(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
+	user := r.Context().Value(utils.ActiveUser).(*a.User)
+	state := r.Context().Value(utils.AppState).(*state.State)
+	db := r.Context().Value(utils.DBConn).(*d.DBConn)
 	err = handler.HandleChatDelete(state, db, user, chatId)
 	if err != nil {
 		log.Printf("[%s] DeleteChat WARN user[%d] failed to delete chat[%d], %s\n", reqId, user.Id, chatId, err.Error())

@@ -13,12 +13,12 @@ func SetReqId(r *http.Request, s *string) string {
 	} else {
 		reqId = *s
 	}
-	r.Header.Set("X-Request-Id", reqId)
+	r.Header.Set(string(utils.ReqIdKey), reqId)
 	return reqId
 }
 
 func GetReqId(r *http.Request) string {
-	return r.Header.Get("X-Request-Id")
+	return r.Header.Get(string(utils.ReqIdKey))
 }
 
 func SetSseHeaders(w *http.ResponseWriter) {
