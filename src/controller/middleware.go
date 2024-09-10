@@ -37,17 +37,30 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 func AuthMiddleware(state *state.State, db *db.DBConn) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			user, err := handler.ReadSession(state, db, w, r)
-			if err != nil || user == nil {
-				log.Printf("AuthMiddleware INFO user in unauthorized, %s\n", err)
-				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte("Unauthorized"))
-				return
+			user, _ := handler.ReadSession(state, db, w, r)
+			ctx := r.Context()
+			if user != nil {
+				ctx = context.WithValue(ctx, utils.ActiveUser, user)
 			}
-			ctx := context.WithValue(r.Context(), utils.ActiveUser, user)
+
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+func AuthRequiredMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		if ctx.Value(utils.ActiveUser) == nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			http.Header.Add(w.Header(), "HX-Refresh", "true")
+			w.Write([]byte("unauthorized"))
+			return
+		}
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+
 }
 
 func StampMiddleware(next http.Handler) http.Handler {
@@ -55,7 +68,7 @@ func StampMiddleware(next http.Handler) http.Handler {
 		reqId := h.SetReqId(r, nil)
 		log.Printf("[%s] StampMiddleware BEGIN", reqId)
 
-		ctx := context.WithValue(r.Context(), utils.ReqIdKey, h.GetReqId(r))
+		ctx := context.WithValue(r.Context(), utils.ReqIdKey, reqId)
 		next.ServeHTTP(w, r.WithContext(ctx))
 		log.Printf("[%s] StampMiddleware END", reqId)
 	})
@@ -63,18 +76,28 @@ func StampMiddleware(next http.Handler) http.Handler {
 
 func StatefulWriterMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("[%s] LoggerMiddleware BEGIN %s %s", h.GetReqId(r), r.Method, r.RequestURI)
+		reqId := r.Context().Value(utils.ReqIdKey).(string)
+		log.Printf("[%s] LoggerMiddleware BEGIN %s %s", reqId, r.Method, r.RequestURI)
 		startTime := time.Now()
 		rec := h.StatefulWriter{ResponseWriter: w}
 
 		next.ServeHTTP(&rec, r)
 		log.Printf("[%s] LoggerMiddleware END %s %s status_code:[%d] in %v",
-			h.GetReqId(r),
+			reqId,
 			r.Method,
 			r.RequestURI,
 			rec.Status(),
 			time.Since(startTime))
 	})
+}
+
+func AppStateMiddleware(state *state.State) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), utils.AppState, state)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }
 
 func DBConnMiddleware(db *db.DBConn) func(next http.Handler) http.Handler {
@@ -86,11 +109,11 @@ func DBConnMiddleware(db *db.DBConn) func(next http.Handler) http.Handler {
 	}
 }
 
-func AppStateMiddleware(state *state.State) func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), utils.AppState, state)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
-}
+// func TransactionMiddleware(next http.Handler) http.Handler {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		db := r.Context().Value(utils.DBConn).(*db.DBConn)
+// 		dbTx, err := db.AddAuth()
+// 		ctx := context.WithValue(r.Context(), utils.DBConn, dbTx)
+// 		next.ServeHTTP(w, r.WithContext(ctx))
+// 	})
+// }

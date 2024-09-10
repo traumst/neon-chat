@@ -3,10 +3,9 @@ package controller
 import (
 	"fmt"
 	"log"
+	"neon-chat/src/utils"
 	"net/http"
 	"strings"
-
-	h "neon-chat/src/utils/http"
 )
 
 func FavIcon(w http.ResponseWriter, r *http.Request) {
@@ -14,7 +13,8 @@ func FavIcon(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServeFile(w http.ResponseWriter, r *http.Request) {
-	log.Printf("[%s] ServeFile TRACE requested [%s]\n", h.GetReqId(r), r.URL.Path)
+	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	log.Printf("[%s] ServeFile TRACE requested [%s]\n", reqId, r.URL.Path)
 	pathParts := strings.Split(r.URL.Path, "/")
 	fileName := pathParts[len(pathParts)-1]
 	ext := strings.Split(fileName, ".")
@@ -36,12 +36,12 @@ func ServeFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if filePath == "" {
-		log.Printf("[%s] ServeFile ERROR serving [%s]\n", h.GetReqId(r), r.URL.Path)
+		log.Printf("[%s] ServeFile ERROR serving [%s]\n", reqId, r.URL.Path)
 		w.Write([]byte("invalid path"))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	log.Printf("[%s] ServeFile TRACE served [%s]\n", h.GetReqId(r), filePath)
+	log.Printf("[%s] ServeFile TRACE served [%s]\n", reqId, filePath)
 	http.ServeFile(w, r, filePath)
 }

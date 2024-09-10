@@ -1,57 +1,53 @@
 package src
 
 import (
-	"log"
 	"net/http"
 
 	"neon-chat/src/controller"
 	"neon-chat/src/db"
-	"neon-chat/src/handler"
 	"neon-chat/src/handler/state"
-	h "neon-chat/src/utils/http"
 )
 
 func SetupControllers(state *state.State, db *db.DBConn) {
-	// auth by nature prevents anything except recovery
-	handleAuth([]controller.Middleware{controller.RecoveryMiddleware})
-
-	// middleware is loaded in reverse order - lifo
-	requiredMiddlewares := []controller.Middleware{
-		controller.StatefulWriterMiddleware,
-		controller.StampMiddleware,
-		controller.AuthMiddleware(state, db),
-		controller.RecoveryMiddleware,
-	}
-	handleStaticFiles(requiredMiddlewares)
-
-	// middleware is loaded in reverse order - lifo
-	extendedMiddleware := append([]controller.Middleware{
+	// middlewares are loaded in reverse order - lifo
+	minMiddlewareSet := []controller.Middleware{
 		controller.DBConnMiddleware(db),
 		controller.AppStateMiddleware(state),
-	}, requiredMiddlewares...)
-	handleAvatar(extendedMiddleware)
-	handleUser(extendedMiddleware)
-	handleChat(extendedMiddleware)
-	handleMsgs(extendedMiddleware)
-	handleSettings(extendedMiddleware)
+		controller.AuthMiddleware(state, db),
+		controller.StatefulWriterMiddleware,
+		controller.StampMiddleware,
+		//controller.RecoveryMiddleware,
+	}
+	handleStaticFiles(minMiddlewareSet)
+	handleAuth(minMiddlewareSet)
+
+	// middlewares are loaded in reverse order - lifo
+	maxMiddleware := []controller.Middleware{
+		controller.AuthRequiredMiddleware,
+		controller.DBConnMiddleware(db),
+		controller.AppStateMiddleware(state),
+		controller.AuthMiddleware(state, db),
+		controller.StatefulWriterMiddleware,
+		controller.StampMiddleware,
+		controller.RecoveryMiddleware,
+	}
+	handleAvatar(maxMiddleware)
+	handleUser(maxMiddleware)
+	handleChat(maxMiddleware)
+	handleMsgs(maxMiddleware)
+	handleSettings(maxMiddleware)
 
 	// live updates
 	http.Handle("/poll", controller.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.PollUpdates(state, db, w, r)
-		}), extendedMiddleware))
+		}), maxMiddleware))
 
 	// home, default
 	http.Handle("/", controller.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			user, err := handler.ReadSession(state, db, w, r)
-			if err != nil || user == nil {
-				log.Printf("[%s] home INFO session, %s\n", h.GetReqId(r), err)
-				controller.RenderLogin(w, r)
-				return
-			}
-			controller.RenderHome(state, db, w, r, user)
-		}), extendedMiddleware))
+			controller.NavigateHome(w, r)
+		}), minMiddlewareSet))
 }
 
 func handleStaticFiles(middleware []controller.Middleware) {

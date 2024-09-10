@@ -16,9 +16,10 @@ import (
 )
 
 func ReadSession(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) (*a.User, error) {
-	log.Printf("[%s] ReadSession TRACE IN\n", h.GetReqId(r))
+	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	log.Printf("[%s] ReadSession TRACE IN\n", reqId)
 	cookie, err := h.GetSessionCookie(r)
-	log.Printf("[%s] ReadSession TRACE session cookie[%v], err[%s]\n", h.GetReqId(r), cookie, err)
+	log.Printf("[%s] ReadSession TRACE session cookie[%v], err[%s]\n", reqId, cookie, err)
 	if err != nil {
 		h.ClearSessionCookie(w, 0)
 		return nil, fmt.Errorf("failed to read session cookie, %s", err)
@@ -35,13 +36,13 @@ func ReadSession(state *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 				cookie.UserId, cookie, err1.Error())
 		} else {
 			log.Printf("[%s] ReadSession TRACE session user[%d][%s], err[%s]\n",
-				h.GetReqId(r), dbUser.Id, dbUser.Name, err1)
+				reqId, dbUser.Id, dbUser.Name, err1)
 			dbAvatar, _ := db.GetAvatar(dbUser.Id)
 			appUser = convert.UserDBToApp(dbUser, dbAvatar)
 		}
 	}()
 	wg.Wait()
-	log.Printf("[%s] ReadSession TRACE OUT, success:%t\n", h.GetReqId(r), err == nil)
+	log.Printf("[%s] ReadSession TRACE OUT, success:%t\n", reqId, err == nil)
 	return appUser, err
 }
 

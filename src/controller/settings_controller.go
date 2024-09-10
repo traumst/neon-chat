@@ -65,7 +65,8 @@ func CloseSettings(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] CloseSettings\n", reqId)
 	if r.Method != "GET" {
 		log.Printf("[%s] CloseSettings TRACE auth does not allow %s\n", reqId, r.Method)
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		http.Header.Add(w.Header(), "HX-Refresh", "true")
+		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("User is unauthorized"))
 		return
 	}
