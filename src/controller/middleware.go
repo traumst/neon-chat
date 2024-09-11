@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -26,7 +27,7 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				log.Printf("Recovered from panic: %v", err)
+				log.Printf("FATAL RecoveryMiddleware recovered from panic: %v", err)
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			}
 		}()
@@ -66,23 +67,23 @@ func AuthRequiredMiddleware(next http.Handler) http.Handler {
 func StampMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqId := h.SetReqId(r, nil)
-		log.Printf("[%s] StampMiddleware BEGIN", reqId)
+		log.Printf("TRACE [%s] StampMiddleware BEGIN", reqId)
 
 		ctx := context.WithValue(r.Context(), utils.ReqIdKey, reqId)
 		next.ServeHTTP(w, r.WithContext(ctx))
-		log.Printf("[%s] StampMiddleware END", reqId)
+		log.Printf("TRACE [%s] StampMiddleware END", reqId)
 	})
 }
 
 func StatefulWriterMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqId := r.Context().Value(utils.ReqIdKey).(string)
-		log.Printf("[%s] LoggerMiddleware BEGIN %s %s", reqId, r.Method, r.RequestURI)
+		log.Printf("TRACE [%s] StatefulWriterMiddleware BEGIN %s %s", reqId, r.Method, r.RequestURI)
 		startTime := time.Now()
 		rec := h.StatefulWriter{ResponseWriter: w}
 
 		next.ServeHTTP(&rec, r)
-		log.Printf("[%s] LoggerMiddleware END %s %s status_code:[%d] in %v",
+		log.Printf("TRACE [%s] StatefulWriterMiddleware END %s %s status_code:[%d] in %v",
 			reqId,
 			r.Method,
 			r.RequestURI,
@@ -109,11 +110,29 @@ func DBConnMiddleware(db *db.DBConn) func(next http.Handler) http.Handler {
 	}
 }
 
-// func TransactionMiddleware(next http.Handler) http.Handler {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		db := r.Context().Value(utils.DBConn).(*db.DBConn)
-// 		dbTx, err := db.AddAuth()
-// 		ctx := context.WithValue(r.Context(), utils.DBConn, dbTx)
-// 		next.ServeHTTP(w, r.WithContext(ctx))
-// 	})
-// }
+func TransactionMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		reqId := ctx.Value(utils.ReqIdKey).(string)
+		db := ctx.Value(utils.DBConn).(*db.DBConn)
+		dbTx, err := db.OpenTx(reqId)
+		if err != nil {
+			log.Printf("FATAL [%s] TransactionMiddleware failed to open transaction: %s", reqId, err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		defer func() {
+			if p := recover(); p != nil {
+				log.Printf("FATAL [%s] TransactionMiddleware Failed to open transaction: %v", reqId, p)
+				dbTx.CloseTx(fmt.Errorf("panic: %v", p))
+				panic(p) // re-throw the panic after rollback
+			} else if code := w.(*h.StatefulWriter).Status(); code >= http.StatusBadRequest {
+				dbTx.CloseTx(fmt.Errorf("error status code %d", code))
+			} else {
+				dbTx.CloseTx(nil)
+			}
+		}()
+		ctx = context.WithValue(ctx, utils.DBTx, dbTx)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}

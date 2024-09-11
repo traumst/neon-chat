@@ -24,6 +24,7 @@ func SetupControllers(state *state.State, db *db.DBConn) {
 	// middlewares are loaded in reverse order - lifo
 	maxMiddleware := []controller.Middleware{
 		controller.AuthRequiredMiddleware,
+		controller.TransactionMiddleware,
 		controller.DBConnMiddleware(db),
 		controller.AppStateMiddleware(state),
 		controller.AuthMiddleware(state, db),
