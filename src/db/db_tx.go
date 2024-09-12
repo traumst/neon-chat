@@ -5,22 +5,24 @@ import (
 	"log"
 )
 
-func (db *DBConn) OpenTx(uid string) error {
-	log.Printf("TRACE [%s] OpenTx", uid)
+func (db *DBConn) OpenTx(sessionId string) error {
+	log.Printf("TRACE [%s] OpenTx", sessionId)
 	tx, err := db.conn.Beginx()
 	if err != nil {
 		return fmt.Errorf("failed to open transaction, %s", err)
 	}
 	db.tx = tx
-	db.txId = uid
+	db.txId = sessionId
 	return nil
 }
 
-func (db *DBConn) CloseTx(err error) error {
-	log.Printf("TRACE [%s] CloseTx, err[%d]", db.txId, err)
-	if err != nil {
+func (db *DBConn) CloseTx(err error, hasChanges bool) error {
+	log.Printf("TRACE [%s] CloseTx hasChanges[%t], err[%d]", db.txId, hasChanges, err)
+	if err != nil || !hasChanges {
+		// only discards im-memory changes, no db io
 		return db.rollbackTx()
 	} else {
+		// must write to database's journal even if tx is empty
 		return db.commitTx()
 	}
 }

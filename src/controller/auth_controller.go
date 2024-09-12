@@ -159,6 +159,8 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("failed to issue reservation token"))
 		return
 	}
+	changesMade := r.Context().Value(utils.TxChangesKey).(*bool)
+	*changesMade = true
 	html, err := sentEmail.HTML()
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR templating result html[%v], %s\n", reqId, sentEmail, err.Error())

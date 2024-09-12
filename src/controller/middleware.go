@@ -121,15 +121,24 @@ func TransactionMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
+
+		// TODO not good requires code below
+		//
+		//   changesMade := r.Context().Value(utils.TxChangesKey).(*bool)
+		//   *changesMade = true
+		//
+		//	at the point where tx can be considered successful.
+		//	for examples see chat_controller.AddChat or auth_controller.Register
+		changesMade := r.Context().Value(utils.TxChangesKey).(*bool)
 		defer func() {
 			if p := recover(); p != nil {
 				log.Printf("FATAL [%s] TransactionMiddleware Failed to open transaction: %v", reqId, p)
-				db.CloseTx(fmt.Errorf("panic: %v", p))
+				db.CloseTx(fmt.Errorf("panic: %v", p), false)
 				panic(p) // re-throw the panic after rollback
 			} else if code := w.(*h.StatefulWriter).Status(); code >= http.StatusBadRequest {
-				db.CloseTx(fmt.Errorf("error status code %d", code))
+				db.CloseTx(fmt.Errorf("error status code %d", code), false)
 			} else {
-				db.CloseTx(nil)
+				db.CloseTx(nil, *changesMade)
 			}
 		}()
 		next.ServeHTTP(w, r.WithContext(ctx))

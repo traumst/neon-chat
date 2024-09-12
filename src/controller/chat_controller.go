@@ -100,7 +100,8 @@ func AddChat(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("failed to template chat"))
 		return
 	}
-
+	changesMade := r.Context().Value(utils.TxChangesKey).(*bool)
+	*changesMade = true
 	log.Printf("[%s] AddChat TRACE chat[%s] created by user[%d]\n", reqId, chatName, user.Id)
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte(html))
