@@ -64,14 +64,11 @@ func (db *DBConn) AddChatUser(chatId uint, userId uint) error {
 	if chatId == 0 || userId == 0 {
 		return fmt.Errorf("bad input: chatId[%d], userId[%d]", chatId, userId)
 	}
-	if !db.ConnIsActive() {
-		return fmt.Errorf("db is not connected")
+	if db.tx == nil {
+		return fmt.Errorf("db has no transaction")
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	_, err := db.conn.Exec(`INSERT INTO chat_users (chat_id, user_id) VALUES (?, ?)`, chatId, userId)
+	_, err := db.tx.Exec(`INSERT INTO chat_users (chat_id, user_id) VALUES (?, ?)`, chatId, userId)
 	if err != nil {
 		return fmt.Errorf("error adding user: %s", err.Error())
 	}

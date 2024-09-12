@@ -36,14 +36,11 @@ func (db *DBConn) AddChat(chat *Chat) (*Chat, error) {
 	} else if chat.OwnerId == 0 {
 		return nil, fmt.Errorf("chat has no owner")
 	}
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
+	if db.tx == nil {
+		return nil, fmt.Errorf("db has no transaction")
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	result, err := db.conn.Exec(`INSERT INTO chats (title, owner_id) VALUES (?, ?)`, chat.Title, chat.OwnerId)
+	result, err := db.tx.Exec(`INSERT INTO chats (title, owner_id) VALUES (?, ?)`, chat.Title, chat.OwnerId)
 	if err != nil {
 		return nil, fmt.Errorf("error adding user: %s", err)
 	}
