@@ -115,7 +115,7 @@ func TransactionMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 		reqId := ctx.Value(utils.ReqIdKey).(string)
 		db := ctx.Value(utils.DBConn).(*db.DBConn)
-		dbTx, err := db.OpenTx(reqId)
+		err := db.OpenTx(reqId)
 		if err != nil {
 			log.Printf("FATAL [%s] TransactionMiddleware failed to open transaction: %s", reqId, err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -124,15 +124,14 @@ func TransactionMiddleware(next http.Handler) http.Handler {
 		defer func() {
 			if p := recover(); p != nil {
 				log.Printf("FATAL [%s] TransactionMiddleware Failed to open transaction: %v", reqId, p)
-				dbTx.CloseTx(fmt.Errorf("panic: %v", p))
+				db.CloseTx(fmt.Errorf("panic: %v", p))
 				panic(p) // re-throw the panic after rollback
 			} else if code := w.(*h.StatefulWriter).Status(); code >= http.StatusBadRequest {
-				dbTx.CloseTx(fmt.Errorf("error status code %d", code))
+				db.CloseTx(fmt.Errorf("error status code %d", code))
 			} else {
-				dbTx.CloseTx(nil)
+				db.CloseTx(nil)
 			}
 		}()
-		ctx = context.WithValue(ctx, utils.DBTx, dbTx)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

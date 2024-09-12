@@ -128,7 +128,6 @@ Making changes to tailwind classes requires rerun to display properly.
 
 ### Message Broadcasting: 
 - msg should distribute to user connection, even if chat is closed
-    - relates to 
 - pagination, track user deltas in chats and messages
 - buffer outgoing events for unstable connection/s
 

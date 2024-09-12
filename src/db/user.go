@@ -47,14 +47,11 @@ func (db *DBConn) AddUser(user *User) (*User, error) {
 	} else if len(user.Salt) == 0 {
 		return nil, fmt.Errorf("user has no salt")
 	}
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
+	if db.tx == nil {
+		return nil, fmt.Errorf("db has no transaction")
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	result, err := db.conn.Exec(`INSERT INTO users (name, email, type, status, salt) VALUES (?, ?, ?, ?, ?)`,
+	result, err := db.tx.Exec(`INSERT INTO users (name, email, type, status, salt) VALUES (?, ?, ?, ?, ?)`,
 		user.Name, user.Email, user.Type, user.Status, user.Salt[:])
 	if err != nil {
 		return nil, fmt.Errorf("error adding user: %s", err)

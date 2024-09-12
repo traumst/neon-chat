@@ -46,7 +46,12 @@ func ReadSession(state *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 	return appUser, err
 }
 
-func Authenticate(db *d.DBConn, username string, pass string, authType a.AuthType) (*a.User, *a.Auth, error) {
+func Authenticate(
+	db *d.DBConn,
+	username string,
+	pass string,
+	authType a.AuthType,
+) (*a.User, *a.Auth, error) {
 	if db == nil || len(username) <= 0 || len(pass) <= 0 {
 		log.Printf("Authenticate ERROR bad arguments username[%s] authType[%s]\n", username, authType)
 		return nil, nil, fmt.Errorf("bad arguments")
@@ -76,7 +81,12 @@ func Authenticate(db *d.DBConn, username string, pass string, authType a.AuthTyp
 	return appUser, appAuth, nil
 }
 
-func Register(db *d.DBConn, newUser *a.User, pass string, authType a.AuthType) (*a.User, *a.Auth, error) {
+func Register(
+	db *d.DBConn,
+	newUser *a.User,
+	pass string,
+	authType a.AuthType,
+) (*a.User, *a.Auth, error) {
 	log.Printf("Register TRACE IN user\n")
 	if db == nil || newUser == nil {
 		return nil, nil, fmt.Errorf("missing mandatory args user[%v] db[%v]", newUser, db)
@@ -98,10 +108,6 @@ func Register(db *d.DBConn, newUser *a.User, pass string, authType a.AuthType) (
 	}
 	auth, err := shared.CreateAuth(db, appUser, pass, authType)
 	if err != nil || auth == nil {
-		if recoverErr := shared.DeleteUser(db, appUser); recoverErr != nil {
-			panic(fmt.Sprintf("failed to recovery-delete user[%d][%s], %s", appUser.Id, appUser.Name, err))
-		}
-
 		return nil, nil, fmt.Errorf("failed to create auth[%s] for user[%v], %s", authType, appUser, err)
 	}
 	log.Printf("Register TRACE user[%d] auth[%v] created\n", appUser.Id, auth)

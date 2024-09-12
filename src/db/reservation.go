@@ -28,9 +28,6 @@ func (db *DBConn) ReservationTableExists() bool {
 }
 
 func (db *DBConn) AddReservation(reserve Reservation) (*Reservation, error) {
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
-	}
 	if reserve.Id != 0 {
 		return nil, fmt.Errorf("reserve already has an id[%d]", reserve.Id)
 	} else if reserve.UserId <= 0 {
@@ -40,11 +37,11 @@ func (db *DBConn) AddReservation(reserve Reservation) (*Reservation, error) {
 	} else if reserve.Expire.IsZero() {
 		return nil, fmt.Errorf("reserve expiration is zero")
 	}
+	if db.tx == nil {
+		return nil, fmt.Errorf("db has no transaction")
+	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	result, err := db.conn.Exec(`INSERT INTO reservations (user_id, token, expire) VALUES (?, ?, ?) 
+	result, err := db.tx.Exec(`INSERT INTO reservations (user_id, token, expire) VALUES (?, ?, ?) 
 		ON CONFLICT(user_id) DO UPDATE 
 			SET token = excluded.token, 
 				expire = excluded.expire;`,

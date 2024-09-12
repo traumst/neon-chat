@@ -146,15 +146,12 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", LocalUserType, signupUser)))
 		return
 	}
-	defer func() {
-		// TODO delete user and auth
-		// if r := recover(); r != nil {
-		// 	handler.DeleteUser()
-		// }
-	}()
 	log.Printf("[%s] SignUp TRACE issuing reservation to [%s]\n", reqId, user.Email)
-	state := r.Context().Value(utils.AppState).(*state.State)
-	sentEmail, err := handler.ReserveUserName(state, db, user)
+	emailConfig, err := r.Context().Value(utils.AppState).(*state.State).SmtpConfig()
+	if err != nil {
+		panic(fmt.Errorf("IssueReservationToken ERROR getting smtp config, %s", err.Error()))
+	}
+	sentEmail, err := handler.ReserveUserName(db, emailConfig, user)
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR failed to issue reservation token to email[%s], %s\n",
 			reqId, user.Email, err.Error())
@@ -162,12 +159,6 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("failed to issue reservation token"))
 		return
 	}
-	defer func() {
-		// TODO delete reservation token
-		// if r := recover(); r != nil {
-		// 	handler.DeleteReservation()
-		// }
-	}()
 	html, err := sentEmail.HTML()
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR templating result html[%v], %s\n", reqId, sentEmail, err.Error())

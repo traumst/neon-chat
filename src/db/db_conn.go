@@ -14,6 +14,8 @@ import (
 type DBConn struct {
 	mu     sync.Mutex
 	conn   *sqlx.DB
+	txId   string
+	tx     *sqlx.Tx
 	isConn bool
 	isInit bool
 }

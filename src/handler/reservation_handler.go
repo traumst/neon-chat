@@ -4,24 +4,19 @@ import (
 	"fmt"
 	"log"
 	d "neon-chat/src/db"
-	"neon-chat/src/handler/state"
 	a "neon-chat/src/model/app"
 	t "neon-chat/src/model/template"
 	"neon-chat/src/utils"
 	"time"
 )
 
-func ReserveUserName(state *state.State, db *d.DBConn, user *a.User) (t.VerifyEmailTemplate, error) {
+func ReserveUserName(db *d.DBConn, emailConfig *utils.SmtpConfig, user *a.User) (t.VerifyEmailTemplate, error) {
 	token := utils.RandStringBytes(16)
 	expire := time.Now().Add(1 * time.Hour)
 	reserve, err := reserve(db, user, token, expire)
 	if err != nil {
 		log.Printf("IssueReservationToken ERROR reserving[%s], %s\n", user.Email, err.Error())
 		return t.VerifyEmailTemplate{}, fmt.Errorf("failed to reserve token")
-	}
-	emailConfig, err := state.SmtpConfig()
-	if err != nil {
-		panic(fmt.Errorf("IssueReservationToken ERROR getting smtp config, %s", err.Error()))
 	}
 	tmpl := t.VerifyEmailTemplate{
 		SourceEmail: emailConfig.User,

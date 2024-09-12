@@ -26,12 +26,6 @@ func (db *DBConn) AuthTableExists() bool {
 }
 
 func (db *DBConn) AddAuth(auth Auth) (*Auth, error) {
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
-	}
-
-	db.mu.Lock()
-	defer db.mu.Unlock()
 	if auth.Id != 0 {
 		return nil, fmt.Errorf("auth already has an id[%d]", auth.Id)
 	} else if auth.UserId <= 0 {
@@ -41,8 +35,11 @@ func (db *DBConn) AddAuth(auth Auth) (*Auth, error) {
 	} else if auth.Hash == "" {
 		return nil, fmt.Errorf("auth has no hash")
 	}
+	if db.tx == nil {
+		return nil, fmt.Errorf("db has no transaction")
+	}
 
-	result, err := db.conn.Exec(`INSERT INTO auth (user_id, type, hash) VALUES (?, ?, ?)`,
+	result, err := db.tx.Exec(`INSERT INTO auth (user_id, type, hash) VALUES (?, ?, ?)`,
 		auth.UserId,
 		auth.Type,
 		auth.Hash)
