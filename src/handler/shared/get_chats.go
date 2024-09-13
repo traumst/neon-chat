@@ -4,23 +4,25 @@ import (
 	"fmt"
 	"log"
 	"neon-chat/src/convert"
-	d "neon-chat/src/db"
+	"neon-chat/src/db"
 	a "neon-chat/src/model/app"
+
+	"github.com/jmoiron/sqlx"
 )
 
-func GetChats(db *d.DBConn, userId uint) ([]*a.Chat, error) {
-	dbUserChats, err := db.GetUserChats(userId)
+func GetChats(dbConn sqlx.Ext, userId uint) ([]*a.Chat, error) {
+	dbUserChats, err := db.GetUserChats(dbConn, userId)
 	if err != nil {
 		return nil, fmt.Errorf("error getting user chats: %s", err.Error())
 	}
 	userChats := make([]*a.Chat, 0)
 	for _, dbChat := range dbUserChats {
-		appChatOwner, _ := GetUser(db, dbChat.OwnerId)
+		appChatOwner, _ := GetUser(dbConn, dbChat.OwnerId)
 		if appChatOwner == nil {
 			log.Printf("GetChats WARN chat[%d] owner[%d] not found\n", dbChat.Id, dbChat.OwnerId)
 			continue
 		}
-		chat := convert.ChatDBToApp(&dbChat, &d.User{
+		chat := convert.ChatDBToApp(&dbChat, &db.User{
 			Id:     appChatOwner.Id,
 			Type:   string(appChatOwner.Type),
 			Status: string(appChatOwner.Status),

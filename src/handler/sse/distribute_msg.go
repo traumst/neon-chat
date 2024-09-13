@@ -22,7 +22,7 @@ func DistributeMsg(
 	if chat == nil || msg == nil {
 		return fmt.Errorf("mandatory argument/s cannot be nil")
 	}
-	users, err := shared.GetChatUsers(db, chat.Id)
+	users, err := shared.GetChatUsers(db.Conn, chat.Id)
 	if err != nil {
 		return fmt.Errorf("failed to get users in chat[%d], %s", chat.Id, err)
 	}

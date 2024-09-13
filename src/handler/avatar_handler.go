@@ -49,5 +49,5 @@ func UpdateAvatar(
 		return nil, fmt.Errorf("file type is not supported[%s]", mime)
 	}
 
-	return shared.UpdateAvatar(db, userId, info.Filename, fileBytes, mime)
+	return shared.UpdateAvatar(db.Tx, userId, info.Filename, fileBytes, mime)
 }

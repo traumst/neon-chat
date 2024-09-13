@@ -74,7 +74,7 @@ func GetAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 	db := r.Context().Value(utils.DBConn).(*d.DBConn)
 	user := r.Context().Value(utils.ActiveUser).(*a.User)
-	avatar, err := shared.GetAvatar(db, user.Id)
+	avatar, err := shared.GetAvatar(db.Conn, user.Id)
 	if err != nil {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(""))

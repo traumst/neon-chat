@@ -6,18 +6,20 @@ import (
 	"neon-chat/src/convert"
 	d "neon-chat/src/db"
 	a "neon-chat/src/model/app"
+
+	"github.com/jmoiron/sqlx"
 )
 
-func GetChatMessages(db *d.DBConn, chatId uint) ([]*a.Message, error) {
-	chatUserIds, err := db.GetChatUserIds(chatId)
+func GetChatMessages(dbConn sqlx.Ext, chatId uint) ([]*a.Message, error) {
+	chatUserIds, err := d.GetChatUserIds(dbConn, chatId)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting chat[%d] user ids, %s", chatId, err.Error())
 	}
-	dbUsers, err := db.GetUsers(chatUserIds)
+	dbUsers, err := d.GetUsers(dbConn, chatUserIds)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting chat[%d] users, %s", chatId, err.Error())
 	}
-	dbAvatars, err := db.GetAvatars(chatUserIds)
+	dbAvatars, err := d.GetAvatars(dbConn, chatUserIds)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting chat[%d] user avatars, %s", chatId, err.Error())
 	}
@@ -30,7 +32,7 @@ func GetChatMessages(db *d.DBConn, chatId uint) ([]*a.Message, error) {
 		appUsers[dbUser.Id] = convert.UserDBToApp(&dbUser, avatarByUserId[dbUser.Id])
 	}
 	// TODO offset := 0 means no offset, ie get entire chat history
-	dbMsgs, err := db.GetMessages(chatId, 0)
+	dbMsgs, err := d.GetMessages(dbConn, chatId, 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting chat[%d] messages, %s", chatId, err.Error())
 	}
@@ -52,7 +54,7 @@ func GetChatMessages(db *d.DBConn, chatId uint) ([]*a.Message, error) {
 		appMsgIdMap[dbMsg.Id] = &appMsg
 	}
 	//
-	dbQuotes, err := db.GetQuotes(msgIds)
+	dbQuotes, err := d.GetQuotes(dbConn, msgIds)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting chat[%d] quotes, %s", chatId, err.Error())
 	}

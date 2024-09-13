@@ -189,8 +189,9 @@ func ConfirmEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO extract to auth_handler
 	db := r.Context().Value(utils.DBConn).(*d.DBConn)
-	reserve, err := db.GetReservation(signupToken)
+	reserve, err := d.GetReservation(db.Tx, signupToken)
 	if err != nil {
 		log.Printf("[%s] ConfirmEmail ERROR error reading reservation, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -213,7 +214,7 @@ func ConfirmEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbUser, err := db.GetUser(reserve.UserId)
+	dbUser, err := d.GetUser(db.Tx, reserve.UserId)
 	if err != nil {
 		log.Printf("[%s] ConfirmEmail ERROR retrieving user[%d], %s\n", reqId, reserve.UserId, err.Error())
 		w.WriteHeader(http.StatusNotFound)
@@ -228,7 +229,7 @@ func ConfirmEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.UpdateUserStatus(user.Id, string(a.UserStatusActive))
+	err = d.UpdateUserStatus(db.Tx, user.Id, string(a.UserStatusActive))
 	if err != nil {
 		log.Printf("[%s] ConfirmEmail ERROR failed to update user[%d] status\n", reqId, user.Id)
 		w.WriteHeader(http.StatusInternalServerError)

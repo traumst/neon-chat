@@ -28,7 +28,7 @@ func OpenSettings(w http.ResponseWriter, r *http.Request) {
 	openChatId := state.GetOpenChat(user.Id)
 	chatOwnerId := uint(0)
 	if openChatId > 0 {
-		chat, err := db.GetChat(openChatId)
+		chat, err := d.GetChat(db.Conn, openChatId)
 		if err != nil || chat == nil {
 			log.Printf("[%s] OpenSettings ERROR retrieving open chat[%d] data %s\n", reqId, openChatId, err)
 		} else {
@@ -37,7 +37,7 @@ func OpenSettings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var avatarTmpl t.AvatarTemplate
-	if avatar, _ := db.GetAvatar(user.Id); avatar != nil {
+	if avatar, _ := d.GetAvatar(db.Conn, user.Id); avatar != nil {
 		appAvatar := convert.AvatarDBToApp(avatar)
 		avatarTmpl = appAvatar.Template(user)
 	}

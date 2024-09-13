@@ -114,22 +114,18 @@ func TransactionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		reqId := ctx.Value(utils.ReqIdKey).(string)
-		db := ctx.Value(utils.DBConn).(*db.DBConn)
+		// copy db connection
+		db := *ctx.Value(utils.DBConn).(*db.DBConn)
+		// populates tx prop
 		err := db.OpenTx(reqId)
 		if err != nil {
 			log.Printf("FATAL [%s] TransactionMiddleware failed to open transaction: %s", reqId, err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
+		// ctx with both general conn and per-session tx
+		ctx = context.WithValue(ctx, utils.DBConn, &db)
 
-		// TODO not good requires code below
-		//
-		//   changesMade := r.Context().Value(utils.TxChangesKey).(*bool)
-		//   *changesMade = true
-		//
-		//	at the point where tx can be considered successful.
-		//	for examples see chat_controller.AddChat or auth_controller.Register
-		changesMade := r.Context().Value(utils.TxChangesKey).(*bool)
 		defer func() {
 			if p := recover(); p != nil {
 				log.Printf("FATAL [%s] TransactionMiddleware Failed to open transaction: %v", reqId, p)
@@ -138,7 +134,14 @@ func TransactionMiddleware(next http.Handler) http.Handler {
 			} else if code := w.(*h.StatefulWriter).Status(); code >= http.StatusBadRequest {
 				db.CloseTx(fmt.Errorf("error status code %d", code), false)
 			} else {
-				db.CloseTx(nil, *changesMade)
+				// must explicitly mark when changes are made in BL
+				var changesMade bool
+				if r.Context().Value(utils.TxChangesKey) != nil {
+					changesMade = *r.Context().Value(utils.TxChangesKey).(*bool)
+				}
+				db.CloseTx(nil, changesMade)
+				db.Tx = nil
+				db.TxId = ""
 			}
 		}()
 		next.ServeHTTP(w, r.WithContext(ctx))

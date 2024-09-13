@@ -29,7 +29,7 @@ func ReadSession(state *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		dbUser, err1 := db.GetUser(cookie.UserId)
+		dbUser, err1 := d.GetUser(db.Conn, cookie.UserId)
 		if err1 != nil {
 			h.ClearSessionCookie(w, 0)
 			err = fmt.Errorf("failed to get user[%d] from cookie[%v], %s",
@@ -37,7 +37,7 @@ func ReadSession(state *state.State, db *d.DBConn, w http.ResponseWriter, r *htt
 		} else {
 			log.Printf("[%s] ReadSession TRACE session user[%d][%s], err[%s]\n",
 				reqId, dbUser.Id, dbUser.Name, err1)
-			dbAvatar, _ := db.GetAvatar(dbUser.Id)
+			dbAvatar, _ := d.GetAvatar(db.Conn, dbUser.Id)
 			appUser = convert.UserDBToApp(dbUser, dbAvatar)
 		}
 	}()
@@ -56,12 +56,12 @@ func Authenticate(
 		log.Printf("Authenticate ERROR bad arguments username[%s] authType[%s]\n", username, authType)
 		return nil, nil, fmt.Errorf("bad arguments")
 	}
-	dbUser, err := db.SearchUser(username)
+	dbUser, err := d.SearchUser(db.Conn, username)
 	if err != nil || dbUser == nil || dbUser.Id <= 0 || len(dbUser.Salt) <= 0 {
 		log.Printf("Authenticate TRACE user[%s] not found, result[%v], %s\n", username, dbUser, err)
 		return nil, nil, nil
 	}
-	dbAvatar, _ := db.GetAvatar(dbUser.Id)
+	dbAvatar, _ := d.GetAvatar(db.Conn, dbUser.Id)
 	appUser := convert.UserDBToApp(dbUser, dbAvatar)
 	if appUser.Status != a.UserStatusActive {
 		log.Printf("Authenticate WARN user[%d] status[%s] is inactive\n", dbUser.Id, dbUser.Status)
@@ -73,7 +73,7 @@ func Authenticate(
 		return appUser, nil, fmt.Errorf("failed hashing pass for user[%d], %s", appUser.Id, err)
 	}
 	log.Printf("Authenticate TRACE user[%d] auth[%s] hash[%s]\n", appUser.Id, authType, hash)
-	dbAuth, err := db.GetAuth(string(authType), hash)
+	dbAuth, err := d.GetAuth(db.Conn, string(authType), hash)
 	if err != nil {
 		return appUser, nil, fmt.Errorf("no auth for user[%d] hash[%s], %s", appUser.Id, hash, err)
 	}
@@ -99,14 +99,14 @@ func Register(
 	if newUser.Id != 0 {
 		appUser = newUser
 	} else {
-		appUser, err = shared.CreateUser(db, newUser)
+		appUser, err = shared.CreateUser(db.Tx, newUser)
 		if err != nil || appUser == nil {
 			return nil, nil, fmt.Errorf("failed to create user[%v], %s", newUser, err)
 		} else {
 			log.Printf("Register TRACE user[%s] created\n", appUser.Name)
 		}
 	}
-	auth, err := shared.CreateAuth(db, appUser, pass, authType)
+	auth, err := shared.CreateAuth(db.Tx, appUser, pass, authType)
 	if err != nil || auth == nil {
 		return nil, nil, fmt.Errorf("failed to create auth[%s] for user[%v], %s", authType, appUser, err)
 	}

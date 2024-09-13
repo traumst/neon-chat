@@ -26,7 +26,7 @@ func DistributeUserChange(
 	if targetUser != nil {
 		return distributeUpdateOfUser(state, targetUser, subjectUser, updateType)
 	}
-	appChats, err := shared.GetChats(db, subjectUser.Id)
+	appChats, err := shared.GetChats(db.Conn, subjectUser.Id)
 	if err != nil {
 		return fmt.Errorf("failed to get chats for user[%d], %s", subjectUser.Id, err)
 	}
@@ -59,7 +59,7 @@ func distributeInCommonChat(
 	subjectUser *app.User,
 	updateType event.EventType,
 ) error {
-	targetUsers, err := shared.GetChatUsers(db, chat.Id)
+	targetUsers, err := shared.GetChatUsers(db.Conn, chat.Id)
 	if err != nil {
 		return fmt.Errorf("failed to get users in chat[%d], %s", chat.Id, err)
 	}

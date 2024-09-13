@@ -9,9 +9,11 @@ import (
 	d "neon-chat/src/db"
 	a "neon-chat/src/model/app"
 	"neon-chat/src/utils"
+
+	"github.com/jmoiron/sqlx"
 )
 
-func CreateAuth(db *d.DBConn, user *a.User, pass string, authType a.AuthType) (*a.Auth, error) {
+func CreateAuth(dbConn sqlx.Ext, user *a.User, pass string, authType a.AuthType) (*a.Auth, error) {
 	log.Printf("createAuth TRACE IN user[%d] auth[%s]\n", user.Id, authType)
 	hash, err := utils.HashPassword(pass, user.Salt)
 	if err != nil {
@@ -28,7 +30,7 @@ func CreateAuth(db *d.DBConn, user *a.User, pass string, authType a.AuthType) (*
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		dbAuth, err = db.AddAuth(*dbAuth)
+		dbAuth, err = d.AddAuth(dbConn, *dbAuth)
 	}()
 	wg.Wait()
 	if err != nil || dbAuth == nil {

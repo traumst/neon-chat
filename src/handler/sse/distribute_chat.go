@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	d "neon-chat/src/db"
+	"neon-chat/src/db"
 	"neon-chat/src/handler/shared"
 	"neon-chat/src/handler/state"
 	"neon-chat/src/model/app"
@@ -14,7 +14,7 @@ import (
 // empty targetUser means all users in chat
 func DistributeChat(
 	state *state.State,
-	db *d.DBConn,
+	dbConn *db.DBConn,
 	chat *app.Chat,
 	author *app.User, // who made the change
 	targetUser *app.User, // who to inform, nil for all users in chat
@@ -36,7 +36,7 @@ func DistributeChat(
 	if targetUser != nil {
 		targetUsers = []*app.User{targetUser}
 	} else {
-		targetUsers, err = shared.GetChatUsers(db, chat.Id)
+		targetUsers, err = shared.GetChatUsers(dbConn.Conn, chat.Id)
 	}
 	if err != nil {
 		return fmt.Errorf("failed to get chat users: %s", err)

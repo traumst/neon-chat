@@ -84,14 +84,11 @@ func applyMigration(db *DBConn, filename string) error {
 }
 
 func addMigration(db *DBConn, migrate string, title string) (*Migration, error) {
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
 	log.Printf("applyMigration TRACE executing [%s]", title)
-	if _, err := db.conn.Exec(migrate); err != nil {
+	if _, err := db.Conn.Exec(migrate); err != nil {
 		return nil, fmt.Errorf("failed to add migration[%s], %s", title, err.Error())
 	}
-	result, err := db.conn.Exec(`INSERT INTO _migrations (title) VALUES (?)`, title)
+	result, err := db.Conn.Exec(`INSERT INTO _migrations (title) VALUES (?)`, title)
 	if err != nil {
 		return nil, fmt.Errorf("error adding migration: %s", err)
 	}
@@ -111,11 +108,8 @@ func isMigrationApplied(db *DBConn, title string) (bool, error) {
 		return false, fmt.Errorf("migration title is empty")
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
 	var migration Migration
-	err := db.conn.Get(&migration, `SELECT * FROM _migrations WHERE title=?`, title)
+	err := db.Conn.Get(&migration, `SELECT * FROM _migrations WHERE title=?`, title)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil
