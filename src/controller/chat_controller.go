@@ -100,8 +100,7 @@ func AddChat(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("failed to template chat"))
 		return
 	}
-	changesMade := r.Context().Value(utils.TxChangesKey).(*bool)
-	*changesMade = true
+	utils.FlagTxChages(r, true)
 	log.Printf("[%s] AddChat TRACE chat[%s] created by user[%d]\n", reqId, chatName, user.Id)
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte(html))
@@ -160,7 +159,7 @@ func DeleteChat(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
+	utils.FlagTxChages(r, true)
 	log.Printf("[%s] DeleteChat TRACE user[%d] deleted chat [%d]\n", reqId, user.Id, chatId)
 	w.WriteHeader(http.StatusAccepted)
 	w.Write([]byte("[DELETED_C]"))

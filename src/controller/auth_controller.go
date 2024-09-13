@@ -168,6 +168,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Failed to template response"))
 		return
 	}
+	utils.FlagTxChages(r, true)
 	log.Printf("[%s] SignUp TRACE OUT\n", reqId)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
@@ -188,7 +189,6 @@ func ConfirmEmail(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("missing token"))
 		return
 	}
-
 	// TODO extract to auth_handler
 	db := r.Context().Value(utils.DBConn).(*d.DBConn)
 	reserve, err := d.GetReservation(db.Tx, signupToken)
@@ -213,7 +213,6 @@ func ConfirmEmail(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("corrupted token"))
 		return
 	}
-
 	dbUser, err := d.GetUser(db.Tx, reserve.UserId)
 	if err != nil {
 		log.Printf("[%s] ConfirmEmail ERROR retrieving user[%d], %s\n", reqId, reserve.UserId, err.Error())
@@ -228,7 +227,6 @@ func ConfirmEmail(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("invalid user status"))
 		return
 	}
-
 	err = d.UpdateUserStatus(db.Tx, user.Id, string(a.UserStatusActive))
 	if err != nil {
 		log.Printf("[%s] ConfirmEmail ERROR failed to update user[%d] status\n", reqId, user.Id)
@@ -236,6 +234,7 @@ func ConfirmEmail(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("failed to update user status"))
 		return
 	}
+	utils.FlagTxChages(r, true)
 	http.Header.Add(w.Header(), "HX-Refresh", "true")
 	w.WriteHeader(http.StatusOK)
 }

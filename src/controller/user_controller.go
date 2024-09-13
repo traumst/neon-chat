@@ -72,6 +72,7 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	utils.FlagTxChages(r, true)
 	log.Printf("[%s] InviteUser TRACE user[%d] added to chat[%d] by user[%d]\n",
 		reqId, appInvitee.Id, chatId, user.Id)
 	w.WriteHeader(http.StatusFound)
@@ -108,6 +109,7 @@ func ExpelUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	utils.FlagTxChages(r, true)
 	log.Printf("[%s] ExpelUser TRACE chat[%d] owner[%d] removed[%d]\n", reqId, chatId, user.Id, appExpelled.Id)
 	w.WriteHeader(http.StatusAccepted)
 	w.Write([]byte(fmt.Sprintf("~<s>%s</s>~", appExpelled.Name)))
@@ -136,6 +138,7 @@ func LeaveChat(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	utils.FlagTxChages(r, true)
 	log.Printf("[%s] LeaveChat TRACE user[%d] left chat[%d]\n", reqId, user.Id, chatId)
 	w.WriteHeader(http.StatusAccepted)
 	w.Write([]byte("[LEFT_U]"))
@@ -168,13 +171,14 @@ func ChangeUser(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("[fail]"))
 		return
 	}
-	err = sse.DistributeUserChange(state, db, nil, updatedUser, event.UserChange)
+	err = sse.DistributeUserChange(state, db.Tx, nil, updatedUser, event.UserChange)
 	if err != nil {
 		log.Printf("[%s] ChangeUser ERROR failed to distribute user change, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("[partial]"))
 		return
 	}
+	utils.FlagTxChages(r, true)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("[ok]"))
 }

@@ -3,7 +3,6 @@ package shared
 import (
 	"fmt"
 	"log"
-	"sync"
 
 	"neon-chat/src/convert"
 	d "neon-chat/src/db"
@@ -26,13 +25,7 @@ func CreateAuth(dbConn sqlx.Ext, user *a.User, pass string, authType a.AuthType)
 		Type:   string(authType),
 		Hash:   hash,
 	}
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		dbAuth, err = d.AddAuth(dbConn, *dbAuth)
-	}()
-	wg.Wait()
+	dbAuth, err = d.AddAuth(dbConn, *dbAuth)
 	if err != nil || dbAuth == nil {
 		return nil, fmt.Errorf("fail to add auth to user[%d][%s], %s", user.Id, user.Name, err)
 	}

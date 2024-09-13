@@ -58,7 +58,7 @@ func AddAvatar(w http.ResponseWriter, r *http.Request) {
 	if err = sse.DistributeAvatarChange(state, user, avatar, event.AvatarChange); err != nil {
 		log.Printf("controller.AddAvatar ERROR failed to distribute avatar[%s] update, %s", info.Filename, err.Error())
 	}
-
+	utils.FlagTxChages(r, true)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }

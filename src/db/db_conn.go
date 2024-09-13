@@ -11,12 +11,9 @@ import (
 )
 
 type DBConn struct {
-	//mu     sync.Mutex
 	Conn *sqlx.DB
 	TxId string
 	Tx   *sqlx.Tx
-	// isConn bool
-	// isInit bool
 }
 
 const migraitonsFolder string = "./src/db/migrations"

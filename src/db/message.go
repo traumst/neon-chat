@@ -37,8 +37,6 @@ func AddMessage(dbConn sqlx.Ext, msg *Message) (*Message, error) {
 	} else if msg.AuthorId == 0 {
 		return nil, fmt.Errorf("message has no author")
 	}
-
-	// TODO open transaction
 	result, err := dbConn.Exec(`INSERT INTO messages (chat_id, author_id, text) VALUES (?, ?, ?)`,
 		msg.ChatId, msg.AuthorId, msg.Text)
 	if err != nil {
@@ -50,7 +48,6 @@ func AddMessage(dbConn sqlx.Ext, msg *Message) (*Message, error) {
 	}
 	msg.Id = uint(lastId)
 
-	// TODO close transaction
 	return msg, nil
 }
 
@@ -58,7 +55,6 @@ func GetMessage(dbConn sqlx.Ext, msgId uint) (*Message, error) {
 	if msgId == 0 {
 		return nil, fmt.Errorf("bad input: msgId[%d]", msgId)
 	}
-
 	var message Message
 	err := sqlx.Get(dbConn, &message, `SELECT * FROM messages where id = ?`, msgId)
 	if err != nil {
@@ -71,7 +67,6 @@ func GetMessages(dbConn sqlx.Ext, chatId uint, offset int) ([]Message, error) {
 	if chatId == 0 {
 		return nil, fmt.Errorf("bad input: chatId[%d]", chatId)
 	}
-
 	var messages []Message
 	err := sqlx.Select(dbConn, &messages, `SELECT * FROM messages where chat_id = ?`, chatId)
 	if err != nil {

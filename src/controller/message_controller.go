@@ -81,7 +81,7 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("failed adding message"))
 		return
 	}
-
+	utils.FlagTxChages(r, true)
 	log.Printf("[%s] AddMessage TRACE serving html\n", reqId)
 	w.WriteHeader(http.StatusAccepted)
 }
@@ -93,7 +93,6 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-
 	chatId, err := shared.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] DeleteMessage ERROR bad arg - chatid, %s\n", reqId, err.Error())
@@ -106,7 +105,6 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
 	user := r.Context().Value(utils.ActiveUser).(*a.User)
 	state := r.Context().Value(utils.AppState).(*state.State)
 	db := r.Context().Value(utils.DBConn).(*d.DBConn)
@@ -116,14 +114,13 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	if deleted == nil {
 		log.Printf("[%s] DeleteMessage WARN message[%d] not found in chat[%d] for user[%d]\n",
 			reqId, msgId, chatId, user.Id)
 		w.WriteHeader(http.StatusAlreadyReported)
 		return
 	}
-
+	utils.FlagTxChages(r, true)
 	log.Printf("[%s] DeleteMessage done\n", reqId)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("~~deleted~~"))

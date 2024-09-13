@@ -42,12 +42,10 @@ func HandleUserInvite(
 			appInvitee.Id, chatId, err.Error())
 		return nil, nil, fmt.Errorf("failed to add user to chat in db")
 	}
-	go func() {
-		err = sse.DistributeChat(state, db, appChat, user, appInvitee, appInvitee, event.ChatInvite)
-		if err != nil {
-			log.Printf("HandleUserInvite WARN cannot distribute chat invite, %s\n", err.Error())
-		}
-	}()
+	err = sse.DistributeChat(state, db.Tx, appChat, user, appInvitee, appInvitee, event.ChatInvite)
+	if err != nil {
+		log.Printf("HandleUserInvite WARN cannot distribute chat invite, %s\n", err.Error())
+	}
 	return appChat, appInvitee, nil
 }
 
@@ -62,17 +60,17 @@ func HandleUserExpelled(state *state.State, db *d.DBConn, user *a.User, chatId u
 		log.Printf("HandleUserExpelled ERROR cannot find chat[%d], %s\n", chatId, err.Error())
 		return nil, fmt.Errorf("failed to expell user: %s", err.Error())
 	}
-	err = sse.DistributeChat(state, db, chat, user, appExpelled, appExpelled, event.ChatClose)
+	err = sse.DistributeChat(state, db.Tx, chat, user, appExpelled, appExpelled, event.ChatClose)
 	if err != nil {
 		log.Printf("HandleUserExpelled ERROR cannot distribute chat close, %s\n", err.Error())
 		return appExpelled, fmt.Errorf("cannot distribute chat close: %s", err.Error())
 	}
-	err = sse.DistributeChat(state, db, chat, user, appExpelled, appExpelled, event.ChatDrop)
+	err = sse.DistributeChat(state, db.Tx, chat, user, appExpelled, appExpelled, event.ChatDrop)
 	if err != nil {
 		log.Printf("HandleUserExpelled ERROR cannot distribute chat deleted, %s\n", err.Error())
 		return appExpelled, fmt.Errorf("cannot distribute chat deleted: %s", err.Error())
 	}
-	err = sse.DistributeChat(state, db, chat, user, nil, appExpelled, event.ChatExpel)
+	err = sse.DistributeChat(state, db.Tx, chat, user, nil, appExpelled, event.ChatExpel)
 	if err != nil {
 		log.Printf("HandleUserExpelled ERROR cannot distribute chat expel, %s\n", err.Error())
 		return appExpelled, fmt.Errorf("cannot distribute chat expel: %s", err.Error())
@@ -97,15 +95,15 @@ func HandleUserLeaveChat(state *state.State, db *d.DBConn, user *a.User, chatId 
 		return fmt.Errorf("failed to leave from chat: %s", err.Error())
 	}
 	log.Printf("HandleUserLeaveChat TRACE informing users in chat[%d]\n", chat.Id)
-	err = sse.DistributeChat(state, db, chat, expelled, expelled, expelled, event.ChatClose)
+	err = sse.DistributeChat(state, db.Tx, chat, expelled, expelled, expelled, event.ChatClose)
 	if err != nil {
 		log.Printf("HandleUserLeaveChat ERROR cannot distribute chat close, %s\n", err.Error())
 	}
-	err = sse.DistributeChat(state, db, chat, expelled, expelled, expelled, event.ChatDrop)
+	err = sse.DistributeChat(state, db.Tx, chat, expelled, expelled, expelled, event.ChatDrop)
 	if err != nil {
 		log.Printf("HandleUserLeaveChat ERROR cannot distribute chat deleted, %s\n", err.Error())
 	}
-	err = sse.DistributeChat(state, db, chat, expelled, nil, expelled, event.ChatLeave)
+	err = sse.DistributeChat(state, db.Tx, chat, expelled, nil, expelled, event.ChatLeave)
 	if err != nil {
 		log.Printf("HandleUserLeaveChat ERROR cannot distribute chat user drop, %s\n", err.Error())
 	}

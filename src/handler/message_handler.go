@@ -35,13 +35,13 @@ func HandleGetQuote(
 	dbOwner, err := d.GetOwner(db.Conn, chatId)
 	if err != nil {
 		log.Printf("HandleGetQuote ERROR getting owner for chat[%d], %s\n", chatId, err.Error())
-		return "", fmt.Errorf("failed to get message from db, %s", err.Error())
+		return "", fmt.Errorf("failed to get chat owner from db, %s", err.Error())
 	}
 	appOwner := convert.UserDBToApp(dbOwner, nil)
 	//
 	dbMsg, err := d.GetMessage(db.Conn, msgId)
 	if err != nil {
-		log.Printf("HandleGetQuote ERROR getting message[%d] from db, %s\n", msgId, err)
+		log.Printf("HandleGetQuote ERROR getting quote[%d] from db, %s\n", msgId, err)
 		return "", fmt.Errorf("failed to get message from db: %s", err.Error())
 	}
 	appQuote := convert.MessageDBToQuoteApp(dbMsg, user)
@@ -192,7 +192,7 @@ func HandleMessageAdd(
 	}
 	appChat := convert.ChatDBToApp(dbChat, dbOwner)
 	appMsg := convert.MessageDBToApp(dbMsg, author, appQuote)
-	err = sse.DistributeMsg(state, db, appChat, &appMsg, event.MessageAdd)
+	err = sse.DistributeMsg(state, db.Tx, appChat, &appMsg, event.MessageAdd)
 	if err != nil {
 		log.Printf("HandleMessageAdd ERROR distributing msg update, %s\n", err)
 	}
@@ -254,7 +254,7 @@ func HandleMessageDelete(
 		return nil, fmt.Errorf("cannot convert chat[%d] for app, owner[%v]", dbChat.Id, appChatOwner)
 	}
 	appMsg := convert.MessageDBToApp(dbMsg, appMsgAuthor, nil) // TODO bad user
-	err = sse.DistributeMsg(state, db, appChat, &appMsg, event.MessageDrop)
+	err = sse.DistributeMsg(state, db.Tx, appChat, &appMsg, event.MessageDrop)
 	if err != nil {
 		log.Printf("HandleMessageDelete ERROR distributing msg update, %s\n", err)
 	}

@@ -37,13 +37,11 @@ func HandleChatAdd(state *state.State, db *d.DBConn, user *a.User, chatName stri
 		Status: string(user.Status),
 		Salt:   user.Salt,
 	})
-	go func() {
-		err = sse.DistributeChat(state, db, appChat, user, user, user, event.ChatAdd)
-		if err != nil {
-			log.Printf("HandleChatAdd ERROR cannot distribute chat[%d] creation to user[%d]: %s",
-				openChat.Id, user.Id, err.Error())
-		}
-	}()
+	err = sse.DistributeChat(state, db.Tx, appChat, user, user, user, event.ChatAdd)
+	if err != nil {
+		log.Printf("HandleChatAdd ERROR cannot distribute chat[%d] creation to user[%d]: %s",
+			openChat.Id, user.Id, err.Error())
+	}
 	appChatUsers, err := shared.GetChatUsers(db.Tx, dbChat.Id)
 	if err != nil {
 		log.Printf("HandleChatAdd ERROR getting chat[%d] users: %s", dbChat.Id, err)
@@ -108,19 +106,17 @@ func HandleChatDelete(state *state.State, db *d.DBConn, user *a.User, chatId uin
 		Status: string(user.Status),
 		Salt:   user.Salt,
 	})
-	go func(db d.DBConn) {
-		err = sse.DistributeChat(state, &db, chat, user, nil, user, event.ChatClose)
-		if err != nil {
-			log.Printf("HandleChatDelete ERROR cannot distribute chat close, %s", err.Error())
-		}
-		err = sse.DistributeChat(state, &db, chat, user, nil, user, event.ChatDrop)
-		if err != nil {
-			log.Printf("HandleChatDelete ERROR cannot distribute chat deleted, %s", err.Error())
-		}
-		err = sse.DistributeChat(state, &db, chat, user, nil, nil, event.ChatExpel)
-		if err != nil {
-			log.Printf("HandleChatDelete ERROR cannot distribute chat user expel, %s", err.Error())
-		}
-	}(*db)
+	err = sse.DistributeChat(state, db.Tx, chat, user, nil, user, event.ChatClose)
+	if err != nil {
+		log.Printf("HandleChatDelete ERROR cannot distribute chat close, %s", err.Error())
+	}
+	err = sse.DistributeChat(state, db.Tx, chat, user, nil, user, event.ChatDrop)
+	if err != nil {
+		log.Printf("HandleChatDelete ERROR cannot distribute chat deleted, %s", err.Error())
+	}
+	err = sse.DistributeChat(state, db.Tx, chat, user, nil, nil, event.ChatExpel)
+	if err != nil {
+		log.Printf("HandleChatDelete ERROR cannot distribute chat user expel, %s", err.Error())
+	}
 	return nil
 }
