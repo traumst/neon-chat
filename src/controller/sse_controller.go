@@ -12,9 +12,6 @@ import (
 	h "neon-chat/src/utils/http"
 )
 
-// TODO wait in the main
-var wg sync.WaitGroup
-
 func PollUpdates(s *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	if r.Method != http.MethodGet {
@@ -36,6 +33,7 @@ func PollUpdates(s *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Re
 
 	h.SetSseHeaders(&conn.Writer)
 	log.Printf("[%s] PollUpdates TRACE sse initiated for user[%d]\n", reqId, user.Id)
+	var wg sync.WaitGroup
 	wg.Add(1)
 	go func(s *state.State, conn *state.Conn) {
 		defer s.DropConn(conn)
@@ -43,4 +41,5 @@ func PollUpdates(s *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Re
 		handler.PollLiveUpdates(s, conn, user.Id)
 		log.Printf("[%s] PollUpdates TRACE OUT user[%d]\n", reqId, user.Id)
 	}(s, conn)
+	wg.Wait()
 }
