@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sync"
 
+	"neon-chat/src/consts"
 	"neon-chat/src/model/app"
 	"neon-chat/src/utils"
 	h "neon-chat/src/utils/http"
@@ -23,8 +24,8 @@ type State struct {
 }
 
 func (state *State) Init(config utils.Config) {
-	if config.CacheSize <= 0 || config.CacheSize > utils.MaxCacheSize {
-		config.CacheSize = utils.MaxCacheSize
+	if config.CacheSize <= 0 || config.CacheSize > consts.MaxCacheSize {
+		config.CacheSize = consts.MaxCacheSize
 	}
 	GlobalAppState = State{
 		isInit: true,

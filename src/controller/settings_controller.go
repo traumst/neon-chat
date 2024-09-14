@@ -4,17 +4,17 @@ import (
 	"log"
 	"net/http"
 
+	"neon-chat/src/consts"
 	"neon-chat/src/convert"
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
 	"neon-chat/src/handler/state"
 	a "neon-chat/src/model/app"
 	t "neon-chat/src/model/template"
-	"neon-chat/src/utils"
 )
 
 func OpenSettings(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] OpenSettings\n", reqId)
 	if r.Method != "GET" {
 		log.Printf("[%s] OpenSettings TRACE auth does not allow %s\n", reqId, r.Method)
@@ -22,9 +22,9 @@ func OpenSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value(utils.ActiveUser).(*a.User)
-	state := r.Context().Value(utils.AppState).(*state.State)
-	db := r.Context().Value(utils.DBConn).(*d.DBConn)
+	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	state := r.Context().Value(consts.AppState).(*state.State)
+	db := r.Context().Value(consts.DBConn).(*d.DBConn)
 	openChatId := state.GetOpenChat(user.Id)
 	chatOwnerId := uint(0)
 	if openChatId > 0 {
@@ -61,7 +61,7 @@ func OpenSettings(w http.ResponseWriter, r *http.Request) {
 }
 
 func CloseSettings(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] CloseSettings\n", reqId)
 	if r.Method != "GET" {
 		log.Printf("[%s] CloseSettings TRACE auth does not allow %s\n", reqId, r.Method)
@@ -71,9 +71,9 @@ func CloseSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value(utils.ActiveUser).(*a.User)
-	state := r.Context().Value(utils.AppState).(*state.State)
-	db := r.Context().Value(utils.DBConn).(*d.DBConn)
+	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	state := r.Context().Value(consts.AppState).(*state.State)
+	db := r.Context().Value(consts.DBConn).(*d.DBConn)
 
 	var html string
 	var err error

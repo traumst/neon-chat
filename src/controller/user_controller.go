@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"neon-chat/src/consts"
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
 	"neon-chat/src/handler/shared"
@@ -17,7 +18,7 @@ import (
 )
 
 func InviteUser(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] InviteUser\n", reqId)
 	if r.Method != "POST" {
 		log.Printf("[%s] InviteUser TRACE auth does not allow %s\n", reqId, r.Method)
@@ -41,9 +42,9 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Bad invitee name"))
 		return
 	}
-	user := r.Context().Value(utils.ActiveUser).(*a.User)
-	state := r.Context().Value(utils.AppState).(*state.State)
-	db := r.Context().Value(utils.DBConn).(*d.DBConn)
+	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	state := r.Context().Value(consts.AppState).(*state.State)
+	db := r.Context().Value(consts.DBConn).(*d.DBConn)
 	appChat, appInvitee, err := handler.HandleUserInvite(state, db, user, chatId, inviteeName)
 	if err != nil {
 		log.Printf("[%s] InviteUser ERROR failed to invite user[%d] into chat[%d], %s\n",
@@ -80,7 +81,7 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func ExpelUser(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] ExpelUser\n", reqId)
 	if r.Method != "POST" {
 		log.Printf("[%s] ExpelUser TRACE auth does not allow %s\n", reqId, r.Method)
@@ -99,9 +100,9 @@ func ExpelUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	user := r.Context().Value(utils.ActiveUser).(*a.User)
-	state := r.Context().Value(utils.AppState).(*state.State)
-	db := r.Context().Value(utils.DBConn).(*d.DBConn)
+	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	state := r.Context().Value(consts.AppState).(*state.State)
+	db := r.Context().Value(consts.DBConn).(*d.DBConn)
 	appExpelled, err := handler.HandleUserExpelled(state, db, user, chatId, expelledId)
 	if err != nil {
 		log.Printf("[%s] ExpelUser ERROR failed to expell user[%d] from chat[%d], %s\n",
@@ -116,7 +117,7 @@ func ExpelUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func LeaveChat(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] LeaveChat\n", reqId)
 	if r.Method != "POST" {
 		log.Printf("[%s] LeaveChat TRACE auth does not allow %s\n", reqId, r.Method)
@@ -129,9 +130,9 @@ func LeaveChat(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	user := r.Context().Value(utils.ActiveUser).(*a.User)
-	state := r.Context().Value(utils.AppState).(*state.State)
-	db := r.Context().Value(utils.DBConn).(*d.DBConn)
+	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	state := r.Context().Value(consts.AppState).(*state.State)
+	db := r.Context().Value(consts.DBConn).(*d.DBConn)
 	err = handler.HandleUserLeaveChat(state, db, user, chatId)
 	if err != nil {
 		log.Printf("[%s] LeaveChat ERROR failed to leave chat[%d], %s\n", reqId, chatId, err.Error())
@@ -145,7 +146,7 @@ func LeaveChat(w http.ResponseWriter, r *http.Request) {
 }
 
 func ChangeUser(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] ChangeUser\n", reqId)
 	if r.Method != "POST" {
 		log.Printf("[%s] ChangeUser TRACE auth does not allow %s\n", reqId, r.Method)
@@ -160,9 +161,9 @@ func ChangeUser(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("[noop]"))
 		return
 	}
-	user := r.Context().Value(utils.ActiveUser).(*a.User)
-	state := r.Context().Value(utils.AppState).(*state.State)
-	db := r.Context().Value(utils.DBConn).(*d.DBConn)
+	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	state := r.Context().Value(consts.AppState).(*state.State)
+	db := r.Context().Value(consts.DBConn).(*d.DBConn)
 	user.Name = newName
 	updatedUser, err := shared.UpdateUser(state, db.Tx, user)
 	if err != nil {
@@ -184,7 +185,7 @@ func ChangeUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func SearchUsers(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] SearchUsers TRACE IN\n", reqId)
 	if r.Method != "POST" {
 		log.Printf("[%s] SearchUsers TRACE auth does not allow %s\n", reqId, r.Method)
@@ -200,7 +201,7 @@ func SearchUsers(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("[noop]"))
 		return
 	}
-	db := r.Context().Value(utils.DBConn).(*d.DBConn)
+	db := r.Context().Value(consts.DBConn).(*d.DBConn)
 	users, err := shared.SearchUsers(db.Conn, name)
 	if err != nil {
 		log.Printf("[%s] SearchUsers INFO no users matching[%s], %s\n", reqId, name, err.Error())

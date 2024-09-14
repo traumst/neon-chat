@@ -3,6 +3,7 @@ package http
 import (
 	"net/http"
 
+	"neon-chat/src/consts"
 	"neon-chat/src/utils"
 )
 
@@ -13,12 +14,12 @@ func SetReqId(r *http.Request, s *string) string {
 	} else {
 		reqId = *s
 	}
-	r.Header.Set(string(utils.ReqIdKey), reqId)
+	r.Header.Set(string(consts.ReqIdKey), reqId)
 	return reqId
 }
 
 func GetReqId(r *http.Request) string {
-	return r.Header.Get(string(utils.ReqIdKey))
+	return r.Header.Get(string(consts.ReqIdKey))
 }
 
 func SetSseHeaders(w *http.ResponseWriter) {

@@ -1,4 +1,4 @@
-package utils
+package consts
 
 type CtxKey string
 

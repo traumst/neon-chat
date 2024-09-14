@@ -3,17 +3,19 @@ package db
 import (
 	"fmt"
 	"log"
+
+	"github.com/jmoiron/sqlx"
 )
 
-func (db *DBConn) OpenTx(sessionId string) error {
-	log.Printf("TRACE [%s] OpenTx", sessionId)
+func (db *DBConn) OpenTx(txId string) (*sqlx.Tx, string, error) {
+	log.Printf("TRACE [%s] OpenTx", txId)
 	tx, err := db.Conn.Beginx()
 	if err != nil {
-		return fmt.Errorf("failed to open transaction, %s", err)
+		return nil, "", fmt.Errorf("failed to open transaction, %s", err)
 	}
 	db.Tx = tx
-	db.TxId = sessionId
-	return nil
+	db.TxId = txId
+	return tx, txId, nil
 }
 
 func (db *DBConn) CloseTx(err error, hasChanges bool) error {

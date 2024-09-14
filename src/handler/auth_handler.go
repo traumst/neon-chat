@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"neon-chat/src/consts"
 	"neon-chat/src/convert"
 	d "neon-chat/src/db"
 	"neon-chat/src/handler/shared"
@@ -15,7 +16,7 @@ import (
 )
 
 func ReadSession(state *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) (*a.User, error) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] ReadSession TRACE IN\n", reqId)
 	cookie, err := h.GetSessionCookie(r)
 	log.Printf("[%s] ReadSession TRACE session cookie[%v], err[%s]\n", reqId, cookie, err)

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"neon-chat/src/consts"
 	"neon-chat/src/utils"
 
 	"github.com/jmoiron/sqlx"
@@ -44,8 +45,8 @@ func AddAvatar(dbConn sqlx.Ext, userId uint, title string, image []byte, mime st
 	if size <= 0 {
 		return nil, fmt.Errorf("avatar requires an image")
 	}
-	if int64(size) > utils.MaxUploadBytesSize {
-		return nil, fmt.Errorf("avatar image size[%d] is over limit[%d]", size, utils.MaxUploadBytesSize)
+	if int64(size) > consts.MaxUploadBytesSize {
+		return nil, fmt.Errorf("avatar image size[%d] is over limit[%d]", size, consts.MaxUploadBytesSize)
 	}
 
 	result, err := dbConn.Exec(`INSERT INTO avatars (user_id, title, size, image, mime) VALUES (?, ?, ?, ?, ?)`,

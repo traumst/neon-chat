@@ -4,18 +4,18 @@ import (
 	"log"
 	"net/http"
 
+	"neon-chat/src/consts"
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
 	"neon-chat/src/handler/state"
 	a "neon-chat/src/model/app"
 	t "neon-chat/src/model/template"
-	"neon-chat/src/utils"
 )
 
 func NavigateHome(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("TRACE [%s] NavigateHome\n", reqId)
-	user := r.Context().Value(utils.ActiveUser)
+	user := r.Context().Value(consts.ActiveUser)
 	if user != nil {
 		RenderHome(w, r)
 	} else {
@@ -24,13 +24,13 @@ func NavigateHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func RenderHome(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("TRACE [%s] RenderHome\n", reqId)
 	ctx := r.Context()
 	html, err := handler.TemplateHome(
-		ctx.Value(utils.AppState).(*state.State),
-		ctx.Value(utils.DBConn).(*d.DBConn),
-		ctx.Value(utils.ActiveUser).(*a.User),
+		ctx.Value(consts.AppState).(*state.State),
+		ctx.Value(consts.DBConn).(*d.DBConn),
+		ctx.Value(consts.ActiveUser).(*a.User),
 	)
 	if err != nil {
 		log.Printf("[%s] RenderHome ERROR failed to template home, %s\n", reqId, err)
