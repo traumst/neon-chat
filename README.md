@@ -111,7 +111,6 @@ Making changes to tailwind classes requires rerun to display properly.
 + fix handler/shared -> split into actions and ~utils
 + handler should abstract app and db models completely, only expose templates
 + user name change should update active user info on left panel
-+ fucking session transactions
 
 ### Next up
 
