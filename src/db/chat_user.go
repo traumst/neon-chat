@@ -26,12 +26,21 @@ func (db *DBConn) ChatUserTableExists() bool {
 }
 
 func UsersCanChat(dbConn sqlx.Ext, chatId uint, userIds ...uint) (bool, error) {
+	if chatId == 0 || len(userIds) == 0 {
+		return false, fmt.Errorf("bad input: chatId[%d], userIds[%v]", chatId, userIds)
+	}
 	query, args, err := sqlx.In(`SELECT * FROM chat_users WHERE chat_id = ? AND user_id IN (?)`, chatId, userIds)
 	if err != nil {
 		return false, fmt.Errorf("error preparing query, %s", err)
+	} else if len(args) != len(userIds)+1 {
+		return false, fmt.Errorf("missing args")
+	} else if query == "" {
+		return false, fmt.Errorf("empty query")
+	}
+	if dbConn == nil {
+		return false, fmt.Errorf("db conn is nil")
 	}
 	query = dbConn.Rebind(query)
-
 	var chatUser []ChatUser
 	err = sqlx.Select(dbConn, &chatUser, query, args...)
 	if err != nil {

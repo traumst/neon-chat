@@ -10,7 +10,7 @@ import (
 	"neon-chat/src/handler/shared"
 	"neon-chat/src/handler/state"
 	a "neon-chat/src/model/app"
-	"neon-chat/src/utils"
+	h "neon-chat/src/utils/http"
 )
 
 func QuoteMessage(w http.ResponseWriter, r *http.Request) {
@@ -79,7 +79,7 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("failed adding message"))
 		return
 	}
-	utils.FlagTxChages(r, true)
+	w.(*h.StatefulWriter).IndicateChanges()
 	log.Printf("[%s] AddMessage TRACE serving html\n", reqId)
 	w.WriteHeader(http.StatusAccepted)
 }
@@ -118,7 +118,7 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAlreadyReported)
 		return
 	}
-	utils.FlagTxChages(r, true)
+	w.(*h.StatefulWriter).IndicateChanges()
 	log.Printf("[%s] DeleteMessage done\n", reqId)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("~~deleted~~"))

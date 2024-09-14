@@ -12,7 +12,12 @@ type Middleware struct {
 }
 
 func ChainMiddlewares(h http.Handler, mw []Middleware) http.Handler {
-	log.Printf("TRACE chaning %d middlewares: %v", len(mw), mw)
+	count := len(mw)
+	names := make([]string, count)
+	for i, m := range mw {
+		names[i] = m.Name
+	}
+	log.Printf("TRACE chaning %d middlewares: %v", count, names)
 	for _, m := range mw {
 		h = m.Func(h)
 	}

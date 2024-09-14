@@ -6,7 +6,6 @@ import (
 	"log"
 	"neon-chat/src/consts"
 	"neon-chat/src/db"
-	"neon-chat/src/utils"
 	h "neon-chat/src/utils/http"
 	"net/http"
 )
@@ -39,7 +38,7 @@ func TransactionMiddleware() Middleware {
 					} else if code := w.(*h.StatefulWriter).Status(); code >= http.StatusBadRequest {
 						db.CloseTx(fmt.Errorf("error status code %d", code), false)
 					} else {
-						db.CloseTx(nil, utils.HasTxChanges(r))
+						db.CloseTx(nil, w.(*h.StatefulWriter).HasChanges())
 						db.Tx = nil
 						db.TxId = ""
 					}

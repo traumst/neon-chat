@@ -169,8 +169,8 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Failed to template response"))
 		return
 	}
-	utils.FlagTxChages(r, true)
 	log.Printf("[%s] SignUp TRACE OUT\n", reqId)
+	w.(*h.StatefulWriter).IndicateChanges()
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }
@@ -235,7 +235,7 @@ func ConfirmEmail(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("failed to update user status"))
 		return
 	}
-	utils.FlagTxChages(r, true)
+	w.(*h.StatefulWriter).IndicateChanges()
 	http.Header.Add(w.Header(), "HX-Refresh", "true")
 	w.WriteHeader(http.StatusOK)
 }

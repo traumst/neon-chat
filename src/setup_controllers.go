@@ -10,8 +10,8 @@ import (
 )
 
 func SetupControllers(state *state.State, db *db.DBConn) {
-	withTx := middleware.DBConnMiddleware(db)
-	authValidate := middleware.DBConnMiddleware(db)
+	withTx := middleware.TransactionMiddleware()
+	authValidate := middleware.AuthValidateMiddleware()
 	dbConn := middleware.DBConnMiddleware(db)
 	appState := middleware.AppStateMiddleware(state)
 	authRead := middleware.AuthReadMiddleware(state, db)

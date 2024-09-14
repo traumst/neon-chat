@@ -14,6 +14,7 @@ import (
 	"neon-chat/src/handler/state"
 	a "neon-chat/src/model/app"
 	"neon-chat/src/utils"
+	h "neon-chat/src/utils/http"
 )
 
 func Welcome(w http.ResponseWriter, r *http.Request) {
@@ -101,7 +102,7 @@ func AddChat(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("failed to template chat"))
 		return
 	}
-	utils.FlagTxChages(r, true)
+	w.(*h.StatefulWriter).IndicateChanges()
 	log.Printf("[%s] AddChat TRACE chat[%s] created by user[%d]\n", reqId, chatName, user.Id)
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte(html))
@@ -157,7 +158,7 @@ func DeleteChat(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	utils.FlagTxChages(r, true)
+	w.(*h.StatefulWriter).IndicateChanges()
 	log.Printf("[%s] DeleteChat TRACE user[%d] deleted chat [%d]\n", reqId, user.Id, chatId)
 	w.WriteHeader(http.StatusAccepted)
 	w.Write([]byte("[DELETED_C]"))

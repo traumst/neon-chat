@@ -13,7 +13,7 @@ import (
 	"neon-chat/src/handler/state"
 	a "neon-chat/src/model/app"
 	"neon-chat/src/model/event"
-	"neon-chat/src/utils"
+	h "neon-chat/src/utils/http"
 )
 
 func AddAvatar(w http.ResponseWriter, r *http.Request) {
@@ -59,7 +59,7 @@ func AddAvatar(w http.ResponseWriter, r *http.Request) {
 	if err = sse.DistributeAvatarChange(state, user, avatar, event.AvatarChange); err != nil {
 		log.Printf("controller.AddAvatar ERROR failed to distribute avatar[%s] update, %s", info.Filename, err.Error())
 	}
-	utils.FlagTxChages(r, true)
+	w.(*h.StatefulWriter).IndicateChanges()
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }

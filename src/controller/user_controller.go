@@ -14,7 +14,7 @@ import (
 	a "neon-chat/src/model/app"
 	"neon-chat/src/model/event"
 	t "neon-chat/src/model/template"
-	"neon-chat/src/utils"
+	h "neon-chat/src/utils/http"
 )
 
 func InviteUser(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +73,7 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	utils.FlagTxChages(r, true)
+	w.(*h.StatefulWriter).IndicateChanges()
 	log.Printf("[%s] InviteUser TRACE user[%d] added to chat[%d] by user[%d]\n",
 		reqId, appInvitee.Id, chatId, user.Id)
 	w.WriteHeader(http.StatusFound)
@@ -110,7 +110,7 @@ func ExpelUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	utils.FlagTxChages(r, true)
+	w.(*h.StatefulWriter).IndicateChanges()
 	log.Printf("[%s] ExpelUser TRACE chat[%d] owner[%d] removed[%d]\n", reqId, chatId, user.Id, appExpelled.Id)
 	w.WriteHeader(http.StatusAccepted)
 	w.Write([]byte(fmt.Sprintf("~<s>%s</s>~", appExpelled.Name)))
@@ -139,7 +139,7 @@ func LeaveChat(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	utils.FlagTxChages(r, true)
+	w.(*h.StatefulWriter).IndicateChanges()
 	log.Printf("[%s] LeaveChat TRACE user[%d] left chat[%d]\n", reqId, user.Id, chatId)
 	w.WriteHeader(http.StatusAccepted)
 	w.Write([]byte("[LEFT_U]"))
@@ -179,7 +179,7 @@ func ChangeUser(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("[partial]"))
 		return
 	}
-	utils.FlagTxChages(r, true)
+	w.(*h.StatefulWriter).IndicateChanges()
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("[ok]"))
 }
