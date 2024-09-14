@@ -5,24 +5,16 @@ import (
 	"log"
 	"os"
 	"strings"
-	"sync"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 type DBConn struct {
-	mu     sync.Mutex
-	conn   *sqlx.DB
-	isConn bool
-	isInit bool
+	Conn *sqlx.DB
+	TxId string
+	Tx   *sqlx.Tx
 }
-
-// type DBTx struct {
-// 	mu   sync.Mutex
-// 	conn *sqlx.Tx
-// 	err  error
-// }
 
 const migraitonsFolder string = "./src/db/migrations"
 
@@ -37,62 +29,23 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 	} else {
 		log.Printf("db file exists [%s]", dbPath)
 	}
-
 	log.Printf("db connects to [%s]", dbPath)
 	conn, err := sqlx.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("error opening db: %s", err)
 	}
-
 	log.Printf("db connection established with connections[%d]", conn.Stats().MaxOpenConnections)
-	db := DBConn{conn: conn, isConn: true, isInit: false}
+	db := DBConn{Conn: conn}
 	err = db.init()
 	return &db, err
 }
 
-// func (db *DBConn) OpenTx() (*DBTx, error) {
-// 	db.mu.Lock()
-// 	defer db.mu.Unlock()
-
-// 	tx, err := db.conn.Beginx()
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to begin transaction, %s", err)
-// 	}
-// 	return &DBTx{conn: tx}, nil
-// }
-
-// func (db *DBConn) CloseTx(tx *DBTx) error {
-// 	tx.mu.Lock()
-// 	defer tx.mu.Unlock()
-
-// 	if err := tx.conn.Rollback(); err != nil {
-// 		return fmt.Errorf("failed to rollback transaction, %s", err)
-// 	}
-// 	return nil
-// }
-
 func (db *DBConn) ConnClose() {
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	db.conn.Close()
-}
-
-func (db *DBConn) ConnIsActive() bool {
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	return db.isConn && db.isInit
+	// TODO count active tx
+	db.Conn.Close()
 }
 
 func (db *DBConn) init() error {
-	if !db.isConn {
-		return fmt.Errorf("DBConn is not connected")
-	}
-	if db.isInit {
-		return fmt.Errorf("DBConn is already initialized")
-	}
-
 	shouldMigrate, err := db.createTables()
 	if err != nil {
 		log.Printf("DBConn.init ERROR failed to create schema, %s", err)
@@ -111,7 +64,6 @@ func (db *DBConn) init() error {
 		return fmt.Errorf("failed to create schema")
 	}
 
-	db.isInit = true
 	return nil
 }
 
@@ -125,9 +77,7 @@ func (db *DBConn) createIndex() (err error) {
 		return nil
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-	_, err = db.conn.Exec(strings.TrimRight(indecies, "\n"))
+	_, err = db.Conn.Exec(strings.TrimRight(indecies, "\n"))
 	if err != nil {
 		log.Printf("createSchema ERROR failed to create indexes, %s", err.Error())
 		return fmt.Errorf("failed to create indexes")
@@ -142,9 +92,7 @@ func (db *DBConn) createTables() (shouldMigrate bool, err error) {
 		return true, nil
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-	_, err = db.conn.Exec(strings.TrimRight(schema, "\n"))
+	_, err = db.Conn.Exec(strings.TrimRight(schema, "\n"))
 	if err != nil {
 		log.Printf("createTables ERROR failed to create schema, %s", err.Error())
 		err = fmt.Errorf("failed to create schema")

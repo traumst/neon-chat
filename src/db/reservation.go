@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type Reservation struct {
@@ -28,9 +30,6 @@ func (db *DBConn) ReservationTableExists() bool {
 }
 
 func (db *DBConn) AddReservation(reserve Reservation) (*Reservation, error) {
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
-	}
 	if reserve.Id != 0 {
 		return nil, fmt.Errorf("reserve already has an id[%d]", reserve.Id)
 	} else if reserve.UserId <= 0 {
@@ -40,11 +39,11 @@ func (db *DBConn) AddReservation(reserve Reservation) (*Reservation, error) {
 	} else if reserve.Expire.IsZero() {
 		return nil, fmt.Errorf("reserve expiration is zero")
 	}
+	if db.Tx == nil {
+		return nil, fmt.Errorf("db has no transaction")
+	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	result, err := db.conn.Exec(`INSERT INTO reservations (user_id, token, expire) VALUES (?, ?, ?) 
+	result, err := db.Tx.Exec(`INSERT INTO reservations (user_id, token, expire) VALUES (?, ?, ?) 
 		ON CONFLICT(user_id) DO UPDATE 
 			SET token = excluded.token, 
 				expire = excluded.expire;`,
@@ -62,19 +61,13 @@ func (db *DBConn) AddReservation(reserve Reservation) (*Reservation, error) {
 	return &reserve, nil
 }
 
-func (db *DBConn) GetReservation(token string) (*Reservation, error) {
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
-	}
+func GetReservation(dbConn sqlx.Ext, token string) (*Reservation, error) {
 	if token == "" {
 		return nil, fmt.Errorf("invalid token")
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
 	reserve := Reservation{}
-	err := db.conn.Get(&reserve, `SELECT * FROM reservations WHERE token=?`, token)
+	err := sqlx.Get(dbConn, &reserve, `SELECT * FROM reservations WHERE token=?`, token)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

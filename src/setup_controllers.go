@@ -4,33 +4,45 @@ import (
 	"net/http"
 
 	"neon-chat/src/controller"
+	"neon-chat/src/controller/middleware"
 	"neon-chat/src/db"
 	"neon-chat/src/handler/state"
 )
 
 func SetupControllers(state *state.State, db *db.DBConn) {
+	withTx := middleware.TransactionMiddleware()
+	authValidate := middleware.AuthValidateMiddleware()
+	dbConn := middleware.DBConnMiddleware(db)
+	appState := middleware.AppStateMiddleware(state)
+	authRead := middleware.AuthReadMiddleware(state, db)
+	writer := middleware.StatefulWriterMiddleware()
+	stamp := middleware.StampMiddleware()
+	//recovery := middleware.RecoveryMiddleware()
+
 	// middlewares are loaded in reverse order - lifo
-	minMiddlewareSet := []controller.Middleware{
-		controller.DBConnMiddleware(db),
-		controller.AppStateMiddleware(state),
-		controller.AuthMiddleware(state, db),
-		controller.StatefulWriterMiddleware,
-		controller.StampMiddleware,
-		//controller.RecoveryMiddleware,
+	minMiddlewareSet := []middleware.Middleware{
+		dbConn,
+		appState,
+		authRead,
+		writer,
+		stamp,
+		//recovery,
 	}
+	// middlewares are loaded in reverse order - lifo
+	maxMiddleware := []middleware.Middleware{
+		withTx,
+		authValidate,
+		dbConn,
+		appState,
+		authRead,
+		writer,
+		stamp,
+		//recovery,
+	}
+
 	handleStaticFiles(minMiddlewareSet)
 	handleAuth(minMiddlewareSet)
 
-	// middlewares are loaded in reverse order - lifo
-	maxMiddleware := []controller.Middleware{
-		controller.AuthRequiredMiddleware,
-		controller.DBConnMiddleware(db),
-		controller.AppStateMiddleware(state),
-		controller.AuthMiddleware(state, db),
-		controller.StatefulWriterMiddleware,
-		controller.StampMiddleware,
-		//controller.RecoveryMiddleware,
-	}
 	handleAvatar(maxMiddleware)
 	handleUser(maxMiddleware)
 	handleChat(maxMiddleware)
@@ -38,139 +50,139 @@ func SetupControllers(state *state.State, db *db.DBConn) {
 	handleSettings(maxMiddleware)
 
 	// live updates
-	http.Handle("/poll", controller.ChainMiddlewares(
+	http.Handle("/poll", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.PollUpdates(state, db, w, r)
 		}), maxMiddleware))
 
 	// home, default
-	http.Handle("/", controller.ChainMiddlewares(
+	http.Handle("/", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.NavigateHome(w, r)
 		}), minMiddlewareSet))
 }
 
-func handleStaticFiles(middleware []controller.Middleware) {
-	http.Handle("/favicon.ico", controller.ChainMiddlewares(
+func handleStaticFiles(mw []middleware.Middleware) {
+	http.Handle("/favicon.ico", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.FavIcon(w, r)
-		}), middleware))
-	http.Handle("/favicon.svg", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/favicon.svg", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.FavIcon(w, r)
-		}), middleware))
-	http.Handle("/icon/", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/icon/", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.ServeFile(w, r)
-		}), middleware))
-	http.Handle("/script/", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/script/", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.ServeFile(w, r)
-		}), middleware))
-	http.Handle("/css/", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/css/", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.ServeFile(w, r)
-		}), middleware))
+		}), mw))
 }
 
-func handleSettings(middleware []controller.Middleware) {
-	http.Handle("/settings", controller.ChainMiddlewares(
+func handleSettings(mw []middleware.Middleware) {
+	http.Handle("/settings", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.OpenSettings(w, r)
-		}), middleware))
-	http.Handle("/settings/close", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/settings/close", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.CloseSettings(w, r)
-		}), middleware))
+		}), mw))
 }
 
-func handleMsgs(middleware []controller.Middleware) {
-	http.Handle("/message/delete", controller.ChainMiddlewares(
+func handleMsgs(mw []middleware.Middleware) {
+	http.Handle("/message/delete", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.DeleteMessage(w, r)
-		}), middleware))
-	http.Handle("/message", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/message", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.AddMessage(w, r)
-		}), middleware))
-	http.Handle("/message/quote", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/message/quote", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.QuoteMessage(w, r)
-		}), middleware))
+		}), mw))
 }
 
-func handleChat(middleware []controller.Middleware) {
-	http.Handle("/chat/welcome", controller.ChainMiddlewares(
+func handleChat(mw []middleware.Middleware) {
+	http.Handle("/chat/welcome", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.Welcome(w, r)
-		}), middleware))
-	http.Handle("/chat/delete", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/chat/delete", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.DeleteChat(w, r)
-		}), middleware))
-	http.Handle("/chat/close", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/chat/close", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.CloseChat(w, r)
-		}), middleware))
-	http.Handle("/chat/", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/chat/", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.OpenChat(w, r)
-		}), middleware))
-	http.Handle("/chat", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/chat", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.AddChat(w, r)
-		}), middleware))
+		}), mw))
 }
 
-func handleUser(middleware []controller.Middleware) {
-	http.Handle("/user/invite", controller.ChainMiddlewares(
+func handleUser(mw []middleware.Middleware) {
+	http.Handle("/user/invite", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.InviteUser(w, r)
-		}), middleware))
-	http.Handle("/user/expel", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/user/expel", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.ExpelUser(w, r)
-		}), middleware))
-	http.Handle("/user/leave", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/user/leave", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.LeaveChat(w, r)
-		}), middleware))
-	http.Handle("/user/change", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/user/change", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.ChangeUser(w, r)
-		}), middleware))
-	http.Handle("/user/search", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/user/search", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.SearchUsers(w, r)
-		}), middleware))
+		}), mw))
 }
 
-func handleAuth(middleware []controller.Middleware) {
-	http.Handle("/login", controller.ChainMiddlewares(
+func handleAuth(mw []middleware.Middleware) {
+	http.Handle("/login", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.Login(w, r)
-		}), middleware))
-	http.Handle("/signup", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/signup", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.SignUp(w, r)
-		}), middleware))
-	http.Handle("/signup-confirm", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/signup-confirm", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.ConfirmEmail(w, r)
-		}), middleware))
-	http.Handle("/logout", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/logout", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.Logout(w, r)
-		}), middleware))
+		}), mw))
 }
 
-func handleAvatar(middleware []controller.Middleware) {
-	http.Handle("/avatar/add", controller.ChainMiddlewares(
+func handleAvatar(mw []middleware.Middleware) {
+	http.Handle("/avatar/add", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.AddAvatar(w, r)
-		}), middleware))
-	http.Handle("/avatar", controller.ChainMiddlewares(
+		}), mw))
+	http.Handle("/avatar", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.GetAvatar(w, r)
-		}), middleware))
+		}), mw))
 }

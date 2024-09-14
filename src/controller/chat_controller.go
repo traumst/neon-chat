@@ -7,18 +7,20 @@ import (
 	"strconv"
 	"strings"
 
+	"neon-chat/src/consts"
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
 	"neon-chat/src/handler/shared"
 	"neon-chat/src/handler/state"
 	a "neon-chat/src/model/app"
 	"neon-chat/src/utils"
+	h "neon-chat/src/utils/http"
 )
 
 func Welcome(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] Welcome TRACE\n", reqId)
-	user := r.Context().Value(utils.ActiveUser).(*a.User)
+	user := r.Context().Value(consts.ActiveUser).(*a.User)
 	html, err := handler.TemplateWelcome(user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -30,7 +32,7 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 }
 
 func OpenChat(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] OpenChat TRACE\n", reqId)
 	if r.Method != "GET" {
 		log.Printf("[%s] OpenChat TRACE auth does not allow %s\n", reqId, r.Method)
@@ -54,9 +56,9 @@ func OpenChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value(utils.ActiveUser).(*a.User)
-	state := r.Context().Value(utils.AppState).(*state.State)
-	db := r.Context().Value(utils.DBConn).(*d.DBConn)
+	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	state := r.Context().Value(consts.AppState).(*state.State)
+	db := r.Context().Value(consts.DBConn).(*d.DBConn)
 	html, err := handler.HandleChatOpen(state, db, user, uint(chatId))
 	if err != nil {
 		log.Printf("[%s] OpenChat ERROR cannot open chat[%d], %s\n", reqId, chatId, err)
@@ -71,7 +73,7 @@ func OpenChat(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddChat(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] AddChat TRACE\n", reqId)
 	if r.Method != "POST" {
 		log.Printf("[%s] AddChat TRACE auth does not allow %s\n", reqId, r.Method)
@@ -90,9 +92,9 @@ func AddChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value(utils.ActiveUser).(*a.User)
-	state := r.Context().Value(utils.AppState).(*state.State)
-	db := r.Context().Value(utils.DBConn).(*d.DBConn)
+	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	state := r.Context().Value(consts.AppState).(*state.State)
+	db := r.Context().Value(consts.DBConn).(*d.DBConn)
 	html, err := handler.HandleChatAdd(state, db, user, chatName)
 	if err != nil {
 		log.Printf("sendChat ERROR cannot template chat[%s], %s", chatName, err)
@@ -100,44 +102,41 @@ func AddChat(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("failed to template chat"))
 		return
 	}
-
+	w.(*h.StatefulWriter).IndicateChanges()
 	log.Printf("[%s] AddChat TRACE chat[%s] created by user[%d]\n", reqId, chatName, user.Id)
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte(html))
 }
 
 func CloseChat(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] CloseChat\n", reqId)
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-
 	chatId, err := shared.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] CloseChat ERROR chat id, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	user := r.Context().Value(utils.ActiveUser).(*a.User)
-	state := r.Context().Value(utils.AppState).(*state.State)
-	db := r.Context().Value(utils.DBConn).(*d.DBConn)
+	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	state := r.Context().Value(consts.AppState).(*state.State)
+	db := r.Context().Value(consts.DBConn).(*d.DBConn)
 	html, err := handler.HandleChatClose(state, db, user, uint(chatId))
 	if err != nil {
 		log.Printf("[%s] CloseChat ERROR cannot template welcome page, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	log.Printf("[%s] CloseChat TRACE user[%d] closed chat[%d]\n", reqId, user.Id, chatId)
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte(html))
 }
 
 func DeleteChat(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] DeleteChat TRACE\n", reqId)
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -150,16 +149,16 @@ func DeleteChat(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	user := r.Context().Value(utils.ActiveUser).(*a.User)
-	state := r.Context().Value(utils.AppState).(*state.State)
-	db := r.Context().Value(utils.DBConn).(*d.DBConn)
+	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	state := r.Context().Value(consts.AppState).(*state.State)
+	db := r.Context().Value(consts.DBConn).(*d.DBConn)
 	err = handler.HandleChatDelete(state, db, user, chatId)
 	if err != nil {
 		log.Printf("[%s] DeleteChat WARN user[%d] failed to delete chat[%d], %s\n", reqId, user.Id, chatId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
+	w.(*h.StatefulWriter).IndicateChanges()
 	log.Printf("[%s] DeleteChat TRACE user[%d] deleted chat [%d]\n", reqId, user.Id, chatId)
 	w.WriteHeader(http.StatusAccepted)
 	w.Write([]byte("[DELETED_C]"))

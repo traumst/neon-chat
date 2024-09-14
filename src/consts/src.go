@@ -1,4 +1,4 @@
-package utils
+package consts
 
 type CtxKey string
 
@@ -7,7 +7,7 @@ const (
 	ActiveUser         CtxKey = "X-Active-User"
 	AppState           CtxKey = "X-App-State"
 	DBConn             CtxKey = "X-DB-Conn"
-	DBTx               CtxKey = "X-DB-Transaction"
+	TxChangesKey       CtxKey = "X-Tx-Changes"
 	SessionCookie      string = "session"
 	LetterBytes        string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	Byte                      = 1

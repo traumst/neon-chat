@@ -3,7 +3,7 @@ package shared
 import (
 	"fmt"
 	"log"
-	"neon-chat/src/utils"
+	"neon-chat/src/consts"
 	"net/http"
 	"strconv"
 )
@@ -14,7 +14,7 @@ type QueryArgs struct {
 }
 
 func ParseQueryString(r *http.Request) (parsed QueryArgs, err error) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	args := r.URL.Query()
 	// v is []string, but we only support one value per key
 	for k, v := range args {

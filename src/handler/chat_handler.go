@@ -13,11 +13,11 @@ import (
 )
 
 func HandleChatAdd(state *state.State, db *d.DBConn, user *a.User, chatName string) (string, error) {
-	dbChat, err := db.AddChat(&d.Chat{Title: chatName, OwnerId: user.Id})
+	dbChat, err := d.AddChat(db.Tx, &d.Chat{Title: chatName, OwnerId: user.Id})
 	if err != nil {
 		return "", fmt.Errorf("failed to add chat[%s] to db: %s", chatName, err)
 	}
-	err = db.AddChatUser(dbChat.Id, user.Id)
+	err = d.AddChatUser(db.Tx, dbChat.Id, user.Id)
 	if err != nil {
 		return "", fmt.Errorf("failed to add owner[%d] to chat[%d] in db: %s", user.Id, dbChat.Id, err)
 	}
@@ -25,7 +25,7 @@ func HandleChatAdd(state *state.State, db *d.DBConn, user *a.User, chatName stri
 	if err != nil {
 		return "", fmt.Errorf("failed to open new chat: %s", err)
 	}
-	openChat, err := db.GetChat(dbChat.Id)
+	openChat, err := d.GetChat(db.Tx, dbChat.Id)
 	if err != nil {
 		return "", fmt.Errorf("failed to get chat[%d] from db: %s", dbChat.Id, err)
 	}
@@ -37,12 +37,12 @@ func HandleChatAdd(state *state.State, db *d.DBConn, user *a.User, chatName stri
 		Status: string(user.Status),
 		Salt:   user.Salt,
 	})
-	err = sse.DistributeChat(state, db, appChat, user, user, user, event.ChatAdd)
+	err = sse.DistributeChat(state, db.Tx, appChat, user, user, user, event.ChatAdd)
 	if err != nil {
 		log.Printf("HandleChatAdd ERROR cannot distribute chat[%d] creation to user[%d]: %s",
 			openChat.Id, user.Id, err.Error())
 	}
-	appChatUsers, err := shared.GetChatUsers(db, dbChat.Id)
+	appChatUsers, err := shared.GetChatUsers(db.Tx, dbChat.Id)
 	if err != nil {
 		log.Printf("HandleChatAdd ERROR getting chat[%d] users: %s", dbChat.Id, err)
 	}
@@ -60,17 +60,17 @@ func HandleChatOpen(state *state.State, db *d.DBConn, user *a.User, chatId uint)
 	if openChatId != chatId {
 		panic(fmt.Errorf("chat[%d] should have been open for user[%d]", chatId, user.Id))
 	}
-	appChat, err := shared.GetChat(state, db, user, chatId)
+	appChat, err := shared.GetChat(state, db.Conn, user, chatId)
 	if err != nil {
 		log.Printf("HandleChatOpen ERROR opening chat[%d] for user[%d], %s\n", chatId, user.Id, err.Error())
 		return TemplateWelcome(user)
 	}
-	appChatUsers, err := shared.GetChatUsers(db, chatId)
+	appChatUsers, err := shared.GetChatUsers(db.Conn, chatId)
 	if err != nil {
 		log.Printf("HandleChatOpen ERROR getting chat[%d] users for user[%d], %s\n", chatId, user.Id, err.Error())
 		return TemplateWelcome(user)
 	}
-	appChatMsgs, err := shared.GetChatMessages(db, chatId)
+	appChatMsgs, err := shared.GetChatMessages(db.Conn, chatId)
 	if err != nil {
 		log.Printf("HandleChatAdd ERROR getting chat[%d] messages: %s", appChat.Id, err)
 	}
@@ -86,7 +86,7 @@ func HandleChatClose(state *state.State, db *d.DBConn, user *a.User, chatId uint
 }
 
 func HandleChatDelete(state *state.State, db *d.DBConn, user *a.User, chatId uint) error {
-	dbChat, err := db.GetChat(chatId)
+	dbChat, err := d.GetChat(db.Tx, chatId)
 	if err != nil {
 		log.Printf("HandleChatDelete ERROR chat[%d] not found in db: %s", chatId, err)
 		return nil
@@ -94,7 +94,7 @@ func HandleChatDelete(state *state.State, db *d.DBConn, user *a.User, chatId uin
 	if user.Id != dbChat.OwnerId {
 		return fmt.Errorf("user[%d] is not owner[%d] of chat[%d]", user.Id, dbChat.OwnerId, chatId)
 	}
-	err = db.DeleteChat(chatId)
+	err = d.DeleteChat(db.Tx, chatId)
 	if err != nil {
 		return fmt.Errorf("error deleting chat in db: %s", err.Error())
 	}
@@ -106,15 +106,15 @@ func HandleChatDelete(state *state.State, db *d.DBConn, user *a.User, chatId uin
 		Status: string(user.Status),
 		Salt:   user.Salt,
 	})
-	err = sse.DistributeChat(state, db, chat, user, nil, user, event.ChatClose)
+	err = sse.DistributeChat(state, db.Tx, chat, user, nil, user, event.ChatClose)
 	if err != nil {
 		log.Printf("HandleChatDelete ERROR cannot distribute chat close, %s", err.Error())
 	}
-	err = sse.DistributeChat(state, db, chat, user, nil, user, event.ChatDrop)
+	err = sse.DistributeChat(state, db.Tx, chat, user, nil, user, event.ChatDrop)
 	if err != nil {
 		log.Printf("HandleChatDelete ERROR cannot distribute chat deleted, %s", err.Error())
 	}
-	err = sse.DistributeChat(state, db, chat, user, nil, nil, event.ChatExpel)
+	err = sse.DistributeChat(state, db.Tx, chat, user, nil, nil, event.ChatExpel)
 	if err != nil {
 		log.Printf("HandleChatDelete ERROR cannot distribute chat user expel, %s", err.Error())
 	}

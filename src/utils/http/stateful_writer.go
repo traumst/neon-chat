@@ -4,7 +4,8 @@ import "net/http"
 
 type StatefulWriter struct {
 	http.ResponseWriter
-	status int
+	status  int
+	changes bool
 	// TODO expand what session can hold
 	// userId   uint
 	// userName string
@@ -31,4 +32,12 @@ func (w *StatefulWriter) Flush() {
 	if ok {
 		flusher.Flush()
 	}
+}
+
+func (w *StatefulWriter) IndicateChanges() {
+	w.changes = true
+}
+
+func (w *StatefulWriter) HasChanges() bool {
+	return w.changes
 }

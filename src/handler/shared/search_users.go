@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"log"
 	"neon-chat/src/convert"
+	"neon-chat/src/db"
 	d "neon-chat/src/db"
 	a "neon-chat/src/model/app"
+
+	"github.com/jmoiron/sqlx"
 )
 
-func SearchUsers(db *d.DBConn, userName string) ([]*a.User, error) {
+func SearchUsers(dbConn sqlx.Ext, userName string) ([]*a.User, error) {
 	log.Printf("FindUsers TRACE user[%s]\n", userName)
-	dbUsers, err := db.SearchUsers(userName)
+	dbUsers, err := db.SearchUsers(dbConn, userName)
 	if err != nil {
 		return nil, fmt.Errorf("user[%s] not found: %s", userName, err.Error())
 	}
@@ -21,7 +24,7 @@ func SearchUsers(db *d.DBConn, userName string) ([]*a.User, error) {
 		}
 		dbUserIds = append(dbUserIds, dbUser.Id)
 	}
-	dbAvatars, err := db.GetAvatars(dbUserIds)
+	dbAvatars, err := db.GetAvatars(dbConn, dbUserIds)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get avatars for users[%v]: %s", dbUserIds, err.Error())
 	}

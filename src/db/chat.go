@@ -2,6 +2,8 @@ package db
 
 import (
 	"fmt"
+
+	"github.com/jmoiron/sqlx"
 )
 
 const minChatTitleLen = 5
@@ -28,7 +30,7 @@ func (db *DBConn) ChatTableExists() bool {
 	return db.TableExists("chats")
 }
 
-func (db *DBConn) AddChat(chat *Chat) (*Chat, error) {
+func AddChat(dbConn sqlx.Ext, chat *Chat) (*Chat, error) {
 	if chat.Id != 0 {
 		return nil, fmt.Errorf("chat already has an id[%d]", chat.Id)
 	} else if len(chat.Title) < minChatTitleLen || len(chat.Title) > maxChatTitleLen {
@@ -36,14 +38,8 @@ func (db *DBConn) AddChat(chat *Chat) (*Chat, error) {
 	} else if chat.OwnerId == 0 {
 		return nil, fmt.Errorf("chat has no owner")
 	}
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
-	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	result, err := db.conn.Exec(`INSERT INTO chats (title, owner_id) VALUES (?, ?)`, chat.Title, chat.OwnerId)
+	result, err := dbConn.Exec(`INSERT INTO chats (title, owner_id) VALUES (?, ?)`, chat.Title, chat.OwnerId)
 	if err != nil {
 		return nil, fmt.Errorf("error adding user: %s", err)
 	}
@@ -55,56 +51,38 @@ func (db *DBConn) AddChat(chat *Chat) (*Chat, error) {
 	return chat, nil
 }
 
-func (db *DBConn) GetChat(chatId uint) (*Chat, error) {
+func GetChat(dbConn sqlx.Ext, chatId uint) (*Chat, error) {
 	if chatId == 0 {
 		return nil, fmt.Errorf("bad input: chatId[%d]", chatId)
 	}
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
-	}
-
-	db.mu.Lock()
-	defer db.mu.Unlock()
 
 	var chat Chat
-	err := db.conn.Get(&chat, `SELECT * FROM chats WHERE id = ?`, chatId)
+	err := sqlx.Get(dbConn, &chat, `SELECT * FROM chats WHERE id = ?`, chatId)
 	if err != nil {
 		return nil, fmt.Errorf("error getting chat: %s", err)
 	}
 	return &chat, nil
 }
 
-func (db *DBConn) GetOwner(chatId uint) (*User, error) {
+func GetOwner(dbConn sqlx.Ext, chatId uint) (*User, error) {
 	if chatId == 0 {
 		return nil, fmt.Errorf("bad input: chatId[%d]", chatId)
 	}
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
-	}
-
-	db.mu.Lock()
-	defer db.mu.Unlock()
 
 	var user User
-	err := db.conn.Get(&user, `
-SELECT * FROM users WHERE id in (
-	SELECT owner_id FROM chats WHERE id = ?
-)`, chatId)
+	err := sqlx.Get(dbConn, &user, `SELECT * FROM users WHERE id in (SELECT owner_id FROM chats WHERE id = ?)`, chatId)
 	if err != nil {
 		return nil, fmt.Errorf("error getting chat[%d] owner: %s", chatId, err.Error())
 	}
 	return &user, nil
 }
 
-func (db *DBConn) DeleteChat(chatId uint) error {
-	if !db.ConnIsActive() {
-		return fmt.Errorf("db is not connected")
+func DeleteChat(dbConn sqlx.Ext, chatId uint) error {
+	if chatId == 0 {
+		return fmt.Errorf("bad input: chatId[%d]", chatId)
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	_, err := db.conn.Exec(`DELETE FROM chats WHERE id = ?`, chatId)
+	_, err := dbConn.Exec(`DELETE FROM chats WHERE id = ?`, chatId)
 	if err != nil {
 		return fmt.Errorf("error deleting chat[%d]: %s", chatId, err)
 	}

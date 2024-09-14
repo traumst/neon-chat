@@ -33,7 +33,7 @@ func (db *DBConn) UserTableExists() bool {
 	return db.TableExists("users")
 }
 
-func (db *DBConn) AddUser(user *User) (*User, error) {
+func AddUser(dbConn sqlx.Ext, user *User) (*User, error) {
 	if user.Id != 0 {
 		return nil, fmt.Errorf("user already has an id[%d]", user.Id)
 	} else if len(user.Name) < minUserNameLen || len(user.Name) > maxUserNameLen {
@@ -47,14 +47,8 @@ func (db *DBConn) AddUser(user *User) (*User, error) {
 	} else if len(user.Salt) == 0 {
 		return nil, fmt.Errorf("user has no salt")
 	}
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
-	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	result, err := db.conn.Exec(`INSERT INTO users (name, email, type, status, salt) VALUES (?, ?, ?, ?, ?)`,
+	result, err := dbConn.Exec(`INSERT INTO users (name, email, type, status, salt) VALUES (?, ?, ?, ?, ?)`,
 		user.Name, user.Email, user.Type, user.Status, user.Salt[:])
 	if err != nil {
 		return nil, fmt.Errorf("error adding user: %s", err)
@@ -67,63 +61,42 @@ func (db *DBConn) AddUser(user *User) (*User, error) {
 	return user, nil
 }
 
-func (db *DBConn) DropUser(userId uint) error {
-	if !db.ConnIsActive() {
-		return fmt.Errorf("db is not connected")
-	}
+func DropUser(dbConn sqlx.Ext, userId uint) error {
 	if userId <= 0 {
 		return fmt.Errorf("user does not have an id[%d]", userId)
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	_, err := db.conn.Exec(`DELETE FROM users where id = ?`, userId)
+	_, err := dbConn.Exec(`DELETE FROM users where id = ?`, userId)
 	if err != nil {
 		return fmt.Errorf("error deleting user: %s", err.Error())
 	}
 	return nil
 }
 
-func (db *DBConn) SearchUser(login string) (*User, error) {
-	if db == nil {
-		return nil, fmt.Errorf("db is nil")
-	}
-	if !db.isConn || !db.isInit {
-		return nil, fmt.Errorf("db is not connected")
-	}
+func SearchUser(dbConn sqlx.Ext, login string) (*User, error) {
 	if len(login) < minUserNameLen || len(login) > maxUserNameLen {
 		return nil, fmt.Errorf("login name/email was not provided")
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
 	var user User
-	err := db.conn.Get(&user, `SELECT * FROM users WHERE name = ? or email = ?`, login, login)
+	err := sqlx.Get(dbConn, &user,
+		`SELECT * FROM users WHERE name = ? or email = ?`,
+		login, login)
 	if err != nil {
 		return nil, fmt.Errorf("login[%s] not found: %s", login, err)
 	}
 	return &user, err
 }
 
-func (db *DBConn) SearchUsers(name string) ([]*User, error) {
-	if db == nil {
-		return nil, fmt.Errorf("db is nil")
-	}
-	if !db.isConn || !db.isInit {
-		return nil, fmt.Errorf("db is not connected")
-	}
+func SearchUsers(dbConn sqlx.Ext, name string) ([]*User, error) {
 	if len(name) < minUserNameLen || len(name) > maxUserNameLen {
 		return nil, fmt.Errorf("name was not provided")
 	}
 	users := make([]*User, 0)
 	approxName := fmt.Sprintf("%%%s%%", name)
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	err := db.conn.Select(&users, `SELECT * FROM users WHERE name like ? or email like ?`,
+	err := sqlx.Select(dbConn, &users,
+		`SELECT * FROM users WHERE name like ? or email like ?`,
 		approxName, approxName)
 	if err != nil {
 		return nil, fmt.Errorf("user[%s] not found: %s", name, err)
@@ -131,62 +104,40 @@ func (db *DBConn) SearchUsers(name string) ([]*User, error) {
 	return users, err
 }
 
-func (db *DBConn) GetUser(id uint) (*User, error) {
-	if db == nil {
-		return nil, fmt.Errorf("db is nil")
-	}
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
-	}
-
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
+func GetUser(dbConn sqlx.Ext, id uint) (*User, error) {
 	var user User
-	err := db.conn.Get(&user, `SELECT * FROM users WHERE id = ?`, id)
+	err := sqlx.Get(dbConn, &user, `SELECT * FROM users WHERE id = ?`, id)
 	if err != nil {
 		return nil, fmt.Errorf("userId[%d] not found: %s", id, err)
 	}
-	return &user, err
+	return &user, nil
 }
 
-func (db *DBConn) GetUsers(userIds []uint) ([]User, error) {
+func GetUsers(dbConn sqlx.Ext, userIds []uint) ([]User, error) {
 	if len(userIds) <= 0 {
 		return []User{}, nil
 	}
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
-	}
-
-	db.mu.Lock()
-	defer db.mu.Unlock()
 
 	query, args, err := sqlx.In(`SELECT * FROM users WHERE id IN (?)`, userIds)
 	if err != nil {
 		return nil, fmt.Errorf("error preparing query with userIds[%v]: %s", userIds, err)
 	}
-	query = db.conn.Rebind(query)
+	query = dbConn.Rebind(query)
 
 	var userChats []User
-	err = db.conn.Select(&userChats, query, args...)
+	err = sqlx.Select(dbConn, &userChats, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("error getting users[%v]: %s", userIds, err)
 	}
 	return userChats, nil
 }
 
-func (db *DBConn) UpdateUserName(userId uint, userName string) error {
+func UpdateUserName(dbConn sqlx.Ext, userId uint, userName string) error {
 	if userId <= 0 {
 		return fmt.Errorf("invalid user id[%d]", userId)
 	}
-	if !db.ConnIsActive() {
-		return fmt.Errorf("db is not connected")
-	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	result, err := db.conn.Exec(`UPDATE users SET name = ? WHERE id = ?;`, userName, userId)
+	result, err := dbConn.Exec(`UPDATE users SET name = ? WHERE id = ?;`, userName, userId)
 	if err != nil {
 		return fmt.Errorf("error updating user name: %s", err)
 	}
@@ -197,18 +148,12 @@ func (db *DBConn) UpdateUserName(userId uint, userName string) error {
 	return nil
 }
 
-func (db *DBConn) UpdateUserStatus(userId uint, userStatus string) error {
+func UpdateUserStatus(dbConn sqlx.Ext, userId uint, userStatus string) error {
 	if userId <= 0 {
 		return fmt.Errorf("invalid user id[%d]", userId)
 	}
-	if !db.ConnIsActive() {
-		return fmt.Errorf("db is not connected")
-	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	result, err := db.conn.Exec(`UPDATE users SET status = ? WHERE id = ?;`, userStatus, userId)
+	result, err := dbConn.Exec(`UPDATE users SET status = ? WHERE id = ?;`, userStatus, userId)
 	if err != nil {
 		return fmt.Errorf("error updating user status: %s", err)
 	}

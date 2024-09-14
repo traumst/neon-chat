@@ -3,7 +3,7 @@ package controller
 import (
 	"fmt"
 	"log"
-	"neon-chat/src/utils"
+	"neon-chat/src/consts"
 	"net/http"
 	"strings"
 )
@@ -13,7 +13,7 @@ func FavIcon(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServeFile(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] ServeFile TRACE requested [%s]\n", reqId, r.URL.Path)
 	pathParts := strings.Split(r.URL.Path, "/")
 	fileName := pathParts[len(pathParts)-1]
