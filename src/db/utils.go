@@ -10,7 +10,7 @@ func (db *DBConn) TableExists(tableName string) bool {
 		panic("check if table exist - empty name")
 	}
 	table := ""
-	err := db.conn.Get(
+	err := db.Conn.Get(
 		&table,
 		"SELECT name FROM sqlite_master WHERE type='table' and name=?;",
 		tableName)

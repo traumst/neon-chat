@@ -2,16 +2,17 @@ package utils
 
 import (
 	"fmt"
+	"neon-chat/src/consts"
 )
 
 func SizeEncode(bytes int64) string {
 	switch {
-	case bytes < KB:
+	case bytes < consts.KB:
 		return fmt.Sprintf("%dBytes", bytes)
-	case bytes < MB:
-		return fmt.Sprintf("%dKB", bytes/KB)
-	case bytes < GB:
-		return fmt.Sprintf("%dMB", bytes/MB)
+	case bytes < consts.MB:
+		return fmt.Sprintf("%dKB", bytes/consts.KB)
+	case bytes < consts.GB:
+		return fmt.Sprintf("%dMB", bytes/consts.MB)
 	default:
 		panic(fmt.Sprintf("size is over 1GB: [%d]", bytes))
 	}
@@ -28,9 +29,9 @@ func SizeDecode(size string) int64 {
 	case "Bytes":
 		return bytes
 	case "KB":
-		return bytes * KB
+		return bytes * consts.KB
 	case "MB":
-		return bytes * MB
+		return bytes * consts.MB
 	default:
 		panic(fmt.Sprintf("size is over 1GB: [%s]", size))
 	}

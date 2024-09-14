@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"neon-chat/src/consts"
 	"neon-chat/src/utils"
 
 	"github.com/jmoiron/sqlx"
@@ -34,7 +35,7 @@ func (db *DBConn) AvatarTableExists() bool {
 	return db.TableExists("avatars")
 }
 
-func (db *DBConn) AddAvatar(userId uint, title string, image []byte, mime string) (*Avatar, error) {
+func AddAvatar(dbConn sqlx.Ext, userId uint, title string, image []byte, mime string) (*Avatar, error) {
 	if userId <= 0 {
 		return nil, fmt.Errorf("avatar must have user id")
 	}
@@ -44,17 +45,11 @@ func (db *DBConn) AddAvatar(userId uint, title string, image []byte, mime string
 	if size <= 0 {
 		return nil, fmt.Errorf("avatar requires an image")
 	}
-	if int64(size) > utils.MaxUploadBytesSize {
-		return nil, fmt.Errorf("avatar image size[%d] is over limit[%d]", size, utils.MaxUploadBytesSize)
-	}
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
+	if int64(size) > consts.MaxUploadBytesSize {
+		return nil, fmt.Errorf("avatar image size[%d] is over limit[%d]", size, consts.MaxUploadBytesSize)
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	result, err := db.conn.Exec(`INSERT INTO avatars (user_id, title, size, image, mime) VALUES (?, ?, ?, ?, ?)`,
+	result, err := dbConn.Exec(`INSERT INTO avatars (user_id, title, size, image, mime) VALUES (?, ?, ?, ?, ?)`,
 		userId, title, size, image, mime)
 	if err != nil {
 		return nil, fmt.Errorf("error adding avatar: %s", err)
@@ -74,44 +69,32 @@ func (db *DBConn) AddAvatar(userId uint, title string, image []byte, mime string
 	return &avatar, nil
 }
 
-func (db *DBConn) GetAvatar(userId uint) (*Avatar, error) {
-	if !db.isConn {
-		return nil, fmt.Errorf("db is not connected")
-	}
+func GetAvatar(dbConn sqlx.Ext, userId uint) (*Avatar, error) {
 	if userId <= 0 {
 		return nil, fmt.Errorf("invalid userId[%d]", userId)
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
 	var avatar Avatar
-	err := db.conn.Get(&avatar, `SELECT * FROM avatars WHERE user_id = ?`, userId)
+	err := sqlx.Get(dbConn, &avatar, `SELECT * FROM avatars WHERE user_id = ?`, userId)
 	if err != nil {
 		return nil, fmt.Errorf("error getting avatar for user[%d]: %s", userId, err)
 	}
 	return &avatar, nil
 }
 
-func (db *DBConn) GetAvatars(userIds []uint) ([]*Avatar, error) {
-	if !db.isConn {
-		return nil, fmt.Errorf("db is not connected")
-	}
+func GetAvatars(dbConn sqlx.Ext, userIds []uint) ([]*Avatar, error) {
 	if len(userIds) <= 0 {
 		return nil, fmt.Errorf("empty input userIds")
 	}
-
-	db.mu.Lock()
-	defer db.mu.Unlock()
 
 	query, args, err := sqlx.In(`SELECT * FROM avatars WHERE user_id IN (?)`, userIds)
 	if err != nil {
 		return nil, fmt.Errorf("error preparing select avatars query for userIds %v, %s", userIds, err)
 	}
-	query = db.conn.Rebind(query)
+	query = dbConn.Rebind(query)
 
 	var avatars []Avatar
-	err = db.conn.Select(&avatars, query, args...)
+	err = sqlx.Select(dbConn, &avatars, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("error getting avatars for userIds %v: %s", userIds, err)
 	}
@@ -122,19 +105,13 @@ func (db *DBConn) GetAvatars(userIds []uint) ([]*Avatar, error) {
 	return avatarsPtrs, nil
 }
 
-func (db *DBConn) GetUserAvatars(userId uint) ([]*Avatar, error) {
-	if !db.isConn {
-		return nil, fmt.Errorf("db is not connected")
-	}
+func GetUserAvatars(dbConn sqlx.Ext, userId uint) ([]*Avatar, error) {
 	if userId <= 0 {
 		return nil, fmt.Errorf("invalid userId[%d]", userId)
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
 	avatars := make([]*Avatar, 0)
-	err := db.conn.Select(&avatars, `SELECT * FROM avatars WHERE user_id = ?`, userId)
+	err := sqlx.Select(dbConn, &avatars, `SELECT * FROM avatars WHERE user_id = ?`, userId)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return avatars, nil
@@ -145,18 +122,12 @@ func (db *DBConn) GetUserAvatars(userId uint) ([]*Avatar, error) {
 	return avatars, nil
 }
 
-func (db *DBConn) DropAvatar(id uint) error {
-	if !db.ConnIsActive() {
-		return fmt.Errorf("db is not connected")
-	}
+func DropAvatar(dbConn sqlx.Ext, id uint) error {
 	if id <= 0 {
 		return fmt.Errorf("invalid avatar id[%d]", id)
 	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	_, err := db.conn.Exec(`DELETE FROM avatars where id = ?`, id)
+	_, err := dbConn.Exec(`DELETE FROM avatars where id = ?`, id)
 	if err != nil {
 		return fmt.Errorf("error deleting avatar: %s", err.Error())
 	}

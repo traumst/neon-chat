@@ -5,18 +5,20 @@ import (
 	"log"
 
 	"neon-chat/src/convert"
-	d "neon-chat/src/db"
-	a "neon-chat/src/model/app"
+	"neon-chat/src/db"
+	"neon-chat/src/model/app"
+
+	"github.com/jmoiron/sqlx"
 )
 
-func CreateUser(db *d.DBConn, user *a.User) (*a.User, error) {
+func CreateUser(dbConn sqlx.Ext, user *app.User) (*app.User, error) {
 	if user.Id != 0 && user.Salt != "" {
 		log.Printf("createUser TRACE completing user[%s] signup\n", user.Name)
 		return user, nil
 	}
 	log.Printf("createUser TRACE creating user[%s]\n", user.Name)
 	dbUser := convert.UserAppToDB(user)
-	created, err := db.AddUser(dbUser)
+	created, err := db.AddUser(dbConn, dbUser)
 	if err != nil || created == nil {
 		return nil, fmt.Errorf("failed to add user[%v], %s", created, err)
 	}

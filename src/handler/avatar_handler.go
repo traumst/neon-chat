@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"neon-chat/src/consts"
 	d "neon-chat/src/db"
 	"neon-chat/src/handler/shared"
 	a "neon-chat/src/model/app"
-	"neon-chat/src/utils"
 	"net/http"
 )
 
@@ -33,11 +33,11 @@ func UpdateAvatar(
 	file *multipart.File,
 	info *multipart.FileHeader,
 ) (*a.Avatar, error) {
-	if info.Size > utils.MaxUploadBytesSize {
-		return nil, fmt.Errorf("file too large %d, limit is %d", info.Size, utils.MaxUploadBytesSize)
+	if info.Size > consts.MaxUploadBytesSize {
+		return nil, fmt.Errorf("file too large %d, limit is %d", info.Size, consts.MaxUploadBytesSize)
 	} else if len(info.Filename) == 0 {
 		return nil, fmt.Errorf("file lacks name")
-	} else if len(info.Filename) > utils.MaxFileName {
+	} else if len(info.Filename) > consts.MaxFileName {
 		return nil, fmt.Errorf("file name is too long")
 	}
 	fileBytes, err := io.ReadAll(*file)
@@ -49,5 +49,5 @@ func UpdateAvatar(
 		return nil, fmt.Errorf("file type is not supported[%s]", mime)
 	}
 
-	return shared.UpdateAvatar(db, userId, info.Filename, fileBytes, mime)
+	return shared.UpdateAvatar(db.Tx, userId, info.Filename, fileBytes, mime)
 }

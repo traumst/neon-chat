@@ -3,22 +3,22 @@ package handler
 import (
 	"fmt"
 	"neon-chat/src/convert"
-	d "neon-chat/src/db"
+	"neon-chat/src/db"
 	"neon-chat/src/handler/shared"
 	"neon-chat/src/handler/state"
 	ti "neon-chat/src/interface"
-	a "neon-chat/src/model/app"
+	"neon-chat/src/model/app"
 	t "neon-chat/src/model/template"
 )
 
-func TemplateHome(state *state.State, db *d.DBConn, user *a.User) (string, error) {
+func TemplateHome(state *state.State, dbConn *db.DBConn, user *app.User) (string, error) {
 	var avatarTmpl t.AvatarTemplate
-	if dbAvatar, err := db.GetAvatar(user.Id); dbAvatar != nil && err == nil {
+	if dbAvatar, err := db.GetAvatar(dbConn.Conn, user.Id); dbAvatar != nil && err == nil {
 		avatar := convert.AvatarDBToApp(dbAvatar)
 		avatarTmpl = avatar.Template(user)
 	}
-	openChatTemplate := TemplateOpenChat(state, db, user)
-	chats, err := shared.GetChats(db, user.Id)
+	openChatTemplate := TemplateOpenChat(state, dbConn, user)
+	chats, err := shared.GetChats(dbConn.Conn, user.Id)
 	if err != nil {
 		return "", fmt.Errorf("failed getting chats for user, %s", err)
 	}

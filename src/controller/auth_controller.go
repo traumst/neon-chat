@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"neon-chat/src/consts"
 	"neon-chat/src/convert"
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
@@ -21,7 +22,7 @@ const (
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] Login TRACE IN\n", reqId)
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -38,7 +39,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("[%s] Login TRACE authentication check for user[%s] auth[%s]\n",
 		reqId, loginUser, EmailAuthType)
-	db := r.Context().Value(utils.DBConn).(*d.DBConn)
+	db := r.Context().Value(consts.DBConn).(*d.DBConn)
 	user, auth, err := handler.Authenticate(db, loginUser, loginPass, EmailAuthType)
 	if err != nil {
 		log.Printf("[%s] Login ERROR unauth user[%s], %s\n", reqId, loginUser, err.Error())
@@ -71,9 +72,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] Logout TRACE \n", reqId)
-	user := r.Context().Value(utils.ActiveUser).(*a.User)
+	user := r.Context().Value(consts.ActiveUser).(*a.User)
 	if user == nil {
 		log.Printf("[%s] Logout INFO user is unauthorized\n", reqId)
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
@@ -85,7 +86,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] SignUp TRACE IN\n", reqId)
 	if r.Method != "PUT" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -102,7 +103,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("bad signup credentials"))
 		return
 	}
-	db := r.Context().Value(utils.DBConn).(*d.DBConn)
+	db := r.Context().Value(consts.DBConn).(*d.DBConn)
 	user, auth, _ := handler.Authenticate(db, signupUser, signupPass, EmailAuthType)
 	if user != nil && user.Status == a.UserStatusActive && auth != nil {
 		log.Printf("[%s] SignUp TRACE signedIn instead of signUp user[%s]\n", reqId, signupUser)
@@ -146,15 +147,12 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", LocalUserType, signupUser)))
 		return
 	}
-	defer func() {
-		// TODO delete user and auth
-		// if r := recover(); r != nil {
-		// 	handler.DeleteUser()
-		// }
-	}()
 	log.Printf("[%s] SignUp TRACE issuing reservation to [%s]\n", reqId, user.Email)
-	state := r.Context().Value(utils.AppState).(*state.State)
-	sentEmail, err := handler.ReserveUserName(state, db, user)
+	emailConfig, err := r.Context().Value(consts.AppState).(*state.State).SmtpConfig()
+	if err != nil {
+		panic(fmt.Errorf("IssueReservationToken ERROR getting smtp config, %s", err.Error()))
+	}
+	sentEmail, err := handler.ReserveUserName(db, emailConfig, user)
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR failed to issue reservation token to email[%s], %s\n",
 			reqId, user.Email, err.Error())
@@ -162,12 +160,8 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("failed to issue reservation token"))
 		return
 	}
-	defer func() {
-		// TODO delete reservation token
-		// if r := recover(); r != nil {
-		// 	handler.DeleteReservation()
-		// }
-	}()
+	changesMade := r.Context().Value(consts.TxChangesKey).(*bool)
+	*changesMade = true
 	html, err := sentEmail.HTML()
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR templating result html[%v], %s\n", reqId, sentEmail, err.Error())
@@ -176,12 +170,13 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("[%s] SignUp TRACE OUT\n", reqId)
+	w.(*h.StatefulWriter).IndicateChanges()
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }
 
 func ConfirmEmail(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(utils.ReqIdKey).(string)
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] ConfirmEmail TRACE IN\n", reqId)
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -195,9 +190,9 @@ func ConfirmEmail(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("missing token"))
 		return
 	}
-
-	db := r.Context().Value(utils.DBConn).(*d.DBConn)
-	reserve, err := db.GetReservation(signupToken)
+	// TODO extract to auth_handler
+	db := r.Context().Value(consts.DBConn).(*d.DBConn)
+	reserve, err := d.GetReservation(db.Tx, signupToken)
 	if err != nil {
 		log.Printf("[%s] ConfirmEmail ERROR error reading reservation, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -219,8 +214,7 @@ func ConfirmEmail(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("corrupted token"))
 		return
 	}
-
-	dbUser, err := db.GetUser(reserve.UserId)
+	dbUser, err := d.GetUser(db.Tx, reserve.UserId)
 	if err != nil {
 		log.Printf("[%s] ConfirmEmail ERROR retrieving user[%d], %s\n", reqId, reserve.UserId, err.Error())
 		w.WriteHeader(http.StatusNotFound)
@@ -234,14 +228,14 @@ func ConfirmEmail(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("invalid user status"))
 		return
 	}
-
-	err = db.UpdateUserStatus(user.Id, string(a.UserStatusActive))
+	err = d.UpdateUserStatus(db.Tx, user.Id, string(a.UserStatusActive))
 	if err != nil {
 		log.Printf("[%s] ConfirmEmail ERROR failed to update user[%d] status\n", reqId, user.Id)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to update user status"))
 		return
 	}
+	w.(*h.StatefulWriter).IndicateChanges()
 	http.Header.Add(w.Header(), "HX-Refresh", "true")
 	w.WriteHeader(http.StatusOK)
 }

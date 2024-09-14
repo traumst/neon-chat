@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"neon-chat/src/consts"
 	"neon-chat/src/model/app"
 	"neon-chat/src/utils"
 )
@@ -22,7 +23,7 @@ type Session struct {
 }
 
 func GetSessionCookie(r *http.Request) (*Session, error) {
-	cookie, err := r.Cookie(utils.SessionCookie)
+	cookie, err := r.Cookie(consts.SessionCookie)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +54,7 @@ func SetSessionCookie(w http.ResponseWriter, user *app.User, auth *app.Auth) Ses
 	sessions[user.Id] = session
 	cookie := session.Encode()
 	http.SetCookie(w, &http.Cookie{
-		Name:    utils.SessionCookie,
+		Name:    consts.SessionCookie,
 		Value:   cookie,
 		Expires: expiration,
 	})
@@ -63,7 +64,7 @@ func SetSessionCookie(w http.ResponseWriter, user *app.User, auth *app.Auth) Ses
 func ClearSessionCookie(w http.ResponseWriter, userId uint) {
 	delete(sessions, userId)
 	http.SetCookie(w, &http.Cookie{
-		Name:    utils.SessionCookie,
+		Name:    consts.SessionCookie,
 		Value:   "",
 		Expires: time.Now(),
 	})

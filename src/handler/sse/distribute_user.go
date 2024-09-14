@@ -3,19 +3,19 @@ package sse
 import (
 	"fmt"
 	"log"
-	"sync"
 
-	"neon-chat/src/db"
 	"neon-chat/src/handler/shared"
 	"neon-chat/src/handler/state"
 	"neon-chat/src/model/app"
 	"neon-chat/src/model/event"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // targetUser=nil means all users in chat
 func DistributeUserChange(
 	state *state.State,
-	db *db.DBConn,
+	dbConn sqlx.Ext,
 	targetUser *app.User, // who to inform, nil for all users
 	subjectUser *app.User, // which user changed
 	updateType event.EventType,
@@ -26,7 +26,7 @@ func DistributeUserChange(
 	if targetUser != nil {
 		return distributeUpdateOfUser(state, targetUser, subjectUser, updateType)
 	}
-	appChats, err := shared.GetChats(db, subjectUser.Id)
+	appChats, err := shared.GetChats(dbConn, subjectUser.Id)
 	if err != nil {
 		return fmt.Errorf("failed to get chats for user[%d], %s", subjectUser.Id, err)
 	}
@@ -34,32 +34,27 @@ func DistributeUserChange(
 		log.Printf("userChanged WARN user[%d] has no chats\n", subjectUser.Id)
 		return fmt.Errorf("user[%d] has no chats", subjectUser.Id)
 	}
-	var wg sync.WaitGroup
-	for _, appChat := range appChats {
-		if appChat == nil {
+	for _, chat := range appChats {
+		if chat == nil {
 			continue
 		}
-		wg.Add(1)
-		go func(chat *app.Chat) {
-			defer wg.Done()
-			err := distributeInCommonChat(db, chat, state, subjectUser, updateType)
-			if err != nil {
-				log.Printf("userChanged ERROR failed to distribute to chat[%d], %s\n", chat.Id, err)
-			}
-		}(appChat)
+		err := distributeInCommonChat(dbConn, chat, state, subjectUser, updateType)
+		if err != nil {
+			log.Printf("userChanged ERROR failed to distribute to chat[%d], %s\n", chat.Id, err)
+		}
 	}
-	wg.Wait()
 	return err
 }
 
 func distributeInCommonChat(
-	db *db.DBConn,
+	dbConn sqlx.Ext,
 	chat *app.Chat,
 	state *state.State,
 	subjectUser *app.User,
 	updateType event.EventType,
 ) error {
-	targetUsers, err := shared.GetChatUsers(db, chat.Id)
+	// TODO is bad bad
+	targetUsers, err := shared.GetChatUsers(dbConn, chat.Id)
 	if err != nil {
 		return fmt.Errorf("failed to get users in chat[%d], %s", chat.Id, err)
 	}

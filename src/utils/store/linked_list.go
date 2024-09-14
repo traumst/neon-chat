@@ -3,7 +3,7 @@ package store
 import (
 	"fmt"
 	"log"
-	"neon-chat/src/utils"
+	"neon-chat/src/consts"
 	"sync"
 )
 
@@ -23,10 +23,10 @@ type node struct {
 }
 
 func NewLinkedList(size int) *DoublyLinkedList {
-	if size < 1 || utils.MaxCacheSize < size {
+	if size < 1 || consts.MaxCacheSize < size {
 		log.Printf("DoublyLinkedList.NewLinkedList WARN overriding stupid size[%d] to default[%d]",
-			size, utils.MaxCacheSize)
-		size = utils.MaxCacheSize
+			size, consts.MaxCacheSize)
+		size = consts.MaxCacheSize
 	}
 	return &DoublyLinkedList{head: nil, tail: nil, size: size, count: 0}
 }
@@ -118,10 +118,10 @@ func (ll *DoublyLinkedList) Bump(node *node) ([]uint, error) {
 
 // removes n nodes from tail, defaults to 1 + (ll.size / 8)
 func (ll *DoublyLinkedList) Prune(drop int) (int, []uint, error) {
-	if drop < 1 || drop > utils.MaxCacheSize {
+	if drop < 1 || drop > consts.MaxCacheSize {
 		def := 1 + (ll.Size() / 8)
 		log.Printf("DoublyLinkedList.Prune WARN stupid prune size, should fulfill [1 <= %d <= %d], using default[%d]",
-			drop, utils.MaxCacheSize, def)
+			drop, consts.MaxCacheSize, def)
 		drop = def
 	}
 	ll.mu.Lock()

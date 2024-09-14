@@ -3,15 +3,16 @@ package shared
 import (
 	"fmt"
 	"log"
-	"sync"
 
 	"neon-chat/src/convert"
 	d "neon-chat/src/db"
 	a "neon-chat/src/model/app"
 	"neon-chat/src/utils"
+
+	"github.com/jmoiron/sqlx"
 )
 
-func CreateAuth(db *d.DBConn, user *a.User, pass string, authType a.AuthType) (*a.Auth, error) {
+func CreateAuth(dbConn sqlx.Ext, user *a.User, pass string, authType a.AuthType) (*a.Auth, error) {
 	log.Printf("createAuth TRACE IN user[%d] auth[%s]\n", user.Id, authType)
 	hash, err := utils.HashPassword(pass, user.Salt)
 	if err != nil {
@@ -24,13 +25,7 @@ func CreateAuth(db *d.DBConn, user *a.User, pass string, authType a.AuthType) (*
 		Type:   string(authType),
 		Hash:   hash,
 	}
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		dbAuth, err = db.AddAuth(*dbAuth)
-	}()
-	wg.Wait()
+	dbAuth, err = d.AddAuth(dbConn, *dbAuth)
 	if err != nil || dbAuth == nil {
 		return nil, fmt.Errorf("fail to add auth to user[%d][%s], %s", user.Id, user.Name, err)
 	}

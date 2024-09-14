@@ -108,6 +108,7 @@ Making changes to tailwind classes requires rerun to display properly.
 
 ## TODOs
 
++ fix handler/shared -> split into actions and ~utils
 + handler should abstract app and db models completely, only expose templates
 + user name change should update active user info on left panel
 + fucking session transactions
@@ -128,7 +129,6 @@ Making changes to tailwind classes requires rerun to display properly.
 
 ### Message Broadcasting: 
 - msg should distribute to user connection, even if chat is closed
-    - relates to 
 - pagination, track user deltas in chats and messages
 - buffer outgoing events for unstable connection/s
 

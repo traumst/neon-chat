@@ -26,18 +26,12 @@ func (db *DBConn) QuoteTableExists() bool {
 	return db.TableExists("quotes")
 }
 
-func (db *DBConn) AddQuote(quote *Quote) (*Quote, error) {
+func AddQuote(dbConn sqlx.Ext, quote *Quote) (*Quote, error) {
 	if quote.MsgId == 0 || quote.QuoteId == 0 {
 		return nil, fmt.Errorf("bad arg - msg_id[%d] quote_id[%d]", quote.MsgId, quote.QuoteId)
 	}
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
-	}
 
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	result, err := db.conn.Exec(`INSERT INTO quotes (msg_id, quote_id) VALUES (?, ?)`, quote.MsgId, quote.QuoteId)
+	result, err := dbConn.Exec(`INSERT INTO quotes (msg_id, quote_id) VALUES (?, ?)`, quote.MsgId, quote.QuoteId)
 	if err != nil {
 		return nil, fmt.Errorf("error adding quote: sqlx %s", err)
 	} else if affected, _ := result.RowsAffected(); affected != 1 {
@@ -47,19 +41,13 @@ func (db *DBConn) AddQuote(quote *Quote) (*Quote, error) {
 	return quote, nil
 }
 
-func (db *DBConn) GetQuote(msgId uint) (*Quote, error) {
+func GetQuote(dbConn sqlx.Ext, msgId uint) (*Quote, error) {
 	if msgId == 0 {
 		return nil, fmt.Errorf("bad input: msgId[%d]", msgId)
 	}
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
-	}
-
-	db.mu.Lock()
-	defer db.mu.Unlock()
 
 	var quote Quote
-	err := db.conn.Get(&quote, `SELECT * FROM quotes WHERE msg_id = ?`, msgId)
+	err := sqlx.Get(dbConn, &quote, `SELECT * FROM quotes WHERE msg_id = ?`, msgId)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	} else if err != nil {
@@ -73,27 +61,21 @@ func (db *DBConn) GetQuote(msgId uint) (*Quote, error) {
 	return &quote, nil
 }
 
-func (db *DBConn) GetQuotes(msgIds []uint) ([]*Quote, error) {
+func GetQuotes(dbConn sqlx.Ext, msgIds []uint) ([]*Quote, error) {
 	if msgIds == nil {
 		return nil, fmt.Errorf("bad input: msgIds[%v]", msgIds)
 	} else if len(msgIds) == 0 {
 		return nil, nil
 	}
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
-	}
-
-	db.mu.Lock()
-	defer db.mu.Unlock()
 
 	query, args, err := sqlx.In(`SELECT * FROM quotes WHERE msg_id IN (?)`, msgIds)
 	if err != nil {
 		return nil, fmt.Errorf("error preparing select quotes query for msgIds %v, %s", msgIds, err)
 	}
-	query = db.conn.Rebind(query)
+	query = dbConn.Rebind(query)
 
 	var quotes []Quote
-	err = db.conn.Select(&quotes, query, args...)
+	err = sqlx.Select(dbConn, &quotes, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("error getting quotes for msgIds %v: %s", msgIds, err)
 	}

@@ -2,6 +2,8 @@ package db
 
 import (
 	"fmt"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type Auth struct {
@@ -25,13 +27,7 @@ func (db *DBConn) AuthTableExists() bool {
 	return db.TableExists("auth")
 }
 
-func (db *DBConn) AddAuth(auth Auth) (*Auth, error) {
-	if !db.ConnIsActive() {
-		return nil, fmt.Errorf("db is not connected")
-	}
-
-	db.mu.Lock()
-	defer db.mu.Unlock()
+func AddAuth(dbConn sqlx.Ext, auth Auth) (*Auth, error) {
 	if auth.Id != 0 {
 		return nil, fmt.Errorf("auth already has an id[%d]", auth.Id)
 	} else if auth.UserId <= 0 {
@@ -41,50 +37,33 @@ func (db *DBConn) AddAuth(auth Auth) (*Auth, error) {
 	} else if auth.Hash == "" {
 		return nil, fmt.Errorf("auth has no hash")
 	}
-
-	result, err := db.conn.Exec(`INSERT INTO auth (user_id, type, hash) VALUES (?, ?, ?)`,
+	result, err := dbConn.Exec(`INSERT INTO auth (user_id, type, hash) VALUES (?, ?, ?)`,
 		auth.UserId,
 		auth.Type,
 		auth.Hash)
 	if err != nil {
 		return nil, fmt.Errorf("error adding auth: %s", err.Error())
 	}
-
 	lastId, err := result.LastInsertId()
 	if err != nil {
 		return nil, fmt.Errorf("error getting last insert id: %s", err.Error())
 	}
-
 	auth.Id = uint(lastId)
 	return &auth, nil
 }
 
-func (db *DBConn) GetUserAuth(userId uint) (*Auth, error) {
-	if !db.isConn {
-		return nil, fmt.Errorf("db is not connected")
-	}
-
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
+func GetUserAuth(dbConn sqlx.Ext, userId uint) (*Auth, error) {
 	var dbAuth Auth
-	err := db.conn.Get(&dbAuth, `SELECT * FROM auth WHERE user_id = ?`, userId)
+	err := sqlx.Get(dbConn, &dbAuth, `SELECT * FROM auth WHERE user_id = ?`, userId)
 	if err != nil {
 		return nil, fmt.Errorf("error getting auth for user[%d]: %s", userId, err.Error())
 	}
 	return &dbAuth, nil
 }
 
-func (db *DBConn) GetAuth(auth string, hash string) (*Auth, error) {
-	if !db.isConn {
-		return nil, fmt.Errorf("db is not connected")
-	}
-
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
+func GetAuth(dbConn sqlx.Ext, auth string, hash string) (*Auth, error) {
 	var dbAuth Auth
-	err := db.conn.Get(&dbAuth, `SELECT * FROM auth WHERE type = ? AND hash = ?`, auth, hash)
+	err := sqlx.Get(dbConn, &dbAuth, `SELECT * FROM auth WHERE type = ? AND hash = ?`, auth, hash)
 	if err != nil {
 		return nil, fmt.Errorf("error getting auth by type_hash[%s_%s]: %s", auth, hash, err.Error())
 	}
