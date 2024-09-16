@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"neon-chat/src/consts"
-	d "neon-chat/src/db"
+	"neon-chat/src/db"
 	"neon-chat/src/handler"
-	a "neon-chat/src/model/app"
-	t "neon-chat/src/model/template"
+	"neon-chat/src/model/app"
+	"neon-chat/src/model/template"
 	"neon-chat/src/state"
 )
 
@@ -29,8 +29,8 @@ func RenderHome(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	html, err := handler.TemplateHome(
 		ctx.Value(consts.AppState).(*state.State),
-		ctx.Value(consts.DBConn).(*d.DBConn),
-		ctx.Value(consts.ActiveUser).(*a.User),
+		ctx.Value(consts.DBConn).(*db.DBConn),
+		ctx.Value(consts.ActiveUser).(*app.User),
 	)
 	if err != nil {
 		log.Printf("[%s] RenderHome ERROR failed to template home, %s\n", reqId, err)
@@ -43,11 +43,11 @@ func RenderHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func RenderLogin(w http.ResponseWriter, r *http.Request) {
-	login := t.AuthTemplate{}
-	home := t.HomeTemplate{
+	login := template.AuthTemplate{}
+	home := template.HomeTemplate{
 		Chats:         nil,
 		OpenChat:      nil,
-		User:          t.UserTemplate{UserName: "anon"},
+		User:          template.UserTemplate{UserName: "anon"},
 		IsAuthorized:  false,
 		LoginTemplate: login,
 		Avatar:        nil,

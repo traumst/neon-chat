@@ -3,14 +3,14 @@ package handler
 import (
 	"fmt"
 	"neon-chat/src/convert"
-	d "neon-chat/src/db"
-	a "neon-chat/src/model/app"
+	"neon-chat/src/db"
+	"neon-chat/src/model/app"
 
 	"github.com/jmoiron/sqlx"
 )
 
-func GetAvatar(dbConn sqlx.Ext, userId uint) (*a.Avatar, error) {
-	avatar, err := d.GetAvatar(dbConn, userId)
+func GetAvatar(dbConn sqlx.Ext, userId uint) (*app.Avatar, error) {
+	avatar, err := db.GetAvatar(dbConn, userId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get avatar, %s", err)
 	}

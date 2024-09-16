@@ -3,7 +3,7 @@ package email
 import (
 	"net/mail"
 
-	t "neon-chat/src/model/template"
+	"neon-chat/src/model/template"
 )
 
 func IsEmailValid(address string) bool {
@@ -12,7 +12,7 @@ func IsEmailValid(address string) bool {
 }
 
 func SendSignupCompletionEmail(
-	tmpl t.VerifyEmailTemplate,
+	tmpl template.VerifyEmailTemplate,
 	source string,
 	pass string,
 ) error {

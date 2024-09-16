@@ -6,7 +6,7 @@ import (
 
 	"neon-chat/src/model/app"
 	"neon-chat/src/model/event"
-	t "neon-chat/src/model/template"
+	"neon-chat/src/model/template"
 	"neon-chat/src/state"
 )
 
@@ -123,7 +123,7 @@ func chatClose(conn *state.Conn, chatId uint, ownerId uint, authorId uint, targe
 	if target.Id != 0 && conn.User.Id != target.Id {
 		return fmt.Errorf("chatClose conn[%s] belongs to other user[%d]", conn.Origin, conn.User.Id)
 	}
-	welcome := t.WelcomeTemplate{User: t.UserTemplate{}}
+	welcome := template.WelcomeTemplate{User: template.UserTemplate{}}
 	data, err := welcome.HTML()
 	if err != nil {
 		return err

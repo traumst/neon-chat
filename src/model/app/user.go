@@ -1,7 +1,7 @@
 package app
 
 import (
-	t "neon-chat/src/model/template"
+	"neon-chat/src/model/template"
 )
 
 // TODO add flags/permissions mapping
@@ -34,8 +34,8 @@ func (user *User) Template(
 	chatId uint,
 	chatOwnerId uint,
 	viewerId uint,
-) t.UserTemplate {
-	return t.UserTemplate{
+) template.UserTemplate {
+	return template.UserTemplate{
 		ChatId:      chatId,
 		ChatOwnerId: chatOwnerId,
 		UserId:      user.Id,

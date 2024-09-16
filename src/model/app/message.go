@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"neon-chat/src/model/event"
-	t "neon-chat/src/model/template"
+	"neon-chat/src/model/template"
 	"neon-chat/src/utils"
 )
 
@@ -20,26 +20,26 @@ func (m *Message) Template(
 	viewer *User,
 	owner *User,
 	quote *Message,
-) (t.MessageTemplate, error) {
+) (template.MessageTemplate, error) {
 	if viewer == nil || viewer.Id == 0 {
-		return t.MessageTemplate{}, fmt.Errorf("viewer cannot be nil or blank")
+		return template.MessageTemplate{}, fmt.Errorf("viewer cannot be nil or blank")
 	}
 	if m.Author == nil || m.Author.Id == 0 || m.Author.Name == "" {
-		return t.MessageTemplate{}, fmt.Errorf("message author cannot be nil or blank")
+		return template.MessageTemplate{}, fmt.Errorf("message author cannot be nil or blank")
 	}
 	if m.ChatId == 0 {
-		return t.MessageTemplate{}, fmt.Errorf("message chatId cannot be 0")
+		return template.MessageTemplate{}, fmt.Errorf("message chatId cannot be 0")
 	}
 	if m.Id == 0 {
-		return t.MessageTemplate{}, fmt.Errorf("message chatId and Id cannot be 0")
+		return template.MessageTemplate{}, fmt.Errorf("message chatId and Id cannot be 0")
 	}
-	var quoteTmpl t.QuoteTemplate
+	var quoteTmpl template.QuoteTemplate
 	if quote != nil {
 		tmpl, err := quote.Template(viewer, owner, nil)
 		if err != nil {
-			return t.MessageTemplate{}, fmt.Errorf("failed to template quote: %s", err)
+			return template.MessageTemplate{}, fmt.Errorf("failed to template quote: %s", err)
 		}
-		quoteTmpl = t.QuoteTemplate{
+		quoteTmpl = template.QuoteTemplate{
 			IntermediateId: tmpl.IntermediateId,
 			ChatId:         tmpl.ChatId,
 			MsgId:          tmpl.MsgId,
@@ -50,14 +50,14 @@ func (m *Message) Template(
 			TextIntro:      tmpl.TextIntro,
 		}
 	}
-	var avatarTmpl t.AvatarTemplate
+	var avatarTmpl template.AvatarTemplate
 	if m.Author.Avatar != nil {
 		avatarTmpl = m.Author.Avatar.Template(viewer)
 	}
 	if avatarTmpl.Title == "" {
 		log.Printf("WARN message avatar title is empty: %v", m.Author.Avatar)
 	}
-	return t.MessageTemplate{
+	return template.MessageTemplate{
 		IntermediateId:   utils.RandStringBytes(5),
 		ChatId:           m.ChatId,
 		MsgId:            m.Id,

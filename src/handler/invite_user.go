@@ -3,18 +3,18 @@ package handler
 import (
 	"fmt"
 	"log"
-	d "neon-chat/src/db"
-	a "neon-chat/src/model/app"
+	"neon-chat/src/db"
+	"neon-chat/src/model/app"
 	"neon-chat/src/state"
 )
 
 func InviteUser(
 	state *state.State,
-	dbConn *d.DBConn,
-	user *a.User,
+	dbConn *db.DBConn,
+	user *app.User,
 	chatId uint,
 	inviteeName string,
-) (*a.Chat, *a.User, error) {
+) (*app.Chat, *app.User, error) {
 	appInvitee, err := SearchUser(dbConn.Tx, inviteeName)
 	if err != nil {
 		log.Printf("HandleUserInvite ERROR invitee not found [%s], %s\n", inviteeName, err.Error())
@@ -32,7 +32,7 @@ func InviteUser(
 		log.Printf("HandleUserInvite WARN user[%d] cannot invite into chat[%d]\n", user.Id, chatId)
 		return nil, nil, fmt.Errorf("chat not found")
 	}
-	err = d.AddChatUser(dbConn.Tx, chatId, appInvitee.Id)
+	err = db.AddChatUser(dbConn.Tx, chatId, appInvitee.Id)
 	if err != nil {
 		log.Printf("HandleUserInvite ERROR failed to add user[%d] to chat[%d] in db, %s\n",
 			appInvitee.Id, chatId, err.Error())

@@ -6,12 +6,12 @@ import (
 	"neon-chat/src/db"
 	ti "neon-chat/src/interface"
 	"neon-chat/src/model/app"
-	t "neon-chat/src/model/template"
+	"neon-chat/src/model/template"
 	"neon-chat/src/state"
 )
 
 func TemplateHome(state *state.State, dbConn *db.DBConn, user *app.User) (string, error) {
-	var avatarTmpl t.AvatarTemplate
+	var avatarTmpl template.AvatarTemplate
 	if dbAvatar, err := db.GetAvatar(dbConn.Conn, user.Id); dbAvatar != nil && err == nil {
 		avatar := convert.AvatarDBToApp(dbAvatar)
 		avatarTmpl = avatar.Template(user)
@@ -28,16 +28,16 @@ func TemplateHome(state *state.State, dbConn *db.DBConn, user *app.User) (string
 	var openChatId uint
 	var chatOwnerId uint
 	if openChatTemplate != nil {
-		openChatId = openChatTemplate.(t.ChatTemplate).ChatId
-		chatOwnerId = openChatTemplate.(t.ChatTemplate).Owner.(t.UserTemplate).UserId
+		openChatId = openChatTemplate.(template.ChatTemplate).ChatId
+		chatOwnerId = openChatTemplate.(template.ChatTemplate).Owner.(template.UserTemplate).UserId
 	}
 	userTemplate := user.Template(openChatId, chatOwnerId, user.Id)
-	home := t.HomeTemplate{
+	home := template.HomeTemplate{
 		Chats:         chatTemplates,
 		OpenChat:      openChatTemplate,
 		User:          userTemplate,
 		IsAuthorized:  true,
-		LoginTemplate: t.AuthTemplate{},
+		LoginTemplate: template.AuthTemplate{},
 		Avatar:        avatarTmpl,
 	}
 	return home.HTML()

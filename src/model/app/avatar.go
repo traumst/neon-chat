@@ -1,7 +1,7 @@
 package app
 
 import (
-	t "neon-chat/src/model/template"
+	"neon-chat/src/model/template"
 )
 
 type Avatar struct {
@@ -13,11 +13,11 @@ type Avatar struct {
 	Mime   string
 }
 
-func (a *Avatar) Template(viewer *User) t.AvatarTemplate {
+func (a *Avatar) Template(viewer *User) template.AvatarTemplate {
 	if a == nil || a.Id == 0 || viewer == nil || viewer.Id == 0 {
-		return t.AvatarTemplate{}
+		return template.AvatarTemplate{}
 	}
-	return t.AvatarTemplate{
+	return template.AvatarTemplate{
 		Id:     a.Id,
 		Title:  a.Title,
 		UserId: a.UserId,

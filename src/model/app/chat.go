@@ -3,7 +3,7 @@ package app
 import (
 	"log"
 	ti "neon-chat/src/interface"
-	t "neon-chat/src/model/template"
+	"neon-chat/src/model/template"
 )
 
 type Chat struct {
@@ -25,15 +25,15 @@ func (c *Chat) Template(
 	viewer *User,
 	members []*User,
 	msgs []*Message,
-) t.ChatTemplate {
+) template.ChatTemplate {
 	// current viewer + chat owner
-	var usr t.UserTemplate
-	var ownr t.UserTemplate
+	var usr template.UserTemplate
+	var ownr template.UserTemplate
 	if viewer == nil {
 		log.Printf("Chat.Template ERROR viewer cannot be nil\n")
-		return t.ChatTemplate{}
+		return template.ChatTemplate{}
 	}
-	usr = t.UserTemplate{
+	usr = template.UserTemplate{
 		ChatId:      c.Id,
 		ChatOwnerId: c.OwnerId,
 		UserId:      viewer.Id,
@@ -41,7 +41,7 @@ func (c *Chat) Template(
 		UserEmail:   viewer.Email,
 		ViewerId:    viewer.Id,
 	}
-	ownr = t.UserTemplate{
+	ownr = template.UserTemplate{
 		ChatId:      c.Id,
 		ChatOwnerId: c.OwnerId,
 		UserId:      c.OwnerId,
@@ -60,7 +60,7 @@ func (c *Chat) Template(
 				log.Printf("Chat.Template TRACE skip nil member in chat[%d]\n", c.Id)
 				continue
 			}
-			users = append(users, t.UserTemplate{
+			users = append(users, template.UserTemplate{
 				ChatId:      c.Id,
 				ChatOwnerId: c.OwnerId,
 				UserId:      member.Id,
@@ -91,7 +91,7 @@ func (c *Chat) Template(
 		log.Printf("Chat.Template INFO chat[%d] has no messages\n", c.Id)
 	}
 	// chat
-	return t.ChatTemplate{
+	return template.ChatTemplate{
 		ChatId:   c.Id,
 		ChatName: c.Name,
 		User:     usr,
