@@ -21,8 +21,8 @@ const ChatUserSchema = `
 	);`
 const ChatUserIndex = `CREATE INDEX IF NOT EXISTS idx_chat_users_chatid_userid ON chat_users(chat_id, user_id);`
 
-func (db *DBConn) ChatUserTableExists() bool {
-	return db.TableExists("chat_users")
+func (dbConn *DBConn) ChatUserTableExists() bool {
+	return dbConn.TableExists("chat_users")
 }
 
 func UsersCanChat(dbConn sqlx.Ext, chatId uint, userIds ...uint) (bool, error) {

@@ -31,8 +31,8 @@ const AvatarSchema = `
 	);`
 const AvatarIndex = ``
 
-func (db *DBConn) AvatarTableExists() bool {
-	return db.TableExists("avatars")
+func (dbConn *DBConn) AvatarTableExists() bool {
+	return dbConn.TableExists("avatars")
 }
 
 func AddAvatar(dbConn sqlx.Ext, userId uint, title string, image []byte, mime string) (*Avatar, error) {

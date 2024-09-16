@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	"log"
-
 	"neon-chat/src/convert"
 	"neon-chat/src/db"
 	"neon-chat/src/model/app"
@@ -11,7 +10,12 @@ import (
 	"neon-chat/src/state"
 )
 
-func AddChat(state *state.State, dbConn *db.DBConn, user *app.User, chatName string) (*template.ChatTemplate, error) {
+func AddChat(
+	state *state.State,
+	dbConn *db.DBConn,
+	user *app.User,
+	chatName string,
+) (*template.ChatTemplate, error) {
 	dbChat, err := db.AddChat(dbConn.Tx, &db.Chat{Title: chatName, OwnerId: user.Id})
 	if err != nil {
 		return nil, fmt.Errorf("failed to add chat[%s] to db: %s", chatName, err)

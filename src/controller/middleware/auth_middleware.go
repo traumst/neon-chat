@@ -10,14 +10,14 @@ import (
 	"net/http"
 )
 
-func AuthReadMiddleware(state *state.State, db *db.DBConn) Middleware {
+func AuthReadMiddleware(state *state.State, dbConn *db.DBConn) Middleware {
 	return Middleware{
 		Name: "AuthRead",
 		Func: func(next http.Handler) http.Handler {
 			log.Println("TRACE with auth read middleware")
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				log.Println(r.Context().Value(consts.ReqIdKey).(string), "TRACE reading user session auth")
-				user, _ := handler.ReadSession(state, db, w, r)
+				user, _ := handler.ReadSession(state, dbConn, w, r)
 				ctx := r.Context()
 				if user != nil {
 					ctx = context.WithValue(ctx, consts.ActiveUser, user)

@@ -6,10 +6,10 @@ import (
 
 	"neon-chat/src/consts"
 	"neon-chat/src/convert"
-	d "neon-chat/src/db"
+	"neon-chat/src/db"
 	"neon-chat/src/handler"
-	a "neon-chat/src/model/app"
-	t "neon-chat/src/model/template"
+	"neon-chat/src/model/app"
+	"neon-chat/src/model/template"
 	"neon-chat/src/state"
 )
 
@@ -22,13 +22,13 @@ func OpenSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
-	db := r.Context().Value(consts.DBConn).(*d.DBConn)
+	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
 	openChatId := state.GetOpenChat(user.Id)
 	chatOwnerId := uint(0)
 	if openChatId > 0 {
-		chat, err := d.GetChat(db.Conn, openChatId)
+		chat, err := db.GetChat(dbConn.Conn, openChatId)
 		if err != nil || chat == nil {
 			log.Printf("[%s] OpenSettings ERROR retrieving open chat[%d] data %s\n", reqId, openChatId, err)
 		} else {
@@ -36,12 +36,12 @@ func OpenSettings(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var avatarTmpl t.AvatarTemplate
-	if avatar, _ := d.GetAvatar(db.Conn, user.Id); avatar != nil {
+	var avatarTmpl template.AvatarTemplate
+	if avatar, _ := db.GetAvatar(dbConn.Conn, user.Id); avatar != nil {
 		appAvatar := convert.AvatarDBToApp(avatar)
 		avatarTmpl = appAvatar.Template(user)
 	}
-	settings := t.UserSettingsTemplate{
+	settings := template.UserSettingsTemplate{
 		ChatId:      openChatId,
 		ChatOwnerId: chatOwnerId,
 		UserId:      user.Id,
@@ -71,13 +71,13 @@ func CloseSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
-	db := r.Context().Value(consts.DBConn).(*d.DBConn)
+	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
 
 	var html string
 	var err error
-	openChat := handler.TemplateOpenChat(state, db, user)
+	openChat := handler.TemplateOpenChat(state, dbConn, user)
 	if openChat == nil {
 		html, err = handler.TemplateWelcome(user)
 	} else {

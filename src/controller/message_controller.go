@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"neon-chat/src/consts"
-	d "neon-chat/src/db"
+	"neon-chat/src/db"
 	"neon-chat/src/handler"
-	pi "neon-chat/src/handler/parse"
-	a "neon-chat/src/model/app"
+	"neon-chat/src/handler/parse"
+	"neon-chat/src/model/app"
 	"neon-chat/src/model/event"
 	"neon-chat/src/sse"
 	"neon-chat/src/state"
@@ -24,17 +24,17 @@ func QuoteMessage(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("action not allowed"))
 		return
 	}
-	args, err := pi.ParseQueryString(r)
+	args, err := parse.ParseQueryString(r)
 	if err != nil {
 		log.Printf("[%s] QuoteMessage ERROR parsing arguments, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid arguments"))
 		return
 	}
-	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
-	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	html, err := handler.GetQuote(state, db, user, args.ChatId, args.MsgId)
+	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
+	html, err := handler.GetQuote(state, dbConn, user, args.ChatId, args.MsgId)
 	if err != nil {
 		log.Printf("[%s] QuoteMessage ERROR quoting message[%d] in chat[%d], %s\n",
 			reqId, args.ChatId, args.MsgId, err.Error())
@@ -56,32 +56,32 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("action not allowed"))
 		return
 	}
-	chatId, err := pi.ReadFormValueUint(r, "chatid")
+	chatId, err := parse.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] WARN AddMessage bad argument - chatid\n", reqId)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid chat id"))
 		return
 	}
-	inputText, err := pi.ReadFormValueString(r, "msg")
+	inputText, err := parse.ReadFormValueString(r, "msg")
 	if err != nil || len(inputText) < 1 {
 		log.Printf("[%s] WARN AddMessage bad argument - msg\n", reqId)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("message too short"))
 		return
 	}
-	quoteId, _ := pi.ReadFormValueUint(r, "quoteid")
-	author := r.Context().Value(consts.ActiveUser).(*a.User)
+	quoteId, _ := parse.ReadFormValueUint(r, "quoteid")
+	author := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
-	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	appChat, appMsg, err := handler.AddMessage(state, db, chatId, author, inputText, quoteId)
+	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
+	appChat, appMsg, err := handler.AddMessage(state, dbConn, chatId, author, inputText, quoteId)
 	if err != nil || appMsg == nil {
 		log.Printf("[%s] ERROR AddMessage while handing, %s, %v\n", reqId, err.Error(), inputText)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed adding message"))
 		return
 	}
-	err = sse.DistributeMsg(state, db.Tx, appChat, appMsg, event.MessageAdd)
+	err = sse.DistributeMsg(state, dbConn.Tx, appChat, appMsg, event.MessageAdd)
 	if err != nil {
 		log.Printf("ERROR HandleMessageAdd distributing msg update, %s\n", err)
 	}
@@ -97,22 +97,22 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	chatId, err := pi.ReadFormValueUint(r, "chatid")
+	chatId, err := parse.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] DeleteMessage ERROR bad arg - chatid, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	msgId, err := pi.ReadFormValueUint(r, "msgid")
+	msgId, err := parse.ReadFormValueUint(r, "msgid")
 	if err != nil {
 		log.Printf("[%s] DeleteMessage ERROR bad arg - msgid, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
-	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	appChat, deletedMsg, err := handler.DeleteMessage(state, db, chatId, user, msgId)
+	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
+	appChat, deletedMsg, err := handler.DeleteMessage(state, dbConn, chatId, user, msgId)
 	if err != nil {
 		log.Printf("[%s] DeleteMessage ERROR deletion failed: %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -124,7 +124,7 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAlreadyReported)
 		return
 	}
-	err = sse.DistributeMsg(state, db.Tx, appChat, deletedMsg, event.MessageDrop)
+	err = sse.DistributeMsg(state, dbConn.Tx, appChat, deletedMsg, event.MessageDrop)
 	if err != nil {
 		log.Printf("HandleMessageDelete ERROR distributing msg update, %s\n", err)
 	}

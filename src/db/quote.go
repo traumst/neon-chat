@@ -22,8 +22,8 @@ const QuoteSchema = `
 
 const QuoteIndex = ``
 
-func (db *DBConn) QuoteTableExists() bool {
-	return db.TableExists("quotes")
+func (dbConn *DBConn) QuoteTableExists() bool {
+	return dbConn.TableExists("quotes")
 }
 
 func AddQuote(dbConn sqlx.Ext, quote *Quote) (*Quote, error) {

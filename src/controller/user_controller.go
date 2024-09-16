@@ -192,16 +192,16 @@ func ChangeUser(w http.ResponseWriter, r *http.Request) {
 	}
 	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
-	db := r.Context().Value(consts.DBConn).(*db.DBConn)
+	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
 	user.Name = newName
-	updatedUser, err := handler.UpdateUser(state, db.Tx, user)
+	updatedUser, err := handler.UpdateUser(state, dbConn.Tx, user)
 	if err != nil {
 		log.Printf("[%s] ChangeUser ERROR failed to update user[%d], %s\n", reqId, user.Id, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("[fail]"))
 		return
 	}
-	err = sse.DistributeUserChange(state, db.Tx, nil, updatedUser, event.UserChange)
+	err = sse.DistributeUserChange(state, dbConn.Tx, nil, updatedUser, event.UserChange)
 	if err != nil {
 		log.Printf("[%s] ChangeUser ERROR failed to distribute user change, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusOK)
@@ -230,8 +230,8 @@ func SearchUsers(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("[noop]"))
 		return
 	}
-	db := r.Context().Value(consts.DBConn).(*db.DBConn)
-	users, err := handler.SearchUsers(db.Conn, name)
+	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
+	users, err := handler.SearchUsers(dbConn.Conn, name)
 	if err != nil {
 		log.Printf("[%s] SearchUsers INFO no users matching[%s], %s\n", reqId, name, err.Error())
 		w.WriteHeader(http.StatusOK)

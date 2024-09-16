@@ -29,8 +29,8 @@ const UserSchema = `
 	);`
 const UserIndex = `CREATE INDEX IF NOT EXISTS idx_user_status ON users(status);`
 
-func (db *DBConn) UserTableExists() bool {
-	return db.TableExists("users")
+func (dbConn *DBConn) UserTableExists() bool {
+	return dbConn.TableExists("users")
 }
 
 func AddUser(dbConn sqlx.Ext, user *User) (*User, error) {

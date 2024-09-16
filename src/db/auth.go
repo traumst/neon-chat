@@ -23,8 +23,8 @@ const AuthSchema string = `
 	);`
 const AuthIndex string = `CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_type_hash ON auth(type, hash);`
 
-func (db *DBConn) AuthTableExists() bool {
-	return db.TableExists("auth")
+func (dbConn *DBConn) AuthTableExists() bool {
+	return dbConn.TableExists("auth")
 }
 
 func AddAuth(dbConn sqlx.Ext, auth Auth) (*Auth, error) {

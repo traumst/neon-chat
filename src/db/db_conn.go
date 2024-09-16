@@ -35,30 +35,30 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 		return nil, fmt.Errorf("error opening db: %s", err)
 	}
 	log.Printf("db connection established with connections[%d]", conn.Stats().MaxOpenConnections)
-	db := DBConn{Conn: conn}
-	err = db.init()
-	return &db, err
+	dbConn := DBConn{Conn: conn}
+	err = dbConn.init()
+	return &dbConn, err
 }
 
-func (db *DBConn) ConnClose() {
+func (dbConn *DBConn) ConnClose() {
 	// TODO count active tx
-	db.Conn.Close()
+	dbConn.Conn.Close()
 }
 
-func (db *DBConn) init() error {
-	shouldMigrate, err := db.createTables()
+func (dbConn *DBConn) init() error {
+	shouldMigrate, err := dbConn.createTables()
 	if err != nil {
 		log.Printf("DBConn.init ERROR failed to create schema, %s", err)
 		return fmt.Errorf("failed to create schema")
 	}
 	if shouldMigrate {
-		err = db.ApplyMigrations()
+		err = dbConn.ApplyMigrations()
 		if err != nil {
 			log.Printf("DBConn.init ERROR failed to apply migrations, %s", err)
 			return fmt.Errorf("failed to apply migrations")
 		}
 	}
-	err = db.createIndex()
+	err = dbConn.createIndex()
 	if err != nil {
 		log.Printf("DBConn.init ERROR failed to create schema, %s", err)
 		return fmt.Errorf("failed to create schema")
@@ -67,7 +67,7 @@ func (db *DBConn) init() error {
 	return nil
 }
 
-func (db *DBConn) createIndex() (err error) {
+func (dbConn *DBConn) createIndex() (err error) {
 	// Note: update when adding new tables
 	indecies := MigrationIndex +
 		UserIndex + AuthIndex + AvatarSchema + ReservationIndex +
@@ -77,7 +77,7 @@ func (db *DBConn) createIndex() (err error) {
 		return nil
 	}
 
-	_, err = db.Conn.Exec(strings.TrimRight(indecies, "\n"))
+	_, err = dbConn.Conn.Exec(strings.TrimRight(indecies, "\n"))
 	if err != nil {
 		log.Printf("createSchema ERROR failed to create indexes, %s", err.Error())
 		return fmt.Errorf("failed to create indexes")
@@ -85,14 +85,14 @@ func (db *DBConn) createIndex() (err error) {
 	return nil
 }
 
-func (db *DBConn) createTables() (shouldMigrate bool, err error) {
-	schema, shouldMigrate := db.concatSchema()
+func (dbConn *DBConn) createTables() (shouldMigrate bool, err error) {
+	schema, shouldMigrate := dbConn.concatSchema()
 	if schema == "" {
 		log.Println("createTables TRACE no tables to create")
 		return true, nil
 	}
 
-	_, err = db.Conn.Exec(strings.TrimRight(schema, "\n"))
+	_, err = dbConn.Conn.Exec(strings.TrimRight(schema, "\n"))
 	if err != nil {
 		log.Printf("createTables ERROR failed to create schema, %s", err.Error())
 		err = fmt.Errorf("failed to create schema")
@@ -101,8 +101,8 @@ func (db *DBConn) createTables() (shouldMigrate bool, err error) {
 }
 
 // Note: update when adding new tables
-func (db *DBConn) concatSchema() (schema string, shouldMigrate bool) {
-	if db.MigrationsTableExists() {
+func (dbConn *DBConn) concatSchema() (schema string, shouldMigrate bool) {
+	if dbConn.MigrationsTableExists() {
 		log.Println("concatSchema TRACE migration table exists")
 		// TODO meta-migrate, ie migrations migration
 	} else {
@@ -110,7 +110,7 @@ func (db *DBConn) concatSchema() (schema string, shouldMigrate bool) {
 		schema += MigrationSchema + "\n"
 	}
 
-	if db.UserTableExists() {
+	if dbConn.UserTableExists() {
 		log.Println("concatSchema TRACE user table exists")
 		shouldMigrate = true
 	} else {
@@ -118,7 +118,7 @@ func (db *DBConn) concatSchema() (schema string, shouldMigrate bool) {
 		schema += UserSchema + "\n"
 	}
 
-	if db.AuthTableExists() {
+	if dbConn.AuthTableExists() {
 		log.Println("concatSchema TRACE auth table exists")
 		shouldMigrate = true
 	} else {
@@ -126,7 +126,7 @@ func (db *DBConn) concatSchema() (schema string, shouldMigrate bool) {
 		schema += AuthSchema + "\n"
 	}
 
-	if db.AvatarTableExists() {
+	if dbConn.AvatarTableExists() {
 		log.Println("concatSchema TRACE avatar table exists")
 		shouldMigrate = true
 	} else {
@@ -134,7 +134,7 @@ func (db *DBConn) concatSchema() (schema string, shouldMigrate bool) {
 		schema += AvatarSchema + "\n"
 	}
 
-	if db.ReservationTableExists() {
+	if dbConn.ReservationTableExists() {
 		log.Println("concatSchema TRACE reservation table exists")
 		shouldMigrate = true
 	} else {
@@ -142,7 +142,7 @@ func (db *DBConn) concatSchema() (schema string, shouldMigrate bool) {
 		schema += ReservationSchema + "\n"
 	}
 
-	if db.ChatTableExists() {
+	if dbConn.ChatTableExists() {
 		log.Println("concatSchema TRACE chat table exists")
 		shouldMigrate = true
 	} else {
@@ -150,7 +150,7 @@ func (db *DBConn) concatSchema() (schema string, shouldMigrate bool) {
 		schema += ChatSchema + "\n"
 	}
 
-	if db.ChatUserTableExists() {
+	if dbConn.ChatUserTableExists() {
 		log.Println("concatSchema TRACE chat_user table exists")
 		shouldMigrate = true
 	} else {
@@ -158,7 +158,7 @@ func (db *DBConn) concatSchema() (schema string, shouldMigrate bool) {
 		schema += ChatUserSchema + "\n"
 	}
 
-	if db.MessageTableExists() {
+	if dbConn.MessageTableExists() {
 		log.Println("concatSchema TRACE messages table exists")
 		shouldMigrate = true
 	} else {
@@ -166,7 +166,7 @@ func (db *DBConn) concatSchema() (schema string, shouldMigrate bool) {
 		schema += MessageSchema + "\n"
 	}
 
-	if db.QuoteTableExists() {
+	if dbConn.QuoteTableExists() {
 		log.Println("concatSchema TRACE quotes table exists")
 		shouldMigrate = true
 	} else {

@@ -5,21 +5,21 @@ import (
 	"net/http"
 
 	"neon-chat/src/consts"
-	d "neon-chat/src/db"
+	"neon-chat/src/db"
 	"neon-chat/src/handler"
 	"neon-chat/src/sse"
 	"neon-chat/src/state"
 	h "neon-chat/src/utils/http"
 )
 
-func PollUpdates(s *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Request) {
+func PollUpdates(s *state.State, dbConn *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	if r.Method != http.MethodGet {
 		log.Printf("[%s] PollUpdates TRACE does not accept %s\n", reqId, r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	user, err := handler.ReadSession(s, db, w, r)
+	user, err := handler.ReadSession(s, dbConn, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] PollUpdates WARN user, %s\n", reqId, err)
 		return

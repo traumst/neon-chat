@@ -25,11 +25,11 @@ const ReservationSchema = `
 	);`
 const ReservationIndex = `CREATE INDEX IF NOT EXISTS idx_reserve_expire ON reservations(expire);`
 
-func (db *DBConn) ReservationTableExists() bool {
-	return db.TableExists("reservations")
+func (dbConn *DBConn) ReservationTableExists() bool {
+	return dbConn.TableExists("reservations")
 }
 
-func (db *DBConn) AddReservation(reserve Reservation) (*Reservation, error) {
+func (dbConn *DBConn) AddReservation(reserve Reservation) (*Reservation, error) {
 	if reserve.Id != 0 {
 		return nil, fmt.Errorf("reserve already has an id[%d]", reserve.Id)
 	} else if reserve.UserId <= 0 {
@@ -39,11 +39,11 @@ func (db *DBConn) AddReservation(reserve Reservation) (*Reservation, error) {
 	} else if reserve.Expire.IsZero() {
 		return nil, fmt.Errorf("reserve expiration is zero")
 	}
-	if db.Tx == nil {
+	if dbConn.Tx == nil {
 		return nil, fmt.Errorf("db has no transaction")
 	}
 
-	result, err := db.Tx.Exec(`INSERT INTO reservations (user_id, token, expire) VALUES (?, ?, ?) 
+	result, err := dbConn.Tx.Exec(`INSERT INTO reservations (user_id, token, expire) VALUES (?, ?, ?) 
 		ON CONFLICT(user_id) DO UPDATE 
 			SET token = excluded.token, 
 				expire = excluded.expire;`,

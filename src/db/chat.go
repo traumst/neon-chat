@@ -26,8 +26,8 @@ const ChatSchema = `
 // TODO chat search
 const ChatIndex = `CREATE INDEX IF NOT EXISTS idx_chat_title ON chats(title);`
 
-func (db *DBConn) ChatTableExists() bool {
-	return db.TableExists("chats")
+func (dbConn *DBConn) ChatTableExists() bool {
+	return dbConn.TableExists("chats")
 }
 
 func AddChat(dbConn sqlx.Ext, chat *Chat) (*Chat, error) {

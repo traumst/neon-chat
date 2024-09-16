@@ -15,7 +15,7 @@ func ExpelUser(
 	chatId uint,
 	expelledId uint,
 ) (*app.Chat, *app.User, error) {
-	appExpelled, err := removeUser(state, dbConn, user, chatId, uint(expelledId))
+	appExpelled, err := RemoveUser(state, dbConn, user, chatId, uint(expelledId))
 	if err != nil {
 		log.Printf("HandleUserExpelled ERROR failed to expell, %s\n", err.Error())
 		return nil, nil, fmt.Errorf("failed to expell user, %s", err.Error())

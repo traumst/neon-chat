@@ -5,12 +5,12 @@ import (
 	"log"
 )
 
-func (db *DBConn) TableExists(tableName string) bool {
+func (dbConn *DBConn) TableExists(tableName string) bool {
 	if tableName == "" {
 		panic("check if table exist - empty name")
 	}
 	table := ""
-	err := db.Conn.Get(
+	err := dbConn.Conn.Get(
 		&table,
 		"SELECT name FROM sqlite_master WHERE type='table' and name=?;",
 		tableName)

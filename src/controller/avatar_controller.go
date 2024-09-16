@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"neon-chat/src/consts"
-	d "neon-chat/src/db"
+	"neon-chat/src/db"
 	"neon-chat/src/handler"
-	a "neon-chat/src/model/app"
+	"neon-chat/src/model/app"
 	"neon-chat/src/model/event"
 	"neon-chat/src/sse"
 	"neon-chat/src/state"
@@ -39,9 +39,9 @@ func AddAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	user := r.Context().Value(consts.ActiveUser).(*a.User)
-	avatar, err := handler.UpdateAvatar(db, user.Id, &file, info)
+	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
+	user := r.Context().Value(consts.ActiveUser).(*app.User)
+	avatar, err := handler.UpdateAvatar(dbConn, user.Id, &file, info)
 	if err != nil {
 		log.Printf("controller.AddAvatar ERROR failed to update to avatar[%s], %s", info.Filename, err.Error())
 		http.Error(w, "[fail]", http.StatusBadRequest)
@@ -72,9 +72,9 @@ func GetAvatar(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Only GET method is allowed"))
 		return
 	}
-	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	user := r.Context().Value(consts.ActiveUser).(*a.User)
-	avatar, err := handler.GetAvatar(db.Conn, user.Id)
+	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
+	user := r.Context().Value(consts.ActiveUser).(*app.User)
+	avatar, err := handler.GetAvatar(dbConn.Conn, user.Id)
 	if err != nil {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(""))

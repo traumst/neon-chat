@@ -9,7 +9,13 @@ import (
 	"neon-chat/src/state"
 )
 
-func removeUser(state *state.State, dbConn *db.DBConn, user *app.User, chatId uint, expelledId uint) (*app.User, error) {
+func RemoveUser(
+	state *state.State,
+	dbConn *db.DBConn,
+	user *app.User,
+	chatId uint,
+	expelledId uint,
+) (*app.User, error) {
 	log.Printf("ExpelUser TRACE user[%d] expells[%d] from chat[%d]\n", user.Id, expelledId, chatId)
 	bothCanChat, err := db.UsersCanChat(dbConn.Conn, chatId, user.Id, expelledId)
 	if err != nil {
