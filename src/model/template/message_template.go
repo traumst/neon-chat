@@ -4,12 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"neon-chat/src/utils"
-	"sync"
 )
 
 type MessageTemplate struct {
-	mu               sync.Mutex
 	IntermediateId   string
 	ChatId           uint
 	MsgId            uint
@@ -22,15 +19,6 @@ type MessageTemplate struct {
 	Text             string
 	TextIntro        string
 	MessageDropEvent string
-}
-
-func (m *MessageTemplate) getIntermediateId() string {
-	if m.IntermediateId == "" {
-		m.mu.Lock()
-		defer m.mu.Unlock()
-		m.IntermediateId = utils.RandStringBytes(5)
-	}
-	return m.IntermediateId
 }
 
 func (m *MessageTemplate) GetId() uint {

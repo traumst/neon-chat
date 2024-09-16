@@ -7,9 +7,9 @@ import (
 
 	"neon-chat/src/consts"
 	d "neon-chat/src/db"
-	"neon-chat/src/handler/chatuser"
+	"neon-chat/src/handler/crud"
+	u "neon-chat/src/handler/crud"
 	pi "neon-chat/src/handler/parse"
-	u "neon-chat/src/handler/user"
 	a "neon-chat/src/model/app"
 	"neon-chat/src/model/event"
 	t "neon-chat/src/model/template"
@@ -46,7 +46,7 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(consts.ActiveUser).(*a.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	appChat, appInvitee, err := chatuser.InviteUser(state, db, user, chatId, inviteeName)
+	appChat, appInvitee, err := crud.InviteUser(state, db, user, chatId, inviteeName)
 	if err != nil {
 		log.Printf("[%s] InviteUser ERROR failed to invite user[%d] into chat[%d], %s\n",
 			reqId, appInvitee.Id, chatId, err.Error())
@@ -59,6 +59,10 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("User not found"))
 		return
+	}
+	err = sse.DistributeChat(state, db.Tx, appChat, user, appInvitee, appInvitee, event.ChatInvite)
+	if err != nil {
+		log.Printf("HandleUserInvite WARN cannot distribute chat invite, %s\n", err.Error())
 	}
 	template := t.UserTemplate{
 		ChatId:      chatId,
@@ -104,12 +108,24 @@ func ExpelUser(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(consts.ActiveUser).(*a.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	appExpelled, err := chatuser.ExpelUser(state, db, user, chatId, expelledId)
+	appChat, appExpelled, err := crud.ExpelUser(state, db, user, chatId, expelledId)
 	if err != nil {
 		log.Printf("[%s] ExpelUser ERROR failed to expell user[%d] from chat[%d], %s\n",
 			reqId, expelledId, chatId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+	err = sse.DistributeChat(state, db.Tx, appChat, user, appExpelled, appExpelled, event.ChatClose)
+	if err != nil {
+		log.Printf("HandleUserExpelled ERROR cannot distribute chat close, %s\n", err.Error())
+	}
+	err = sse.DistributeChat(state, db.Tx, appChat, user, appExpelled, appExpelled, event.ChatDrop)
+	if err != nil {
+		log.Printf("HandleUserExpelled ERROR cannot distribute chat deleted, %s\n", err.Error())
+	}
+	err = sse.DistributeChat(state, db.Tx, appChat, user, nil, appExpelled, event.ChatExpel)
+	if err != nil {
+		log.Printf("HandleUserExpelled ERROR cannot distribute chat expel, %s\n", err.Error())
 	}
 	w.(*h.StatefulWriter).IndicateChanges()
 	log.Printf("[%s] ExpelUser TRACE chat[%d] owner[%d] removed[%d]\n", reqId, chatId, user.Id, appExpelled.Id)
@@ -134,11 +150,24 @@ func LeaveChat(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(consts.ActiveUser).(*a.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	err = chatuser.LeaveChat(state, db, user, chatId)
+	appChat, leftUser, err := crud.LeaveChat(state, db, user, chatId)
 	if err != nil {
 		log.Printf("[%s] LeaveChat ERROR failed to leave chat[%d], %s\n", reqId, chatId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+	log.Printf("HandleUserLeaveChat TRACE informing users in chat[%d]\n", appChat.Id)
+	err = sse.DistributeChat(state, db.Tx, appChat, leftUser, leftUser, leftUser, event.ChatClose)
+	if err != nil {
+		log.Printf("HandleUserLeaveChat ERROR cannot distribute chat close, %s\n", err.Error())
+	}
+	err = sse.DistributeChat(state, db.Tx, appChat, leftUser, leftUser, leftUser, event.ChatDrop)
+	if err != nil {
+		log.Printf("HandleUserLeaveChat ERROR cannot distribute chat deleted, %s\n", err.Error())
+	}
+	err = sse.DistributeChat(state, db.Tx, appChat, leftUser, nil, leftUser, event.ChatLeave)
+	if err != nil {
+		log.Printf("HandleUserLeaveChat ERROR cannot distribute chat user drop, %s\n", err.Error())
 	}
 	w.(*h.StatefulWriter).IndicateChanges()
 	log.Printf("[%s] LeaveChat TRACE user[%d] left chat[%d]\n", reqId, user.Id, chatId)

@@ -10,7 +10,7 @@ import (
 	"neon-chat/src/convert"
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
-	au "neon-chat/src/handler/auth"
+	au "neon-chat/src/handler/crud"
 	a "neon-chat/src/model/app"
 	"neon-chat/src/state"
 	"neon-chat/src/utils"

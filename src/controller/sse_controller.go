@@ -7,7 +7,7 @@ import (
 	"neon-chat/src/consts"
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
-	"neon-chat/src/handler/auth"
+	"neon-chat/src/handler/crud"
 	"neon-chat/src/state"
 	h "neon-chat/src/utils/http"
 )
@@ -19,7 +19,7 @@ func PollUpdates(s *state.State, db *d.DBConn, w http.ResponseWriter, r *http.Re
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	user, err := auth.ReadSession(s, db, w, r)
+	user, err := crud.ReadSession(s, db, w, r)
 	if err != nil || user == nil {
 		log.Printf("[%s] PollUpdates WARN user, %s\n", reqId, err)
 		return

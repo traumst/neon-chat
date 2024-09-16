@@ -7,7 +7,7 @@ import (
 
 	"neon-chat/src/consts"
 	d "neon-chat/src/db"
-	"neon-chat/src/handler/avatar"
+	"neon-chat/src/handler/crud"
 	a "neon-chat/src/model/app"
 	"neon-chat/src/model/event"
 	"neon-chat/src/sse"
@@ -41,7 +41,7 @@ func AddAvatar(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
 	user := r.Context().Value(consts.ActiveUser).(*a.User)
-	avatar, err := avatar.UpdateAvatar(db, user.Id, &file, info)
+	avatar, err := crud.UpdateAvatar(db, user.Id, &file, info)
 	if err != nil {
 		log.Printf("controller.AddAvatar ERROR failed to update to avatar[%s], %s", info.Filename, err.Error())
 		http.Error(w, "[fail]", http.StatusBadRequest)
@@ -74,7 +74,7 @@ func GetAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
 	user := r.Context().Value(consts.ActiveUser).(*a.User)
-	avatar, err := avatar.GetAvatar(db.Conn, user.Id)
+	avatar, err := crud.GetAvatar(db.Conn, user.Id)
 	if err != nil {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(""))
