@@ -5,7 +5,7 @@ import (
 	"io"
 	"log"
 	"neon-chat/src/db"
-	"neon-chat/src/handler/state"
+	"neon-chat/src/state"
 	"neon-chat/src/utils"
 	"os"
 	"strings"

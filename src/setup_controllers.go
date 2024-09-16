@@ -6,7 +6,7 @@ import (
 	"neon-chat/src/controller"
 	"neon-chat/src/controller/middleware"
 	"neon-chat/src/db"
-	"neon-chat/src/handler/state"
+	"neon-chat/src/state"
 )
 
 func SetupControllers(state *state.State, db *db.DBConn) {

@@ -2,7 +2,7 @@ package handler
 
 import (
 	"log"
-	"neon-chat/src/handler/state"
+	"neon-chat/src/state"
 )
 
 // TODO queue mechanism for delta updates

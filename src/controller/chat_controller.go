@@ -9,10 +9,13 @@ import (
 
 	"neon-chat/src/consts"
 	d "neon-chat/src/db"
-	"neon-chat/src/handler"
-	"neon-chat/src/handler/shared"
-	"neon-chat/src/handler/state"
-	a "neon-chat/src/model/app"
+	"neon-chat/src/handler/chat"
+	pi "neon-chat/src/handler/parse"
+	"neon-chat/src/model/app"
+	"neon-chat/src/model/event"
+	"neon-chat/src/model/template"
+	"neon-chat/src/sse"
+	"neon-chat/src/state"
 	"neon-chat/src/utils"
 	h "neon-chat/src/utils/http"
 )
@@ -20,8 +23,8 @@ import (
 func Welcome(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] Welcome TRACE\n", reqId)
-	user := r.Context().Value(consts.ActiveUser).(*a.User)
-	html, err := handler.TemplateWelcome(user)
+	user := r.Context().Value(consts.ActiveUser).(*app.User)
+	html, err := chat.TemplateWelcome(user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("failed to template html, %s", err.Error())))
@@ -56,10 +59,10 @@ func OpenChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	html, err := handler.HandleChatOpen(state, db, user, uint(chatId))
+	html, err := chat.OpenChat(state, db, user, uint(chatId))
 	if err != nil {
 		log.Printf("[%s] OpenChat ERROR cannot open chat[%d], %s\n", reqId, chatId, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -92,16 +95,35 @@ func AddChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	html, err := handler.HandleChatAdd(state, db, user, chatName)
+	tmpl, err := chat.AddChat(state, db, user, chatName)
 	if err != nil {
-		log.Printf("sendChat ERROR cannot template chat[%s], %s", chatName, err)
+		log.Printf("AddChat ERROR cannot template chat[%s], %s", chatName, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to template chat"))
 		return
 	}
+	appChat := app.Chat{
+		Id:        tmpl.ChatId,
+		Name:      tmpl.ChatName,
+		OwnerId:   tmpl.Owner.(*template.UserTemplate).UserId,
+		OwnerName: tmpl.Owner.(*template.UserTemplate).UserName,
+	}
+	err = sse.DistributeChat(state, db.Tx, &appChat, user, user, user, event.ChatAdd)
+	if err != nil {
+		log.Printf("AddChat ERROR cannot distribute chat[%d] creation to user[%d]: %s",
+			appChat.Id, user.Id, err.Error())
+	}
+	html, err := tmpl.HTML()
+	if err != nil {
+		log.Printf("AddChat ERROR cannot template chat[%s], %s", chatName, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to template chat"))
+		return
+	}
+
 	w.(*h.StatefulWriter).IndicateChanges()
 	log.Printf("[%s] AddChat TRACE chat[%s] created by user[%d]\n", reqId, chatName, user.Id)
 	w.WriteHeader(http.StatusFound)
@@ -115,16 +137,16 @@ func CloseChat(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	chatId, err := shared.ReadFormValueUint(r, "chatid")
+	chatId, err := pi.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] CloseChat ERROR chat id, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	html, err := handler.HandleChatClose(state, db, user, uint(chatId))
+	html, err := chat.CloseChat(state, db, user, uint(chatId))
 	if err != nil {
 		log.Printf("[%s] CloseChat ERROR cannot template welcome page, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -143,20 +165,32 @@ func DeleteChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chatId, err := shared.ReadFormValueUint(r, "chatid")
+	chatId, err := pi.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] DeleteChat ERROR chat id, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	err = handler.HandleChatDelete(state, db, user, chatId)
+	deletedChat, err := chat.DeleteChat(state, db, user, chatId)
 	if err != nil {
 		log.Printf("[%s] DeleteChat WARN user[%d] failed to delete chat[%d], %s\n", reqId, user.Id, chatId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+	err = sse.DistributeChat(state, db.Tx, deletedChat, user, nil, user, event.ChatClose)
+	if err != nil {
+		log.Printf("DeleteChat ERROR cannot distribute chat close, %s", err.Error())
+	}
+	err = sse.DistributeChat(state, db.Tx, deletedChat, user, nil, user, event.ChatDrop)
+	if err != nil {
+		log.Printf("DeleteChat ERROR cannot distribute chat deleted, %s", err.Error())
+	}
+	err = sse.DistributeChat(state, db.Tx, deletedChat, user, nil, nil, event.ChatExpel)
+	if err != nil {
+		log.Printf("DeleteChat ERROR cannot distribute chat user expel, %s", err.Error())
 	}
 	w.(*h.StatefulWriter).IndicateChanges()
 	log.Printf("[%s] DeleteChat TRACE user[%d] deleted chat [%d]\n", reqId, user.Id, chatId)

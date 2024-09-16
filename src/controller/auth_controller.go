@@ -10,8 +10,9 @@ import (
 	"neon-chat/src/convert"
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
-	"neon-chat/src/handler/state"
+	au "neon-chat/src/handler/auth"
 	a "neon-chat/src/model/app"
+	"neon-chat/src/state"
 	"neon-chat/src/utils"
 	h "neon-chat/src/utils/http"
 )
@@ -40,7 +41,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] Login TRACE authentication check for user[%s] auth[%s]\n",
 		reqId, loginUser, EmailAuthType)
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	user, auth, err := handler.Authenticate(db, loginUser, loginPass, EmailAuthType)
+	user, auth, err := au.Authenticate(db, loginUser, loginPass, EmailAuthType)
 	if err != nil {
 		log.Printf("[%s] Login ERROR unauth user[%s], %s\n", reqId, loginUser, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
@@ -104,7 +105,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	user, auth, _ := handler.Authenticate(db, signupUser, signupPass, EmailAuthType)
+	user, auth, _ := au.Authenticate(db, signupUser, signupPass, EmailAuthType)
 	if user != nil && user.Status == a.UserStatusActive && auth != nil {
 		log.Printf("[%s] SignUp TRACE signedIn instead of signUp user[%s]\n", reqId, signupUser)
 		h.SetSessionCookie(w, user, auth)
@@ -135,7 +136,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		Status: a.UserStatusPending,
 		Salt:   salt,
 	}
-	user, auth, err := handler.Register(db, user, signupPass, EmailAuthType)
+	user, auth, err := au.Register(db, user, signupPass, EmailAuthType)
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR on register user[%s][%s], %s\n", reqId, signupUser, signupEmail, err.Error())
 		w.WriteHeader(http.StatusBadRequest)

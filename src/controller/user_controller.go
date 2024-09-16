@@ -7,13 +7,14 @@ import (
 
 	"neon-chat/src/consts"
 	d "neon-chat/src/db"
-	"neon-chat/src/handler"
-	"neon-chat/src/handler/shared"
-	"neon-chat/src/handler/sse"
-	"neon-chat/src/handler/state"
+	"neon-chat/src/handler/chatuser"
+	pi "neon-chat/src/handler/parse"
+	u "neon-chat/src/handler/user"
 	a "neon-chat/src/model/app"
 	"neon-chat/src/model/event"
 	t "neon-chat/src/model/template"
+	"neon-chat/src/sse"
+	"neon-chat/src/state"
 	h "neon-chat/src/utils/http"
 )
 
@@ -25,13 +26,13 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	chatId, err := shared.ReadFormValueUint(r, "chatid")
+	chatId, err := pi.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] InviteUser ERROR chat id, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	inviteeName, err := shared.ReadFormValueString(r, "invitee")
+	inviteeName, err := pi.ReadFormValueString(r, "invitee")
 	if err != nil {
 		log.Printf("[%s] InviteUser ERROR invitee name, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
@@ -45,7 +46,7 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(consts.ActiveUser).(*a.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	appChat, appInvitee, err := handler.HandleUserInvite(state, db, user, chatId, inviteeName)
+	appChat, appInvitee, err := chatuser.InviteUser(state, db, user, chatId, inviteeName)
 	if err != nil {
 		log.Printf("[%s] InviteUser ERROR failed to invite user[%d] into chat[%d], %s\n",
 			reqId, appInvitee.Id, chatId, err.Error())
@@ -88,13 +89,13 @@ func ExpelUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	chatId, err := shared.ReadFormValueUint(r, "chatid")
+	chatId, err := pi.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] ExpelUser ERROR chat id, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	expelledId, err := shared.ReadFormValueUint(r, "userid")
+	expelledId, err := pi.ReadFormValueUint(r, "userid")
 	if err != nil {
 		log.Printf("[%s] ExpelUser ERROR expelled id, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
@@ -103,7 +104,7 @@ func ExpelUser(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(consts.ActiveUser).(*a.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	appExpelled, err := handler.HandleUserExpelled(state, db, user, chatId, expelledId)
+	appExpelled, err := chatuser.ExpelUser(state, db, user, chatId, expelledId)
 	if err != nil {
 		log.Printf("[%s] ExpelUser ERROR failed to expell user[%d] from chat[%d], %s\n",
 			reqId, expelledId, chatId, err.Error())
@@ -124,7 +125,7 @@ func LeaveChat(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	chatId, err := shared.ReadFormValueUint(r, "chatid")
+	chatId, err := pi.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] LeaveChat ERROR chat id, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
@@ -133,7 +134,7 @@ func LeaveChat(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(consts.ActiveUser).(*a.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	err = handler.HandleUserLeaveChat(state, db, user, chatId)
+	err = chatuser.LeaveChat(state, db, user, chatId)
 	if err != nil {
 		log.Printf("[%s] LeaveChat ERROR failed to leave chat[%d], %s\n", reqId, chatId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -165,7 +166,7 @@ func ChangeUser(w http.ResponseWriter, r *http.Request) {
 	state := r.Context().Value(consts.AppState).(*state.State)
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
 	user.Name = newName
-	updatedUser, err := shared.UpdateUser(state, db.Tx, user)
+	updatedUser, err := u.UpdateUser(state, db.Tx, user)
 	if err != nil {
 		log.Printf("[%s] ChangeUser ERROR failed to update user[%d], %s\n", reqId, user.Id, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -202,7 +203,7 @@ func SearchUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	users, err := shared.SearchUsers(db.Conn, name)
+	users, err := u.SearchUsers(db.Conn, name)
 	if err != nil {
 		log.Printf("[%s] SearchUsers INFO no users matching[%s], %s\n", reqId, name, err.Error())
 		w.WriteHeader(http.StatusOK)

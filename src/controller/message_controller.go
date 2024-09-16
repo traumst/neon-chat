@@ -7,9 +7,9 @@ import (
 	"neon-chat/src/consts"
 	d "neon-chat/src/db"
 	"neon-chat/src/handler"
-	"neon-chat/src/handler/shared"
-	"neon-chat/src/handler/state"
+	pi "neon-chat/src/handler/parse"
 	a "neon-chat/src/model/app"
+	"neon-chat/src/state"
 	h "neon-chat/src/utils/http"
 )
 
@@ -22,7 +22,7 @@ func QuoteMessage(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("action not allowed"))
 		return
 	}
-	args, err := shared.ParseQueryString(r)
+	args, err := pi.ParseQueryString(r)
 	if err != nil {
 		log.Printf("[%s] QuoteMessage ERROR parsing arguments, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -54,21 +54,21 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("action not allowed"))
 		return
 	}
-	chatId, err := shared.ReadFormValueUint(r, "chatid")
+	chatId, err := pi.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] WARN AddMessage bad argument - chatid\n", reqId)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid chat id"))
 		return
 	}
-	msg, err := shared.ReadFormValueString(r, "msg")
+	msg, err := pi.ReadFormValueString(r, "msg")
 	if err != nil || len(msg) < 1 {
 		log.Printf("[%s] WARN AddMessage bad argument - msg\n", reqId)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("message too short"))
 		return
 	}
-	quoteId, _ := shared.ReadFormValueUint(r, "quoteid")
+	quoteId, _ := pi.ReadFormValueUint(r, "quoteid")
 	author := r.Context().Value(consts.ActiveUser).(*a.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	db := r.Context().Value(consts.DBConn).(*d.DBConn)
@@ -91,13 +91,13 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	chatId, err := shared.ReadFormValueUint(r, "chatid")
+	chatId, err := pi.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] DeleteMessage ERROR bad arg - chatid, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	msgId, err := shared.ReadFormValueUint(r, "msgid")
+	msgId, err := pi.ReadFormValueUint(r, "msgid")
 	if err != nil {
 		log.Printf("[%s] DeleteMessage ERROR bad arg - msgid, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
