@@ -5,7 +5,7 @@ import (
 	"log"
 	"neon-chat/src/consts"
 	"neon-chat/src/db"
-	"neon-chat/src/handler/crud"
+	"neon-chat/src/handler"
 	"neon-chat/src/state"
 	"net/http"
 )
@@ -17,7 +17,7 @@ func AuthReadMiddleware(state *state.State, db *db.DBConn) Middleware {
 			log.Println("TRACE with auth read middleware")
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				log.Println(r.Context().Value(consts.ReqIdKey).(string), "TRACE reading user session auth")
-				user, _ := crud.ReadSession(state, db, w, r)
+				user, _ := handler.ReadSession(state, db, w, r)
 				ctx := r.Context()
 				if user != nil {
 					ctx = context.WithValue(ctx, consts.ActiveUser, user)

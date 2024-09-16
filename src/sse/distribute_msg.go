@@ -5,7 +5,7 @@ import (
 	"log"
 	"sync"
 
-	"neon-chat/src/handler/crud"
+	"neon-chat/src/handler"
 	"neon-chat/src/model/app"
 	"neon-chat/src/model/event"
 	"neon-chat/src/state"
@@ -23,7 +23,7 @@ func DistributeMsg(
 	if chat == nil || msg == nil {
 		return fmt.Errorf("mandatory argument/s cannot be nil")
 	}
-	users, err := crud.GetChatUsers(dbConn, chat.Id)
+	users, err := handler.GetChatUsers(dbConn, chat.Id)
 	if err != nil {
 		return fmt.Errorf("failed to get users in chat[%d], %s", chat.Id, err)
 	}

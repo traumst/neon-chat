@@ -6,7 +6,7 @@ import (
 
 	"neon-chat/src/consts"
 	d "neon-chat/src/db"
-	"neon-chat/src/handler/crud"
+	"neon-chat/src/handler"
 	a "neon-chat/src/model/app"
 	t "neon-chat/src/model/template"
 	"neon-chat/src/state"
@@ -27,7 +27,7 @@ func RenderHome(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("TRACE [%s] RenderHome\n", reqId)
 	ctx := r.Context()
-	html, err := crud.TemplateHome(
+	html, err := handler.TemplateHome(
 		ctx.Value(consts.AppState).(*state.State),
 		ctx.Value(consts.DBConn).(*d.DBConn),
 		ctx.Value(consts.ActiveUser).(*a.User),

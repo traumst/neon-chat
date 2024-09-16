@@ -6,7 +6,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"neon-chat/src/handler/crud"
+	"neon-chat/src/handler"
 	"neon-chat/src/model/app"
 	"neon-chat/src/model/event"
 	"neon-chat/src/state"
@@ -37,7 +37,7 @@ func DistributeChat(
 	if targetUser != nil {
 		targetUsers = []*app.User{targetUser}
 	} else {
-		targetUsers, err = crud.GetChatUsers(dbConn, chat.Id)
+		targetUsers, err = handler.GetChatUsers(dbConn, chat.Id)
 	}
 	if err != nil {
 		return fmt.Errorf("failed to get chat users: %s", err)
