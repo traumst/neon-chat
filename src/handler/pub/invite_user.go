@@ -3,10 +3,13 @@ package pub
 import (
 	"fmt"
 	"log"
+	"neon-chat/src/convert"
 	"neon-chat/src/db"
 	"neon-chat/src/handler/priv"
 	"neon-chat/src/model/app"
 	"neon-chat/src/state"
+
+	"github.com/jmoiron/sqlx"
 )
 
 func InviteUser(
@@ -16,7 +19,7 @@ func InviteUser(
 	chatId uint,
 	inviteeName string,
 ) (*app.Chat, *app.User, error) {
-	appInvitee, err := priv.SearchUser(dbConn.Tx, inviteeName)
+	appInvitee, err := searchUser(dbConn.Tx, inviteeName)
 	if err != nil {
 		log.Printf("HandleUserInvite ERROR invitee not found [%s], %s\n", inviteeName, err.Error())
 		return nil, nil, fmt.Errorf("invitee not found")
@@ -40,4 +43,19 @@ func InviteUser(
 		return nil, nil, fmt.Errorf("failed to add user to chat in db")
 	}
 	return appChat, appInvitee, nil
+}
+
+func searchUser(dbConn sqlx.Ext, userName string) (*app.User, error) {
+	log.Printf("FindUser TRACE IN user[%s]\n", userName)
+	dbUser, err := db.SearchUser(dbConn, userName)
+	if err != nil {
+		return nil, fmt.Errorf("user[%s] not found: %s", userName, err.Error())
+	}
+	var dbAvatar *db.Avatar
+	if dbUser != nil {
+		dbAvatar, _ = db.GetAvatar(dbConn, dbUser.Id)
+	}
+
+	log.Printf("FindUser TRACE OUT user[%s]\n", userName)
+	return convert.UserDBToApp(dbUser, dbAvatar), nil
 }
