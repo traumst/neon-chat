@@ -7,9 +7,9 @@ set -xeuo pipefail
 # set -n          # Check syntax without running
 
 echo "Performing checks and cleanup..."
-go clean
-go mod tidy
-go vet ./...
+go clean && \
+go mod tidy && \
+go vet ./... && \
 staticcheck ./...
 
 echo "Running tests..."
