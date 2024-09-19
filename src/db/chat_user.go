@@ -16,8 +16,8 @@ const ChatUserSchema = `
 	CREATE TABLE IF NOT EXISTS chat_users (
 		chat_id INTEGER,
 		user_id INTEGER,
-		FOREIGN KEY(chat_id) REFERENCES chats(id),
-		FOREIGN KEY(user_id) REFERENCES users(id)
+		FOREIGN KEY(chat_id) REFERENCES chats(id) ON DELETE CASCADE,
+		FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 	);`
 const ChatUserIndex = `CREATE INDEX IF NOT EXISTS idx_chat_users_chatid_userid ON chat_users(chat_id, user_id);`
 

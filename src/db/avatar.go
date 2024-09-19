@@ -27,7 +27,7 @@ const AvatarSchema = `
 		size INTEGER,
 		image BLOB,
 		mime TEXT,
-		FOREIGN KEY(user_id) REFERENCES users(id)
+		FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 	);`
 const AvatarIndex = ``
 

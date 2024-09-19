@@ -20,7 +20,7 @@ const ChatSchema = `
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
 		title TEXT,
 		owner_id INTEGER,
-		FOREIGN KEY(owner_id) REFERENCES users(id)
+		FOREIGN KEY(owner_id) REFERENCES users(id) ON DELETE CASCADE
 	);`
 
 const ChatIndex = `CREATE INDEX IF NOT EXISTS idx_chat_title ON chats(title);`
@@ -80,7 +80,6 @@ func DeleteChat(dbConn sqlx.Ext, chatId uint) error {
 	if chatId == 0 {
 		return fmt.Errorf("bad input: chatId[%d]", chatId)
 	}
-
 	_, err := dbConn.Exec(`DELETE FROM chats WHERE id = ?`, chatId)
 	if err != nil {
 		return fmt.Errorf("error deleting chat[%d]: %s", chatId, err)

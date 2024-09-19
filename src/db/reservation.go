@@ -21,7 +21,7 @@ const ReservationSchema = `
 		user_id INTEGER UNIQUE,
 		token TEXT NOT NULL UNIQUE,
 		expire DATETIME NOT NULL,
-		FOREIGN KEY(user_id) REFERENCES users(id)
+		FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 	);`
 const ReservationIndex = `CREATE INDEX IF NOT EXISTS idx_reserve_expire ON reservations(expire);`
 

@@ -16,8 +16,8 @@ const QuoteSchema = `
 	CREATE TABLE IF NOT EXISTS quotes (
 		msg_id INTEGER, 
 		quote_id INTEGER,
-		FOREIGN KEY(msg_id) REFERENCES messages(id),
-		FOREIGN KEY(quote_id) REFERENCES messages(id)
+		FOREIGN KEY(msg_id) REFERENCES messages(id) ON DELETE CASCADE,
+		FOREIGN KEY(quote_id) REFERENCES messages(id) ON DELETE CASCADE
 	);`
 
 const QuoteIndex = ``

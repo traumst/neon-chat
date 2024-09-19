@@ -108,7 +108,7 @@ Making changes to tailwind classes requires rerun to display properly.
 
 ## TODOs
 
-+ check why db file never shrinks
+-
 
 ### Next up
 

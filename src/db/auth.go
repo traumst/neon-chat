@@ -19,7 +19,7 @@ const AuthSchema string = `
 		user_id INTEGER,
 		type TEXT,
 		hash TEXT,
-		FOREIGN KEY(user_id) REFERENCES users(id)
+		FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 	);`
 const AuthIndex string = `CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_type_hash ON auth(type, hash);`
 
