@@ -5,7 +5,7 @@ import (
 	"neon-chat/src/convert"
 	"neon-chat/src/db"
 	"neon-chat/src/handler/priv"
-	ti "neon-chat/src/interface"
+	ti "neon-chat/src/interfaces"
 	"neon-chat/src/model/app"
 	"neon-chat/src/state"
 )

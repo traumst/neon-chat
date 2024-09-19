@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"neon-chat/src/convert"
 	"neon-chat/src/db"
-	ti "neon-chat/src/interface"
+	ti "neon-chat/src/interfaces"
 	"neon-chat/src/model/app"
 	"neon-chat/src/model/template"
 	"neon-chat/src/state"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"neon-chat/src/consts"
-	i "neon-chat/src/interface"
+	i "neon-chat/src/interfaces"
 	"sync"
 )
 

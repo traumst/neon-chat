@@ -2,7 +2,7 @@ package app
 
 import (
 	"log"
-	ti "neon-chat/src/interface"
+	ti "neon-chat/src/interfaces"
 	"neon-chat/src/model/template"
 )
 

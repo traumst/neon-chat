@@ -6,7 +6,7 @@ import (
 	"html/template"
 	"log"
 
-	ti "neon-chat/src/interface"
+	ti "neon-chat/src/interfaces"
 	"neon-chat/src/model/event"
 )
 
