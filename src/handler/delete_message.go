@@ -63,6 +63,6 @@ func DeleteMessage(
 	if appChat == nil {
 		return nil, nil, fmt.Errorf("cannot convert chat[%d] for app, owner[%v]", dbChat.Id, appChatOwner)
 	}
-	appMsg := convert.MessageDBToApp(dbMsg, appMsgAuthor, nil) // TODO bad user
+	appMsg := convert.MessageDBToApp(dbMsg, appMsgAuthor, nil)
 	return appChat, &appMsg, err
 }

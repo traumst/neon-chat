@@ -6,9 +6,6 @@ type StatefulWriter struct {
 	http.ResponseWriter
 	status  int
 	changes bool
-	// TODO expand what session can hold
-	// userId   uint
-	// userName string
 }
 
 func StatefulWriterMiddleware(next http.Handler) http.Handler {

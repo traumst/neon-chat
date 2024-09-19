@@ -16,5 +16,3 @@ func TestDefaultChat(t *testing.T) {
 	}
 	t.Logf("TestDefaultChat finished")
 }
-
-// TODO

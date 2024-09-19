@@ -16,7 +16,7 @@ type Conn struct {
 	Origin string
 	Writer http.ResponseWriter
 	Reader http.Request
-	In     chan event.LiveEvent // TODO test load
+	In     chan event.LiveEvent
 	//Out    chan event.LiveUpdate
 }
 

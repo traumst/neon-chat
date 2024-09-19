@@ -4,14 +4,12 @@ import (
 	"neon-chat/src/model/template"
 )
 
-// TODO add flags/permissions mapping
 type UserType string
 
 const (
 	UserTypeBasic UserType = "basic"
 )
 
-// TODO allow user ban / suspend
 type UserStatus string
 
 const (

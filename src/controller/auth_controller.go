@@ -191,7 +191,6 @@ func ConfirmEmail(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("missing token"))
 		return
 	}
-	// TODO extract to auth_handler
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
 	reserve, err := db.GetReservation(dbConn.Tx, signupToken)
 	if err != nil {

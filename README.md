@@ -123,6 +123,9 @@ Making changes to tailwind classes requires rerun to display properly.
 
 ## Backlog
 
+### Research
+- stress test a bufferred vs unbuffered channel
+
 ### Message Broadcasting: 
 - msg should distribute to user connection, even if chat is closed
 - pagination, track user deltas in chats and messages

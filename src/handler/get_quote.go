@@ -10,7 +10,7 @@ import (
 	"neon-chat/src/state"
 )
 
-// TODO consider adding quote thread with depth limit
+// TODO consider quote thread with depth limit
 func GetQuote(
 	state *state.State,
 	dbConn *db.DBConn,

@@ -18,7 +18,7 @@ func TemplateOpenChat(state *state.State, dbConn *db.DBConn, user *app.User) ti.
 	openChat, err := GetChat(state, dbConn.Conn, user, openChatId)
 	if err != nil {
 		log.Printf("templateOpenchat ERROR, failed to get chat[%d], %s\n", openChatId, err.Error())
-		return nil // TODO custom error pop-up
+		return nil
 	}
 	appChatUsers, err := GetChatUsers(dbConn.Conn, openChatId)
 	if err != nil {

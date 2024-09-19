@@ -66,7 +66,7 @@ func distributeInCommonChat(
 		}
 		openChatId := state.GetOpenChat(targetUser.Id)
 		if openChatId == 0 || openChatId != chat.Id {
-			// TODO send unread counter update
+			// TODO unread msg indicator -> counter update
 			continue
 		}
 		uErr := distributeUpdateOfUser(state, targetUser, subjectUser, updateType)
