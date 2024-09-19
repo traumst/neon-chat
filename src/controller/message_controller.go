@@ -34,12 +34,26 @@ func QuoteMessage(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
-	html, err := pub.GetQuote(state, dbConn, user, args.ChatId, args.MsgId)
+	quote, err := pub.GetQuote(state, dbConn, user, args.ChatId, args.MsgId)
 	if err != nil {
 		log.Printf("[%s] QuoteMessage ERROR quoting message[%d] in chat[%d], %s\n",
 			reqId, args.ChatId, args.MsgId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to quote message"))
+		return
+	}
+	tmpl, err := quote.Template(user)
+	if err != nil {
+		log.Printf("[%s] QuoteMessage ERROR generating template, %s\n", reqId, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to generate template"))
+		return
+	}
+	html, err := tmpl.HTML()
+	if err != nil {
+		log.Printf("[%s] QuoteMessage ERROR generating html, %s\n", reqId, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to generate html"))
 		return
 	}
 	log.Printf("[%s] QuoteMessage TRACE serving html\n", reqId)

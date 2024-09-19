@@ -32,3 +32,12 @@ func MessageDBToQuoteApp(message *db.Message, author *app.User) app.Quote {
 		Text:   message.Text,
 	}
 }
+
+func MessageAppToQuoteApp(message *app.Message) app.Quote {
+	return app.Quote{
+		Id:     message.Id,
+		ChatId: message.ChatId,
+		Author: message.Author,
+		Text:   message.Text,
+	}
+}

@@ -13,7 +13,12 @@ import (
 	h "neon-chat/src/utils/http"
 )
 
-func ReadSession(state *state.State, dbConn *db.DBConn, w http.ResponseWriter, r *http.Request) (*app.User, error) {
+func ReadSession(
+	state *state.State,
+	dbConn *db.DBConn,
+	w http.ResponseWriter,
+	r *http.Request,
+) (*app.User, error) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] ReadSession TRACE IN\n", reqId)
 	cookie, err := h.GetSessionCookie(r)

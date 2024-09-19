@@ -11,9 +11,12 @@ import (
 )
 
 type DBConn struct {
+	// READONLY static conn
 	Conn *sqlx.DB
+	// READWRITE per session tx
+	Tx *sqlx.Tx
+	// ReqId from original request for tracing
 	TxId string
-	Tx   *sqlx.Tx
 }
 
 const migraitonsFolder string = "./src/db/migrations"

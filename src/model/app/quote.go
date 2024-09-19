@@ -13,7 +13,7 @@ type Quote struct {
 	Text   string
 }
 
-func (m *Quote) Template(viewer *User, owner *User) (template.QuoteTemplate, error) {
+func (m *Quote) Template(viewer *User) (template.QuoteTemplate, error) {
 	if viewer == nil || viewer.Id == 0 {
 		return template.QuoteTemplate{}, fmt.Errorf("viewer cannot be nil or blank")
 	}

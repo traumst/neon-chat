@@ -12,6 +12,7 @@ import (
 	"neon-chat/src/handler/email"
 	"neon-chat/src/handler/pub"
 	"neon-chat/src/model/app"
+	"neon-chat/src/model/template"
 	"neon-chat/src/state"
 	"neon-chat/src/utils"
 	h "neon-chat/src/utils/http"
@@ -140,12 +141,12 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR on register user[%s][%s], %s\n", reqId, signupUser, signupEmail, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", LocalUserType, signupUser)))
+		w.Write([]byte("Failed to register"))
 		return
 	} else if user == nil || auth == nil {
-		log.Printf("[%s] SignUp ERROR to register user[%v]\n", reqId, user)
+		log.Printf("[%s] SignUp ERROR to register user[%v] - but no err\n", reqId, user)
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf("Failed to register user [%s:%s]", LocalUserType, signupUser)))
+		w.Write([]byte("Failed to registref"))
 		return
 	}
 	log.Printf("[%s] SignUp TRACE issuing reservation to [%s]\n", reqId, user.Email)
@@ -153,19 +154,36 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(fmt.Errorf("IssueReservationToken ERROR getting smtp config, %s", err.Error()))
 	}
-	sentEmail, err := pub.ReserveUserName(dbConn, emailConfig, user)
+	reservation, err := pub.ReserveUserName(dbConn, emailConfig, user)
 	if err != nil {
-		log.Printf("[%s] SignUp ERROR failed to issue reservation token to email[%s], %s\n",
-			reqId, user.Email, err.Error())
+		log.Printf("[%s] SignUp ERROR failed to reserve username[%s] for [%s], %s\n",
+			reqId, user.Name, user.Email, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to issue reservation token"))
 		return
 	}
+	emailTmpl := template.VerifyEmailTemplate{
+		SourceEmail: emailConfig.User,
+		UserEmail:   user.Email,
+		UserName:    user.Name,
+		Token:       reservation.Token,
+		//TokenExpire: reservation.Expire.Format(time.RFC3339),
+		TokenExpire: reservation.Expire.Format(time.Stamp),
+	}
+	err = email.SendSignupCompletionEmail(emailTmpl, emailConfig.User, emailConfig.Pass)
+	if err != nil {
+		log.Printf("[%s] SignUp ERROR sending email from [%s] to [%s], %s\n",
+			reqId, emailConfig.User, user.Email, err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to send email"))
+		return
+	}
 	changesMade := r.Context().Value(consts.TxChangesKey).(*bool)
 	*changesMade = true
-	html, err := sentEmail.HTML()
+	html, err := emailTmpl.HTML()
 	if err != nil {
-		log.Printf("[%s] SignUp ERROR templating result html[%v], %s\n", reqId, sentEmail, err.Error())
+		log.Printf("[%s] SignUp ERROR templating result html[%v], %s\n",
+			reqId, emailTmpl, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to template response"))
 		return

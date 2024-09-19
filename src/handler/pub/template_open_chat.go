@@ -26,7 +26,7 @@ func TemplateOpenChat(state *state.State, dbConn *db.DBConn, user *app.User) ti.
 		log.Printf("templateOpenChat ERROR, failed getting chat[%d] users, %s\n", openChatId, err.Error())
 		return nil
 	}
-	appMsgs, err := priv.GetChatMessages(dbConn.Conn, openChatId)
+	appMsgs, err := GetChatMessages(dbConn.Conn, openChatId)
 	if err != nil {
 		log.Printf("templateOpenChat ERROR, failed getting chat[%d] messages, %s\n", openChatId, err.Error())
 		return nil

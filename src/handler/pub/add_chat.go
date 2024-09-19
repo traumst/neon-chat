@@ -2,11 +2,9 @@ package pub
 
 import (
 	"fmt"
-	"log"
 	"neon-chat/src/convert"
 	"neon-chat/src/db"
 	"neon-chat/src/model/app"
-	"neon-chat/src/model/template"
 	"neon-chat/src/state"
 )
 
@@ -15,7 +13,7 @@ func AddChat(
 	dbConn *db.DBConn,
 	user *app.User,
 	chatName string,
-) (*template.ChatTemplate, error) {
+) (*app.Chat, error) {
 	dbChat, err := db.AddChat(dbConn.Tx, &db.Chat{Title: chatName, OwnerId: user.Id})
 	if err != nil {
 		return nil, fmt.Errorf("failed to add chat[%s] to db: %s", chatName, err)
@@ -40,11 +38,5 @@ func AddChat(
 		Status: string(user.Status),
 		Salt:   user.Salt,
 	})
-	appChatUsers, err := GetChatUsers(dbConn.Tx, dbChat.Id)
-	if err != nil {
-		log.Printf("HandleChatAdd ERROR getting chat[%d] users: %s", dbChat.Id, err)
-	}
-	appChatMsgs := make([]*app.Message, 0)
-	tmpl := appChat.Template(user, user, appChatUsers, appChatMsgs)
-	return &tmpl, nil
+	return appChat, nil
 }

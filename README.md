@@ -108,7 +108,8 @@ Making changes to tailwind classes requires rerun to display properly.
 
 ## TODOs
 
-+ handler should abstract app and db models completely, only expose templates
++ handler should expose uniform interface - always app.* models
+    + controllers will template response
 + check why db file never shrinks
 
 ### Next up

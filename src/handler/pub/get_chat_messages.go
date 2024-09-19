@@ -1,4 +1,4 @@
-package priv
+package pub
 
 import (
 	"fmt"
