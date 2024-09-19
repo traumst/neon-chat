@@ -109,7 +109,7 @@ Making changes to tailwind classes requires rerun to display properly.
 ## TODOs
 
 + handler should abstract app and db models completely, only expose templates
-+ user name change should update active user info on left panel
++ check why db file never shrinks
 
 ### Next up
 
