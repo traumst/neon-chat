@@ -11,20 +11,16 @@ import (
 
 func DistributeAvatarChange(
 	state *state.State,
-	//TODO targetUser *app.User, // who to inform, nil for all users
-	subjectUser *app.User, // which user changed
+	user *app.User, // which user changed
 	avatar *app.Avatar,
 	updateType event.EventType,
 ) error {
-	if subjectUser == nil {
+	if user == nil {
 		return fmt.Errorf("subject user is nil")
 	}
-	// TODO distribute to users with common chats
-	targetUser := subjectUser
 	err := distributeUpdateOfAvatar(
 		state,
-		targetUser,
-		subjectUser,
+		user,
 		avatar,
 		updateType)
 	return err
@@ -32,8 +28,7 @@ func DistributeAvatarChange(
 
 func distributeUpdateOfAvatar(
 	state *state.State,
-	targetUser *app.User,
-	subjectUser *app.User,
+	user *app.User,
 	avatar *app.Avatar,
 	updateType event.EventType,
 ) (err error) {
@@ -42,28 +37,28 @@ func distributeUpdateOfAvatar(
 			err = fmt.Errorf("panicked: %v", r)
 		}
 	}()
-	conns := state.GetConn(targetUser.Id)
+	conns := state.GetConn(user.Id)
 	if len(conns) == 0 {
 		return nil
 	}
 	switch updateType {
 	case event.AvatarChange:
-		return avatarChanged(conns, subjectUser, avatar)
+		return avatarChanged(conns, user, avatar)
 	default:
 		return fmt.Errorf("unknown event type[%v]", updateType)
 	}
 }
 
-func avatarChanged(conns []*state.Conn, subject *app.User, avatar *app.Avatar) error {
+func avatarChanged(conns []*state.Conn, user *app.User, avatar *app.Avatar) error {
 	if len(conns) == 0 {
 		return nil
 	}
-	if subject == nil || avatar == nil {
-		return fmt.Errorf("arguments were nil, user[%v], avatar[%v]", subject, avatar)
+	if user == nil || avatar == nil {
+		return fmt.Errorf("arguments were nil, user[%v], avatar[%v]", user, avatar)
 	}
 	log.Printf("avatarChanged TRACE informing target[%d] about subject[%d] new avatar[%d]\n",
-		conns[0].User.Id, subject.Id, avatar.Id)
-	tmpl := avatar.Template(subject)
+		conns[0].User.Id, user.Id, avatar.Id)
+	tmpl := avatar.Template(user)
 	data, err := tmpl.HTML()
 	if err != nil {
 		return fmt.Errorf("failed to template user")
@@ -72,9 +67,9 @@ func avatarChanged(conns []*state.Conn, subject *app.User, avatar *app.Avatar) e
 		conn.In <- event.LiveEvent{
 			Event:    event.AvatarChange,
 			ChatId:   0,
-			UserId:   subject.Id,
+			UserId:   user.Id,
 			MsgId:    0,
-			AuthorId: subject.Id,
+			AuthorId: user.Id,
 			Data:     data,
 		}
 	}
