@@ -1,9 +1,10 @@
-package pub
+package shared
 
 import (
 	"fmt"
 	"neon-chat/src/convert"
 	"neon-chat/src/db"
+	"neon-chat/src/handler/pub"
 	ti "neon-chat/src/interfaces"
 	"neon-chat/src/model/app"
 	"neon-chat/src/model/template"
@@ -17,7 +18,7 @@ func TemplateHome(state *state.State, dbConn *db.DBConn, user *app.User) (string
 		avatarTmpl = avatar.Template(user)
 	}
 	openChatTemplate := TemplateOpenChat(state, dbConn, user)
-	chats, err := GetChats(dbConn.Conn, user.Id)
+	chats, err := pub.GetChats(dbConn.Conn, user.Id)
 	if err != nil {
 		return "", fmt.Errorf("failed getting chats for user, %s", err)
 	}

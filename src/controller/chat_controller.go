@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"neon-chat/src/consts"
+	"neon-chat/src/controller/shared"
 	"neon-chat/src/db"
 	"neon-chat/src/handler/parse"
 	"neon-chat/src/handler/pub"
@@ -23,7 +24,7 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] Welcome TRACE\n", reqId)
 	user := r.Context().Value(consts.ActiveUser).(*app.User)
-	html, err := pub.TemplateWelcome(user)
+	html, err := shared.TemplateWelcome(user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("failed to template html, %s", err.Error())))
@@ -166,7 +167,7 @@ func CloseChat(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	html, err := pub.TemplateWelcome(user)
+	html, err := shared.TemplateWelcome(user)
 	if err != nil {
 		log.Printf("[%s] CloseChat ERROR cannot template welcome page, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)

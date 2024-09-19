@@ -1,4 +1,4 @@
-package pub
+package shared
 
 import (
 	"neon-chat/src/model/app"

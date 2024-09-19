@@ -108,9 +108,6 @@ Making changes to tailwind classes requires rerun to display properly.
 
 ## TODOs
 
-+ handler should expose uniform interface - always app.* models
-    + controllers will template response
-    - template_home, template_open_chat, template_welcome are exceptions
 + check why db file never shrinks
 
 ### Next up

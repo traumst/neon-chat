@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"neon-chat/src/consts"
+	"neon-chat/src/controller/shared"
 	"neon-chat/src/db"
-	"neon-chat/src/handler/pub"
 	"neon-chat/src/model/app"
 	"neon-chat/src/model/template"
 	"neon-chat/src/state"
@@ -27,7 +27,7 @@ func RenderHome(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("TRACE [%s] RenderHome\n", reqId)
 	ctx := r.Context()
-	html, err := pub.TemplateHome(
+	html, err := shared.TemplateHome(
 		ctx.Value(consts.AppState).(*state.State),
 		ctx.Value(consts.DBConn).(*db.DBConn),
 		ctx.Value(consts.ActiveUser).(*app.User),

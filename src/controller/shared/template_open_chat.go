@@ -1,10 +1,10 @@
-package pub
+package shared
 
 import (
 	"log"
-	"neon-chat/src/convert"
 	"neon-chat/src/db"
 	"neon-chat/src/handler/priv"
+	"neon-chat/src/handler/pub"
 	ti "neon-chat/src/interfaces"
 	"neon-chat/src/model/app"
 	"neon-chat/src/state"
@@ -21,20 +21,20 @@ func TemplateOpenChat(state *state.State, dbConn *db.DBConn, user *app.User) ti.
 		log.Printf("templateOpenchat ERROR, failed to get chat[%d], %s\n", openChatId, err.Error())
 		return nil
 	}
-	appChatUsers, err := GetChatUsers(dbConn.Conn, openChatId)
+	appChatUsers, err := pub.GetChatUsers(dbConn.Conn, openChatId)
 	if err != nil {
 		log.Printf("templateOpenChat ERROR, failed getting chat[%d] users, %s\n", openChatId, err.Error())
 		return nil
 	}
-	appMsgs, err := GetChatMessages(dbConn.Conn, openChatId)
+	appMsgs, err := pub.GetChatMessages(dbConn.Conn, openChatId)
 	if err != nil {
 		log.Printf("templateOpenChat ERROR, failed getting chat[%d] messages, %s\n", openChatId, err.Error())
 		return nil
 	}
 	if user.Avatar == nil {
-		dbAvatar, err := db.GetAvatar(dbConn.Conn, user.Id)
-		if dbAvatar != nil && err == nil {
-			user.Avatar = convert.AvatarDBToApp(dbAvatar)
+		avatar, err := pub.GetAvatar(dbConn.Conn, user.Id)
+		if avatar != nil && err == nil {
+			user.Avatar = avatar
 		}
 	}
 	return openChat.Template(user, user, appChatUsers, appMsgs)
