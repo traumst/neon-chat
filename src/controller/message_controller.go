@@ -6,8 +6,8 @@ import (
 
 	"neon-chat/src/consts"
 	"neon-chat/src/db"
-	"neon-chat/src/handler"
 	"neon-chat/src/handler/parse"
+	"neon-chat/src/handler/pub"
 	"neon-chat/src/model/app"
 	"neon-chat/src/model/event"
 	"neon-chat/src/sse"
@@ -34,7 +34,7 @@ func QuoteMessage(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
-	html, err := handler.GetQuote(state, dbConn, user, args.ChatId, args.MsgId)
+	html, err := pub.GetQuote(state, dbConn, user, args.ChatId, args.MsgId)
 	if err != nil {
 		log.Printf("[%s] QuoteMessage ERROR quoting message[%d] in chat[%d], %s\n",
 			reqId, args.ChatId, args.MsgId, err.Error())
@@ -74,7 +74,7 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 	author := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
-	appChat, appMsg, err := handler.AddMessage(state, dbConn, chatId, author, inputText, quoteId)
+	appChat, appMsg, err := pub.AddMessage(state, dbConn, chatId, author, inputText, quoteId)
 	if err != nil || appMsg == nil {
 		log.Printf("[%s] ERROR AddMessage while handing, %s, %v\n", reqId, err.Error(), inputText)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -112,7 +112,7 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
-	appChat, deletedMsg, err := handler.DeleteMessage(state, dbConn, chatId, user, msgId)
+	appChat, deletedMsg, err := pub.DeleteMessage(state, dbConn, chatId, user, msgId)
 	if err != nil {
 		log.Printf("[%s] DeleteMessage ERROR deletion failed: %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

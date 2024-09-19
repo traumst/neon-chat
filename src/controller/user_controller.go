@@ -7,8 +7,8 @@ import (
 
 	"neon-chat/src/consts"
 	"neon-chat/src/db"
-	"neon-chat/src/handler"
 	"neon-chat/src/handler/parse"
+	"neon-chat/src/handler/pub"
 	"neon-chat/src/model/app"
 	"neon-chat/src/model/event"
 	"neon-chat/src/model/template"
@@ -45,7 +45,7 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
-	appChat, appInvitee, err := handler.InviteUser(state, dbConn, user, chatId, inviteeName)
+	appChat, appInvitee, err := pub.InviteUser(state, dbConn, user, chatId, inviteeName)
 	if err != nil {
 		log.Printf("[%s] InviteUser ERROR failed to invite user[%d] into chat[%d], %s\n",
 			reqId, appInvitee.Id, chatId, err.Error())
@@ -107,7 +107,7 @@ func ExpelUser(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
-	appChat, appExpelled, err := handler.ExpelUser(state, dbConn, user, chatId, expelledId)
+	appChat, appExpelled, err := pub.ExpelUser(state, dbConn, user, chatId, expelledId)
 	if err != nil {
 		log.Printf("[%s] ExpelUser ERROR failed to expell user[%d] from chat[%d], %s\n",
 			reqId, expelledId, chatId, err.Error())
@@ -149,7 +149,7 @@ func LeaveChat(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
-	appChat, leftUser, err := handler.LeaveChat(state, dbConn, user, chatId)
+	appChat, leftUser, err := pub.LeaveChat(state, dbConn, user, chatId)
 	if err != nil {
 		log.Printf("[%s] LeaveChat ERROR failed to leave chat[%d], %s\n", reqId, chatId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -194,7 +194,7 @@ func ChangeUser(w http.ResponseWriter, r *http.Request) {
 	state := r.Context().Value(consts.AppState).(*state.State)
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
 	user.Name = newName
-	updatedUser, err := handler.UpdateUser(state, dbConn.Tx, user)
+	updatedUser, err := pub.UpdateUser(state, dbConn.Tx, user)
 	if err != nil {
 		log.Printf("[%s] ChangeUser ERROR failed to update user[%d], %s\n", reqId, user.Id, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -231,7 +231,7 @@ func SearchUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
-	users, err := handler.SearchUsers(dbConn.Conn, name)
+	users, err := pub.SearchUsers(dbConn.Conn, name)
 	if err != nil {
 		log.Printf("[%s] SearchUsers INFO no users matching[%s], %s\n", reqId, name, err.Error())
 		w.WriteHeader(http.StatusOK)

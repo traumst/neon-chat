@@ -7,7 +7,7 @@ import (
 	"neon-chat/src/consts"
 	"neon-chat/src/convert"
 	"neon-chat/src/db"
-	"neon-chat/src/handler"
+	"neon-chat/src/handler/pub"
 	"neon-chat/src/model/app"
 	"neon-chat/src/model/template"
 	"neon-chat/src/state"
@@ -77,9 +77,9 @@ func CloseSettings(w http.ResponseWriter, r *http.Request) {
 
 	var html string
 	var err error
-	openChat := handler.TemplateOpenChat(state, dbConn, user)
+	openChat := pub.TemplateOpenChat(state, dbConn, user)
 	if openChat == nil {
-		html, err = handler.TemplateWelcome(user)
+		html, err = pub.TemplateWelcome(user)
 	} else {
 		html, err = openChat.HTML()
 	}

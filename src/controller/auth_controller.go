@@ -9,8 +9,8 @@ import (
 	"neon-chat/src/consts"
 	"neon-chat/src/convert"
 	"neon-chat/src/db"
-	"neon-chat/src/handler"
 	"neon-chat/src/handler/email"
+	"neon-chat/src/handler/pub"
 	"neon-chat/src/model/app"
 	"neon-chat/src/state"
 	"neon-chat/src/utils"
@@ -41,7 +41,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] Login TRACE authentication check for user[%s] auth[%s]\n",
 		reqId, loginUser, EmailAuthType)
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
-	user, auth, err := handler.AuthenticateUser(dbConn, loginUser, loginPass, EmailAuthType)
+	user, auth, err := pub.AuthenticateUser(dbConn, loginUser, loginPass, EmailAuthType)
 	if err != nil {
 		log.Printf("[%s] Login ERROR unauth user[%s], %s\n", reqId, loginUser, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
@@ -105,7 +105,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
-	user, auth, _ := handler.AuthenticateUser(dbConn, signupUser, signupPass, EmailAuthType)
+	user, auth, _ := pub.AuthenticateUser(dbConn, signupUser, signupPass, EmailAuthType)
 	if user != nil && user.Status == app.UserStatusActive && auth != nil {
 		log.Printf("[%s] SignUp TRACE signedIn instead of signUp user[%s]\n", reqId, signupUser)
 		h.SetSessionCookie(w, user, auth)
@@ -136,7 +136,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		Status: app.UserStatusPending,
 		Salt:   salt,
 	}
-	user, auth, err := handler.RegisterUser(dbConn, user, signupPass, EmailAuthType)
+	user, auth, err := pub.RegisterUser(dbConn, user, signupPass, EmailAuthType)
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR on register user[%s][%s], %s\n", reqId, signupUser, signupEmail, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
@@ -153,7 +153,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(fmt.Errorf("IssueReservationToken ERROR getting smtp config, %s", err.Error()))
 	}
-	sentEmail, err := handler.ReserveUserName(dbConn, emailConfig, user)
+	sentEmail, err := pub.ReserveUserName(dbConn, emailConfig, user)
 	if err != nil {
 		log.Printf("[%s] SignUp ERROR failed to issue reservation token to email[%s], %s\n",
 			reqId, user.Email, err.Error())

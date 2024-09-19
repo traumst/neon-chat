@@ -6,7 +6,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"neon-chat/src/handler"
+	"neon-chat/src/handler/pub"
 	"neon-chat/src/model/app"
 	"neon-chat/src/model/event"
 	"neon-chat/src/state"
@@ -26,7 +26,7 @@ func DistributeUserChange(
 	if targetUser != nil {
 		return distributeUpdateOfUser(state, targetUser, subjectUser, updateType)
 	}
-	appChats, err := handler.GetChats(dbConn, subjectUser.Id)
+	appChats, err := pub.GetChats(dbConn, subjectUser.Id)
 	if err != nil {
 		return fmt.Errorf("failed to get chats for user[%d], %s", subjectUser.Id, err)
 	}
@@ -54,7 +54,7 @@ func distributeInCommonChat(
 	updateType event.EventType,
 ) error {
 	// TODO is bad bad
-	targetUsers, err := handler.GetChatUsers(dbConn, chat.Id)
+	targetUsers, err := pub.GetChatUsers(dbConn, chat.Id)
 	if err != nil {
 		return fmt.Errorf("failed to get users in chat[%d], %s", chat.Id, err)
 	}

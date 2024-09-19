@@ -9,8 +9,8 @@ import (
 
 	"neon-chat/src/consts"
 	"neon-chat/src/db"
-	"neon-chat/src/handler"
 	"neon-chat/src/handler/parse"
+	"neon-chat/src/handler/pub"
 	"neon-chat/src/model/app"
 	"neon-chat/src/model/event"
 	"neon-chat/src/model/template"
@@ -24,7 +24,7 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] Welcome TRACE\n", reqId)
 	user := r.Context().Value(consts.ActiveUser).(*app.User)
-	html, err := handler.TemplateWelcome(user)
+	html, err := pub.TemplateWelcome(user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("failed to template html, %s", err.Error())))
@@ -62,7 +62,7 @@ func OpenChat(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
-	html, err := handler.OpenChat(state, dbConn, user, uint(chatId))
+	html, err := pub.OpenChat(state, dbConn, user, uint(chatId))
 	if err != nil {
 		log.Printf("[%s] OpenChat ERROR cannot open chat[%d], %s\n", reqId, chatId, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -98,7 +98,7 @@ func AddChat(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
-	tmpl, err := handler.AddChat(state, dbConn, user, chatName)
+	tmpl, err := pub.AddChat(state, dbConn, user, chatName)
 	if err != nil {
 		log.Printf("AddChat ERROR cannot template chat[%s], %s", chatName, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -108,8 +108,8 @@ func AddChat(w http.ResponseWriter, r *http.Request) {
 	appChat := app.Chat{
 		Id:        tmpl.ChatId,
 		Name:      tmpl.ChatName,
-		OwnerId:   tmpl.Owner.(*template.UserTemplate).UserId,
-		OwnerName: tmpl.Owner.(*template.UserTemplate).UserName,
+		OwnerId:   tmpl.Owner.(template.UserTemplate).UserId,
+		OwnerName: tmpl.Owner.(template.UserTemplate).UserName,
 	}
 	err = sse.DistributeChat(state, dbConn.Tx, &appChat, user, user, user, event.ChatAdd)
 	if err != nil {
@@ -146,7 +146,7 @@ func CloseChat(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
-	html, err := handler.CloseChat(state, dbConn, user, uint(chatId))
+	html, err := pub.CloseChat(state, dbConn, user, uint(chatId))
 	if err != nil {
 		log.Printf("[%s] CloseChat ERROR cannot template welcome page, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -174,7 +174,7 @@ func DeleteChat(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
-	deletedChat, err := handler.DeleteChat(state, dbConn, user, chatId)
+	deletedChat, err := pub.DeleteChat(state, dbConn, user, chatId)
 	if err != nil {
 		log.Printf("[%s] DeleteChat WARN user[%d] failed to delete chat[%d], %s\n", reqId, user.Id, chatId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
