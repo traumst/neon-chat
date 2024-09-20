@@ -3,8 +3,8 @@ package pub
 import (
 	"fmt"
 
+	"neon-chat/src/app"
 	"neon-chat/src/db"
-	"neon-chat/src/model/app"
 	"neon-chat/src/state"
 )
 

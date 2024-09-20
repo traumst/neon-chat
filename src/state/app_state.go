@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"sync"
 
+	"neon-chat/src/app"
 	"neon-chat/src/consts"
-	"neon-chat/src/model/app"
-	"neon-chat/src/utils"
+	"neon-chat/src/utils/config"
 	h "neon-chat/src/utils/http"
 	"neon-chat/src/utils/store"
 )
@@ -20,10 +20,10 @@ type State struct {
 	isInit bool
 	chats  store.LRUCache
 	conns  OpenConnections
-	config utils.Config
+	config config.Config
 }
 
-func (state *State) Init(config utils.Config) {
+func (state *State) Init(config config.Config) {
 	if config.CacheSize <= 0 || config.CacheSize > consts.MaxCacheSize {
 		config.CacheSize = consts.MaxCacheSize
 	}
@@ -35,7 +35,7 @@ func (state *State) Init(config utils.Config) {
 	}
 }
 
-func (state *State) SmtpConfig() (*utils.SmtpConfig, error) {
+func (state *State) SmtpConfig() (*config.SmtpConfig, error) {
 	if !state.isInit {
 		return nil, fmt.Errorf("state is not initialized")
 	}

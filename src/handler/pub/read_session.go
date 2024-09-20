@@ -5,10 +5,10 @@ import (
 	"log"
 	"net/http"
 
+	"neon-chat/src/app"
 	"neon-chat/src/consts"
 	"neon-chat/src/convert"
 	"neon-chat/src/db"
-	"neon-chat/src/model/app"
 	"neon-chat/src/state"
 	h "neon-chat/src/utils/http"
 )

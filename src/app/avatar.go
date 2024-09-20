@@ -1,7 +1,7 @@
 package app
 
 import (
-	"neon-chat/src/model/template"
+	"neon-chat/src/template"
 )
 
 type Avatar struct {

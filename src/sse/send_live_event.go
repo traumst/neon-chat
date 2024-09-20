@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	"neon-chat/src/model/app"
-	"neon-chat/src/model/event"
-	"neon-chat/src/model/template"
+	"neon-chat/src/app"
+	"neon-chat/src/event"
 	"neon-chat/src/state"
+	"neon-chat/src/template"
 )
 
 func chatCreate(conn *state.Conn, targetChat *app.Chat) error {

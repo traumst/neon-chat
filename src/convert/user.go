@@ -1,8 +1,9 @@
 package convert
 
 import (
+	"neon-chat/src/app"
+	"neon-chat/src/app/enum"
 	"neon-chat/src/db"
-	"neon-chat/src/model/app"
 )
 
 func UserAppToDB(user *app.User) *db.User {
@@ -21,8 +22,8 @@ func UserDBToApp(user *db.User, avatar *db.Avatar) *app.User {
 		Id:     user.Id,
 		Name:   user.Name,
 		Email:  user.Email,
-		Type:   app.UserType(user.Type),
-		Status: app.UserStatus(user.Status),
+		Type:   enum.UserType(user.Type),
+		Status: enum.UserStatus(user.Status),
 		Salt:   user.Salt,
 		Avatar: nil,
 	}

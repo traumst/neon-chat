@@ -6,8 +6,8 @@ import (
 	"html/template"
 	"log"
 
+	"neon-chat/src/event"
 	ti "neon-chat/src/interfaces"
-	"neon-chat/src/model/event"
 )
 
 type HomeTemplate struct {

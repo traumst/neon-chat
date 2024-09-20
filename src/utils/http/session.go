@@ -8,8 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"neon-chat/src/app"
+	"neon-chat/src/app/enum"
 	"neon-chat/src/consts"
-	"neon-chat/src/model/app"
 	"neon-chat/src/utils"
 )
 
@@ -17,8 +18,8 @@ var sessions map[uint]Session = map[uint]Session{}
 
 type Session struct {
 	UserId   uint
-	UserType app.UserType
-	AuthType app.AuthType
+	UserType enum.UserType
+	AuthType enum.AuthType
 	Expire   time.Time
 }
 
@@ -94,7 +95,7 @@ func Decode(s string) (*Session, error) {
 
 	return &Session{
 		UserId:   uint(userId),
-		UserType: app.UserType(ss[1]),
-		AuthType: app.AuthType(ss[3]),
+		UserType: enum.UserType(ss[1]),
+		AuthType: enum.AuthType(ss[3]),
 	}, nil
 }

@@ -3,8 +3,8 @@ package state
 import (
 	"fmt"
 	"log"
-	"neon-chat/src/model/app"
-	"neon-chat/src/model/event"
+	"neon-chat/src/app"
+	"neon-chat/src/event"
 	"net/http"
 	"sync"
 )

@@ -4,12 +4,12 @@ import (
 	"log"
 	"net/http"
 
+	"neon-chat/src/app"
 	"neon-chat/src/consts"
 	"neon-chat/src/controller/shared"
 	"neon-chat/src/db"
-	"neon-chat/src/model/app"
-	"neon-chat/src/model/template"
 	"neon-chat/src/state"
+	"neon-chat/src/template"
 )
 
 func NavigateHome(w http.ResponseWriter, r *http.Request) {

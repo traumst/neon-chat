@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"html/template"
 
+	"neon-chat/src/event"
 	ti "neon-chat/src/interfaces"
-	"neon-chat/src/model/event"
 )
 
 type UserSettingsTemplate struct {

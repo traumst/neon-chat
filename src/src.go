@@ -6,7 +6,7 @@ import (
 	"log"
 	"neon-chat/src/db"
 	"neon-chat/src/state"
-	"neon-chat/src/utils"
+	"neon-chat/src/utils/config"
 	"os"
 	"strings"
 	"time"
@@ -38,40 +38,81 @@ func SetupGlobalLogger(toStderr bool, toFile bool) {
 	log.Println("TRACE OUT SetupGlobalLogger")
 }
 
-func ReadEnvConfig() *utils.Config {
+func ReadEnvConfig() *config.Config {
 	log.Println("parsing config...")
-	config, err := utils.EnvRead()
+	c, err := config.EnvRead()
 	if err != nil {
 		log.Printf("Error parsing config: %s\n", err)
-		log.Println(utils.ConfigHelp())
+		log.Println(config.ConfigHelp())
 		os.Exit(13)
 	}
-	log.Printf("\tparsed config: %s\n", config)
-	return config
+	log.Printf("\tparsed config: %s\n", c)
+	return c
 }
 
-func ConnectDB(config *utils.Config) *db.DBConn {
+func ConnectDB(dbFilePath string) *db.DBConn {
 	log.Println("connecting db...")
-	db, err := db.ConnectDB(config.Sqlite)
+	db, err := db.ConnectDB(dbFilePath)
 	if err != nil {
-		log.Fatalf("Error opening db at [%s]: %s", config.Sqlite, err)
+		log.Fatalf("Error opening db at [%s]: %s", dbFilePath, err)
 	}
 	return db
 }
 
-func InitAppState(config *utils.Config) *state.State {
+func CreateTestUsers(dbConn *db.DBConn, TestUsers config.TestUsers) (int, error) {
+	log.Println("Checking test users status...")
+	dbUsers, err := db.SearchUsers(dbConn.Conn, TestUsers.GetNames()...)
+	if err != nil {
+		return -1, fmt.Errorf("failed to search for test users: %s", err)
+	}
+	newUsers := make(config.TestUsers, 0)
+	for _, testUser := range TestUsers {
+		exists := false
+		for _, dbUser := range dbUsers {
+			if dbUser.Name == testUser.Name {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			newUsers = append(newUsers, testUser)
+		}
+	}
+	log.Printf("there are [%d] test users to create: \n%+v\n", len(newUsers), newUsers)
+	// for _, testUser := range newUsers {
+	// 	salt := utils.GenerateSalt(testUser.Name, string(app.LocalUserType))
+	// 	dbUser := db.User{
+	// 		Id:     0,
+	// 		Name:   testUser.Name,
+	// 		Email:  testUser.Email,
+	// 		Type:   string(enum.AuthTypeEmail),
+	// 		Status: "",
+	// 		Salt:   salt,
+	// 	}
+
+	// 	newDbUser, err := db.AddUser(dbConn.Tx, &dbUser)
+	// 	if err != nil {
+	// 		return -999, fmt.Errorf("failed to create test user[%s]: %s", testUser.Name, err)
+	// 	}
+	// }
+
+	return -999, nil
+}
+
+func InitAppState(c *config.Config) *state.State {
 	log.Println("init app state...")
 	app := &state.GlobalAppState
-	app.Init(utils.Config{
-		CacheSize: config.CacheSize,
-		Port:      config.Port,
-		Sqlite:    config.Sqlite,
-		Smtp: utils.SmtpConfig{
-			User: config.Smtp.User,
-			Pass: config.Smtp.Pass,
-			Host: config.Smtp.Host,
-			Port: config.Smtp.Port,
+	app.Init(config.Config{
+		CacheSize: c.CacheSize,
+		Port:      c.Port,
+		Sqlite:    c.Sqlite,
+		Smtp: config.SmtpConfig{
+			User: c.Smtp.User,
+			Pass: c.Smtp.Pass,
+			Host: c.Smtp.Host,
+			Port: c.Smtp.Port,
 		},
+		TestUsers: c.TestUsers[:],
 	})
 	return app
 }

@@ -1,4 +1,4 @@
-package utils
+package config
 
 import (
 	"bufio"
@@ -9,26 +9,8 @@ import (
 	"strings"
 )
 
-type SmtpConfig struct {
-	User string
-	Pass string
-	Host string
-	Port string
-}
-
-type Config struct {
-	Port      int
-	Sqlite    string
-	Smtp      SmtpConfig
-	CacheSize int
-}
-
-func (a *Config) String() string {
-	return fmt.Sprintf("{Port:%d,Sqlite:%s}", a.Port, a.Sqlite)
-}
-
 func ConfigHelp() string {
-	return `Application expects the config from the .env file in the root directory. 
+	return `Application expects the config file '.env' in the root directory.
 		* find .env.template
 		* copy it to .env
 		* set desired values`
@@ -71,7 +53,7 @@ func EnvRead() (*Config, error) {
 }
 
 func readEnvFile(scanner *bufio.Scanner) (*Config, error) {
-	envConf := Config{Smtp: SmtpConfig{}}
+	envConf := Config{Smtp: SmtpConfig{}, TestUsers: make([]*TestUser, 0)}
 	for scanner.Scan() {
 		line := scanner.Text()
 		kv := strings.Split(line, "=")
@@ -81,17 +63,9 @@ func readEnvFile(scanner *bufio.Scanner) (*Config, error) {
 		}
 		switch kv[0] {
 		case "PORT":
-			port, err := strconv.Atoi(kv[1])
-			if err != nil {
-				return nil, fmt.Errorf("invalid PORT value [%s], %v", kv[1], err)
-			}
-			envConf.Port = port
+			envConf.Port = parseInt(kv[0], kv[1])
 		case "CACHE_SIZE":
-			size, err := strconv.Atoi(kv[1])
-			if err != nil {
-				return nil, fmt.Errorf("invalid CACHE_SIZE value [%s], %v", kv[1], err)
-			}
-			envConf.CacheSize = size
+			envConf.CacheSize = parseInt(kv[0], kv[1])
 		case "SQLITE":
 			envConf.Sqlite = kv[1]
 		case "SMTP_USER":
@@ -102,9 +76,57 @@ func readEnvFile(scanner *bufio.Scanner) (*Config, error) {
 			envConf.Smtp.Host = kv[1]
 		case "SMTP_PORT":
 			envConf.Smtp.Port = kv[1]
+		case "TEST_USER":
+			envConf.TestUsers = accTestUsers(envConf.TestUsers, kv[1])
 		default:
 			log.Printf("unknown env config [%s]\n", line)
 		}
 	}
 	return &envConf, nil
+}
+
+// expected format: val="user:ABCDE;email:abcd@gmail.com;pass:123456"
+func accTestUsers(acc TestUsers, val string) TestUsers {
+	sections := strings.Split(val, ";")
+	if acc == nil {
+		acc = make([]*TestUser, 0)
+	}
+	for _, section := range sections {
+		user, err := parseTestUser(section)
+		if err != nil {
+			log.Printf("failed to parse test user section [%s]: %v\n", section, err)
+			continue
+		}
+		acc = append(acc, user)
+	}
+	return acc
+}
+
+func parseTestUser(val string) (*TestUser, error) {
+	kv := strings.Split(val, ":")
+	if len(kv) != 2 || kv[0] == "" || kv[1] == "" {
+		return nil, fmt.Errorf("invalid test user, %s", val)
+	}
+	var user TestUser
+	switch kv[0] {
+	case "user":
+		user = TestUser{Name: kv[1]}
+	case "email":
+		user.Email = kv[1]
+	case "pass":
+		user.Pass = kv[1]
+	case "salt":
+		user.Salt = kv[1]
+	default:
+		log.Printf("unknown test user section [%s]\n", val)
+	}
+	return &user, nil
+}
+
+func parseInt(key string, val string) int {
+	i, err := strconv.Atoi(val)
+	if err != nil {
+		panic(fmt.Errorf("failed to parse int[%s] as [%s]: %v", val, key, err))
+	}
+	return i
 }

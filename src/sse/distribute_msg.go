@@ -5,9 +5,9 @@ import (
 	"log"
 	"sync"
 
+	"neon-chat/src/app"
+	"neon-chat/src/event"
 	"neon-chat/src/handler/pub"
-	"neon-chat/src/model/app"
-	"neon-chat/src/model/event"
 	"neon-chat/src/state"
 
 	"github.com/jmoiron/sqlx"

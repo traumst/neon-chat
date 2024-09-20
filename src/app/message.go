@@ -3,8 +3,8 @@ package app
 import (
 	"fmt"
 	"log"
-	"neon-chat/src/model/event"
-	"neon-chat/src/model/template"
+	"neon-chat/src/event"
+	"neon-chat/src/template"
 	"neon-chat/src/utils"
 )
 

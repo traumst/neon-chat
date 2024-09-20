@@ -5,14 +5,15 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"neon-chat/src/model/app"
-	"neon-chat/src/utils"
+	"neon-chat/src/app"
+	"neon-chat/src/app/enum"
+	"neon-chat/src/utils/config"
 	h "neon-chat/src/utils/http"
 )
 
 func TestStateDefaults(t *testing.T) {
 	app1 := &GlobalAppState
-	app1.Init(utils.Config{})
+	app1.Init(config.Config{})
 	if app1.isInit != true {
 		t.Errorf("TestStateDefaults expected isInit true, got [%v]", app1.isInit)
 	}
@@ -25,9 +26,9 @@ func TestAddConn(t *testing.T) {
 	t.Logf("TestAddConn started")
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/some-route", nil)
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeBasic)}
+	user := app.User{Id: 1, Name: "John", Type: enum.UserType(enum.UserTypeBasic)}
 	app1 := &GlobalAppState
-	app1.Init(utils.Config{})
+	app1.Init(config.Config{})
 	conn1 := app1.AddConn(w, *r, &user, nil)
 	if conn1 == nil {
 		t.Fatalf("TestAddConn expected a conn1, got nil")
@@ -47,9 +48,9 @@ func TestGetConn(t *testing.T) {
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	reqId := "test-req-id"
 	reqId = h.SetReqId(r, &reqId)
-	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeBasic)}
+	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: enum.UserType(enum.UserTypeBasic)}
 	app1 := &GlobalAppState
-	app1.Init(utils.Config{})
+	app1.Init(config.Config{})
 	expect := app1.AddConn(w, *r, &user, nil)
 	if expect == nil {
 		t.Fatalf("TestGetConn expected a conn, got nil")
@@ -88,9 +89,9 @@ func TestDropConn(t *testing.T) {
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	reqId := "test-req-id"
 	reqId = h.SetReqId(r, &reqId)
-	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeBasic)}
+	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: enum.UserType(enum.UserTypeBasic)}
 	app1 := &GlobalAppState
-	app1.Init(utils.Config{})
+	app1.Init(config.Config{})
 	expect := app1.AddConn(w, *r, &user, nil)
 	if expect == nil {
 		t.Fatalf("TestDropConn expected a conn, got nil")
@@ -114,19 +115,15 @@ func TestOpenChat(t *testing.T) {
 	user := app.User{
 		Id: uint(rand.Uint32()),
 		// Name: "John",
-		// Type: app.UserType(app.UserTypeBasic),
+		// Type: enum.UserType(enum.UserTypeBasic),
 	}
 	app1 := &GlobalAppState
-	app1.Init(utils.Config{
-		Port:   0,
-		Sqlite: "",
-		Smtp: utils.SmtpConfig{
-			User: "",
-			Pass: "",
-			Host: "",
-			Port: "",
-		},
+	app1.Init(config.Config{
+		Port:      0,
+		Sqlite:    "",
+		Smtp:      config.SmtpConfig{User: "", Pass: "", Host: "", Port: ""},
 		CacheSize: 0,
+		TestUsers: []*config.TestUser{},
 	})
 	err := app1.OpenChat(user.Id, 22)
 	if err != nil {
@@ -143,10 +140,10 @@ func TestGetOpenChatEmpty(t *testing.T) {
 	user := app.User{
 		Id: uint(rand.Uint32()),
 		// Name: "John",
-		// Type: app.UserType(app.UserTypeBasic),
+		// Type: enum.UserType(enum.UserTypeBasic),
 	}
 	app1 := &GlobalAppState
-	app1.Init(utils.Config{})
+	app1.Init(config.Config{})
 	open := app1.GetOpenChat(user.Id)
 	if open != 0 {
 		t.Fatalf("TestGetOpenChatEmpty expected 0, got [%v]", open)
@@ -158,10 +155,10 @@ func TestGetOpenChat(t *testing.T) {
 	user := app.User{
 		Id: uint(rand.Uint32()),
 		// Name: "John",
-		// Type: app.UserType(app.UserTypeBasic),
+		// Type: enum.UserType(enum.UserTypeBasic),
 	}
 	app1 := &GlobalAppState
-	app1.Init(utils.Config{})
+	app1.Init(config.Config{})
 	err := app1.OpenChat(user.Id, 33)
 	if err != nil {
 		t.Fatalf("TestGetOpenChat failed to open chat, %s", err.Error())
@@ -185,10 +182,10 @@ func TestCloseChat(t *testing.T) {
 	user := app.User{
 		Id: uint(rand.Uint32()),
 		// Name: "John",
-		// Type: app.UserType(app.UserTypeBasic),
+		// Type: enum.UserType(enum.UserTypeBasic),
 	}
 	app1 := &GlobalAppState
-	app1.Init(utils.Config{})
+	app1.Init(config.Config{})
 	app1.OpenChat(user.Id, 11)
 	open := app1.GetOpenChat(user.Id)
 	if open != 11 {

@@ -1,4 +1,4 @@
-package pub
+package handler
 
 import (
 	"fmt"
@@ -31,10 +31,12 @@ func GetChatMessages(dbConn sqlx.Ext, chatId uint) ([]*app.Message, error) {
 	for _, dbUser := range dbUsers {
 		appUsers[dbUser.Id] = convert.UserDBToApp(&dbUser, avatarByUserId[dbUser.Id])
 	}
+	// TODO offset := 0 means no offset, ie get entire chat history
 	dbMsgs, err := db.GetMessages(dbConn, chatId, 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting chat[%d] messages, %s", chatId, err.Error())
 	}
+	//
 	appMsgs := make([]*app.Message, 0)
 	appMsgIdMap := make(map[uint]*app.Message, 0)
 	msgIds := make([]uint, len(dbMsgs))
@@ -51,10 +53,12 @@ func GetChatMessages(dbConn sqlx.Ext, chatId uint) ([]*app.Message, error) {
 		msgIds = append(msgIds, dbMsg.Id)
 		appMsgIdMap[dbMsg.Id] = &appMsg
 	}
+	//
 	dbQuotes, err := db.GetQuotes(dbConn, msgIds)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting chat[%d] quotes, %s", chatId, err.Error())
 	}
+	//
 	for _, dbQuote := range dbQuotes {
 		appMsg, ok1 := appMsgIdMap[dbQuote.MsgId]
 		appQuote, ok2 := appMsgIdMap[dbQuote.QuoteId]

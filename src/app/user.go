@@ -1,29 +1,16 @@
 package app
 
 import (
-	"neon-chat/src/model/template"
-)
-
-type UserType string
-
-const (
-	UserTypeBasic UserType = "basic"
-)
-
-type UserStatus string
-
-const (
-	UserStatusPending UserStatus = "pending"
-	UserStatusActive  UserStatus = "active"
-	UserStatusSuspend UserStatus = "suspend"
+	"neon-chat/src/app/enum"
+	"neon-chat/src/template"
 )
 
 type User struct {
 	Id     uint
 	Name   string
 	Email  string
-	Type   UserType
-	Status UserStatus
+	Type   enum.UserType
+	Status enum.UserStatus
 	Salt   string
 	Avatar *Avatar
 }

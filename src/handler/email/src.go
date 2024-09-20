@@ -3,7 +3,7 @@ package email
 import (
 	"net/mail"
 
-	"neon-chat/src/model/template"
+	"neon-chat/src/template"
 )
 
 func IsEmailValid(address string) bool {

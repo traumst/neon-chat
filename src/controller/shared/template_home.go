@@ -2,13 +2,13 @@ package shared
 
 import (
 	"fmt"
+	"neon-chat/src/app"
 	"neon-chat/src/convert"
 	"neon-chat/src/db"
 	"neon-chat/src/handler/pub"
 	ti "neon-chat/src/interfaces"
-	"neon-chat/src/model/app"
-	"neon-chat/src/model/template"
 	"neon-chat/src/state"
+	"neon-chat/src/template"
 )
 
 func TemplateHome(state *state.State, dbConn *db.DBConn, user *app.User) (string, error) {

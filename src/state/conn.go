@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"neon-chat/src/model/app"
-	"neon-chat/src/model/event"
+	"neon-chat/src/app"
+	"neon-chat/src/event"
 	"neon-chat/src/utils"
 )
 

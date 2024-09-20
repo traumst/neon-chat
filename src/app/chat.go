@@ -3,7 +3,7 @@ package app
 import (
 	"log"
 	ti "neon-chat/src/interfaces"
-	"neon-chat/src/model/template"
+	"neon-chat/src/template"
 )
 
 type Chat struct {

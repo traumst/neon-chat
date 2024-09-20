@@ -2,7 +2,7 @@ package app
 
 import (
 	"fmt"
-	"neon-chat/src/model/template"
+	"neon-chat/src/template"
 	"neon-chat/src/utils"
 )
 

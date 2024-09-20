@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"log"
 
+	"neon-chat/src/app"
+	"neon-chat/src/app/enum"
 	"neon-chat/src/convert"
 	"neon-chat/src/db"
-	"neon-chat/src/model/app"
 	"neon-chat/src/utils"
 )
 
@@ -14,7 +15,7 @@ func AuthenticateUser(
 	dbConn *db.DBConn,
 	username string,
 	pass string,
-	authType app.AuthType,
+	authType enum.AuthType,
 ) (*app.User, *app.Auth, error) {
 	if dbConn == nil || len(username) <= 0 || len(pass) <= 0 {
 		log.Printf("Authenticate ERROR bad arguments username[%s] authType[%s]\n", username, authType)
@@ -27,7 +28,7 @@ func AuthenticateUser(
 	}
 	dbAvatar, _ := db.GetAvatar(dbConn.Conn, dbUser.Id)
 	appUser := convert.UserDBToApp(dbUser, dbAvatar)
-	if appUser.Status != app.UserStatusActive {
+	if appUser.Status != enum.UserStatusActive {
 		log.Printf("Authenticate WARN user[%d] status[%s] is inactive\n", dbUser.Id, dbUser.Status)
 		return appUser, nil, nil
 	}

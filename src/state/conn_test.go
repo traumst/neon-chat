@@ -8,7 +8,8 @@ import (
 	"sync"
 	"testing"
 
-	"neon-chat/src/model/app"
+	"neon-chat/src/app"
+	"neon-chat/src/app/enum"
 	h "neon-chat/src/utils/http"
 )
 
@@ -49,7 +50,7 @@ func TestChannels(t *testing.T) {
 func TestIsConnEmpty(t *testing.T) {
 	t.Logf("TestIsConnEmpty started")
 	uc := make(OpenConnections, 0)
-	user := app.User{Id: 1 /*, Name: "John", Type: app.UserType(app.UserTypeBasic) */}
+	user := app.User{Id: 1 /*, Name: "John", Type: enum.UserType(enum.UserTypeBasic) */}
 	isConn := uc.IsConn(user.Id)
 	if isConn {
 		t.Errorf("TestIsConnEmpty user was not supposed to be connected")
@@ -61,7 +62,7 @@ func TestIsConn(t *testing.T) {
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	w := httptest.NewRecorder()
 	uc := OpenConnections{}
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeBasic)}
+	user := app.User{Id: 1, Name: "John", Type: enum.UserType(enum.UserTypeBasic)}
 	uc.Add(&user, "test_origin", w, *r)
 	isConn := uc.IsConn(user.Id)
 	if !isConn {
@@ -74,7 +75,7 @@ func TestAdd(t *testing.T) {
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	w := httptest.NewRecorder()
 	uc := OpenConnections{}
-	user := app.User{Id: 1, Name: "John", Type: app.UserType(app.UserTypeBasic)}
+	user := app.User{Id: 1, Name: "John", Type: enum.UserType(enum.UserTypeBasic)}
 	conn := uc.Add(&user, "test_origin", w, *r)
 	if conn == nil {
 		t.Errorf("TestAdd expected conn, got NIL")
@@ -86,7 +87,7 @@ func TestAdd(t *testing.T) {
 func TestGetEmpty(t *testing.T) {
 	t.Logf("TestGetEmpty started")
 	uc := OpenConnections{}
-	user := app.User{Id: uint(rand.Uint32()) /*Name: "John", Type: app.UserType(app.UserTypeBasic)*/}
+	user := app.User{Id: uint(rand.Uint32()) /*Name: "John", Type: enum.UserType(enum.UserTypeBasic)*/}
 	conns := uc.Get(user.Id)
 	if len(conns) != 0 {
 		t.Errorf("TestGetEmpty expected empty, got [%+v]", conns)
@@ -100,7 +101,7 @@ func TestGet(t *testing.T) {
 	h.SetReqId(r, &reqId)
 	w := httptest.NewRecorder()
 	uc := OpenConnections{}
-	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeBasic)}
+	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: enum.UserType(enum.UserTypeBasic)}
 	conn := uc.Add(&user, "test_origin", w, *r)
 	if conn == nil {
 		t.Errorf("TestGet expected conn, got NIL")
@@ -136,7 +137,7 @@ func TestDrop(t *testing.T) {
 	}
 	w := httptest.NewRecorder()
 	uc := make(OpenConnections, 0)
-	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeBasic)}
+	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: enum.UserType(enum.UserTypeBasic)}
 	addedConn := uc.Add(&user, "test_origin", w, *r)
 	if addedConn == nil {
 		t.Errorf("failed to add conn")
@@ -157,17 +158,17 @@ func TestUserConns(t *testing.T) {
 	r := httptest.NewRequest("GET", "/some-route", nil)
 	w := httptest.NewRecorder()
 	uc := OpenConnections{}
-	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: app.UserType(app.UserTypeBasic)}
+	user := app.User{Id: uint(rand.Uint32()), Name: "John", Type: enum.UserType(enum.UserTypeBasic)}
 	conn1 := uc.Add(&user, "test_origin_1", w, *r)
 	if conn1 == nil {
 		t.Errorf("TestUserConns expected conn1, got NIL")
 	}
-	user2 := app.User{Id: 2, Name: "Jill", Type: app.UserType(app.UserTypeBasic)}
+	user2 := app.User{Id: 2, Name: "Jill", Type: enum.UserType(enum.UserTypeBasic)}
 	conn2 := uc.Add(&user2, "test_origin_2", w, *r)
 	if conn2 == nil {
 		t.Errorf("TestUserConns expected conn2, got NIL")
 	}
-	user3 := app.User{Id: 3, Name: "Bill", Type: app.UserType(app.UserTypeBasic)}
+	user3 := app.User{Id: 3, Name: "Bill", Type: enum.UserType(enum.UserTypeBasic)}
 	conn3 := uc.Add(&user3, "test_origin_3", w, *r)
 	if conn3 == nil {
 		t.Errorf("TestUserConns expected conn3, got NIL")

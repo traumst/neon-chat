@@ -88,18 +88,14 @@ func SearchUser(dbConn sqlx.Ext, login string) (*User, error) {
 	return &user, err
 }
 
-func SearchUsers(dbConn sqlx.Ext, name string) ([]*User, error) {
-	if len(name) < minUserNameLen || len(name) > maxUserNameLen {
+func SearchUsers(dbConn sqlx.Ext, terms ...string) ([]*User, error) {
+	if len(terms) <= 0 {
 		return nil, fmt.Errorf("name was not provided")
 	}
-	users := make([]*User, 0)
-	approxName := fmt.Sprintf("%%%s%%", name)
-
-	err := sqlx.Select(dbConn, &users,
-		`SELECT * FROM users WHERE name like ? or email like ?`,
-		approxName, approxName)
+	var users []*User
+	err := sqlx.Select(dbConn, &users, `SELECT * FROM users WHERE name IN (?) or email IN (?)`, terms, terms)
 	if err != nil {
-		return nil, fmt.Errorf("user[%s] not found: %s", name, err)
+		return nil, fmt.Errorf("user not found: %s", err)
 	}
 	return users, err
 }

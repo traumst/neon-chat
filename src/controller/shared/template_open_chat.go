@@ -2,11 +2,11 @@ package shared
 
 import (
 	"log"
+	"neon-chat/src/app"
 	"neon-chat/src/db"
 	"neon-chat/src/handler/priv"
 	"neon-chat/src/handler/pub"
 	ti "neon-chat/src/interfaces"
-	"neon-chat/src/model/app"
 	"neon-chat/src/state"
 )
 

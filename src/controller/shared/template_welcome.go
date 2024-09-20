@@ -1,8 +1,8 @@
 package shared
 
 import (
-	"neon-chat/src/model/app"
-	"neon-chat/src/model/template"
+	"neon-chat/src/app"
+	"neon-chat/src/template"
 )
 
 func TemplateWelcome(user *app.User) (string, error) {

@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"time"
 
+	"neon-chat/src/app"
 	"neon-chat/src/convert"
 	"neon-chat/src/db"
-	"neon-chat/src/model/app"
 	"neon-chat/src/utils"
+	"neon-chat/src/utils/config"
 )
 
 func ReserveUserName(
 	dbConn *db.DBConn,
-	emailConfig *utils.SmtpConfig,
+	emailConfig *config.SmtpConfig,
 	user *app.User,
 ) (*app.Reservation, error) {
 	token := utils.RandStringBytes(16)

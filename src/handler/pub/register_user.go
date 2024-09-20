@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"log"
 
+	"neon-chat/src/app"
+	"neon-chat/src/app/enum"
 	"neon-chat/src/convert"
 	"neon-chat/src/db"
-	"neon-chat/src/model/app"
 	"neon-chat/src/utils"
 
 	"github.com/jmoiron/sqlx"
@@ -16,7 +17,7 @@ func RegisterUser(
 	dbConn *db.DBConn,
 	newUser *app.User,
 	pass string,
-	authType app.AuthType,
+	authType enum.AuthType,
 ) (*app.User, *app.Auth, error) {
 	log.Printf("Register TRACE IN user\n")
 	if dbConn == nil || newUser == nil {
@@ -45,7 +46,7 @@ func RegisterUser(
 	return appUser, auth, nil
 }
 
-func createAuth(dbConn sqlx.Ext, user *app.User, pass string, authType app.AuthType) (*app.Auth, error) {
+func createAuth(dbConn sqlx.Ext, user *app.User, pass string, authType enum.AuthType) (*app.Auth, error) {
 	log.Printf("createAuth TRACE IN user[%d] auth[%s]\n", user.Id, authType)
 	hash, err := utils.HashPassword(pass, user.Salt)
 	if err != nil {
