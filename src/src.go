@@ -59,46 +59,6 @@ func ConnectDB(dbFilePath string) *db.DBConn {
 	return db
 }
 
-func CreateTestUsers(dbConn *db.DBConn, TestUsers config.TestUsers) (int, error) {
-	log.Println("Checking test users status...")
-	dbUsers, err := db.SearchUsers(dbConn.Conn, TestUsers.GetNames()...)
-	if err != nil {
-		return -1, fmt.Errorf("failed to search for test users: %s", err)
-	}
-	newUsers := make(config.TestUsers, 0)
-	for _, testUser := range TestUsers {
-		exists := false
-		for _, dbUser := range dbUsers {
-			if dbUser.Name == testUser.Name {
-				exists = true
-				break
-			}
-		}
-		if !exists {
-			newUsers = append(newUsers, testUser)
-		}
-	}
-	log.Printf("there are [%d] test users to create: \n%+v\n", len(newUsers), newUsers)
-	// for _, testUser := range newUsers {
-	// 	salt := utils.GenerateSalt(testUser.Name, string(app.LocalUserType))
-	// 	dbUser := db.User{
-	// 		Id:     0,
-	// 		Name:   testUser.Name,
-	// 		Email:  testUser.Email,
-	// 		Type:   string(enum.AuthTypeEmail),
-	// 		Status: "",
-	// 		Salt:   salt,
-	// 	}
-
-	// 	newDbUser, err := db.AddUser(dbConn.Tx, &dbUser)
-	// 	if err != nil {
-	// 		return -999, fmt.Errorf("failed to create test user[%s]: %s", testUser.Name, err)
-	// 	}
-	// }
-
-	return -999, nil
-}
-
 func InitAppState(c *config.Config) *state.State {
 	log.Println("init app state...")
 	app := &state.GlobalAppState

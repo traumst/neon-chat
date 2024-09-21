@@ -76,6 +76,8 @@ func readEnvFile(scanner *bufio.Scanner) (*Config, error) {
 			envConf.Smtp.Host = kv[1]
 		case "SMTP_PORT":
 			envConf.Smtp.Port = kv[1]
+		case "TEST_DATA_INSERT":
+			envConf.TestDataInsert = kv[1] == "true"
 		case "TEST_USER":
 			envConf.TestUsers = accTestUsers(envConf.TestUsers, kv[1])
 		default:

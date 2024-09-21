@@ -3,11 +3,12 @@ package config
 import "fmt"
 
 type Config struct {
-	Port      int
-	Sqlite    string
-	Smtp      SmtpConfig
-	CacheSize int
-	TestUsers TestUsers
+	Port           int
+	Sqlite         string
+	Smtp           SmtpConfig
+	CacheSize      int
+	TestUsers      TestUsers
+	TestDataInsert bool
 }
 
 func (a *Config) String() string {

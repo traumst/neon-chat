@@ -19,11 +19,6 @@ import (
 	h "neon-chat/src/utils/http"
 )
 
-// const (
-// 	LocalUserType = enum.UserTypeBasic
-// 	EmailAuthType = enum.AuthTypeEmail
-// )
-
 func Login(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("[%s] Login TRACE IN\n", reqId)
