@@ -3,9 +3,10 @@ package controller
 import (
 	"fmt"
 	"log"
-	"neon-chat/src/consts"
 	"net/http"
 	"strings"
+
+	"neon-chat/src/consts"
 )
 
 func FavIcon(w http.ResponseWriter, r *http.Request) {

@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -29,8 +30,8 @@ const UserSchema = `
 	);`
 const UserIndex = `CREATE INDEX IF NOT EXISTS idx_user_status ON users(status);`
 
-func (db *DBConn) UserTableExists() bool {
-	return db.TableExists("users")
+func (dbConn *DBConn) UserTableExists() bool {
+	return dbConn.TableExists("users")
 }
 
 func AddUser(dbConn sqlx.Ext, user *User) (*User, error) {
@@ -48,8 +49,14 @@ func AddUser(dbConn sqlx.Ext, user *User) (*User, error) {
 		return nil, fmt.Errorf("user has no salt")
 	}
 
+	n := user.Name
+	e := user.Email
+	t := user.Type
+	status := user.Status
+	salt := user.Salt
+	log.Println("...adding user:", n, "email:", e, "type:", t, "status:", status, "salt:", salt)
 	result, err := dbConn.Exec(`INSERT INTO users (name, email, type, status, salt) VALUES (?, ?, ?, ?, ?)`,
-		user.Name, user.Email, user.Type, user.Status, user.Salt[:])
+		n, e, t, status, salt)
 	if err != nil {
 		return nil, fmt.Errorf("error adding user: %s", err)
 	}
@@ -88,20 +95,28 @@ func SearchUser(dbConn sqlx.Ext, login string) (*User, error) {
 	return &user, err
 }
 
-func SearchUsers(dbConn sqlx.Ext, name string) ([]*User, error) {
-	if len(name) < minUserNameLen || len(name) > maxUserNameLen {
+func SearchUsers(dbConn sqlx.Ext, terms []string) ([]*User, error) {
+	if len(terms) <= 0 {
 		return nil, fmt.Errorf("name was not provided")
 	}
-	users := make([]*User, 0)
-	approxName := fmt.Sprintf("%%%s%%", name)
+	//err := sqlx.Select(dbConn, &users, `SELECT * FROM users WHERE name IN (?) or email IN (?)`, terms, terms)
+	//if err != nil {
+	//	return nil, fmt.Errorf("user not found: %s", err)
+	//}
+	//return users, nil
 
-	err := sqlx.Select(dbConn, &users,
-		`SELECT * FROM users WHERE name like ? or email like ?`,
-		approxName, approxName)
+	query, args, err := sqlx.In(`SELECT * FROM users WHERE name IN (?) or email IN (?)`, terms, terms)
 	if err != nil {
-		return nil, fmt.Errorf("user[%s] not found: %s", name, err)
+		return nil, fmt.Errorf("error preparing search query by user names %v, %s", terms, err)
 	}
-	return users, err
+	query = dbConn.Rebind(query)
+
+	var users []*User
+	err = sqlx.Select(dbConn, &users, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("error getting avatars for %v: %s", terms, err)
+	}
+	return users, nil
 }
 
 func GetUser(dbConn sqlx.Ext, id uint) (*User, error) {

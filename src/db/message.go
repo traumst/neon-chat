@@ -19,14 +19,14 @@ const MessageSchema = `
 		chat_id INTEGER, 
 		author_id INTEGER,
 		text TEXT,
-		FOREIGN KEY(chat_id) REFERENCES chats(id),
-		FOREIGN KEY(author_id) REFERENCES users(id)
+		FOREIGN KEY(chat_id) REFERENCES chat_users(chat_id) ON DELETE CASCADE,
+		FOREIGN KEY(author_id) REFERENCES chat_users(user_id)
 	);`
 
 const MessageIndex = `CREATE INDEX IF NOT EXISTS idx_message_text ON messages(text);`
 
-func (db *DBConn) MessageTableExists() bool {
-	return db.TableExists("messages")
+func (dbConn *DBConn) MessageTableExists() bool {
+	return dbConn.TableExists("messages")
 }
 
 func AddMessage(dbConn sqlx.Ext, msg *Message) (*Message, error) {

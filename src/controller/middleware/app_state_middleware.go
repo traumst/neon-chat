@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 	"neon-chat/src/consts"
-	"neon-chat/src/handler/state"
+	"neon-chat/src/state"
 	"net/http"
 )
 

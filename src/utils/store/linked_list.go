@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"neon-chat/src/consts"
+	i "neon-chat/src/interfaces"
 	"sync"
 )
 
@@ -20,6 +21,17 @@ type node struct {
 	value interface{}
 	prev  *node
 	next  *node
+}
+
+func (n node) GetId() uint {
+	return n.id
+}
+
+func (n node) Next() (bool, i.Identifiable) {
+	if n.next == nil {
+		return false, nil
+	}
+	return true, n.next
 }
 
 func NewLinkedList(size int) *DoublyLinkedList {
@@ -190,9 +202,7 @@ func (ll *DoublyLinkedList) removeTail() *node {
 }
 func (ll *DoublyLinkedList) removeNode(id uint) *node {
 	log.Printf("DoublyLinkedList.removeNode TRACE any node[%d]", id)
-	// TODO check from head and tail
 	current := ll.head
-	// TODO consider avoiding this loop - restitch instead
 	for current != nil && current.id != id {
 		if current.id == id {
 			log.Printf("DoublyLinkedList.removeNode TRACE removing node[%d]", id)

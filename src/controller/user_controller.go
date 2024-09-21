@@ -5,15 +5,15 @@ import (
 	"log"
 	"net/http"
 
+	"neon-chat/src/app"
 	"neon-chat/src/consts"
-	d "neon-chat/src/db"
-	"neon-chat/src/handler"
-	"neon-chat/src/handler/shared"
-	"neon-chat/src/handler/sse"
-	"neon-chat/src/handler/state"
-	a "neon-chat/src/model/app"
-	"neon-chat/src/model/event"
-	t "neon-chat/src/model/template"
+	"neon-chat/src/db"
+	"neon-chat/src/event"
+	"neon-chat/src/handler/parse"
+	"neon-chat/src/handler/pub"
+	"neon-chat/src/sse"
+	"neon-chat/src/state"
+	"neon-chat/src/template"
 	h "neon-chat/src/utils/http"
 )
 
@@ -25,13 +25,13 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	chatId, err := shared.ReadFormValueUint(r, "chatid")
+	chatId, err := parse.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] InviteUser ERROR chat id, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	inviteeName, err := shared.ReadFormValueString(r, "invitee")
+	inviteeName, err := parse.ReadFormValueString(r, "invitee")
 	if err != nil {
 		log.Printf("[%s] InviteUser ERROR invitee name, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
@@ -42,10 +42,10 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Bad invitee name"))
 		return
 	}
-	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
-	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	appChat, appInvitee, err := handler.HandleUserInvite(state, db, user, chatId, inviteeName)
+	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
+	appChat, appInvitee, err := pub.InviteUser(state, dbConn, user, chatId, inviteeName)
 	if err != nil {
 		log.Printf("[%s] InviteUser ERROR failed to invite user[%d] into chat[%d], %s\n",
 			reqId, appInvitee.Id, chatId, err.Error())
@@ -59,7 +59,11 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("User not found"))
 		return
 	}
-	template := t.UserTemplate{
+	err = sse.DistributeChat(state, dbConn.Tx, appChat, user, appInvitee, appInvitee, event.ChatInvite)
+	if err != nil {
+		log.Printf("HandleUserInvite WARN cannot distribute chat invite, %s\n", err.Error())
+	}
+	template := template.UserTemplate{
 		ChatId:      chatId,
 		ChatOwnerId: appChat.OwnerId,
 		UserId:      appInvitee.Id,
@@ -88,27 +92,39 @@ func ExpelUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	chatId, err := shared.ReadFormValueUint(r, "chatid")
+	chatId, err := parse.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] ExpelUser ERROR chat id, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	expelledId, err := shared.ReadFormValueUint(r, "userid")
+	expelledId, err := parse.ReadFormValueUint(r, "userid")
 	if err != nil {
 		log.Printf("[%s] ExpelUser ERROR expelled id, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
-	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	appExpelled, err := handler.HandleUserExpelled(state, db, user, chatId, expelledId)
+	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
+	appChat, appExpelled, err := pub.ExpelUser(state, dbConn, user, chatId, expelledId)
 	if err != nil {
 		log.Printf("[%s] ExpelUser ERROR failed to expell user[%d] from chat[%d], %s\n",
 			reqId, expelledId, chatId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+	err = sse.DistributeChat(state, dbConn.Tx, appChat, user, appExpelled, appExpelled, event.ChatClose)
+	if err != nil {
+		log.Printf("HandleUserExpelled ERROR cannot distribute chat close, %s\n", err.Error())
+	}
+	err = sse.DistributeChat(state, dbConn.Tx, appChat, user, appExpelled, appExpelled, event.ChatDrop)
+	if err != nil {
+		log.Printf("HandleUserExpelled ERROR cannot distribute chat deleted, %s\n", err.Error())
+	}
+	err = sse.DistributeChat(state, dbConn.Tx, appChat, user, nil, appExpelled, event.ChatExpel)
+	if err != nil {
+		log.Printf("HandleUserExpelled ERROR cannot distribute chat expel, %s\n", err.Error())
 	}
 	w.(*h.StatefulWriter).IndicateChanges()
 	log.Printf("[%s] ExpelUser TRACE chat[%d] owner[%d] removed[%d]\n", reqId, chatId, user.Id, appExpelled.Id)
@@ -124,20 +140,33 @@ func LeaveChat(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	chatId, err := shared.ReadFormValueUint(r, "chatid")
+	chatId, err := parse.ReadFormValueUint(r, "chatid")
 	if err != nil {
 		log.Printf("[%s] LeaveChat ERROR chat id, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
-	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	err = handler.HandleUserLeaveChat(state, db, user, chatId)
+	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
+	appChat, leftUser, err := pub.LeaveChat(state, dbConn, user, chatId)
 	if err != nil {
 		log.Printf("[%s] LeaveChat ERROR failed to leave chat[%d], %s\n", reqId, chatId, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+	log.Printf("HandleUserLeaveChat TRACE informing users in chat[%d]\n", appChat.Id)
+	err = sse.DistributeChat(state, dbConn.Tx, appChat, leftUser, leftUser, leftUser, event.ChatClose)
+	if err != nil {
+		log.Printf("HandleUserLeaveChat ERROR cannot distribute chat close, %s\n", err.Error())
+	}
+	err = sse.DistributeChat(state, dbConn.Tx, appChat, leftUser, leftUser, leftUser, event.ChatDrop)
+	if err != nil {
+		log.Printf("HandleUserLeaveChat ERROR cannot distribute chat deleted, %s\n", err.Error())
+	}
+	err = sse.DistributeChat(state, dbConn.Tx, appChat, leftUser, nil, leftUser, event.ChatLeave)
+	if err != nil {
+		log.Printf("HandleUserLeaveChat ERROR cannot distribute chat user drop, %s\n", err.Error())
 	}
 	w.(*h.StatefulWriter).IndicateChanges()
 	log.Printf("[%s] LeaveChat TRACE user[%d] left chat[%d]\n", reqId, user.Id, chatId)
@@ -161,18 +190,18 @@ func ChangeUser(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("[noop]"))
 		return
 	}
-	user := r.Context().Value(consts.ActiveUser).(*a.User)
+	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
-	db := r.Context().Value(consts.DBConn).(*d.DBConn)
+	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
 	user.Name = newName
-	updatedUser, err := shared.UpdateUser(state, db.Tx, user)
+	updatedUser, err := pub.UpdateUser(state, dbConn.Tx, user)
 	if err != nil {
 		log.Printf("[%s] ChangeUser ERROR failed to update user[%d], %s\n", reqId, user.Id, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("[fail]"))
 		return
 	}
-	err = sse.DistributeUserChange(state, db.Tx, nil, updatedUser, event.UserChange)
+	err = sse.DistributeUserChange(state, dbConn.Tx, nil, updatedUser, event.UserChange)
 	if err != nil {
 		log.Printf("[%s] ChangeUser ERROR failed to distribute user change, %s\n", reqId, err.Error())
 		w.WriteHeader(http.StatusOK)
@@ -201,8 +230,8 @@ func SearchUsers(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("[noop]"))
 		return
 	}
-	db := r.Context().Value(consts.DBConn).(*d.DBConn)
-	users, err := shared.SearchUsers(db.Conn, name)
+	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
+	users, err := pub.SearchUsers(dbConn.Conn, name)
 	if err != nil {
 		log.Printf("[%s] SearchUsers INFO no users matching[%s], %s\n", reqId, name, err.Error())
 		w.WriteHeader(http.StatusOK)

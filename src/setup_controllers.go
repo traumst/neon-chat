@@ -6,22 +6,22 @@ import (
 	"neon-chat/src/controller"
 	"neon-chat/src/controller/middleware"
 	"neon-chat/src/db"
-	"neon-chat/src/handler/state"
+	"neon-chat/src/state"
 )
 
-func SetupControllers(state *state.State, db *db.DBConn) {
+func SetupControllers(state *state.State, dbConn *db.DBConn) {
 	withTx := middleware.TransactionMiddleware()
 	authValidate := middleware.AuthValidateMiddleware()
-	dbConn := middleware.DBConnMiddleware(db)
+	conn := middleware.DBConnMiddleware(dbConn)
 	appState := middleware.AppStateMiddleware(state)
-	authRead := middleware.AuthReadMiddleware(state, db)
+	authRead := middleware.AuthReadMiddleware(state, dbConn)
 	writer := middleware.StatefulWriterMiddleware()
 	stamp := middleware.StampMiddleware()
 	//recovery := middleware.RecoveryMiddleware()
 
 	// middlewares are loaded in reverse order - lifo
 	minMiddlewareSet := []middleware.Middleware{
-		dbConn,
+		conn,
 		appState,
 		authRead,
 		writer,
@@ -32,7 +32,7 @@ func SetupControllers(state *state.State, db *db.DBConn) {
 	maxMiddleware := []middleware.Middleware{
 		withTx,
 		authValidate,
-		dbConn,
+		conn,
 		appState,
 		authRead,
 		writer,
@@ -52,7 +52,7 @@ func SetupControllers(state *state.State, db *db.DBConn) {
 	// live updates
 	http.Handle("/poll", middleware.ChainMiddlewares(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.PollUpdates(state, db, w, r)
+			controller.PollUpdates(state, dbConn, w, r)
 		}), maxMiddleware))
 
 	// home, default

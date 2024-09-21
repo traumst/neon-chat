@@ -1,7 +1,7 @@
 package utils
 
 import (
-	i "neon-chat/src/interface"
+	i "neon-chat/src/interfaces"
 )
 
 // arr is expected to be orderred by item id

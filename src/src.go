@@ -5,8 +5,8 @@ import (
 	"io"
 	"log"
 	"neon-chat/src/db"
-	"neon-chat/src/handler/state"
-	"neon-chat/src/utils"
+	"neon-chat/src/state"
+	"neon-chat/src/utils/config"
 	"os"
 	"strings"
 	"time"
@@ -38,40 +38,41 @@ func SetupGlobalLogger(toStderr bool, toFile bool) {
 	log.Println("TRACE OUT SetupGlobalLogger")
 }
 
-func ReadEnvConfig() *utils.Config {
+func ReadEnvConfig() *config.Config {
 	log.Println("parsing config...")
-	config, err := utils.EnvRead()
+	c, err := config.EnvRead()
 	if err != nil {
 		log.Printf("Error parsing config: %s\n", err)
-		log.Println(utils.ConfigHelp())
+		log.Println(config.ConfigHelp())
 		os.Exit(13)
 	}
-	log.Printf("\tparsed config: %s\n", config)
-	return config
+	log.Printf("\tparsed config: %s\n", c)
+	return c
 }
 
-func ConnectDB(config *utils.Config) *db.DBConn {
+func ConnectDB(dbFilePath string) *db.DBConn {
 	log.Println("connecting db...")
-	db, err := db.ConnectDB(config.Sqlite)
+	db, err := db.ConnectDB(dbFilePath)
 	if err != nil {
-		log.Fatalf("Error opening db at [%s]: %s", config.Sqlite, err)
+		log.Fatalf("Error opening db at [%s]: %s", dbFilePath, err)
 	}
 	return db
 }
 
-func InitAppState(config *utils.Config) *state.State {
+func InitAppState(c *config.Config) *state.State {
 	log.Println("init app state...")
 	app := &state.GlobalAppState
-	app.Init(utils.Config{
-		CacheSize: config.CacheSize,
-		Port:      config.Port,
-		Sqlite:    config.Sqlite,
-		Smtp: utils.SmtpConfig{
-			User: config.Smtp.User,
-			Pass: config.Smtp.Pass,
-			Host: config.Smtp.Host,
-			Port: config.Smtp.Port,
+	app.Init(config.Config{
+		CacheSize: c.CacheSize,
+		Port:      c.Port,
+		Sqlite:    c.Sqlite,
+		Smtp: config.SmtpConfig{
+			User: c.Smtp.User,
+			Pass: c.Smtp.Pass,
+			Host: c.Smtp.Host,
+			Port: c.Smtp.Port,
 		},
+		TestUsers: c.TestUsers[:],
 	})
 	return app
 }

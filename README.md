@@ -108,23 +108,22 @@ Making changes to tailwind classes requires rerun to display properly.
 
 ## TODOs
 
-+ fix handler/shared -> split into actions and ~utils
-+ handler should abstract app and db models completely, only expose templates
-+ user name change should update active user info on left panel
+-
 
 ### Next up
 
-+ resource consumption log - cpu/ram/network
 + support ALLOW_UNSAFE_ACCESS for dev and test
 + log levels with [slog in GO 1.23](https://pkg.go.dev/log/slog#Debug)
-- replace all `<form>` tags with with
-```
-<div hx-ACTION="/endpoint"
-    hx-headers='{"Content-Type": "application/x-www-form-urlencoded"}'
-    hx-vals='{"chatid":{{ .ChatId }},"msgid":{{ .MsgId }}},"userid":{{ .UserId }}}'
-```
++ change chat title
++ collapsible / resizable left panel
++ add contacts page / address book
+    * limit who can invite add / you
++ user info card - avatar, name, contact, mutual chats
 
 ## Backlog
+
+### Research
+- stress test a bufferred vs unbuffered channel
 
 ### Message Broadcasting: 
 - msg should distribute to user connection, even if chat is closed
@@ -176,11 +175,6 @@ Making changes to tailwind classes requires rerun to display properly.
 - effects
 
 ### GUI
-- change chat title
-- collapsible / resizable left panel
-- add contacts page / address book
-    * limit who can invite add / you
-- user info card - avatar, name, contact, mutual chats
 - user settings page
     * add alternative auth
     * light/dark mode

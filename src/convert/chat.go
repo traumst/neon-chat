@@ -1,8 +1,8 @@
 package convert
 
 import (
+	"neon-chat/src/app"
 	"neon-chat/src/db"
-	"neon-chat/src/model/app"
 )
 
 func ChatAppToDB(chat *app.Chat) *db.Chat {

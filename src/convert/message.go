@@ -1,8 +1,8 @@
 package convert
 
 import (
+	"neon-chat/src/app"
 	"neon-chat/src/db"
-	"neon-chat/src/model/app"
 )
 
 func MessageAppToDB(message *app.Message) db.Message {
@@ -29,6 +29,15 @@ func MessageDBToQuoteApp(message *db.Message, author *app.User) app.Quote {
 		Id:     message.Id,
 		ChatId: message.ChatId,
 		Author: author,
+		Text:   message.Text,
+	}
+}
+
+func MessageAppToQuoteApp(message *app.Message) app.Quote {
+	return app.Quote{
+		Id:     message.Id,
+		ChatId: message.ChatId,
+		Author: message.Author,
 		Text:   message.Text,
 	}
 }

@@ -27,12 +27,12 @@ const AvatarSchema = `
 		size INTEGER,
 		image BLOB,
 		mime TEXT,
-		FOREIGN KEY(user_id) REFERENCES users(id)
+		FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 	);`
 const AvatarIndex = ``
 
-func (db *DBConn) AvatarTableExists() bool {
-	return db.TableExists("avatars")
+func (dbConn *DBConn) AvatarTableExists() bool {
+	return dbConn.TableExists("avatars")
 }
 
 func AddAvatar(dbConn sqlx.Ext, userId uint, title string, image []byte, mime string) (*Avatar, error) {
