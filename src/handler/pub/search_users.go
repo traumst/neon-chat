@@ -12,7 +12,7 @@ import (
 
 func SearchUsers(dbConn sqlx.Ext, userName string) ([]*app.User, error) {
 	log.Printf("FindUsers TRACE user[%s]\n", userName)
-	dbUsers, err := db.SearchUsers(dbConn, userName)
+	dbUsers, err := db.SearchUsers(dbConn, []string{userName})
 	if err != nil {
 		return nil, fmt.Errorf("user[%s] not found: %s", userName, err.Error())
 	}

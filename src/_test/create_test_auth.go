@@ -19,7 +19,9 @@ import (
 //   - negative number of creation errors
 func CreateTestAuth(dbConn *db.DBConn, TestUsers config.TestUsers) (int, error) {
 	log.Println("Checking test users status...")
-	dbUsers, err := db.SearchUsers(dbConn.Conn, TestUsers.GetNames()...)
+	userNames := TestUsers.GetNames()
+	log.Println("Searching for test users", userNames)
+	dbUsers, err := db.SearchUsers(dbConn.Conn, userNames)
 	if err != nil {
 		return 0, fmt.Errorf("failed to search for test users: %s", err)
 	}
@@ -29,7 +31,7 @@ func CreateTestAuth(dbConn *db.DBConn, TestUsers config.TestUsers) (int, error) 
 	for _, dbUser := range dbUsers {
 		for _, testUser := range TestUsers {
 			if testUser.Name == dbUser.Name {
-				hash, err := utils.HashPassword(testUser.Pass, testUser.Salt)
+				hash, err := utils.HashPassword(testUser.Pass, dbUser.Salt)
 				if err != nil {
 					log.Printf("ERROR failed hashing pass, %s", err)
 				}

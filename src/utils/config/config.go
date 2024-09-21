@@ -1,6 +1,8 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Config struct {
 	Port           int
@@ -25,7 +27,6 @@ type SmtpConfig struct {
 type TestUser struct {
 	Name  string
 	Email string
-	Salt  string
 	Pass  string
 }
 

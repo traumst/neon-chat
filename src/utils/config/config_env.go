@@ -79,50 +79,13 @@ func readEnvFile(scanner *bufio.Scanner) (*Config, error) {
 		case "TEST_DATA_INSERT":
 			envConf.TestDataInsert = kv[1] == "true"
 		case "TEST_USER":
-			envConf.TestUsers = accTestUsers(envConf.TestUsers, kv[1])
+			testUser := parseTestUser(kv[1])
+			envConf.TestUsers = append(envConf.TestUsers, testUser)
 		default:
 			log.Printf("unknown env config [%s]\n", line)
 		}
 	}
 	return &envConf, nil
-}
-
-// expected format: val="user:ABCDE;email:abcd@gmail.com;pass:123456"
-func accTestUsers(acc TestUsers, val string) TestUsers {
-	sections := strings.Split(val, ";")
-	if acc == nil {
-		acc = make([]*TestUser, 0)
-	}
-	for _, section := range sections {
-		user, err := parseTestUser(section)
-		if err != nil {
-			log.Printf("failed to parse test user section [%s]: %v\n", section, err)
-			continue
-		}
-		acc = append(acc, user)
-	}
-	return acc
-}
-
-func parseTestUser(val string) (*TestUser, error) {
-	kv := strings.Split(val, ":")
-	if len(kv) != 2 || kv[0] == "" || kv[1] == "" {
-		return nil, fmt.Errorf("invalid test user, %s", val)
-	}
-	var user TestUser
-	switch kv[0] {
-	case "user":
-		user = TestUser{Name: kv[1]}
-	case "email":
-		user.Email = kv[1]
-	case "pass":
-		user.Pass = kv[1]
-	case "salt":
-		user.Salt = kv[1]
-	default:
-		log.Printf("unknown test user section [%s]\n", val)
-	}
-	return &user, nil
 }
 
 func parseInt(key string, val string) int {
@@ -131,4 +94,48 @@ func parseInt(key string, val string) int {
 		panic(fmt.Errorf("failed to parse int[%s] as [%s]: %v", val, key, err))
 	}
 	return i
+}
+
+// TEST_USER="name:ABCDE;email:abcd@gmail.com;pass:123456"
+func parseTestUser(rawUser string) *TestUser {
+	log.Printf("...digesting raw test user data [%s]", rawUser)
+	testUser := TestUser{}
+	rawUser = strings.Trim(rawUser, "\"")
+	props := strings.Split(rawUser, ";")
+	for _, prop := range props {
+		var err error
+		testUser, err = assignProp(testUser, prop)
+		if err != nil {
+			log.Fatalf("failed to parse test user section [%s]: %v\n", prop, err)
+		}
+	}
+	if testUser.Name == "" {
+		log.Fatalf("name is required for test user")
+	}
+	if testUser.Email == "" {
+		log.Fatalf("email is required for test user")
+	}
+	if testUser.Pass == "" {
+		log.Fatalf("pass is required")
+	}
+	return &testUser
+}
+
+func assignProp(testUser TestUser, prop string) (TestUser, error) {
+	kv := strings.Split(prop, ":")
+	if len(kv) != 2 || kv[0] == "" || kv[1] == "" {
+		return testUser, fmt.Errorf("invalid test user, %s", testUser)
+	}
+	switch kv[0] {
+	case "name":
+		testUser.Name = kv[1]
+	case "email":
+		testUser.Email = kv[1]
+	case "pass":
+		testUser.Pass = kv[1]
+	default:
+		log.Printf("unknown test user section [%s]\n", testUser)
+	}
+
+	return testUser, nil
 }
