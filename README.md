@@ -108,7 +108,7 @@ Making changes to tailwind classes requires rerun to display properly.
 
 ## TODOs
 
--
++ db does not shrink, need to [do a VACUUM](https://www.sqlite.org/lang_vacuum.html)
 
 ### Next up
 
