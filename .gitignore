@@ -11,6 +11,8 @@ log/*
 .DS_Store
 *.db
 *.db-journal
+*.db-shm
+*.db-wal
 .env
 neon-chat
 launch.json

@@ -12,7 +12,25 @@ This app is being build as an excercise for me to
 - <s>finish a project for a change</s>
 - maintain project over time, extend functionality, fix bugs
 
-## How to run
+
+## System requirements
+
+I don't normally specify such info, but just for tracking I'll estimate 
+and later update minimal requirements for the system.
+Please note, this is neither precise nor load-adjusted.
+
+### Minimal Requirements
+
+* 1 CORE    - with arbitrary performance
+* 256MB RAM - for app memory and db caches with ~30% spair
+* 2GB DISK  - for dependencies, db file, logs with ~60% spair
+
+### Recommended Requirements
+* 2 CORES   - to better utilize go concurrency
+* 512MB RAM - lower % usage = faster RAM lookup
+* 4GB DISK  - same as RAM for SSD, but just log space for HHD
+
+## Install, setup, build and run
 
 ### Prerequisites
 
@@ -108,17 +126,22 @@ Making changes to tailwind classes requires rerun to display properly.
 
 ## TODOs
 
++ user info card - avatar, name, contact, mutual chats
 + db does not shrink, need to [do a VACUUM](https://www.sqlite.org/lang_vacuum.html)
++ consider [conn pool for db](https://github.com/jmoiron/sqlx/issues/300)
++ need [Regular Maintenance: VACUUM and Analyze]
++ run `PRAGMA incremental_vacuum;` periodically to reclaim space
+
 
 ### Next up
 
++ logrotate
 + support ALLOW_UNSAFE_ACCESS for dev and test
 + log levels with [slog in GO 1.23](https://pkg.go.dev/log/slog#Debug)
 + change chat title
 + collapsible / resizable left panel
 + add contacts page / address book
     * limit who can invite add / you
-+ user info card - avatar, name, contact, mutual chats
 
 ## Backlog
 

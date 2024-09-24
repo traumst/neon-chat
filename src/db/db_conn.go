@@ -33,9 +33,28 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 		log.Printf("db file exists [%s]", dbPath)
 	}
 	log.Printf("db connects to [%s]", dbPath)
-	conn, err := sqlx.Open("sqlite3", dbPath)
+	conn, err := sqlx.Connect("sqlite3", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("error opening db: %s", err)
+	}
+	dbOptions := []string{
+		"PRAGMA journal_mode = WAL;",
+		"PRAGMA synchronous = NORMAL;",
+		"PRAGMA locking_mode = NORMAL;",
+		// "PRAGMA auto_vacuum = INCREMENTAL;",
+		"PRAGMA foreign_keys = ON;",
+		"PRAGMA journal_size_limit = 67108864;",
+		"PRAGMA page_size = 4096;",
+		"PRAGMA cache_size = 2000;",
+		"PRAGMA mmap_size = 134217728;",
+	}
+	log.Printf("applying db options...")
+	for _, pragma := range dbOptions {
+		log.Printf("applying db option [%s]", pragma)
+		_, err := conn.Exec(pragma)
+		if err != nil {
+			log.Fatalf("db connection error applying pragma [%s]: %s", pragma, err)
+		}
 	}
 	log.Printf("db connection established with connections[%d]", conn.Stats().MaxOpenConnections)
 	dbConn := DBConn{Conn: conn}
