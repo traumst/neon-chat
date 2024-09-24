@@ -43,12 +43,12 @@ func SetupControllers(state *state.State, dbConn *db.DBConn) {
 	handleStaticFiles(minMiddlewareSet)
 	handleAuth(minMiddlewareSet)
 
+	handleContacts(maxMiddleware)
 	handleAvatar(maxMiddleware)
 	handleUser(maxMiddleware)
 	handleChat(maxMiddleware)
 	handleMsgs(maxMiddleware)
 	handleSettings(maxMiddleware)
-	handleContacts(maxMiddleware)
 
 	// live updates
 	http.Handle("/poll", middleware.ChainMiddlewares(

@@ -19,6 +19,7 @@ This app is being build as an excercise for me to
 + consider [conn pool for db](https://github.com/jmoiron/sqlx/issues/300)
 + need [Regular Maintenance: VACUUM and Analyze]
 + run `PRAGMA incremental_vacuum;` periodically to reclaim space
++ docker setup: pod + persistent storage
 
 ### Next up
 
@@ -226,7 +227,7 @@ I don't normally specify such info, because this is absolutely subjective and
 could probably work "fine" on less that half of minimal requirements.
 But then we start testing the limits of garbage collection and resource allocation.
 This is russian roulette and I love it! 
-Test it out and report lowest requirements you are able to achieve while serving a load.
+Test it out and report the lowest resource consumption you are able to achieve while serving a load.
 
 ### Minimal Requirements
 

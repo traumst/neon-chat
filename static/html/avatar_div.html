@@ -1,4 +1,4 @@
-{{ if ne .UserId 0 }}
+{{ if and . (ne .UserId 0) }}
     <img id="user-{{ .UserId }}-avatar-{{ .Id }}" 
         title="{{ .Title }}, {{ .Size }}" 
         src="data:{{ .Mime }};base64,{{ .Base64 }}"

@@ -15,7 +15,14 @@ type Avatar struct {
 
 func (a *Avatar) Template(viewer *User) template.AvatarTemplate {
 	if a == nil || a.Id == 0 || viewer == nil || viewer.Id == 0 {
-		return template.AvatarTemplate{}
+		return template.AvatarTemplate{
+			Id:     0,
+			Title:  "",
+			UserId: 0,
+			Size:   "0KB",
+			Image:  []byte{},
+			Mime:   "",
+		}
 	}
 	return template.AvatarTemplate{
 		Id:     a.Id,

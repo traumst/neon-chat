@@ -14,6 +14,8 @@ func GetAvatar(dbConn sqlx.Ext, userId uint) (*app.Avatar, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get avatar, %s", err)
 	}
+	if avatar == nil {
+		return nil, nil
+	}
 	return convert.AvatarDBToApp(avatar), nil
-
 }

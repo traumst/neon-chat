@@ -1,7 +1,6 @@
-<div id="info-card-{{ .UserId }}"
-    class="">
-    <div>{{ template "avatar_div.html" .UserAvatar }}</div>
-    <div>{{ .UserName }}</div>
-    <div>{{ .UserEmail }}</div>
-    <div>member since `{{ .RegisterDate }}`</div>
+<div id="info-card-{{ .UserId }}">
+    <div id="info-card-{{ .UserId }}-avatar">{{ template "avatar_div.html" .UserAvatar }}</div>
+    <div id="info-card-{{ .UserId }}-username">{{ .UserName }}</div>
+    <div id="info-card-{{ .UserId }}-useremail">{{ .UserEmail }}</div>
+    <div id="info-card-{{ .UserId }}-since">member since <pre>{{ .RegisterDate }}</pre></div>
 </div>

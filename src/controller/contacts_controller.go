@@ -14,29 +14,27 @@ import (
 
 func GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("[%s] GetUserInfo\n", reqId)
+	log.Printf("TRACE [%s] GetUserInfo\n", reqId)
 	if r.Method != "GET" {
-		log.Printf("[%s] GetUserInfo TRACE auth does not allow %s\n", reqId, r.Method)
+		log.Printf("TRACE [%s] GetUserInfo auth does not allow %s\n", reqId, r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 	args, err := parse.ParseQueryString(r)
 	if err != nil {
-		log.Printf("[%s] QuoteMessage ERROR parsing arguments, %s\n", reqId, err)
+		log.Printf("ERROR [%s] GetUserInfo parsing arguments, %s\n", reqId, err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid arguments"))
 		return
 	}
 	if args.UserId < 1 {
-		log.Printf("[%s] GetUserInfo TRACE invalid user id\n", reqId)
+		log.Printf("TRACE [%s] GetUserInfo invalid user id\n", reqId)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid user id"))
 		return
 	}
-
 	viewer := r.Context().Value(consts.ActiveUser).(*app.User)
 	dbConn := shared.DbConn(r)
-
 	dbUser, err := db.GetUser(dbConn.Conn, args.UserId)
 	if err != nil {
 		log.Printf("[%s] GetUserInfo ERROR retrieving user[%d] data %s\n", reqId, args.UserId, err)
@@ -49,23 +47,21 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	dbAvatar, err := db.GetAvatar(dbConn.Conn, dbUser.Id)
 	if err != nil {
-		log.Printf("[%s] GetUserInfo ERROR retrieving user[%d] avatar %s\n", reqId, dbUser.Id, err)
+		log.Printf("[%s] GetUserInfo ERROR retrieving user[%d] avatar: %s\n", reqId, dbUser.Id, err)
 	}
 	appUser := convert.UserDBToApp(dbUser, dbAvatar)
 	avatar := appUser.Avatar.Template(viewer)
-
 	tmpl := template.UserInfoTemplate{
 		ViewerId:     viewer.Id,
 		UserId:       appUser.Id,
 		UserName:     appUser.Name,
 		UserEmail:    appUser.Email,
-		UserAvatar:   &avatar,
+		UserAvatar:   avatar,
 		RegisterDate: "",
 	}
-
 	html, err := tmpl.HTML()
 	if err != nil {
-		log.Printf("[%s] OpenSettings ERROR %s\n", reqId, err)
+		log.Printf("[%s] GetUserInfo ERROR cannot template response: %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to template response"))
 		return

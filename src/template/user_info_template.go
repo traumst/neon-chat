@@ -11,7 +11,7 @@ type UserInfoTemplate struct {
 	UserId       uint
 	UserName     string
 	UserEmail    string
-	UserAvatar   *AvatarTemplate
+	UserAvatar   AvatarTemplate
 	RegisterDate string
 }
 
@@ -21,8 +21,9 @@ func (uit UserInfoTemplate) HTML() (string, error) {
 	}
 	var buf bytes.Buffer
 	tmpl := template.Must(template.ParseFiles(
+		"static/html/contacts/user_info_div.html",
 		"static/html/avatar_div.html",
-		"static/html/contacts/user_info_div.html"))
+	))
 	if err := tmpl.Execute(&buf, uit); err != nil {
 		return "", fmt.Errorf("failed to template, %s", err.Error())
 	}
@@ -38,9 +39,6 @@ func (ust UserInfoTemplate) validate() error {
 	}
 	if ust.ViewerId < 1 {
 		return fmt.Errorf("UserSettingsTemplate viewer id cannot be 0")
-	}
-	if ust.UserAvatar == nil {
-		return fmt.Errorf("UserSettingsTemplate avatar cannot be nil")
 	}
 	return nil
 }
