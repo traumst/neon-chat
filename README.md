@@ -12,118 +12,6 @@ This app is being build as an excercise for me to
 - <s>finish a project for a change</s>
 - maintain project over time, extend functionality, fix bugs
 
-
-## System requirements
-
-I don't normally specify such info, but just for tracking I'll estimate 
-and later update minimal requirements for the system.
-Please note, this is neither precise nor load-adjusted.
-
-### Minimal Requirements
-
-* 1 CORE    - with arbitrary performance
-* 256MB RAM - for app memory and db caches with ~30% spair
-* 2GB DISK  - for dependencies, db file, logs with ~60% spair
-
-### Recommended Requirements
-* 2 CORES   - to better utilize go concurrency
-* 512MB RAM - lower % usage = faster RAM lookup
-* 4GB DISK  - same as RAM for SSD, but just log space for HHD
-
-## Install, setup, build and run
-
-### Prerequisites
-
-First run is special. 
-We're now going to do a couple of things that we would not have to do on subsequent runs. 
-At least not entirely.
-
-I assume you already have golang installed.
-You can check if it is by running `go version` in a terminal.
-If not, you can refer to [official istallation instruction](https://go.dev/doc/install) for you pc/mac/linux.
-
-There's [tailwind.config.js](./tailwind.config.js) in the root, but it's content is not in use YET. 
-Meaning we don't have custom tailwind definition, only relying on built-in utility classes. 
-Technically we can simply make a 3rd party call and get entire tailwindcss.min.js from a CDN. 
-Still, in the current setup we built tailwind file to produce minimal css. 
-[Compiled css](./static/css/tailwind.css) comes out at roughly 15kb, 
-about 1/20 of the default minified [cdn provided talwindcss.js](https://cdn.tailwindcss.com/3.4.5) wich is around 300kb.
-
-To actually compile this, you'd need to install tailwind. 
-There's plenty of options. 
-I recommend downloading the [stadalone tailwind cli](https://tailwindcss.com/blog/standalone-cli) and avoiding npm completely. 
-But if you have nodejs installed and feel more comfortable with it, 
-you can [install tailwind via npm](https://tailwindcss.com/docs/installation). 
-
-> <b><u>Note</u></b><br>
-[run.sh script](./run.sh) specifies path to tailwind executable, and needs to be updated.
-
-Finally, app expects to have `.env` file in the root directory, which you have to create. 
-There's `.env.template` file that you can easily copy-paste and fill up. 
-App may still start without this file, as some defaults are provided. 
-But the behaviour in this case is unpredicable, thus is a broken state and should fatal exit at some point.
-
-### Preparing run script
-
-Successfull launch of the app requires:
-* passing tests
-* compiling tailwind
-* (optional) purging the db
-* launching the app
-* etc.
-
-`run.sh` file is just a plaintext shell script. We need to make it executable by running 
-`chmod +x run.sh` in project root in terminal. After that, we can start the app by running `sh run.sh` or `./run.sh`.
-
-Contents of [run.sh](./run.sh) is more or less:
-```
-> cat run.sh
-echo "Running tests"
-time go test ./...
-
-# for dev purposes
-#echo "Dropping db file..."
-# rm chat.db
-# (la chat.db && echo "...Dropped db successfully.") || echo "...Data not dropped."
-
-echo "Building tailwind..."
-~/code/bin/tailwindcss -i static/css/input.css -o static/css/tailwind.css
-
-echo "Starting server..."
-go run main.go
-```
-
-> <b><u>Note</u></b><br>
-by default, db file is created in the root folder where executable runs
-
-> <b><u>Note</u></b><br>
-for db file to be deleted on start, must uncomment appropriate lines
-
-> <b><u>Note</u></b><br>
-tailwind executable path will need to be updated to match your system
-
-### Run script
-
-Executing a script from the terminal, you should then see output similar to:
-```
-> ./run.sh
-Running tests
-ok      neon-chat/src/handler     (cached)
-ok      neon-chat/src/model/app   (cached)
-Starting server...
-2024/05/01 00:07:58 Application is starting...
-...
-2024/05/01 00:07:58 Starting server at port [8080]
-```
-App should now be available at http://localhost:8080
-
-> <b><u>Note</u></b><br>
-After initial successfull run, we will not need to go through any of the setup steps again.
-
-> <b><u>Note</u></b><br>
-Executing `./run.sh` also builds the short tailwind.css. 
-Making changes to tailwind classes requires rerun to display properly.
-
 ## TODOs
 
 + user info card - avatar, name, contact, mutual chats
@@ -131,7 +19,6 @@ Making changes to tailwind classes requires rerun to display properly.
 + consider [conn pool for db](https://github.com/jmoiron/sqlx/issues/300)
 + need [Regular Maintenance: VACUUM and Analyze]
 + run `PRAGMA incremental_vacuum;` periodically to reclaim space
-
 
 ### Next up
 
@@ -238,6 +125,119 @@ Making changes to tailwind classes requires rerun to display properly.
 ### *GPTs*:
 - Consider for content moderation assistance
 - Consider for chat participant - query, image, auto-response
+
+## Install, setup, build and run
+
+### Prerequisites
+
+First run is special. 
+We're now going to do a couple of things that we would not have to do on subsequent runs. 
+At least not entirely.
+
+I assume you already have golang installed.
+You can check if it is by running `go version` in a terminal.
+If not, you can refer to [official istallation instruction](https://go.dev/doc/install) for you pc/mac/linux.
+
+There's [tailwind.config.js](./tailwind.config.js) in the root, but it's content is not in use YET. 
+Meaning we don't have custom tailwind definition, only relying on built-in utility classes. 
+Technically we can simply make a 3rd party call and get entire tailwindcss.min.js from a CDN. 
+Still, in the current setup we built tailwind file to produce minimal css. 
+[Compiled css](./static/css/tailwind.css) comes out at roughly 15kb, 
+about 1/20 of the default minified [cdn provided talwindcss.js](https://cdn.tailwindcss.com/3.4.5) wich is around 300kb.
+
+To actually compile this, you'd need to install tailwind. 
+There's plenty of options. 
+I recommend downloading the [stadalone tailwind cli](https://tailwindcss.com/blog/standalone-cli) and avoiding npm completely. 
+But if you have nodejs installed and feel more comfortable with it, 
+you can [install tailwind via npm](https://tailwindcss.com/docs/installation). 
+
+> <b><u>Note</u></b><br>
+[run.sh script](./run.sh) specifies path to tailwind executable, and needs to be updated.
+
+Finally, app expects to have `.env` file in the root directory, which you have to create. 
+There's `.env.template` file that you can easily copy-paste and fill up. 
+App may still start without this file, as some defaults are provided. 
+But the behaviour in this case is unpredicable, thus is a broken state and should fatal exit at some point.
+
+### Preparing run script
+
+Successfull launch of the app requires:
+* passing tests
+* compiling tailwind
+* (optional) purging the db
+* launching the app
+* etc.
+
+`run.sh` file is just a plaintext shell script. We need to make it executable by running 
+`chmod +x run.sh` in project root in terminal. After that, we can start the app by running `sh run.sh` or `./run.sh`.
+
+Contents of [run.sh](./run.sh) is more or less:
+```
+> cat run.sh
+echo "Running tests"
+time go test ./...
+
+# for dev purposes
+#echo "Dropping db file..."
+# rm chat.db
+# (la chat.db && echo "...Dropped db successfully.") || echo "...Data not dropped."
+
+echo "Building tailwind..."
+~/code/bin/tailwindcss -i static/css/input.css -o static/css/tailwind.css
+
+echo "Starting server..."
+go run main.go
+```
+
+> <b><u>Note</u></b><br>
+by default, db file is created in the root folder where executable runs
+
+> <b><u>Note</u></b><br>
+for db file to be deleted on start, must uncomment appropriate lines
+
+> <b><u>Note</u></b><br>
+tailwind executable path will need to be updated to match your system
+
+### Run script
+
+Executing a script from the terminal, you should then see output similar to:
+```
+> ./run.sh
+Running tests
+ok      neon-chat/src/handler     (cached)
+ok      neon-chat/src/model/app   (cached)
+Starting server...
+2024/05/01 00:07:58 Application is starting...
+...
+2024/05/01 00:07:58 Starting server at port [8080]
+```
+App should now be available at http://localhost:8080
+
+> <b><u>Note</u></b><br>
+After initial successfull run, we will not need to go through any of the setup steps again.
+
+> <b><u>Note</u></b><br>
+Executing `./run.sh` also builds the short tailwind.css. 
+Making changes to tailwind classes requires rerun to display properly.
+
+## System requirements
+
+I don't normally specify such info, because this is absolutely subjective and 
+could probably work "fine" on less that half of minimal requirements.
+But then we start testing the limits of garbage collection and resource allocation.
+This is russian roulette and I love it! 
+Test it out and report lowest requirements you are able to achieve while serving a load.
+
+### Minimal Requirements
+
+* 1 CORE    - with arbitrary performance
+* 256MB RAM - for app memory and db caches with ~30% spair
+* 2GB DISK  - for dependencies, db file, logs with ~60% spair
+
+### Recommended Requirements
+* 2 CORES   - to better utilize go concurrency
+* 512MB RAM - lower % usage = faster RAM lookup
+* 4GB DISK  - same as RAM for SSD, but just log space for HHD
 
 ## License
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
