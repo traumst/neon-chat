@@ -48,6 +48,7 @@ func SetupControllers(state *state.State, dbConn *db.DBConn) {
 	handleChat(maxMiddleware)
 	handleMsgs(maxMiddleware)
 	handleSettings(maxMiddleware)
+	handleContacts(maxMiddleware)
 
 	// live updates
 	http.Handle("/poll", middleware.ChainMiddlewares(
@@ -60,6 +61,13 @@ func SetupControllers(state *state.State, dbConn *db.DBConn) {
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.NavigateHome(w, r)
 		}), minMiddlewareSet))
+}
+
+func handleContacts(mw []middleware.Middleware) {
+	http.Handle("/infocard", middleware.ChainMiddlewares(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			controller.GetUserInfo(w, r)
+		}), mw))
 }
 
 func handleStaticFiles(mw []middleware.Middleware) {

@@ -9,6 +9,7 @@ import (
 )
 
 type QueryArgs struct {
+	UserId uint
 	ChatId uint
 	MsgId  uint
 }
@@ -19,6 +20,13 @@ func ParseQueryString(r *http.Request) (parsed QueryArgs, err error) {
 	// v is []string, but we only support one value per key
 	for k, v := range args {
 		switch k {
+		case "userid":
+			c, e := strconv.Atoi(v[0])
+			if e != nil {
+				err = e
+			} else {
+				parsed.UserId = uint(c)
+			}
 		case "chatid":
 			c, e := strconv.Atoi(v[0])
 			if e != nil {

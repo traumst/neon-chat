@@ -19,9 +19,11 @@
         shadow shadow-green-800
         hover:shadow-green-500
         hover:text-green-500">
-    <div class="chat-message-content 
-        flex flex-col 
-        overflow-hidden">
+    <div hx-get="/contacts?userid={{ .AuthorId }}" 
+        hx-trigger="mouseover" 
+        hx-target="#overlay" 
+        hx-indicator=".neon-border"
+        class="chat-message-content flex flex-col overflow-hidden hover:">
         {{ with $quote := .Quote }}
             {{ if ne $quote.MsgId 0 }}
                 <div class="flex flex-col

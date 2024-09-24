@@ -1,0 +1,7 @@
+<div id="info-card-{{ .UserId }}"
+    class="">
+    <div>{{ template "avatar_div.html" .UserAvatar }}</div>
+    <div>{{ .UserName }}</div>
+    <div>{{ .UserEmail }}</div>
+    <div>member since `{{ .RegisterDate }}`</div>
+</div>
