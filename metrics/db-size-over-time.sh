@@ -3,7 +3,7 @@
 # calculates some agregates
 # appends new line to db-size-over-time.csv
 
-DATABASE_FILE="./chat.db"
+DATABASE_FILE=chat.db
 if [ ! -f "$DATABASE_FILE" ]; then
   echo "'$DATABASE_FILE' does not exist - metrics cant be collected"
   exit 1
@@ -26,16 +26,14 @@ fi
 TABLES_COUNT=0
 ROWS_COUNT=0
 EXCLUDE_TABLES=("name" "---------------" "sqlite_sequence")
-export SQLITE_IGNORE=1
-TABLE_NAMES=$(sqlite3 "$DATABASE_FILE" "SELECT name FROM sqlite_master WHERE type='table';")
+TABLE_NAMES=$(sqlite3 $DATABASE_FILE "SELECT name FROM sqlite_master WHERE type='table';");
 for TABLE in $TABLE_NAMES; do
   if [[ " ${EXCLUDE_TABLES[@]} " =~ " ${TABLE} " ]]; then
-    echo "skipping table $TABLE"
-    continue
+    echo "skipping table $TABLE";
+    continue;
   fi
-  echo "...counting rows in table: [$TABLE]"
-  export SQLITE_IGNORE=1
-  ROW_COUNT=$(sqlite3 "$DATABASE_FILE" "SELECT COUNT(1) FROM $TABLE;")
+  echo "...counting rows in table: [$TABLE]";
+  ROW_COUNT=$(sqlite3 $DATABASE_FILE "SELECT COUNT(1) FROM $TABLE")
   ROWS_COUNT=$((ROWS_COUNT + ROW_COUNT))
   TABLES_COUNT=$((TABLES_COUNT + 1))
 done
