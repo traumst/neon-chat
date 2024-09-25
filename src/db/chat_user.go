@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"neon-chat/src/consts"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -110,11 +112,59 @@ func GetUserChats(dbConn sqlx.Ext, userId uint) ([]Chat, error) {
 	return userChats, nil
 }
 
+// INNER-JOIN
+func GetSharedChatIds(dbConn sqlx.Ext, userIds []uint) ([]uint, error) {
+	if len(userIds) != 2 {
+		return nil, fmt.Errorf("expected exactly 2 userIds, but got userIds[%v]", userIds)
+	}
+	withLimit := fmt.Sprintf(`
+        SELECT L.chat_id
+        FROM chat_users L
+        JOIN chat_users R
+            ON L.chat_id = R.chat_id
+        WHERE L.user_id = ? 
+            AND R.user_id = ?
+        ORDER BY L.chat_id
+        LIMIT %d;`, consts.MaxSharedChats)
+	query, args, err := sqlx.In(withLimit)
+	if err != nil {
+		return nil, fmt.Errorf("error preparing shared chats query: %s", err)
+	}
+	query = dbConn.Rebind(query)
+	var chatIds []uint
+	err = sqlx.Select(dbConn, &chatIds, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("error getting shared chat ids: %s", err.Error())
+	}
+	return chatIds, nil
+}
+
+// INNER-JOIN
+func GetSharedChats(dbConn sqlx.Ext, userIds []uint) ([]Chat, error) {
+	chatIds, err := GetSharedChatIds(dbConn, userIds)
+	if err != nil {
+		return nil, fmt.Errorf("error getting shared chat ids for users[%v]: %s", userIds, err)
+	}
+	if len(chatIds) == 0 {
+		return []Chat{}, nil
+	}
+	query, args, err := sqlx.In(`SELECT * FROM chats WHERE id IN (?)`, chatIds)
+	if err != nil {
+		return nil, fmt.Errorf("error preparing chatIds query for [%v]: %s", chatIds, err)
+	}
+	query = dbConn.Rebind(query)
+	var sharedChats []Chat
+	err = sqlx.Select(dbConn, &sharedChats, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("error getting shared chats[%v]: %s", chatIds, err)
+	}
+	return sharedChats, nil
+}
+
 func GetChatUserIds(dbConn sqlx.Ext, chatId uint) ([]uint, error) {
 	if chatId == 0 {
 		return nil, fmt.Errorf("bad input: chatId[%d]", chatId)
 	}
-
 	var userIds []uint
 	err := sqlx.Select(dbConn, &userIds, `SELECT user_id FROM chat_users WHERE chat_id = ?`, chatId)
 	if err != nil {

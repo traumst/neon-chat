@@ -7,12 +7,12 @@ import (
 )
 
 type UserInfoTemplate struct {
-	ViewerId     uint
-	UserId       uint
-	UserName     string
-	UserEmail    string
-	UserAvatar   AvatarTemplate
-	RegisterDate string
+	ViewerId    uint
+	UserId      uint
+	UserName    string
+	UserEmail   string
+	UserAvatar  AvatarTemplate
+	SharedChats []ChatTemplate
 }
 
 func (uit UserInfoTemplate) HTML() (string, error) {
@@ -22,6 +22,7 @@ func (uit UserInfoTemplate) HTML() (string, error) {
 	var buf bytes.Buffer
 	tmpl := template.Must(template.ParseFiles(
 		"static/html/contacts/user_info_div.html",
+		"static/html/nav/chat_li.html",
 		"static/html/avatar_div.html",
 	))
 	if err := tmpl.Execute(&buf, uit); err != nil {

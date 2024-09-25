@@ -1,6 +1,20 @@
 <div id="info-card-{{ .UserId }}">
-    <div id="info-card-{{ .UserId }}-avatar">{{ template "avatar_div.html" .UserAvatar }}</div>
-    <div id="info-card-{{ .UserId }}-username">{{ .UserName }}</div>
-    <div id="info-card-{{ .UserId }}-useremail">{{ .UserEmail }}</div>
-    <div id="info-card-{{ .UserId }}-since">member since <pre>{{ .RegisterDate }}</pre></div>
+    <div id="info-card-{{ .UserId }}-avatar">
+        {{ template "avatar_div.html" .UserAvatar }}
+    </div>
+    <div id="info-card-{{ .UserId }}-username">
+        {{ .UserName }}
+    </div>
+    <div id="info-card-{{ .UserId }}-useremail">
+        {{ .UserEmail }}
+    </div>
+    {{ if ne 0 (len .SharedChats) }}
+    <div id="info-card-{{ .UserId }}-top-shared-chats">
+        <ul>
+        {{ range $index, $chat := .SharedChats }}
+            {{ template "chat_li.html" $chat }}
+        {{ end }}
+        </ul>
+    </div>
+    {{ end }}
 </div>
