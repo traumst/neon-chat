@@ -10,7 +10,7 @@ func RecoveryMiddleware() Middleware {
 	return Middleware{
 		Name: "Recovery",
 		Func: func(next http.Handler) http.Handler {
-			log.Println("TRACE with recovery middleware")
+			//log.Println("TRACE with recovery middleware")
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				defer func(reqId string) {
 					log.Println(reqId, "TRACE checking for panic")

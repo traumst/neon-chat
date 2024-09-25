@@ -12,7 +12,7 @@ func StatefulWriterMiddleware() Middleware {
 	return Middleware{
 		Name: "StatefulWriter",
 		Func: func(next http.Handler) http.Handler {
-			log.Println("TRACE with auth read middleware")
+			//log.Println("TRACE with auth read middleware")
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				reqId := r.Context().Value(consts.ReqIdKey).(string)
 				log.Printf("TRACE [%s] StatefulWriterMiddleware BEGIN %s %s", reqId, r.Method, r.RequestURI)

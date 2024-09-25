@@ -14,7 +14,10 @@ This app is being build as an excercise for me to
 
 ## TODOs
 
-+ user info card - avatar, name, contact, mutual chats
++ user info card - avatar, name, contact, mutual chats (recently joined)
+    + add timestamps to every table:
+        * created
+        * updated
 + db does not shrink, need to [do a VACUUM](https://www.sqlite.org/lang_vacuum.html)
 + consider [conn pool for db](https://github.com/jmoiron/sqlx/issues/300)
 + need [Regular Maintenance: VACUUM and Analyze]
@@ -127,33 +130,28 @@ This app is being build as an excercise for me to
 - Consider for content moderation assistance
 - Consider for chat participant - query, image, auto-response
 
-## Install, setup, build and run
+## Technichals
 
 ### Prerequisites
-
-First run is special. 
-We're now going to do a couple of things that we would not have to do on subsequent runs. 
-At least not entirely.
 
 I assume you already have golang installed.
 You can check if it is by running `go version` in a terminal.
 If not, you can refer to [official istallation instruction](https://go.dev/doc/install) for you pc/mac/linux.
 
-There's [tailwind.config.js](./tailwind.config.js) in the root, but it's content is not in use YET. 
-Meaning we don't have custom tailwind definition, only relying on built-in utility classes. 
+There's [tailwind.config.js](./tailwind.config.js) in the root. 
 Technically we can simply make a 3rd party call and get entire tailwindcss.min.js from a CDN. 
-Still, in the current setup we built tailwind file to produce minimal css. 
+And we do - it's much easier for development.
+Still, current setup will build tailwind and produce updated minimal css. 
 [Compiled css](./static/css/tailwind.css) comes out at roughly 15kb, 
 about 1/20 of the default minified [cdn provided talwindcss.js](https://cdn.tailwindcss.com/3.4.5) wich is around 300kb.
 
-To actually compile this, you'd need to install tailwind. 
-There's plenty of options. 
+To actually compile this, you'd need to install tailwind. There are too many options. 
 I recommend downloading the [stadalone tailwind cli](https://tailwindcss.com/blog/standalone-cli) and avoiding npm completely. 
 But if you have nodejs installed and feel more comfortable with it, 
 you can [install tailwind via npm](https://tailwindcss.com/docs/installation). 
 
 > <b><u>Note</u></b><br>
-[run.sh script](./run.sh) specifies path to tailwind executable, and needs to be updated.
+[run.sh script](./run.sh) specifies path to tailwind executable and needs to be updated, `~/code/bin/tailwindcss` may have different path, or if you installed tailwind via npm you'd need to replace it with `npx tailwind` or something similar.
 
 Finally, app expects to have `.env` file in the root directory, which you have to create. 
 There's `.env.template` file that you can easily copy-paste and fill up. 
@@ -221,13 +219,87 @@ After initial successfull run, we will not need to go through any of the setup s
 Executing `./run.sh` also builds the short tailwind.css. 
 Making changes to tailwind classes requires rerun to display properly.
 
+## Sqlite DB
+
+You can imagine this entire app as an upside-down pyramid standing firmly 
+on the pinacle of sqlite. I can't believe I am only discovering this now.
+
+> <b><u>Note</u></b><br>
+When you first run the app with `./run.sh`, the `chat.db` file should be created.
+
+> <b><u>Note</u></b><br>
+You can specify a few test users in the `.env` file to pre-create users with auth in DB for tests.
+
+### DB Options
+
+There are a number of PRAGMAs defined in code. In general, pragmas adjust db settings. Changing these requires at least a restart, while some pragmas cannot be applied to a pre-existing db file at all. Some of the relevant pragmas are listed below, for detailed explanation and full list of all available pragmas, refer to [official documentation](https://www.sqlite.org/pragma.html#pragma_journal_mode).
+* PRAGMA journal_mode = WAL;
+* PRAGMA synchronous = NORMAL;
+* PRAGMA locking_mode = NORMAL;
+* PRAGMA foreign_keys = ON;
+* PRAGMA journal_size_limit = 67108864;
+* PRAGMA page_size = 4096;
+* PRAGMA cache_size = 2000;
+* PRAGMA mmap_size = 134217728;
+
+### CLI Options
+
+We can interact with our db from the terminal. In order to do so we would need a connector. Install [sqlite3 cli](https://www.sqlite.org/cli.html), at least it is very simple and it's what I use at the moment.
+
+Connect with sqlite3 cli tool to the db file. Sqlite is just a normal sql, so we can run normal query to view content of a table:
+``` sql
+> sqlite3 chat.db
+SQLite version 3.43.2 2023-10-10 13:08:14
+Enter ".help" for usage hints.
+sqlite>
+```
+```sql
+sqlite> SELECT * FROM users WHERE status='active' LIMIT 2;
+1|ABCDE|abcd@gmail.com|basic|active
+2|NEW12|newt@gmail.com|basic|active
+sqlite>
+```
+
+Data is provided without the headers - probably good default for connectors But when I look at it I prefer to have column names shown as well. This can be achieved by running the two commands below in sqlite3 cli:
+```sql
+sqlite> .headers ON
+sqlite>
+```
+```sql
+sqlite> .mode columns
+sqlite>
+```
+Here's the full reference for [sqlite dot commands](https://sqlite.org/cli.html#special_commands_to_sqlite3_dot_commands_).
+
+These commands do not produce any output but if we run the same query again, the output will now be nicely formatted:
+```sql
+sqlite> SELECT * FROM users WHERE status='active' LIMIT 2;
+id  name   email           type   status  
+--  -----  --------------  -----  ------  
+1   ABCDE  abcd@gmail.com  basic  active  
+2   NEW12  newt@gmail.com  basic  active  
+sqlite>         
+```
+
+### Run from terminal
+
+There are a couple of annoying settings when working directly in `sqlite>`, which I list below. Running your commands directly in the terminal solves all of them.
+
+Some of the `sqlite>` tool's interface limitations:
+* No command history from previous sessions
+* Opitons like `.headers ON` are set for entire session or globally
+* Global options can interfere with go's sqlx connector
+* Queries require `;` at the end
+
+```sh
+> sqlite3 chat.db "select * from users" -cmd ".headers ON" -cmd ".mode columns"
+```
+
+With this, all of queries are executed in a single session, we can find it in the history, and both `-cmd`s values are cleaned up for the next query. Semicolon is also not required for a single query. No global setting to mess with running code later.
+
 ## System requirements
 
-I don't normally specify such info, because this is absolutely subjective and 
-could probably work "fine" on less that half of minimal requirements.
-But then we start testing the limits of garbage collection and resource allocation.
-This is russian roulette and I love it! 
-Test it out and report the lowest resource consumption you are able to achieve while serving a load.
+I don't normally specify such info, because this is absolutely subjective and could probably work "fine" on less that half of minimal requirements. But then we start testing the limits of garbage collection and resource allocation. This is russian roulette and I love it! Test it out and report the lowest resource consumption you are able to achieve while serving a load.
 
 ### Minimal Requirements
 
@@ -239,6 +311,3 @@ Test it out and report the lowest resource consumption you are able to achieve w
 * 2 CORES   - to better utilize go concurrency
 * 512MB RAM - lower % usage = faster RAM lookup
 * 4GB DISK  - same as RAM for SSD, but just log space for HHD
-
-## License
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.

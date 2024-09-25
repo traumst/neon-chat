@@ -56,7 +56,7 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 			log.Fatalf("db connection error applying pragma [%s]: %s", pragma, err)
 		}
 	}
-	log.Printf("db connection established with connections[%d]", conn.Stats().MaxOpenConnections)
+	log.Printf("db connection established with limit[%d]", conn.Stats().MaxOpenConnections)
 	dbConn := DBConn{Conn: conn}
 	err = dbConn.init()
 	return &dbConn, err

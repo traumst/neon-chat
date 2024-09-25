@@ -15,21 +15,28 @@ if [ -s "$CSV_FILE" ]; then
   LAST_LINE=$(tail -n 1 "$CSV_FILE")
   LAST_NEXT=$(echo "$LAST_LINE" | cut -d',' -f1)
   NEXT=$((LAST_NEXT + 1))
-  echo "next line number will be $NEXT"
+  echo "...$CSV_FILE next line number will be $NEXT"
 else
   CSV_FILE_HEADER="day,timestamp,filesize,table_count,index_count,total_rows_count"
   echo "$CSV_FILE_HEADER" >> "$CSV_FILE"
   NEXT=1
-  echo "csv header appended, initial line number is $NEXT"
+  echo "...csv header appended to $CSV_FILE, initial line number is $NEXT"
 fi
 
 TABLES_COUNT=0
 ROWS_COUNT=0
+EXCLUDE_TABLES=("name" "---------------" "sqlite_sequence")
+export SQLITE_IGNORE=1
 TABLE_NAMES=$(sqlite3 "$DATABASE_FILE" "SELECT name FROM sqlite_master WHERE type='table';")
-echo "counting rows in following tables: [$TABLE_NAMES]"
 for TABLE in $TABLE_NAMES; do
+  if [[ " ${EXCLUDE_TABLES[@]} " =~ " ${TABLE} " ]]; then
+    echo "skipping table $TABLE"
+    continue
+  fi
+  echo "...counting rows in table: [$TABLE]"
+  export SQLITE_IGNORE=1
   ROW_COUNT=$(sqlite3 "$DATABASE_FILE" "SELECT COUNT(1) FROM $TABLE;")
-  ROWS_COUNT=$((TOTAL_TABLE_ROWs_COUNT + ROW_COUNT))
+  ROWS_COUNT=$((ROWS_COUNT + ROW_COUNT))
   TABLES_COUNT=$((TABLES_COUNT + 1))
 done
 echo "counted $ROWS_COUNT rows over $TABLES_COUNT tables"

@@ -52,6 +52,7 @@ func ReadEnvConfig() *config.Config {
 
 func ConnectDB(dbFilePath string) *db.DBConn {
 	log.Println("connecting db...")
+	os.Setenv("SQLITE_IGNORE", "1")
 	db, err := db.ConnectDB(dbFilePath)
 	if err != nil {
 		log.Fatalf("Error opening db at [%s]: %s", dbFilePath, err)

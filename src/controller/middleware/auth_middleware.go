@@ -14,7 +14,7 @@ func AuthReadMiddleware(state *state.State, dbConn *db.DBConn) Middleware {
 	return Middleware{
 		Name: "AuthRead",
 		Func: func(next http.Handler) http.Handler {
-			log.Println("TRACE with auth read middleware")
+			//log.Println("TRACE with auth read middleware")
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				log.Println(r.Context().Value(consts.ReqIdKey).(string), "TRACE reading user session auth")
 				user, _ := pub.ReadSession(state, dbConn, w, r)
@@ -29,11 +29,11 @@ func AuthReadMiddleware(state *state.State, dbConn *db.DBConn) Middleware {
 }
 
 func AuthValidateMiddleware() Middleware {
-	log.Println("TRACE with auth validate middleware")
+	//log.Println("TRACE with auth validate middleware")
 	return Middleware{
 		Name: "AuthValidate",
 		Func: func(next http.Handler) http.Handler {
-			log.Println("TRACE with auth read middleware")
+			//log.Println("TRACE with auth read middleware")
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				log.Println(r.Context().Value(consts.ReqIdKey).(string), "TRACE validating user session auth")
 				ctx := r.Context()
