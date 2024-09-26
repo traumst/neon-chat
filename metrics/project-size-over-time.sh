@@ -1,121 +1,193 @@
 #!/bin/bash
-
-CSV_FILE="./metrics/project-size-over-time.csv"
-EXTENSIONS=("*.go" "*.html" "*.js" "*.css" "README.md")
-EXTENSIONS_FIND=$(printf " -name %s -o" "${EXTENSIONS[@]}")
-EXTENSIONS_FIND=${EXTENSIONS_FIND% -o}
-
-if [ ! -f "$CSV_FILE" ]; then
-  echo "day,timestamp,total_files,largest_folder_name,largest_folder_size,greatest_file_depth,min_lines,min_file,max_lines,max_file,median_lines,median_file,total_non_empty_lines" > "$CSV_FILE"
+#
+if [[ ${#args[@]} -eq 0 ]]; then
+  exit 1
 fi
+if [ $1 == () ]; then
+  exit 2
+fi
+array=("$@:2")
+# expects following args
+#  $1            - input args array
+#  args=("$@:2") - search values
+contains_values() {
+  local array=$1
+  local lookup=("value1")
+  local value2="value2"
+  local found_value1=0
+  local found_value2=0
 
-DAY=$(date +%Y-%m-%d)
+  for element in "${array[@]}"; do
+    if [[ "$element" == "$value1" ]]; then
+      found_value1=1
+    elif [[ "$element" == "$value2" ]]; then
+      found_value2=1
+    fi
+  done
+
+  if [[ $found_value1 -eq 1 && $found_value2 -eq 1 ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+is_excluded() {
+  local EXCLUDES=("tailwind.css" "README.md")
+  for EXCLUDE in "${EXCLUDES[@]}"; do
+    if [[ "$1" == *"$EXCLUDE"* ]]; then
+      echo 1
+      return
+    fi
+  done
+  echo 0
+}
+dirs_except_pattern() {
+  find "$1" -type d \
+    ! -path "./.git" \
+    ! -path "./.git/*" \
+    ! -path "./tmp" \
+    ! -path "./tmp/*" \
+    ! -path "./log" \
+    ! -path "./log/*" \
+    ! -path "./_bugz" \
+  ;
+}
+files_by_pattern() {
+  find "$1" -type f \
+    -name "*.go" -o \
+    -name "*.html" -o \
+    -name "*.css" ! -name "tailwind.css" -o \
+    -name "*.js" -o \
+    -name "*.md" ! -name "README.md" \
+  ;
+}
+all_except_pattern() {
+  local dirs_array=($(dirs_except_pattern "$1"))
+  local files_array=($(files_by_pattern "$1"))
+  echo "${dirs_array[@]}" "${files_array[@]}"
+}
+non_empty_lines() {
+  grep -v '^\s*$' "$1"
+}
+
+# Take relevant metrics
+TOTAL_FILES=0
+TOTAL_DIRS=0
+TOTAL_LINES=0
+LONGEST_FILE=""
+LONGEST_LINES=0
+DEEPEST_NEST=0
+DEEPEST_FILE=0
+declare -a DIR_SIZES; # in direct files + folders decendants
+declare -a FILE_SIZES # in non-empty text lines
+take_metrics() {
+  #
+  # mean is all numbers in the set divided by the set count. 
+  # median is the middle value when a data set is ordered from least to greatest. 
+  # mode is the number that occurs most often in a data set.
+  # 
+  echo "processing metrics at $(pwd)"
+  for file in $(all_except_pattern ".")
+  do
+    echo "...glancing at [$file]"
+    if [ -d "$file" ]; then # directory
+      local NESTED_FILE_COUNT=$(files_by_pattern "$file" | wc -l)
+      if [ $NESTED_FILE_COUNT -gt 0 ]; then
+        echo "   skip dir without relevant files [$file]"
+        TOTAL_DIRS=$((TOTAL_DIRS + 1))
+        continue
+      fi
+      local ALL_BELOW=$(all_except_pattern "$file" | wc -l)
+      local FILES_BELOW=$(files_by_pattern "$file" | wc -l)
+      DIR_SIZES+=("$file:count:$ALL_BELOW")
+      TOTAL_DIRS=$((TOTAL_DIRS + 1))
+      echo "    all below: $ALL_BELOW"
+      echo "  files below: $FILES_BELOW"
+    elif [ -f "$file" ]; then # file
+      local LINE_COUNT=$(wc -l < "$file" | awk '{print $1}')
+      local USEFUL_COUNT=$(non_empty_lines "$file" | wc -l | awk '{print $1}')
+      local EXCLUDED_STATUS=$(is_excluded "$file")
+      if [[ $EXCLUDED_STATUS -eq 0 ]]; then
+        TOTAL_FILES=$((TOTAL_FILES + 1))
+        if [[ $LONGEST_LINES -eq 0 ]] || [[ $LINE_COUNT -gt $LONGEST_LINES ]]; then
+          LONGEST_LINES="$LINE_COUNT"
+          LONGEST_FILE="$file"
+        else 
+          echo "   minmax unchanged"
+        fi
+      else
+        echo "   minmax skip"
+      fi
+      TOTAL_LINES=$((TOTAL_LINES + USEFUL_COUNT))
+      FILE_SIZES+=("$file:lines:$USEFUL_COUNT")
+      FILE_DEPTH=$(echo "$file" | tr -cd '/' | wc -c | awk '{print $1}')
+      echo "        depth: $FILE_DEPTH"
+      if [[ $FILE_DEPTH -gt $DEEPEST_NEST ]]; then
+        DEEPEST_NEST=$FILE_DEPTH
+        DEEPEST_FILE="$file"
+      fi
+      echo "   line count: $LINE_COUNT"
+      echo " useful count: $USEFUL_COUNT"
+    fi
+  done
+}
+
+# MAIN
+CSV_FILE="./metrics/project-size-over-time.csv"
+HEADER=("date" 
+  "timestamp" 
+  "total_files" 
+  "total_non_empty_lines"
+  "greatest_file_depth" 
+  "largest_folder_name" 
+  "largest_folder_size" 
+  "min_file_lines" 
+  "min_file_name" 
+  "mid_file_lines" #20-80% size median
+  "mid_file_file"  #20-80% size median
+  "max_file_lines"  
+  "max_file_name"
+)
+CSV_HEADER=$(printf "%s," "${HEADER[@]}")
+CSV_HEADER=${CSV_HEADER% ","}
+if [ ! -f "$CSV_FILE" ]; then
+  echo "$CSV_HEADER" > "$CSV_FILE"
+fi
+echo "---------------------------------------------"
+echo "   CSV_FILE: $CSV_FILE"
+echo " CSV_HEADER: $CSV_HEADER"
+echo "---------------------------------------------"
+echo "---------------------------------------------"
+
+take_metrics
+
+echo "---------------------------------------------"
+echo "    WORKING_DIR: '$(pwd)'"
+echo "     TOTAL_DIRS: $TOTAL_DIRS"
+echo "    TOTAL_FILES: $TOTAL_FILES matching: [ "*.go", "*.html", "*.css", "*.js", "*.md" ]"
+echo "    TOTAL_LINES: $TOTAL_LINES"
+echo "   LONGEST_FILE: $LONGEST_FILE"
+echo "  LONGEST_LINES: $LONGEST_LINES"
+echo "   DEEPEST_FILE: $DEEPEST_FILE"
+echo "   DEEPEST_NEST: $DEEPEST_NEST"
+echo "---------------------------------------------"
+echo "---------------------------------------------"
+
+# TODO averages
+
+DATE=$(date +%Y-%m-%d)
 TIMESTAMP=$(date +%s)
 
-# Find all relevant files and folders
-FOLDERS=()
-FILES=()
-for file in $(find . ! -path "./.git" ! -path "./.git/*" ! -path "./log" ! -path "./log/*")
-do
-  echo "$file"
-  if [ -d "$file" ]; then
-    FOLDERS+=("$file")
-  elif [ -f "$file" ]; then
-    FILES+=("$file")
-  fi
-done
+#echo "$DATE,$TIMESTAMP,$TOTAL_FILES,$TOTAL_LINES,  
+  # "greatest_file_depth" 
+  # "largest_folder_name" 
+  # "largest_folder_size" 
+  # "min_file_lines" 
+  # "min_file_name" 
+  # "mid_file_lines" #20-80% size median
+  # "mid_file_file"  #20-80% size median
+  # "max_file_lines"  
+  # "max_file_name"
+# " >> "$CSV_FILE"
 
-declare -A FILE_LENGTHS
-
-total_non_empty_lines=0
-min_lines=-1
-max_lines=-1
-min_file=""
-max_file=""
-file_count=0
-declare -a LINE_COUNTS_FILES
-
-for file in $FILES; do
-  LINES=$(wc -l < "$file")
-  FILE_LENGTHS["$file"]=$LINES
-  total_non_empty_lines=$((total_non_empty_lines + LINES))
-  LINE_COUNTS_FILES+=("$LINES:$file")
-  
-  if [ $min_lines -eq -1 ] || [ $LINES -lt $min_lines ]; then
-    min_lines=$LINES
-    min_file="$file"
-  fi
-  if [ $max_lines -eq -1 ] || [ $LINES -gt $max_lines ]; then
-    max_lines=$LINES
-    max_file="$file"
-  fi
-  file_count=$((file_count + 1))
-done
-
-
-exit 2222
-
-# Total number of relevant files
-TOTAL_FOLDERS=$(find "." -type d | wc -l)
-TOTAL_FILES=$(find . -type f \( $EXTENSIONS_FIND \) | wc -l)
-echo "There are $TOTAL_FILES dirs and files in the project."
-
-exit 111
-
-# Greatest file depth
-GREATEST_FILE_DEPTH=$(find "." -type f | awk -F"/" '{print NF-1}' | sort -nr | head -n 1)
-echo "The greatest file depth is $GREATEST_FILE_DEPTH."
-
-# Dir with most files
-LARGEST_FOLDER=$(find "." -type f \( $EXTENSIONS_FIND \) -exec dirname {} \; | sort | uniq -c | sort -nr | head -n 1)
-LARGEST_FOLDER_SIZE=$(echo "$LARGEST_FOLDER" | awk '{print $1}')
-LARGEST_FOLDER_NAME=$(echo "$LARGEST_FOLDER" | awk '{print $2}')
-echo "Largest folder is $LARGEST_FOLDER_NAME with $LARGEST_FOLDER_SIZE files."
-
-# Total lines count
-LINE_COUNTS=()
-FILE_NAMES=()
-for EXT in "${EXTENSIONS[@]}"; do
-  while IFS= read -r -d '' FILE; do
-    LINE_COUNT=$(wc -l < "$FILE")
-    LINE_COUNTS+=("$LINE_COUNT")
-    FILE_NAMES+=("$FILE")
-  done < <(find "." -name "$EXT" -print0)
-done
-
-TOTAL_NON_EMPTY_LINES=$(printf '%s\n' "${LINE_COUNTS[@]}" | paste -sd+ - | bc)
-echo "There are $TOTAL_NON_EMPTY_LINES non-empty lines of code in this project."
-
-MIN_INDEX=$(printf '%s\n' "${!LINE_COUNTS[@]}" | sort -n -k1,1 -k2,2 | head -n 1)
-MIN_LINES=${LINE_COUNTS[$MIN_INDEX]}
-MIN_FILE=${FILE_NAMES[$MIN_INDEX]}
-echo "The smallest file is $MIN_FILE with $MIN_LINES lines."
-
-MAX_INDEX=$(printf '%s\n' "${!LINE_COUNTS[@]}" | sort -n -k1,1 -k2,2 | tail -n 1)
-MAX_LINES=${LINE_COUNTS[$MAX_INDEX]}
-MAX_FILE=${FILE_NAMES[$MAX_INDEX]}
-echo "The largest file is $MAX_FILE with $MAX_LINES lines."
-
-MEDIAN_INDEX=$(printf '%s\n' "${!LINE_COUNTS[@]}" | sort -n -k1,1 -k2,2 | {
-  read -r first
-  read -r second
-  if (( ${#LINE_COUNTS[@]} % 2 == 1 )); then
-    for ((i = 2; i <= ${#LINE_COUNTS[@]} / 2; i++)); do
-      read -r first
-    done
-    echo "$first"
-  else
-    for ((i = 2; i < ${#LINE_COUNTS[@]} / 2; i++)); do
-      read -r first
-    done
-    read -r second
-    echo "($first + $second) / 2" | bc
-  fi
-})
-MEDIAN_LINES=${LINE_COUNTS[$MEDIAN_INDEX]}
-MEDIAN_FILE=${FILE_NAMES[$MEDIAN_INDEX]}
-echo "The median file is $MEDIAN_FILE with $MEDIAN_LINES lines."
-
-exit 666
-
-echo "$DAY,$TIMESTAMP,$TOTAL_FILES,$LARGEST_FOLDER_NAME,$LARGEST_FOLDER_SIZE,$GREATEST_FILE_DEPTH,$MIN_LINES,$MIN_FILE,$MAX_LINES,$MAX_FILE,$MEDIAN_LINES,$MEDIAN_FILE,$TOTAL_NON_EMPTY_LINES" >> "$CSV_FILE"
+exit 1

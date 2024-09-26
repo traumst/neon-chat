@@ -17,7 +17,7 @@ echo "Running tests..."
 time go test ./...
 echo "Logging metrics..."
 ./metrics/db-size-over-time.sh
-# TODO
+# WIP
 #./metrics/project-size-over-time.sh
 
 # echo "Backing up db file..."

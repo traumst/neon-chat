@@ -5,8 +5,8 @@
 
 DATABASE_FILE=chat.db
 if [ ! -f "$DATABASE_FILE" ]; then
-  echo "'$DATABASE_FILE' does not exist - metrics cant be collected"
-  exit 1
+  echo "'$DATABASE_FILE' does not exist, skip metrics collection"
+  exit 0
 fi
 echo "'$DATABASE_FILE' exists..."
 

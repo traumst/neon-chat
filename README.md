@@ -292,7 +292,12 @@ Some of the `sqlite>` tool's interface limitations:
 * Queries require `;` at the end
 
 ```sh
-> sqlite3 chat.db "select * from users" -cmd ".headers ON" -cmd ".mode columns"
+sqlite3 chat.db "select * from users" -cmd ".headers ON" -cmd ".mode columns"
+```
+
+or with the shorthand
+```sh
+sqlite3 chat.db  -header -column  "select * from users;"
 ```
 
 With this, all of queries are executed in a single session, we can find it in the history, and both `-cmd`s values are cleaned up for the next query. Semicolon is also not required for a single query. No global setting to mess with running code later.
