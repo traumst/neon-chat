@@ -61,67 +61,74 @@
             </div>
         </div>
         <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const msgAuthor = document.getElementById('msg-author-{{ .AuthorId }}-info-{{ .IntermediateId }}');
-                const userInfoUnderlay = document.getElementById('dark-underlay-{{ .AuthorId }}-{{ .IntermediateId }}');
+        (function() {
+            const hidePopupTimeoutMs = 5/*sec*/ * 1000/*ms*/;
+            const clearCooldownTimeoutMs = 5/*sec*/ * 1000/*ms*/;
+            const showPopup = (event) => {
                 const userInfoPopup = document.getElementById('popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}');
-                const timeoutMs = 1/*sec*/ * 1000/*ms*/;
-                
-                const showPopup = (event) => {
-                    userInfoUnderlay.classList.remove('hidden');
-                    userInfoPopup.classList.add('mr-2');
-                    userInfoPopup.classList.add('mt-2');
-                    userInfoPopup.classList.add('absolute');
+                while (userInfoPopup && userInfoPopup.classList.contains('hidden')) {
                     userInfoPopup.classList.remove('hidden');
                 }
-                const hidePopup = () => {
-                    userInfoPopup.classList.add('hidden');
-                    userInfoPopup.classList.remove('absolute');
-                    userInfoPopup.style.left = 0 + 'px';
-                    userInfoPopup.style.top = 0 + 'px';
+                const userInfoUnderlay = document.getElementById('dark-underlay-{{ .AuthorId }}-{{ .IntermediateId }}');
+                while (userInfoUnderlay && userInfoUnderlay.classList.contains('hidden')) {
+                    userInfoUnderlay.classList.remove('hidden');
+                }
+            };
+            const hidePopup = () => {
+                const userInfoUnderlay = document.getElementById('dark-underlay-{{ .AuthorId }}-{{ .IntermediateId }}');
+                if (userInfoUnderlay && !userInfoUnderlay.classList.contains('hidden')) {
                     userInfoUnderlay.classList.add('hidden');
                 }
-
-                let hideTimeout;
-                const hideTimerClear = () => {
-                    if (hideTimeout) {
-                        clearTimeout(hideTimeout);
-                    }
+                const userInfoPopup = document.getElementById('popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}');
+                if (userInfoPopup && !userInfoPopup.classList.contains('hidden')) {
+                    userInfoPopup.classList.add('hidden');
                 }
-                let cooldownTimeout;
-                let onTimeOut = false;
-                const cooldownClear = () => {
-                    if (cooldownTimeout) {
-                        clearTimeout(cooldownTimeout);
-                    }
+            };
+            let hideTimeout = setTimeout(() => {}, 0);
+            const hideTimerClear = () => {
+                if (hideTimeout) {
+                    clearTimeout(hideTimeout);
                 }
-                document.body.addEventListener('mouseleave', function(event) {
-                    if (event?.detail?.target?.id === 'popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}') {
-                        hideTimerClear();
-                        hideTimeout = setTimeout(hidePopup, timeoutMs);
-                    }
-                });
-                document.body.addEventListener('mouseenter', function(event) {
-                    if (event?.detail?.target?.id === 'popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}') {
-                        hideTimerClear()
-                    }
-                });
-                document.body.addEventListener('htmx:beforeinput', function(event) {
-                    if (event?.detail?.target?.id === 'msg-author-{{ .AuthorId }}-info-{{ .IntermediateId }}') {
-                        if (onTimeOut) {
-                            event.preventDefault();
-                        }
-                        cooldownTimeout = setTimeout(cooldownClear, timeoutMs);
-                    }
-                });
-                document.body.addEventListener('htmx:afterSwap', function(event) {
-                    if (event?.detail?.target?.id === 'popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}') {
-                        showPopup(event)
-                        hideTimerClear();
-                        hideTimeout = setTimeout(hidePopup, timeoutMs);
-                    }
-                });
+            }
+            let cooldownTimeout = setTimeout(() => {}, 0);
+            let onCooldown = false;
+            const cooldownClear = () => {
+                if (cooldownTimeout) {
+                    clearTimeout(cooldownTimeout);
+                }
+                onCooldown = false;
+            }
+            document.body.addEventListener('mouseleave', event => {
+                if (event?.detail?.target?.id === 'popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}') {
+                    hideTimerClear();
+                    hideTimeout = setTimeout(hidePopup, hidePopupTimeoutMs);
+                }
             });
+            document.body.addEventListener('mouseenter', event => {
+                if (event?.detail?.target?.id === 'popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}' ||
+                    event?.detail?.target?.id === 'msg-author-{{ .AuthorId }}-info-{{ .IntermediateId }}' ||
+                    event?.detail?.target?.id === 'info-card-1-{{ .AuthorId }}') {
+                    hideTimerClear()
+                }
+            });
+            document.body.addEventListener('htmx:beforeinput', event => {
+                if (event?.detail?.target?.id === 'msg-author-{{ .AuthorId }}-info-{{ .IntermediateId }}') {
+                    if (onCooldown) { 
+                        event.preventDefault(); 
+                        return
+                    } 
+                    onCooldown = true;
+                    cooldownTimeout = setTimeout(cooldownClear, clearCooldownTimeoutMs); 
+                }
+            });
+            document.body.addEventListener('htmx:afterSwap', event => {
+                if (event?.detail?.target?.id === 'popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}') {
+                    showPopup(event)
+                    hideTimerClear();
+                    hideTimeout = setTimeout(hidePopup, hidePopupTimeoutMs);
+                }
+            });
+        })();
         </script>    
         <div class="mt-2 ml-1 flex flex-col">
             <div class="break-all">

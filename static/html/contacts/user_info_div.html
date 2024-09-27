@@ -1,4 +1,10 @@
-<div id="info-card-{{ .UserId }}">
+<div id="info-card-{{ .UserId }}" 
+    class="absolute default-transition
+        m-2
+        rounded-lg
+        border-b-4 border-green-500
+        shadow shadow-green-500
+        hover:shadow-indigo-700">
     <div id="info-card-{{ .UserId }}-avatar">
         {{ template "avatar_div.html" .UserAvatar }}
     </div>
