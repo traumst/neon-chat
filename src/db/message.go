@@ -19,8 +19,7 @@ const MessageSchema = `
 		chat_id INTEGER, 
 		author_id INTEGER,
 		text TEXT,
-		FOREIGN KEY(chat_id) REFERENCES chat_users(chat_id) ON DELETE CASCADE,
-		FOREIGN KEY(author_id) REFERENCES chat_users(user_id)
+		FOREIGN KEY(chat_id, author_id) REFERENCES chat_users(chat_id, user_id) ON DELETE CASCADE
 	);`
 
 const MessageIndex = `CREATE INDEX IF NOT EXISTS idx_message_text ON messages(text);`
