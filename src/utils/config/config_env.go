@@ -81,6 +81,10 @@ func readEnvFile(scanner *bufio.Scanner) (*Config, error) {
 		case "TEST_USER":
 			testUser := parseTestUser(kv[1])
 			envConf.TestUsers = append(envConf.TestUsers, testUser)
+		case "LOG_STDOUT":
+			envConf.Log.Stdout = kv[1] == "true"
+		case "LOG_DIR":
+			envConf.Log.Dir = kv[1]
 		default:
 			log.Printf("unknown env config [%s]\n", line)
 		}

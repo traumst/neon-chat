@@ -5,6 +5,7 @@ import (
 )
 
 type Config struct {
+	Log            LogConfig
 	Port           int
 	Sqlite         string
 	Smtp           SmtpConfig
@@ -15,6 +16,11 @@ type Config struct {
 
 func (a *Config) String() string {
 	return fmt.Sprintf("{Port:%d,Sqlite:%s}", a.Port, a.Sqlite)
+}
+
+type LogConfig struct {
+	Stdout bool
+	Dir    string
 }
 
 type SmtpConfig struct {

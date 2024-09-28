@@ -17,9 +17,9 @@ import (
 
 func QuoteMessage(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("TRACE [%s]\n", reqId)
+	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.RequestURI)
 	if r.Method != "GET" {
-		log.Printf("ERROR [%s] request method\n", reqId)
+		log.Printf("TRACE [%s] method '%s' not allowed at '%s'\n", reqId, r.Method, r.RequestURI)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("action not allowed"))
 		return
@@ -63,8 +63,9 @@ func QuoteMessage(w http.ResponseWriter, r *http.Request) {
 
 func AddMessage(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("TRACE [%s] AddMessage \n", reqId)
+	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.RequestURI)
 	if r.Method != "POST" {
+		log.Printf("TRACE [%s] method '%s' not allowed at '%s'\n", reqId, r.Method, r.RequestURI)
 		log.Printf("ERROR [%s] AddMessage request method\n", reqId)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("action not allowed"))
@@ -106,8 +107,9 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 
 func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("[%s] DeleteMessage\n", reqId)
+	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.RequestURI)
 	if r.Method != "POST" {
+		log.Printf("TRACE [%s] method '%s' not allowed at '%s'\n", reqId, r.Method, r.RequestURI)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}

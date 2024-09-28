@@ -19,9 +19,8 @@ import (
 
 func InviteUser(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.URL.RawPath)
 	if r.Method != "POST" {
-		log.Printf("TRACE [%s] '%s' is not allowed at '%s'\n", reqId, r.Method, r.URL.RawPath)
+		log.Printf("TRACE [%s] '%s' is not allowed at '%s'\n", reqId, r.Method, r.RequestURI)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -84,9 +83,8 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 
 func ExpelUser(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.URL.RawPath)
 	if r.Method != "POST" {
-		log.Printf("TRACE [%s] '%s' is not allowed at '%s'\n", reqId, r.Method, r.URL.RawPath)
+		log.Printf("TRACE [%s] '%s' is not allowed at '%s'\n", reqId, r.Method, r.RequestURI)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -131,9 +129,8 @@ func ExpelUser(w http.ResponseWriter, r *http.Request) {
 
 func LeaveChat(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.URL.RawPath)
 	if r.Method != "POST" {
-		log.Printf("TRACE [%s] '%s' is not allowed at '%s'\n", reqId, r.Method, r.URL.RawPath)
+		log.Printf("TRACE [%s] '%s' is not allowed at '%s'\n", reqId, r.Method, r.RequestURI)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -172,9 +169,8 @@ func LeaveChat(w http.ResponseWriter, r *http.Request) {
 
 func ChangeUser(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.URL.RawPath)
 	if r.Method != "POST" {
-		log.Printf("TRACE [%s] '%s' is not allowed at '%s'\n", reqId, r.Method, r.URL.RawPath)
+		log.Printf("TRACE [%s] '%s' is not allowed at '%s'\n", reqId, r.Method, r.RequestURI)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("[verb]"))
 		return
@@ -211,9 +207,8 @@ func ChangeUser(w http.ResponseWriter, r *http.Request) {
 
 func SearchUsers(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.URL.RawPath)
 	if r.Method != "POST" {
-		log.Printf("TRACE [%s] '%s' is not allowed at '%s'\n", reqId, r.Method, r.URL.RawPath)
+		log.Printf("TRACE [%s] '%s' is not allowed at '%s'\n", reqId, r.Method, r.RequestURI)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("[verb]"))
 		return

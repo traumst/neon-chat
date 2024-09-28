@@ -12,12 +12,11 @@ import (
 	"time"
 )
 
-func SetupGlobalLogger(toStderr bool, toFile bool) {
-	log.Println("TRACE IN SetupGlobalLogger")
+func SetupGlobalLogger(stderr bool, dir string) {
 	now := time.Now()
 	timestamp := now.Format(time.RFC3339)
 	date := strings.Split(timestamp, "T")[0]
-	logPath := fmt.Sprintf("log/from-%s.log", date)
+	logPath := fmt.Sprintf("%s/from-%s.log", dir, date)
 	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal(err)
@@ -25,15 +24,18 @@ func SetupGlobalLogger(toStderr bool, toFile bool) {
 	defer logFile.Close()
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	// log.SetPrefix("CUSTOM_LOG: ")
-	if toFile && toStderr {
+	if len(dir) > 0 && stderr {
 		log.SetOutput(io.MultiWriter(logFile, os.Stderr))
-		log.Printf("Logging to file [%s] and stderr\n", logPath)
-	} else if toFile {
+		log.Printf("INFO Logging to file[%s] and stderr\n", logPath)
+	} else if len(dir) > 0 {
 		log.SetOutput(logFile)
-		log.Printf("Logging to file [%s]\n", logPath)
-	} else {
+		log.Printf("INFO Logging to file[%s]\n", logPath)
+	} else if stderr {
 		log.SetOutput(os.Stderr)
-		log.Println("Logging to stderr")
+		log.Println("INFO Logging to stderr")
+	} else {
+		log.SetOutput(io.Discard)
+		log.Println("WARN Logging is DISABLED")
 	}
 	log.Println("TRACE OUT SetupGlobalLogger")
 }

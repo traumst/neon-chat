@@ -21,7 +21,6 @@ func ReadSession(
 ) (*app.User, error) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	cookie, err := h.GetSessionCookie(r)
-	log.Printf("TRACE [%s] reading session cookie[%s], err[%s]\n", reqId, cookie.AuthType, err)
 	if err != nil {
 		h.ClearSessionCookie(w, 0)
 		return nil, fmt.Errorf("failed to read session cookie, %s", err)

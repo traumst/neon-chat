@@ -15,9 +15,9 @@ import (
 
 func OpenSettings(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.URL.RawPath)
+	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.RequestURI)
 	if r.Method != "GET" {
-		log.Printf("TRACE [%s] '%s' is not allowed at '%s'\n", reqId, r.Method, r.URL.RawPath)
+		log.Printf("TRACE [%s] '%s' is not allowed at '%s'\n", reqId, r.Method, r.RequestURI)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -60,9 +60,9 @@ func OpenSettings(w http.ResponseWriter, r *http.Request) {
 
 func CloseSettings(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.URL.RawPath)
+	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.RequestURI)
 	if r.Method != "GET" {
-		log.Printf("TRACE [%s] '%s' is not allowed at '%s'\n", reqId, r.Method, r.URL.RawPath)
+		log.Printf("TRACE [%s] '%s' is not allowed at '%s'\n", reqId, r.Method, r.RequestURI)
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("User is unauthorized"))

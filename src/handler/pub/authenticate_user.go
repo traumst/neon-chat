@@ -27,6 +27,10 @@ func AuthenticateUser(
 		return nil, nil, nil
 	}
 	dbAvatar, _ := db.GetAvatar(dbConn.Conn, dbUser.Id)
+	if dbAvatar == nil {
+		log.Printf("WARN Authenticate user[%d] has no avatar\n", dbUser.Id)
+		dbAvatar = &db.Avatar{}
+	}
 	appUser := convert.UserDBToApp(dbUser, dbAvatar)
 	if appUser.Status != enum.UserStatusActive {
 		log.Printf("WARN Authenticate user[%d] status[%s] is inactive\n", dbUser.Id, dbUser.Status)

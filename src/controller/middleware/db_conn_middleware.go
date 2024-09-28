@@ -14,7 +14,7 @@ func DBConnMiddleware(dbConn *db.DBConn) Middleware {
 		Func: func(next http.Handler) http.Handler {
 			//log.Println("TRACE with db conn middleware")
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				log.Printf("TRACE [%s] attaching db conn to request context\n", r.Context().Value(consts.ReqIdKey).(string))
+				log.Printf("TRACE [%s] attaching dbConn to ctx of '%s' '%s'\n", r.Context().Value(consts.ReqIdKey).(string), r.Method, r.RequestURI)
 				ctx := context.WithValue(r.Context(), consts.DBConn, dbConn)
 				next.ServeHTTP(w, r.WithContext(ctx))
 			})

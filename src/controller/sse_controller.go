@@ -15,7 +15,7 @@ import (
 func PollUpdates(s *state.State, dbConn *db.DBConn, w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	if r.Method != http.MethodGet {
-		log.Printf("TRACE [%s] '%s' does not accept %s\n", reqId, r.URL.RawPath, r.Method)
+		log.Printf("TRACE [%s] '%s' does not accept %s\n", reqId, r.RequestURI, r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}

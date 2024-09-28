@@ -13,12 +13,11 @@ func RecoveryMiddleware() Middleware {
 			//log.Println("TRACE with recovery middleware")
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				defer func(reqId string) {
-					log.Println(reqId, "TRACE checking for panic")
+					log.Printf("TRACE [%s] checking for panic '%s' '%s'\n", reqId, r.Method, r.RequestURI)
 					if err := recover(); err != nil {
-						log.Printf(reqId, "FATAL recovered from panic: %v", err)
+						log.Printf("FATAL [%s] recovered from panic: %v", reqId, err)
 						http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 					}
-					log.Println(reqId, "TRACE request recovered")
 				}(r.Context().Value(consts.ReqIdKey).(string))
 				next.ServeHTTP(w, r)
 			})

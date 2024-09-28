@@ -34,16 +34,16 @@ func GetQuote(
 	}
 	appQuote := convert.MessageDBToQuoteApp(dbMsg, user)
 	//
-	dbAvatar, err := db.GetAvatar(dbConn.Conn, dbMsg.AuthorId)
-	if err != nil {
-		log.Printf("ERROR HandleGetQuote getting author[%d] avatar from db, %s\n", dbMsg.AuthorId, err)
-		return nil, fmt.Errorf("failed to get author avatar from db: %s", err.Error())
-	}
-	//
 	dbAuthor, err := db.GetUser(dbConn.Conn, dbMsg.AuthorId)
 	if err != nil {
 		log.Printf("ERROR HandleGetQuote getting author[%d] from db, %s\n", dbMsg.AuthorId, err)
 		return nil, fmt.Errorf("failed to get author from db: %s", err.Error())
+	}
+	//
+	dbAvatar, err := db.GetAvatar(dbConn.Conn, dbMsg.AuthorId)
+	if err != nil {
+		log.Printf("ERROR HandleGetQuote getting author[%d] avatar from db, %s\n", dbMsg.AuthorId, err)
+		return nil, fmt.Errorf("failed to get author avatar from db: %s", err.Error())
 	}
 	appQuote.Author = convert.UserDBToApp(dbAuthor, dbAvatar)
 	return &appQuote, nil
