@@ -33,7 +33,7 @@ func RenderHome(w http.ResponseWriter, r *http.Request) {
 		ctx.Value(consts.ActiveUser).(*app.User),
 	)
 	if err != nil {
-		log.Printf("[%s] RenderHome ERROR failed to template home, %s\n", reqId, err)
+		log.Printf("ERROR [%s] failed to template home, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to render home page"))
 		return

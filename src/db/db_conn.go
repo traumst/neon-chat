@@ -70,19 +70,19 @@ func (dbConn *DBConn) ConnClose() {
 func (dbConn *DBConn) init() error {
 	shouldMigrate, err := dbConn.createTables()
 	if err != nil {
-		log.Printf("DBConn.init ERROR failed to create schema, %s", err)
+		log.Printf("ERROR DBConn.init failed to create schema, %s", err)
 		return fmt.Errorf("failed to create schema")
 	}
 	if shouldMigrate {
 		err = dbConn.ApplyMigrations()
 		if err != nil {
-			log.Printf("DBConn.init ERROR failed to apply migrations, %s", err)
+			log.Printf("ERROR DBConn.init failed to apply migrations, %s", err)
 			return fmt.Errorf("failed to apply migrations")
 		}
 	}
 	err = dbConn.createIndex()
 	if err != nil {
-		log.Printf("DBConn.init ERROR failed to create schema, %s", err)
+		log.Printf("ERROR DBConn.init failed to create schema, %s", err)
 		return fmt.Errorf("failed to create schema")
 	}
 
@@ -95,13 +95,13 @@ func (dbConn *DBConn) createIndex() (err error) {
 		UserIndex + AuthIndex + AvatarSchema + ReservationIndex +
 		ChatIndex + ChatUserIndex + MessageIndex + QuoteIndex
 	if indecies == "" {
-		log.Println("createIndex TRACE no indexes to create")
+		log.Println("TRACE createIndex no indexes to create")
 		return nil
 	}
 
 	_, err = dbConn.Conn.Exec(strings.TrimRight(indecies, "\n"))
 	if err != nil {
-		log.Printf("createSchema ERROR failed to create indexes, %s", err.Error())
+		log.Printf("ERROR createSchema failed to create indexes, %s", err.Error())
 		return fmt.Errorf("failed to create indexes")
 	}
 	return nil
@@ -110,13 +110,13 @@ func (dbConn *DBConn) createIndex() (err error) {
 func (dbConn *DBConn) createTables() (shouldMigrate bool, err error) {
 	schema, shouldMigrate := dbConn.concatSchema()
 	if schema == "" {
-		log.Println("createTables TRACE no tables to create")
+		log.Println("TRACE createTables no tables to create")
 		return true, nil
 	}
 
 	_, err = dbConn.Conn.Exec(strings.TrimRight(schema, "\n"))
 	if err != nil {
-		log.Printf("createTables ERROR failed to create schema, %s", err.Error())
+		log.Printf("ERROR createTables failed to create schema, %s", err.Error())
 		err = fmt.Errorf("failed to create schema")
 	}
 	return shouldMigrate, err
@@ -125,74 +125,74 @@ func (dbConn *DBConn) createTables() (shouldMigrate bool, err error) {
 // Note: update when adding new tables
 func (dbConn *DBConn) concatSchema() (schema string, shouldMigrate bool) {
 	if dbConn.MigrationsTableExists() {
-		log.Println("concatSchema TRACE migration table exists")
+		log.Println("TRACE concatSchema migration table exists")
 		// TODO meta-migrate, ie migrations migration
 	} else {
-		log.Println("concatSchema TRACE migration table will be created")
+		log.Println("TRACE concatSchema migration table will be created")
 		schema += MigrationSchema + "\n"
 	}
 
 	if dbConn.UserTableExists() {
-		log.Println("concatSchema TRACE user table exists")
+		log.Println("TRACE concatSchema user table exists")
 		shouldMigrate = true
 	} else {
-		log.Println("concatSchema TRACE user table will be created")
+		log.Println("TRACE concatSchema user table will be created")
 		schema += UserSchema + "\n"
 	}
 
 	if dbConn.AuthTableExists() {
-		log.Println("concatSchema TRACE auth table exists")
+		log.Println("TRACE concatSchema auth table exists")
 		shouldMigrate = true
 	} else {
-		log.Println("concatSchema TRACE auth table will be created")
+		log.Println("TRACE concatSchema auth table will be created")
 		schema += AuthSchema + "\n"
 	}
 
 	if dbConn.AvatarTableExists() {
-		log.Println("concatSchema TRACE avatar table exists")
+		log.Println("TRACE concatSchema avatar table exists")
 		shouldMigrate = true
 	} else {
-		log.Println("concatSchema TRACE avatar table will be created")
+		log.Println("TRACE concatSchema avatar table will be created")
 		schema += AvatarSchema + "\n"
 	}
 
 	if dbConn.ReservationTableExists() {
-		log.Println("concatSchema TRACE reservation table exists")
+		log.Println("TRACE concatSchema reservation table exists")
 		shouldMigrate = true
 	} else {
-		log.Println("concatSchema TRACE reservation table will be created")
+		log.Println("TRACE concatSchema reservation table will be created")
 		schema += ReservationSchema + "\n"
 	}
 
 	if dbConn.ChatTableExists() {
-		log.Println("concatSchema TRACE chat table exists")
+		log.Println("TRACE concatSchema chat table exists")
 		shouldMigrate = true
 	} else {
-		log.Println("concatSchema TRACE chat table will be created")
+		log.Println("TRACE concatSchema chat table will be created")
 		schema += ChatSchema + "\n"
 	}
 
 	if dbConn.ChatUserTableExists() {
-		log.Println("concatSchema TRACE chat_user table exists")
+		log.Println("TRACE concatSchema chat_user table exists")
 		shouldMigrate = true
 	} else {
-		log.Println("concatSchema TRACE chat_user table will be created")
+		log.Println("TRACE concatSchema chat_user table will be created")
 		schema += ChatUserSchema + "\n"
 	}
 
 	if dbConn.MessageTableExists() {
-		log.Println("concatSchema TRACE messages table exists")
+		log.Println("TRACE concatSchema messages table exists")
 		shouldMigrate = true
 	} else {
-		log.Println("concatSchema TRACE messages table will be created")
+		log.Println("TRACE concatSchema messages table will be created")
 		schema += MessageSchema + "\n"
 	}
 
 	if dbConn.QuoteTableExists() {
-		log.Println("concatSchema TRACE quotes table exists")
+		log.Println("TRACE concatSchema quotes table exists")
 		shouldMigrate = true
 	} else {
-		log.Println("concatSchema TRACE quotes table will be created")
+		log.Println("TRACE concatSchema quotes table will be created")
 		schema += QuoteSchema + "\n"
 	}
 

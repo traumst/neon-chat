@@ -59,7 +59,7 @@ func distributeToUsers(
 ) error {
 	var errors []string
 	for _, targetUser := range targetUsers {
-		log.Printf("distributeToUsers TRACE event[%v] about subject[%v] will be sent to user[%v] in chat[%v]\n",
+		log.Printf("TRACE distributeToUsers event[%v] about subject[%v] will be sent to user[%v] in chat[%v]\n",
 			updateType, subjectUser, targetUser, chat)
 		err := distributeChatToUser(
 			state,
@@ -121,7 +121,7 @@ func distributeChatToUser(
 		}
 
 		if connerr != nil {
-			log.Printf("distributeChatToUser ERROR failed to send update to user[%d], err[%s]\n",
+			log.Printf("ERROR distributeChatToUser failed to send update to user[%d], err[%s]\n",
 				targetUser.Id, connerr)
 			if err == nil {
 				err = connerr

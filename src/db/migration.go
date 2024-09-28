@@ -30,7 +30,7 @@ func (dbConn *DBConn) MigrationsTableExists() bool {
 }
 
 func (dbConn *DBConn) ApplyMigrations() error {
-	log.Printf("applyMigrations TRACE IN")
+	log.Printf("TRACE applyMigrations IN")
 	//utils.LS()
 	// TODO load "latest" subset
 	files, err := utils.GetFilenamesIn(migraitonsFolder)
@@ -45,46 +45,46 @@ func (dbConn *DBConn) ApplyMigrations() error {
 			return fmt.Errorf("fail to apply migration[%s]", filename)
 		}
 	}
-	log.Printf("applyMigrations TRACE OUT")
+	log.Printf("TRACE applyMigrations OUT")
 	return nil
 }
 
 func applyMigration(dbConn *DBConn, filename string) error {
-	log.Printf("applyMigration TRACE now on [%s]", filename)
+	log.Printf("TRACE applyMigration now on [%s]", filename)
 	path := strings.Split(filename, ".")
 	if len(path) != 2 {
 		return fmt.Errorf("migration title[%s] is not *.sql", filename)
 	}
 	title := path[0]
 	if title == "" {
-		log.Printf("applyMigration WARN blank title [%s]", filename)
+		log.Printf("WARN applyMigration blank title [%s]", filename)
 		return nil
 	}
 	if ext := path[1]; ext != "sql" {
-		log.Printf("applyMigration TRACE skip non-sql [%s]", title)
+		log.Printf("TRACE applyMigration skip non-sql [%s]", title)
 		return nil
 	}
-	log.Printf("applyMigration TRACE check if already applied [%s]", title)
+	log.Printf("TRACE applyMigration check if already applied [%s]", title)
 	isApplied, err := isMigrationApplied(dbConn, title)
 	if err == nil && isApplied {
 		return nil
 	}
-	log.Printf("applyMigration TRACE reading [%s]", title)
+	log.Printf("TRACE applyMigration reading [%s]", title)
 	bytes, err := os.ReadFile(migraitonsFolder + "/" + filename)
 	if err != nil {
 		return fmt.Errorf("failed to read migration file content[%s]", title)
 	}
-	log.Printf("applyMigration TRACE storing migration [%s]", title)
+	log.Printf("TRACE applyMigration storing migration [%s]", title)
 	migration, err := addMigration(dbConn, string(bytes[:]), title)
 	if err != nil || migration.Id < 1 {
 		return fmt.Errorf("failed to apply migration[%s], %s", title, err)
 	}
-	log.Printf("applyMigration TRACE applied[%d][%s]", migration.Id, migration.Title)
+	log.Printf("TRACE applyMigration applied[%d][%s]", migration.Id, migration.Title)
 	return nil
 }
 
 func addMigration(dbConn *DBConn, migrate string, title string) (*Migration, error) {
-	log.Printf("applyMigration TRACE executing [%s]", title)
+	log.Printf("TRACE applyMigration executing [%s]", title)
 	if _, err := dbConn.Conn.Exec(migrate); err != nil {
 		return nil, fmt.Errorf("failed to add migration[%s], %s", title, err.Error())
 	}

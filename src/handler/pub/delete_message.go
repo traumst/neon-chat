@@ -16,7 +16,7 @@ func DeleteMessage(
 	user *app.User,
 	msgId uint,
 ) (*app.Chat, *app.Message, error) {
-	log.Printf("HandleMessageDelete TRACE removing msg[%d] from chat[%d] for user[%d]\n", msgId, chatId, user.Id)
+	log.Printf("TRACE HandleMessageDelete removing msg[%d] from chat[%d] for user[%d]\n", msgId, chatId, user.Id)
 	dbMsg, err := db.GetMessage(dbConn.Tx, msgId)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get message[%d] from db: %s", msgId, err.Error())

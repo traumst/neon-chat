@@ -31,7 +31,7 @@ func DistributeUserChange(
 		return fmt.Errorf("failed to get chats for user[%d], %s", subjectUser.Id, err)
 	}
 	if len(appChats) <= 0 {
-		log.Printf("userChanged WARN user[%d] has no chats\n", subjectUser.Id)
+		log.Printf("WARN userChanged user[%d] has no chats\n", subjectUser.Id)
 		return fmt.Errorf("user[%d] has no chats", subjectUser.Id)
 	}
 	for _, chat := range appChats {
@@ -40,7 +40,7 @@ func DistributeUserChange(
 		}
 		err := distributeInCommonChat(dbConn, chat, state, subjectUser, updateType)
 		if err != nil {
-			log.Printf("userChanged ERROR failed to distribute to chat[%d], %s\n", chat.Id, err)
+			log.Printf("ERROR userChanged failed to distribute to chat[%d], %s\n", chat.Id, err)
 		}
 	}
 	return err
@@ -116,7 +116,7 @@ func userNameChanged(conn *state.Conn, subject *app.User) error {
 	if subject == nil {
 		return fmt.Errorf("subject user is nil")
 	}
-	log.Printf("userNameChanged TRACE informing target[%d] about subject[%d] name change\n", conn.User.Id, subject.Id)
+	log.Printf("TRACE userNameChanged informing target[%d] about subject[%d] name change\n", conn.User.Id, subject.Id)
 	tmpl := subject.Template(0, 0, conn.User.Id)
 	data, err := tmpl.HTML()
 	if err != nil {

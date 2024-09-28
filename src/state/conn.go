@@ -23,12 +23,12 @@ type Conn struct {
 func (conn *Conn) SendUpdates(up event.LiveEvent, pollingUserId uint) {
 	origin := conn.Origin
 	if conn.User.Id != pollingUserId {
-		log.Printf("[%s] Conn.SendUpdates WARN user[%v] is does not own conn[%v]\n", origin, pollingUserId, conn)
+		log.Printf("WARN [%s] user[%v] is does not own conn[%v]\n", origin, pollingUserId, conn)
 		return
 	}
 	err := conn.trySend(up)
 	if err != nil {
-		log.Printf("[%s] Conn.SendUpdates ERROR failed to send update to user[%d], err[%s]\n",
+		log.Printf("ERROR [%s] failed to send update to user[%d], err[%s]\n",
 			origin, pollingUserId, err)
 		up.Error = fmt.Errorf("ERROR SENDING TO: %d", pollingUserId)
 		//conn.Out <- up
@@ -39,10 +39,10 @@ func (conn *Conn) SendUpdates(up event.LiveEvent, pollingUserId uint) {
 func (conn *Conn) trySend(up event.LiveEvent) error {
 	w := conn.Writer
 	if up.UserId <= 0 {
-		return fmt.Errorf("Conn.trySend ERROR user is empty, user[%d], msg[%s]", up.UserId, up.Data)
+		return fmt.Errorf("ERROR  user is empty, user[%d], msg[%s]", up.UserId, up.Data)
 	}
 	if w == nil {
-		return fmt.Errorf("Conn.trySend ERROR writer is nil")
+		return fmt.Errorf("ERROR  writer is nil")
 	}
 	switch up.Event {
 	case event.UserChange,
@@ -57,10 +57,10 @@ func (conn *Conn) trySend(up event.LiveEvent) error {
 		event.MessageDrop:
 		err := flushEvent(&w, up.Event, up)
 		if err != nil {
-			return fmt.Errorf("Conn.trySend ERROR failed to delete message to user[%d], %s", up.UserId, err)
+			return fmt.Errorf("ERROR  failed to delete message to user[%d], %s", up.UserId, err)
 		}
 	default:
-		return fmt.Errorf("Conn.trySend ERROR unknown update event[%s], update[%s]", up.Event, up.String())
+		return fmt.Errorf("ERROR  unknown update event[%s], update[%s]", up.Event, up.String())
 	}
 	return nil
 }

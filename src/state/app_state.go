@@ -45,7 +45,7 @@ func (state *State) SmtpConfig() (*config.SmtpConfig, error) {
 // CONN
 func (state *State) AddConn(w http.ResponseWriter, r http.Request, user *app.User, openChat *app.Chat) *Conn {
 	if !state.isInit {
-		log.Printf("AddConn ERROR state is not initialized")
+		log.Printf("ERROR AddConn state is not initialized")
 		return nil
 	}
 	state.mu.Lock()
@@ -55,7 +55,7 @@ func (state *State) AddConn(w http.ResponseWriter, r http.Request, user *app.Use
 
 func (state *State) GetConn(userId uint) []*Conn {
 	if !state.isInit {
-		log.Printf("GetConn ERROR state is not initialized")
+		log.Printf("ERROR GetConn state is not initialized")
 		return nil
 	}
 	state.mu.Lock()
@@ -65,7 +65,7 @@ func (state *State) GetConn(userId uint) []*Conn {
 
 func (state *State) DropConn(conn *Conn) error {
 	if !state.isInit {
-		log.Printf("DropConn ERROR state is not initialized")
+		log.Printf("ERROR DropConn state is not initialized")
 		return fmt.Errorf("state is not initialized")
 	}
 	state.mu.Lock()
@@ -76,7 +76,7 @@ func (state *State) DropConn(conn *Conn) error {
 // CHAT
 func (state *State) OpenChat(userId uint, chatId uint) error {
 	if !state.isInit {
-		log.Printf("OpenChat ERROR state is not initialized")
+		log.Printf("ERROR OpenChat state is not initialized")
 		return fmt.Errorf("state is not initialized")
 	}
 	state.mu.Lock()
@@ -86,7 +86,7 @@ func (state *State) OpenChat(userId uint, chatId uint) error {
 
 func (state *State) GetOpenChat(userId uint) uint {
 	if !state.isInit {
-		log.Printf("GetOpenChat ERROR state is not initialized")
+		log.Printf("ERROR GetOpenChat state is not initialized")
 		return 0
 	}
 	state.mu.Lock()

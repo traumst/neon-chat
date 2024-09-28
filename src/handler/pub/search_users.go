@@ -11,7 +11,7 @@ import (
 )
 
 func SearchUsers(dbConn sqlx.Ext, userName string) ([]*app.User, error) {
-	log.Printf("FindUsers TRACE user[%s]\n", userName)
+	log.Printf("TRACE FindUsers user[%s]\n", userName)
 	dbUsers, err := db.SearchUsers(dbConn, []string{userName})
 	if err != nil {
 		return nil, fmt.Errorf("user[%s] not found: %s", userName, err.Error())
@@ -39,6 +39,6 @@ func SearchUsers(dbConn sqlx.Ext, userName string) ([]*app.User, error) {
 		appUser := convert.UserDBToApp(dbUser, avatarByUserId[dbUser.Id])
 		appUsers = append(appUsers, appUser)
 	}
-	log.Printf("FindUsers TRACE OUT user[%s]\n", userName)
+	log.Printf("TRACE FindUsers OUT user[%s]\n", userName)
 	return appUsers, nil
 }

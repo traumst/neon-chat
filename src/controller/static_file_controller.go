@@ -15,7 +15,7 @@ func FavIcon(w http.ResponseWriter, r *http.Request) {
 
 func ServeFile(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("[%s] ServeFile TRACE requested [%s]\n", reqId, r.URL.Path)
+	log.Printf("TRACE [%s] requested [%s]\n", reqId, r.URL.Path)
 	pathParts := strings.Split(r.URL.Path, "/")
 	fileName := pathParts[len(pathParts)-1]
 	ext := strings.Split(fileName, ".")
@@ -33,16 +33,12 @@ func ServeFile(w http.ResponseWriter, r *http.Request) {
 	case "svg":
 		filePath = fmt.Sprintf("./static/icon/%s", fileName)
 	default:
-		filePath = ""
-	}
-
-	if filePath == "" {
-		log.Printf("[%s] ServeFile ERROR serving [%s]\n", reqId, r.URL.Path)
+		log.Printf("ERROR [%s] serving [%s]\n", reqId, r.URL.Path)
 		w.Write([]byte("invalid path"))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	log.Printf("[%s] ServeFile TRACE served [%s]\n", reqId, filePath)
+	log.Printf("TRACE [%s] served [%s]\n", reqId, filePath)
 	http.ServeFile(w, r, filePath)
 }

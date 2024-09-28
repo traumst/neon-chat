@@ -44,7 +44,7 @@ func DistributeMsg(
 		wg.Add(1)
 		go func(viewer app.User, msg app.Message) {
 			defer wg.Done()
-			log.Printf("DistributeMsg TRACE event[%s] will be sent to user[%d]\n", updateType, viewer.Id)
+			log.Printf("TRACE DistributeMsg event[%s] will be sent to user[%d]\n", updateType, viewer.Id)
 			msgTmpl, err := msg.Template(&viewer, owner, msg.Quote)
 			if err != nil {
 				errors = append(errors, fmt.Sprintf("template:%s", err.Error()))
@@ -79,15 +79,15 @@ func distributeMsgToUser(
 	updateType event.EventType,
 	data string,
 ) error {
-	log.Printf("distributeMsgToUser TRACE user[%d] chat[%d] event[%v]\n", userId, chatId, updateType)
+	log.Printf("TRACE distributeMsgToUser user[%d] chat[%d] event[%v]\n", userId, chatId, updateType)
 	openChatId := state.GetOpenChat(userId)
 	if openChatId == 0 {
-		log.Printf("distributeMsgToUser INFO user[%d] has no open chat to distribute", userId)
+		log.Printf("INFO distributeMsgToUser user[%d] has no open chat to distribute", userId)
 		return nil
 	}
 	// TODO only sends updates to open chat
 	if openChatId != chatId {
-		log.Printf("distributeMsgToUser INFO user[%d] has open chat[%d] different from message chat[%d]",
+		log.Printf("INFO distributeMsgToUser user[%d] has open chat[%d] different from message chat[%d]",
 			userId, openChatId, chatId)
 		return nil
 	}

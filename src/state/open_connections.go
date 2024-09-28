@@ -40,7 +40,7 @@ func (conns *OpenConnections) Add(
 		//Out:    make(chan event.LiveUpdate, 64),
 	}
 	(*conns)[user.Id] = append((*conns)[user.Id], &newConn)
-	log.Printf("UserConn.Add INFO added conn[%s] user[%d]\n", origin, user.Id)
+	log.Printf("INFO [%s] added user[%d] conn\n", origin, user.Id)
 	return &newConn
 }
 
@@ -60,7 +60,7 @@ func (uc *OpenConnections) Drop(c *Conn) error {
 	for i, conn := range userConns {
 		if conn.User == c.User && conn.Origin == c.Origin {
 			(*uc)[c.User.Id] = append(userConns[:i], userConns[i+1:]...)
-			log.Printf("UserConn.Drop INFO dropped conn[%s] user[%d]\n", c.Origin, c.User.Id)
+			log.Printf("INFO UserConn.Drop dropped conn[%s] user[%d]\n", c.Origin, c.User.Id)
 			return nil
 		}
 	}

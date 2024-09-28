@@ -37,14 +37,14 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	viewer := r.Context().Value(consts.ActiveUser).(*app.User)
 	tmpl, err := GetUserInfoCard(w, r, viewer, args.UserId)
 	if err != nil {
-		log.Printf("[%s] GetUserInfo TRACE user[%d] not found\n", reqId, args.UserId)
+		log.Printf("TRACE [%s] user[%d] not found\n", reqId, args.UserId)
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("user not found"))
 		return
 	}
 	html, err := tmpl.HTML()
 	if err != nil {
-		log.Printf("[%s] GetUserInfo ERROR cannot template response: %s\n", reqId, err)
+		log.Printf("ERROR [%s] cannot template response: %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to template response"))
 		return
@@ -63,15 +63,15 @@ func GetUserInfoCard(
 	dbConn := shared.DbConn(r)
 	dbUser, err := db.GetUser(dbConn.Conn, otherUserId)
 	if err != nil {
-		log.Printf("[%s] GetUserInfo ERROR retrieving user[%d] data %s\n", reqId, otherUserId, err)
+		log.Printf("ERROR [%s] retrieving user[%d] data %s\n", reqId, otherUserId, err)
 	}
 	if dbUser == nil {
-		log.Printf("[%s] GetUserInfo TRACE user[%d] not found\n", reqId, otherUserId)
+		log.Printf("TRACE [%s] user[%d] not found\n", reqId, otherUserId)
 		return template.UserInfoTemplate{}, fmt.Errorf("user not found")
 	}
 	dbAvatar, err := db.GetAvatar(dbConn.Conn, dbUser.Id)
 	if err != nil {
-		log.Printf("[%s] GetUserInfo ERROR retrieving user[%d] avatar: %s\n", reqId, dbUser.Id, err)
+		log.Printf("ERROR [%s] retrieving user[%d] avatar: %s\n", reqId, dbUser.Id, err)
 	}
 	appUser := convert.UserDBToApp(dbUser, dbAvatar)
 	avatar := appUser.Avatar.Template(viewer)

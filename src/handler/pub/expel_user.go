@@ -18,12 +18,12 @@ func ExpelUser(
 ) (*app.Chat, *app.User, error) {
 	appExpelled, err := priv.RemoveUser(state, dbConn, user, chatId, uint(expelledId))
 	if err != nil {
-		log.Printf("HandleUserExpelled ERROR failed to expell, %s\n", err.Error())
+		log.Printf("ERROR HandleUserExpelled failed to expell, %s\n", err.Error())
 		return nil, nil, fmt.Errorf("failed to expell user, %s", err.Error())
 	}
 	targetChat, err := priv.GetChat(state, dbConn.Tx, user, chatId)
 	if err != nil {
-		log.Printf("HandleUserExpelled ERROR cannot find chat[%d], %s\n", chatId, err.Error())
+		log.Printf("ERROR HandleUserExpelled cannot find chat[%d], %s\n", chatId, err.Error())
 		return nil, nil, fmt.Errorf("failed to expell user: %s", err.Error())
 	}
 	return targetChat, appExpelled, nil

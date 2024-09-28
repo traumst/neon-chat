@@ -16,7 +16,7 @@ func AuthReadMiddleware(state *state.State, dbConn *db.DBConn) Middleware {
 		Func: func(next http.Handler) http.Handler {
 			//log.Println("TRACE with auth read middleware")
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				log.Println(r.Context().Value(consts.ReqIdKey).(string), "TRACE reading user session auth")
+				log.Printf("TRACE [%s] reading user session auth", r.Context().Value(consts.ReqIdKey).(string))
 				user, _ := pub.ReadSession(state, dbConn, w, r)
 				ctx := r.Context()
 				if user != nil {
