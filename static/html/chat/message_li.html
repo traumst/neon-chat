@@ -43,7 +43,7 @@
         <div id="msg-author-{{ .AuthorId }}-info-{{ .IntermediateId }}" 
             title="show user info card"
             hx-get="/infocard?userid={{ .AuthorId }}" 
-            hx-trigger="mouseover"
+            hx-trigger="mousedown"
             hx-target="#popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}"
             hx-swap="innerHTML"
             DIS_hx-indicator="TODO"
@@ -62,49 +62,33 @@
         </div>
         <script>
         (function() {
-            const hidePopupTimeoutMs = 5/*sec*/ * 1000/*ms*/;
+            const hideScopedPopupTimeoutMs = 5/*sec*/ * 1000/*ms*/;
             const clearCooldownTimeoutMs = 5/*sec*/ * 1000/*ms*/;
-            const showPopup = (event) => {
-                const userInfoPopup = document.getElementById('popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}');
-                while (userInfoPopup && userInfoPopup.classList.contains('hidden')) {
-                    userInfoPopup.classList.remove('hidden');
-                }
-                const userInfoUnderlay = document.getElementById('dark-underlay-{{ .AuthorId }}-{{ .IntermediateId }}');
-                while (userInfoUnderlay && userInfoUnderlay.classList.contains('hidden')) {
-                    userInfoUnderlay.classList.remove('hidden');
-                }
-            };
-            const hidePopup = () => {
-                const userInfoUnderlay = document.getElementById('dark-underlay-{{ .AuthorId }}-{{ .IntermediateId }}');
-                if (userInfoUnderlay && !userInfoUnderlay.classList.contains('hidden')) {
-                    userInfoUnderlay.classList.add('hidden');
-                }
-                const userInfoPopup = document.getElementById('popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}');
-                if (userInfoPopup && !userInfoPopup.classList.contains('hidden')) {
-                    userInfoPopup.classList.add('hidden');
-                }
-            };
             let hideTimeout = setTimeout(() => {}, 0);
+            let cooldownTimeout = setTimeout(() => {}, 0);
+            let onCooldown = false;
             const hideTimerClear = () => {
                 if (hideTimeout) {
                     clearTimeout(hideTimeout);
                 }
             }
-            let cooldownTimeout = setTimeout(() => {}, 0);
-            let onCooldown = false;
             const cooldownClear = () => {
                 if (cooldownTimeout) {
                     clearTimeout(cooldownTimeout);
                 }
                 onCooldown = false;
             }
-            document.body.addEventListener('mouseleave', event => {
+            document.body.addEventListener('focusleave', event => {
                 if (event?.detail?.target?.id === 'popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}') {
                     hideTimerClear();
-                    hideTimeout = setTimeout(hidePopup, hidePopupTimeoutMs);
+                    hideTimeout = setTimeout(
+                        () => hideScopedPopup(
+                            'dark-underlay-{{ .AuthorId }}-{{ .IntermediateId }}',
+                            'popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}'), 
+                        hideScopedPopupTimeoutMs);
                 }
             });
-            document.body.addEventListener('mouseenter', event => {
+            document.body.addEventListener('focusenter', event => {
                 if (event?.detail?.target?.id === 'popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}' ||
                     event?.detail?.target?.id === 'msg-author-{{ .AuthorId }}-info-{{ .IntermediateId }}' ||
                     event?.detail?.target?.id === 'info-card-1-{{ .AuthorId }}') {
@@ -123,9 +107,14 @@
             });
             document.body.addEventListener('htmx:afterSwap', event => {
                 if (event?.detail?.target?.id === 'popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}') {
-                    showPopup(event)
+                    showScopedPopup('dark-underlay-{{ .AuthorId }}-{{ .IntermediateId }}',
+                            'popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}');
                     hideTimerClear();
-                    hideTimeout = setTimeout(hidePopup, hidePopupTimeoutMs);
+                    hideTimeout = setTimeout(
+                        () => hideScopedPopup(
+                            'dark-underlay-{{ .AuthorId }}-{{ .IntermediateId }}',
+                            'popup-over-user-{{ .AuthorId }}-{{ .IntermediateId }}'), 
+                        hideScopedPopupTimeoutMs);
                 }
             });
         })();
