@@ -12,7 +12,6 @@ go mod tidy && \
 go vet ./... && \
 staticcheck ./...
 
-
 echo "Running tests..."
 time go test ./...
 echo "Logging metrics..."

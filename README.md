@@ -7,10 +7,10 @@ This app is being build as an excercise for me to
 - try sqlite db via sqlx, write custom migration module
 - explore server sent events for live messaging
 - further explore htmx, locality of behaviour, etc
-- <s>familiarize with </s>tailwind - surprisingly good, pointless for animations
+- familiarize with tailwind
 - <s>prove react is overrated</s>
-- <s>finish a project for a change</s>
-- maintain project over time, extend functionality, fix bugs
+- finish a project for a change
+- maintain project over time, optimize, extend functionality, fix bugs
 
 ## TODOs
 
@@ -151,40 +151,31 @@ But if you have nodejs installed and feel more comfortable with it,
 you can [install tailwind via npm](https://tailwindcss.com/docs/installation). 
 
 > <b><u>Note</u></b><br>
-[run.sh script](./run.sh) specifies path to tailwind executable and needs to be updated, `~/code/bin/tailwindcss` may have different path, or if you installed tailwind via npm you'd need to replace it with `npx tailwind` or something similar.
+[run.sh script](./run.sh) specifies path to tailwind executable and needs to be updated, 
+`~/code/bin/tailwindcss` is specific to my system, so unless you put it in exacty the
+same place - you'd need to replace it with `npx tailwind` or something similar.
 
 Finally, app expects to have `.env` file in the root directory, which you have to create. 
 There's `.env.template` file that you can easily copy-paste and fill up. 
-App may still start without this file, as some defaults are provided. 
-But the behaviour in this case is unpredicable, thus is a broken state and should fatal exit at some point.
+App may still start without this file, as some defaults are provided,
+but the behaviour in this case is unpredicable. Broken state should fatal exit at some point in short future.
 
 ### Preparing run script
 
 Successfull launch of the app requires:
-* passing tests
+* passing static checks and tests
 * compiling tailwind
-* (optional) purging the db
 * launching the app
 * etc.
 
 `run.sh` file is just a plaintext shell script. We need to make it executable by running 
 `chmod +x run.sh` in project root in terminal. After that, we can start the app by running `sh run.sh` or `./run.sh`.
 
-Contents of [run.sh](./run.sh) is more or less:
-```
-> cat run.sh
-echo "Running tests"
+Contents of [run.sh](./run.sh) are more or less:
+```sh
+go vet ./... && staticcheck ./...
 time go test ./...
-
-# for dev purposes
-#echo "Dropping db file..."
-# rm chat.db
-# (la chat.db && echo "...Dropped db successfully.") || echo "...Data not dropped."
-
-echo "Building tailwind..."
 ~/code/bin/tailwindcss -i static/css/input.css -o static/css/tailwind.css
-
-echo "Starting server..."
 go run main.go
 ```
 
@@ -192,15 +183,15 @@ go run main.go
 by default, db file is created in the root folder where executable runs
 
 > <b><u>Note</u></b><br>
-for db file to be deleted on start, must uncomment appropriate lines
+for db file to be deleted on start, must uncomment appropriate lines in `run.sh`
 
 > <b><u>Note</u></b><br>
-tailwind executable path will need to be updated to match your system
+path to <b>tailwind</b> executable needs to be updated to match your system
 
 ### Run script
 
-Executing a script from the terminal, you should then see output similar to:
-```
+Execute a script from the terminal, you should then see output similar to:
+```sh
 > ./run.sh
 Running tests
 ok      neon-chat/src/handler     (cached)
@@ -213,11 +204,9 @@ Starting server...
 App should now be available at http://localhost:8080
 
 > <b><u>Note</u></b><br>
-After initial successfull run, we will not need to go through any of the setup steps again.
-
-> <b><u>Note</u></b><br>
 Executing `./run.sh` also builds the short tailwind.css. 
 Making changes to tailwind classes requires rerun to display properly.
+Unless, we load the entire tailwind.min.css from CDN - then we have all classes available.
 
 ## Sqlite DB
 
@@ -244,15 +233,17 @@ There are a number of PRAGMAs defined in code. In general, pragmas adjust db set
 
 ### CLI Options
 
-We can interact with our db from the terminal. In order to do so we would need a connector. Install [sqlite3 cli](https://www.sqlite.org/cli.html), at least it is very simple and it's what I use at the moment.
+We can interact with our db from the terminal. In order to do so we would need a connector. Install [sqlite3 cli](https://www.sqlite.org/cli.html), it is very simple and it's what I use at the moment.
 
-Connect with sqlite3 cli tool to the db file. Sqlite is just a normal sql, so we can run normal query to view content of a table:
+Connect with sqlite3 cli tool to the db file
 ``` sql
 > sqlite3 chat.db
 SQLite version 3.43.2 2023-10-10 13:08:14
 Enter ".help" for usage hints.
 sqlite>
 ```
+
+Sqlite is just a normal sql, so we can run a normal select like below
 ```sql
 sqlite> SELECT * FROM users WHERE status='active' LIMIT 2;
 1|ABCDE|abcd@gmail.com|basic|active
@@ -260,7 +251,9 @@ sqlite> SELECT * FROM users WHERE status='active' LIMIT 2;
 sqlite>
 ```
 
-Data is provided without the headers - probably good default for connectors But when I look at it I prefer to have column names shown as well. This can be achieved by running the two commands below in sqlite3 cli:
+Data is provided without the headers - probably good default for connectors. 
+But when I look at it I prefer to have column names shown as well.
+This can be achieved by running the two commands below in sqlite3 cli:
 ```sql
 sqlite> .headers ON
 sqlite>

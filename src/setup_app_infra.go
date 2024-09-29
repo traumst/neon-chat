@@ -13,8 +13,8 @@ import (
 )
 
 func SetupGlobalLogger(stderr bool, dir string) {
-	now := time.Now()
-	timestamp := now.Format(time.RFC3339)
+	log.Printf("TRACE SetupGlobalLogger stderr[%t], dir[%s]", stderr, dir)
+	timestamp := time.Now().Format(time.RFC3339)
 	date := strings.Split(timestamp, "T")[0]
 	logPath := fmt.Sprintf("%s/from-%s.log", dir, date)
 	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
@@ -37,7 +37,6 @@ func SetupGlobalLogger(stderr bool, dir string) {
 		log.SetOutput(io.Discard)
 		log.Println("WARN Logging is DISABLED")
 	}
-	log.Println("TRACE OUT SetupGlobalLogger")
 }
 
 func ReadEnvConfig() *config.Config {
@@ -48,7 +47,7 @@ func ReadEnvConfig() *config.Config {
 		log.Println(config.ConfigHelp())
 		os.Exit(13)
 	}
-	log.Printf("\tparsed config: %s\n", c)
+	log.Printf("...parsed config\n%s\n", c)
 	return c
 }
 
