@@ -14,6 +14,31 @@ import (
 
 func SetupGlobalLogger(stderr bool, dir string) {
 	log.Printf("TRACE SetupGlobalLogger stderr[%t], dir[%s]", stderr, dir)
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	var w io.Writer
+	var logFile *os.File
+	if len(dir) > 0 && stderr {
+		log.Println("INFO Logging to file and stderr")
+		logFile = OpenLogFile(dir)
+		w = io.MultiWriter(os.Stderr, logFile)
+	} else if len(dir) > 0 {
+		log.Println("INFO Logging to file")
+		logFile = OpenLogFile(dir)
+		w = logFile
+	} else if stderr {
+		log.Println("INFO Logging to stderr")
+		w = os.Stderr
+	} else {
+		log.Println("WARN Logging is DISABLED")
+		w = io.Discard
+	}
+	if logFile != nil {
+		defer logFile.Close()
+	}
+	log.SetOutput(w)
+}
+
+func OpenLogFile(dir string) *os.File {
 	timestamp := time.Now().Format(time.RFC3339)
 	date := strings.Split(timestamp, "T")[0]
 	logPath := fmt.Sprintf("%s/from-%s.log", dir, date)
@@ -21,22 +46,7 @@ func SetupGlobalLogger(stderr bool, dir string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer logFile.Close()
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	// log.SetPrefix("CUSTOM_LOG: ")
-	if len(dir) > 0 && stderr {
-		log.SetOutput(io.MultiWriter(logFile, os.Stderr))
-		log.Printf("INFO Logging to file[%s] and stderr\n", logPath)
-	} else if len(dir) > 0 {
-		log.SetOutput(logFile)
-		log.Printf("INFO Logging to file[%s]\n", logPath)
-	} else if stderr {
-		log.SetOutput(os.Stderr)
-		log.Println("INFO Logging to stderr")
-	} else {
-		log.SetOutput(io.Discard)
-		log.Println("WARN Logging is DISABLED")
-	}
+	return logFile
 }
 
 func ReadEnvConfig() *config.Config {

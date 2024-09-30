@@ -76,6 +76,7 @@ func GetUserInfoCard(
 	appUser := convert.UserDBToApp(dbUser, dbAvatar)
 	avatar := appUser.Avatar.Template(viewer)
 	sharedChats := GetSharedChats(dbConn, viewer, dbUser)
+	log.Printf("shared between viewer[%d] other[%d] chats:%v\n", viewer.Id, otherUserId, sharedChats)
 	tmpl := template.UserInfoTemplate{
 		ViewerId:    viewer.Id,
 		UserId:      appUser.Id,
