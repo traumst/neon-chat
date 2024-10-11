@@ -18,6 +18,8 @@ This app is being build as an excercise for me to
     + add timestamps to every table:
         * created
         * updated
++ add api throttling
++ add db query-response caching
 + db does not shrink, need to [do a VACUUM](https://www.sqlite.org/lang_vacuum.html)
 + consider [conn pool for db](https://github.com/jmoiron/sqlx/issues/300)
 + need [Regular Maintenance: VACUUM and Analyze]
@@ -26,6 +28,7 @@ This app is being build as an excercise for me to
 
 ### Next up
 
++ add log trace to all methods
 + logrotate
 + support ALLOW_UNSAFE_ACCESS for dev and test
 + log levels with [slog in GO 1.23](https://pkg.go.dev/log/slog#Debug)

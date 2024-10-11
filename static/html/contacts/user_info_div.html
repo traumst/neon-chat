@@ -1,30 +1,40 @@
-<div id="info-card-{{ .UserId }}" 
+<div id="info-card-{{ .UserId }}"
     onkeydown="escFocus(event)"
-    onfocusout="hideInfoCard()"
-    class="absolute default-transition
-        m-2
-        rounded-lg
-        border-b-4 border-green-500
-        shadow shadow-green-500
-        hover:shadow-indigo-700">
-    <script>
-    </script>
-    <div id="info-card-{{ .UserId }}-avatar">
-        {{ template "avatar_div.html" .UserAvatar }}
+    onfocusout="TODO()"
+    class="absolute flex flex-col 
+      bg-black bg-opacity-100
+        top-0 left-0 w-64 max-h-64 
+        overflow-x-hidden overflow-y-auto m-2 rounded-lg 
+        border-b-4 border-green-500 shadow-lg shadow-green-500
+        pointer-events-auto">
+    <div class="flex flex-col">
+        <div id="info-card-{{ .UserId }}-user-info" class="flex justify-between">
+            <div class="m-2">
+                {{ template "avatar_div.html" .UserAvatar }}
+            </div>
+            <div class="m-2 flex flex-col">
+                <div class="flex">
+                    {{ .UserName }}
+                </div>
+                <div class="flex">
+                    {{ .UserEmail }}
+                </div>
+            </div>
+        </div>
+        {{ if ne 0 (len .SharedChats) }}
+        <hr />
+        <div class="m-2">
+            <h3>{{len .SharedChats}} Shared Chats</h3>
+            <ul>
+                {{ range $index, $chat := .SharedChats }}
+                <li class="my-2">
+                    {{ template "chat_li.html" $chat }}
+                </li>
+                {{ end }}
+            </ul>
+        </div>
     </div>
-    <div id="info-card-{{ .UserId }}-username">
-        {{ .UserName }}
-    </div>
-    <div id="info-card-{{ .UserId }}-useremail">
-        {{ .UserEmail }}
-    </div>
-    {{ if ne 0 (len .SharedChats) }}
-    <div id="info-card-{{ .UserId }}-top-shared-chats">
-        <ul>
-        {{ range $index, $chat := .SharedChats }}
-            {{ template "chat_li.html" $chat }}
-        {{ end }}
-        </ul>
-    </div>
+    {{ else }}
+        <h3 class="m-2">No shared chats</h3>
     {{ end }}
 </div>

@@ -106,6 +106,9 @@ func GetSharedChats(dbConn *db.DBConn, viewer *app.User, otherUser *db.User) []t
 		sharedChats = append(sharedChats, template.ChatTemplate{
 			ChatId:   shared.Id,
 			ChatName: shared.Name,
+			Viewer:   template.UserTemplate{UserId: viewer.Id},
+			User:     template.UserTemplate{UserId: viewer.Id},
+			Owner:    template.UserTemplate{UserId: dbChat.OwnerId},
 		})
 	}
 	return sharedChats

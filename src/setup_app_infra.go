@@ -14,7 +14,7 @@ import (
 
 func SetupGlobalLogger(stderr bool, dir string) {
 	log.Printf("TRACE SetupGlobalLogger stderr[%t], dir[%s]", stderr, dir)
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile | log.Lmsgprefix)
 	var w io.Writer
 	var logFile *os.File
 	if len(dir) > 0 && stderr {
@@ -35,6 +35,7 @@ func SetupGlobalLogger(stderr bool, dir string) {
 	if logFile != nil {
 		defer logFile.Close()
 	}
+	log.SetPrefix("\n\t")
 	log.SetOutput(w)
 }
 

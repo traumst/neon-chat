@@ -133,7 +133,8 @@ func GetSharedChatIds(dbConn sqlx.Ext, userIds []uint) ([]uint, error) {
             AND R.user_id = ?
         ORDER BY L.chat_id
         LIMIT %d;`, consts.MaxSharedChats)
-	query, args, err := sqlx.In(withLimit)
+	log.Printf("TRACE shared chat ids query for users[%v]: %s\n", userIds, withLimit)
+	query, args, err := sqlx.In(withLimit, userIds[0], userIds[1])
 	if err != nil {
 		return nil, fmt.Errorf("error preparing shared chats query: %s", err)
 	}
@@ -143,6 +144,7 @@ func GetSharedChatIds(dbConn sqlx.Ext, userIds []uint) ([]uint, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error getting shared chat ids: %s", err.Error())
 	}
+	log.Printf("TRACE shared chat ids between users[%v]: %v\n", userIds, chatIds)
 	return chatIds, nil
 }
 
@@ -153,8 +155,10 @@ func GetSharedChats(dbConn sqlx.Ext, userIds []uint) ([]Chat, error) {
 		return nil, fmt.Errorf("error getting shared chat ids for users[%v]: %s", userIds, err)
 	}
 	if len(chatIds) == 0 {
+		log.Printf("INFO no shared chats between users[%v]\n", userIds)
 		return []Chat{}, nil
 	}
+	log.Printf("TRACE shared chats between users[%v] ids: %d\n", userIds, len(chatIds))
 	query, args, err := sqlx.In(`SELECT * FROM chats WHERE id IN (?)`, chatIds)
 	if err != nil {
 		return nil, fmt.Errorf("error preparing chatIds query for [%v]: %s", chatIds, err)
@@ -165,6 +169,7 @@ func GetSharedChats(dbConn sqlx.Ext, userIds []uint) ([]Chat, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error getting shared chats[%v]: %s", chatIds, err)
 	}
+	log.Printf("TRACE shared chats between users[%v] found: %d\n", userIds, len(sharedChats))
 	return sharedChats, nil
 }
 

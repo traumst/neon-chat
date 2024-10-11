@@ -26,6 +26,7 @@ func (c *Chat) Template(
 	members []*User,
 	msgs []*Message,
 ) template.ChatTemplate {
+	log.Println("TRACE Chat.Template", c.Name, "members:", len(members), "messages:", len(msgs))
 	// current viewer + chat owner
 	var usr template.UserTemplate
 	var ownr template.UserTemplate
