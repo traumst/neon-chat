@@ -17,7 +17,7 @@ import (
 
 func AddAvatar(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("[%s] AddAvatar\n", reqId)
+	log.Printf("TRACE [%s] AddAvatar\n", reqId)
 	if r.Method != "POST" {
 		log.Printf("TRACE [%s] auth does not allow %s\n", reqId, r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -65,7 +65,7 @@ func AddAvatar(w http.ResponseWriter, r *http.Request) {
 
 func GetAvatar(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("[%s] GetAvatar\n", reqId)
+	log.Printf("TRACE [%s] GetAvatar\n", reqId)
 	if r.Method != "GET" {
 		log.Printf("TRACE [%s] auth does not allow %s\n", reqId, r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)

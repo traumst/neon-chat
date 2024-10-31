@@ -19,7 +19,7 @@ This app is being build as an excercise for me to
     </summary>
 ## TODOs
 |-------------------------------------------------------------|
-|---  from: 2024-10-14  --------------------------------------|
+|---  from: 2024-10-29  --------------------------------------|
 |-------------------------------------------------------------|
 + user info card (2 weeks)
     + should include:
@@ -32,9 +32,7 @@ This app is being build as an excercise for me to
         + most unviewed messages
         + most recent activivity
         + most recently joined
-    + add timestamps to every table:
-        * created
-        * updated
++ store sessions in db, keep between restarts (2 days)
 + add api throttling (1 week)
 + sanitize user input against XSS attacks (1 week)
 + need [Regular Maintenance: VACUUM and Analyze] (1 week)
@@ -43,7 +41,11 @@ This app is being build as an excercise for me to
 + db
     + add db query-response caching (2 weeks)
     + consider [conn pool for db](https://github.com/jmoiron/sqlx/issues/300) (1 week)
+    + add timestamps to every table:
+        * created
+        * updated
 + docker setup: pod + persistent storage [1 week]
++ deployment github action
 
 ### Next up
 

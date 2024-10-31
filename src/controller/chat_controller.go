@@ -45,7 +45,7 @@ func OpenChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	path := strings.Split(r.URL.Path, "/")
-	log.Printf("[%s] OpenChat, %s\n", reqId, path[2])
+	log.Printf("TRACE [%s] OpenChat, %s\n", reqId, path[2])
 	chatId, err := strconv.Atoi(path[2])
 	if err != nil {
 		log.Printf("INFO [%s] invalid chat-id, %s\n", reqId, err)
@@ -147,7 +147,7 @@ func AddChat(w http.ResponseWriter, r *http.Request) {
 
 func CloseChat(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("[%s] CloseChat\n", reqId)
+	log.Printf("TRACE [%s] CloseChat\n", reqId)
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return

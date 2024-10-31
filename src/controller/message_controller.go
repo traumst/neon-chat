@@ -145,7 +145,7 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ERROR  distributing msg update, %s\n", err)
 	}
 	w.(*h.StatefulWriter).IndicateChanges()
-	log.Printf("[%s] DeleteMessage done\n", reqId)
+	log.Printf("TRACE [%s] DeleteMessage done\n", reqId)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("~~deleted~~"))
 }
