@@ -2,7 +2,7 @@
 
 Minimalistic chat app built using server-components on go + htmx.
 Default colorscheme is a personal preference, and light/dark mode are... khm... on the horizon.
-This app is being build as an excercise for me to 
+This app is being build as an excercise for me to
 - learn go practically
 - try sqlite db via sqlx, write custom migration module
 - explore server sent events for live messaging
@@ -10,31 +10,49 @@ This app is being build as an excercise for me to
 - familiarize with tailwind
 - <s>prove react is overrated</s>
 - finish a project for a change
-- maintain project over time, optimize, extend functionality, fix bugs
+- maintain go project over time, optimize, extend functionality, fix bugs, etc.
 
+
+<details>
+    <summary>
+        <b>Roadmap</b>
+    </summary>
 ## TODOs
-
-+ user info card - avatar, name, contact, mutual chats (recently joined)
+|-------------------------------------------------------------|
+|---  from: 2024-10-14  --------------------------------------|
+|-------------------------------------------------------------|
++ user info card (2 weeks)
+    + should include:
+        + avatar
+        + name
+        + contact info like email
+        + mutual chats
+    + optional order by:
+        + most notifications in chat (default) - every message for 1-on-1
+        + most unviewed messages
+        + most recent activivity
+        + most recently joined
     + add timestamps to every table:
         * created
         * updated
-+ add api throttling
-+ add db query-response caching
-+ db does not shrink, need to [do a VACUUM](https://www.sqlite.org/lang_vacuum.html)
-+ consider [conn pool for db](https://github.com/jmoiron/sqlx/issues/300)
-+ need [Regular Maintenance: VACUUM and Analyze]
-+ run `PRAGMA incremental_vacuum;` periodically to reclaim space
-+ docker setup: pod + persistent storage
++ add api throttling (1 week)
++ sanitize user input against XSS attacks (1 week)
++ need [Regular Maintenance: VACUUM and Analyze] (1 week)
+    + run `PRAGMA incremental_vacuum;` periodically to reclaim space
+    + db does not shrink, need to [do a VACUUM](https://www.sqlite.org/lang_vacuum.html)
++ db
+    + add db query-response caching (2 weeks)
+    + consider [conn pool for db](https://github.com/jmoiron/sqlx/issues/300) (1 week)
++ docker setup: pod + persistent storage [1 week]
 
 ### Next up
 
-+ add log trace to all methods
-+ logrotate
-+ support ALLOW_UNSAFE_ACCESS for dev and test
-+ log levels with [slog in GO 1.23](https://pkg.go.dev/log/slog#Debug)
-+ change chat title
-+ collapsible / resizable left panel
-+ add contacts page / address book
++ add log trace to all methods (1 day)
++ logrotate (1 week)
++ log levels with [slog in GO 1.23](https://pkg.go.dev/log/slog#Debug) (1 week)
++ change chat title (1 week)
++ collapsible / resizable left panel (2 weeks)
++ add contacts page / address book (2 weeks)
     * limit who can invite add / you
 
 ## Backlog
@@ -42,7 +60,7 @@ This app is being build as an excercise for me to
 ### Research
 - stress test a bufferred vs unbuffered channel
 
-### Message Broadcasting: 
+### Message Broadcasting:
 - msg should distribute to user connection, even if chat is closed
 - pagination, track user deltas in chats and messages
 - buffer outgoing events for unstable connection/s
@@ -56,7 +74,7 @@ This app is being build as an excercise for me to
     - blacklist / whitelist users
 
 ### Fuzzy search
-- search chats by: 
+- search chats by:
     - by chat name
     - by members
     - by message content
@@ -107,20 +125,9 @@ This app is being build as an excercise for me to
     * open chat - close, delete
     * chat members - expel
     * msg options - delete, reply
-    
+
 
 ## Never gonna happen, but sounds nice
-
-### Use better templating lib
-- switch to Tmpl
-
-### Client storage
-- local / innodb
-- store chats with history on client
-- load only chat deltas
-
-### *Security Considerations*
-- Validate nd sanitize all incoming messages to prevent cross-site scripting (XSS) attacks.
 
 ### *Mini Games*
 - embed games into chat, to start
@@ -133,7 +140,9 @@ This app is being build as an excercise for me to
 - Consider for content moderation assistance
 - Consider for chat participant - query, image, auto-response
 
-## Technichals
+</details>
+
+## Technical Details
 
 ### Prerequisites
 
@@ -141,25 +150,25 @@ I assume you already have golang installed.
 You can check if it is by running `go version` in a terminal.
 If not, you can refer to [official istallation instruction](https://go.dev/doc/install) for you pc/mac/linux.
 
-There's [tailwind.config.js](./tailwind.config.js) in the root. 
-Technically we can simply make a 3rd party call and get entire tailwindcss.min.js from a CDN. 
+There's [tailwind.config.js](./tailwind.config.js) in the root.
+Technically we can simply make a 3rd party call and get entire tailwindcss.min.js from a CDN.
 And we do - it's much easier for development.
-Still, current setup will build tailwind and produce updated minimal css. 
-[Compiled css](./static/css/tailwind.css) comes out at roughly 15kb, 
+Still, current setup will build tailwind and produce updated minimal css.
+[Compiled css](./static/css/tailwind.css) comes out at roughly 15kb,
 about 1/20 of the default minified [cdn provided talwindcss.js](https://cdn.tailwindcss.com/3.4.5) wich is around 300kb.
 
-To actually compile this, you'd need to install tailwind. There are too many options. 
-I recommend downloading the [stadalone tailwind cli](https://tailwindcss.com/blog/standalone-cli) and avoiding npm completely. 
-But if you have nodejs installed and feel more comfortable with it, 
-you can [install tailwind via npm](https://tailwindcss.com/docs/installation). 
+To actually compile this, you'd need to install tailwind. There are too many options.
+I recommend downloading the [stadalone tailwind cli](https://tailwindcss.com/blog/standalone-cli) and avoiding npm completely.
+But if you have nodejs installed and feel more comfortable with it,
+you can [install tailwind via npm](https://tailwindcss.com/docs/installation).
 
 > <b><u>Note</u></b><br>
-[run.sh script](./run.sh) specifies path to tailwind executable and needs to be updated, 
+[run.sh script](./run.sh) specifies path to tailwind executable and needs to be updated,
 `~/code/bin/tailwindcss` is specific to my system, so unless you put it in exacty the
 same place - you'd need to replace it with `npx tailwind` or something similar.
 
-Finally, app expects to have `.env` file in the root directory, which you have to create. 
-There's `.env.template` file that you can easily copy-paste and fill up. 
+Finally, app expects to have `.env` file in the root directory, which you have to create.
+There's `.env.template` file that you can easily copy-paste and fill up.
 App may still start without this file, as some defaults are provided,
 but the behaviour in this case is unpredicable. Broken state should fatal exit at some point in short future.
 
@@ -171,7 +180,7 @@ Successfull launch of the app requires:
 * launching the app
 * etc.
 
-`run.sh` file is just a plaintext shell script. We need to make it executable by running 
+`run.sh` file is just a plaintext shell script. We need to make it executable by running
 `chmod +x run.sh` in project root in terminal. After that, we can start the app by running `sh run.sh` or `./run.sh`.
 
 Contents of [run.sh](./run.sh) are more or less:
@@ -207,13 +216,13 @@ Starting server...
 App should now be available at http://localhost:8080
 
 > <b><u>Note</u></b><br>
-Executing `./run.sh` also builds the short tailwind.css. 
+Executing `./run.sh` also builds the short tailwind.css.
 Making changes to tailwind classes requires rerun to display properly.
 Unless, we load the entire tailwind.min.css from CDN - then we have all classes available.
 
 ## Sqlite DB
 
-You can imagine this entire app as an upside-down pyramid standing firmly 
+You can imagine this entire app as an upside-down pyramid standing firmly
 on the pinacle of sqlite. I can't believe I am only discovering this now.
 
 > <b><u>Note</u></b><br>
@@ -254,7 +263,7 @@ sqlite> SELECT * FROM users WHERE status='active' LIMIT 2;
 sqlite>
 ```
 
-Data is provided without the headers - probably good default for connectors. 
+Data is provided without the headers - probably good default for connectors.
 But when I look at it I prefer to have column names shown as well.
 This can be achieved by running the two commands below in sqlite3 cli:
 ```sql
@@ -270,11 +279,11 @@ Here's the full reference for [sqlite dot commands](https://sqlite.org/cli.html#
 These commands do not produce any output but if we run the same query again, the output will now be nicely formatted:
 ```sql
 sqlite> SELECT * FROM users WHERE status='active' LIMIT 2;
-id  name   email           type   status  
---  -----  --------------  -----  ------  
-1   ABCDE  abcd@gmail.com  basic  active  
-2   NEW12  newt@gmail.com  basic  active  
-sqlite>         
+id  name   email           type   status
+--  -----  --------------  -----  ------
+1   ABCDE  abcd@gmail.com  basic  active
+2   NEW12  newt@gmail.com  basic  active
+sqlite>
 ```
 
 ### Run from terminal
@@ -300,15 +309,27 @@ With this, all of queries are executed in a single session, we can find it in th
 
 ## System requirements
 
-I don't normally specify such info, because this is absolutely subjective and could probably work "fine" on less that half of minimal requirements. But then we start testing the limits of garbage collection and resource allocation. This is russian roulette and I love it! Test it out and report the lowest resource consumption you are able to achieve while serving a load.
+I don't normally specify such info, because this is absolutely subjective and could probably work "fine" on less that half of minimal requirements. But then we start testing the limits of garbage collection and resource allocation. This is russian roulette and I love it! Test it out and report the lowest resource consumption you are able to achieve while serving a hot steamy load.
 
-### Minimal Requirements
+### Pre-measure estimates
+
+What **I** think a good measure is 
+* ~1000 active/concurrent users 
+* 100-300 mixed calls per second
+* responses always under 200ms
+
+#### Minimal Requirements
+
+Obviously our machine is expected to be bottlenecked by the CPU the most here, expect occasional hang or reboot.
 
 * 1 CORE    - with arbitrary performance
 * 256MB RAM - for app memory and db caches with ~30% spair
 * 2GB DISK  - for dependencies, db file, logs with ~60% spair
 
-### Recommended Requirements
-* 2 CORES   - to better utilize go concurrency
-* 512MB RAM - lower % usage = faster RAM lookup
-* 4GB DISK  - same as RAM for SSD, but just log space for HHD
+#### Recommended Requirements
+
+Here we should not cross ~85% cpu anymore, memory should be at max ~50% in use
+
+* 2+ CORES   - to better utilize go concurrency
+* 512MB+ RAM - lower % usage = faster RAM lookup
+* 4GB+ DISK  - same as RAM for SSD, otherwise it's only log space for HHD
