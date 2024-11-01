@@ -35,6 +35,6 @@ func PollUpdates(s *state.State, dbConn *db.DBConn, w http.ResponseWriter, r *ht
 	h.SetSseHeaders(&conn.Writer)
 	log.Printf("TRACE [%s] sse initiated for user[%d]\n", reqId, user.Id)
 
-	sse.LiveUpdates(s, conn, user.Id)
+	sse.PollUpdates(s, conn, user.Id)
 	log.Printf("TRACE [%s] live update consumption stopped for user[%d]\n", reqId, user.Id)
 }

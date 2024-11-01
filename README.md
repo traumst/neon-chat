@@ -22,16 +22,7 @@ This app is being build as an excercise for me to
 |---  from: 2024-10-29  --------------------------------------|
 |-------------------------------------------------------------|
 + user info card (2 weeks)
-    + should include:
-        + avatar
-        + name
-        + contact info like email
-        + mutual chats
-    + optional order by:
-        + most notifications in chat (default) - every message for 1-on-1
-        + most unviewed messages
-        + most recent activivity
-        + most recently joined
++ gzip responses (1 week)
 + store sessions in db, keep between restarts (2 days)
 + add api throttling (1 week)
 + sanitize user input against XSS attacks (1 week)
