@@ -89,6 +89,7 @@
                 transform: translateX(-100%);
             }
         }
+        /* Chromium */
         ::-webkit-scrollbar {
             width: .37rem;
         }
@@ -105,6 +106,11 @@
             border-color: #3f3f46;
             border-radius: 8px;
             box-shadow: #3f3f46;
+        }
+        /* Firefox */
+        * {
+            scrollbar-width: .37rem;
+            scrollbar-color: #166534 #4338ca; /* thumb color, track color */
         }
     </style>
 </head>
@@ -157,11 +163,14 @@
         </div>
     </div>
     <script>
+    document.addEventListener('load', () => {
         document.body.addEventListener('htmx:beforeOnLoad', function handleServerError(event) {
             if (event.detail.xhr.status > 399 || /^[45]\d\d$/g.test(event.detail.xhr.status)) {
                 alert("Action failed!\nresponse details:\n" + 
                     `[${event.detail.xhr.status}:${event.detail.xhr.statusText}]` +
                     `${event.detail.xhr.responseText}`);
+
+                
                 console.error("bad int handleServerError", 
                     event.detail.xhr.responseURL, 
                     event.detail.xhr.status, 
@@ -175,6 +184,7 @@
                 //     event.detail.xhr.responseText);
             }
         });
+    });
     </script>
 </body>
 </html>

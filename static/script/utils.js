@@ -79,27 +79,3 @@ function scrollToLastChild(parent) {
         console.error('scrollToLastChild: not found parent', parent.id);
     }
 }
-
-function showScopedPopup(targetUnderlayId, targetPopupId) {
-    console.log('showScopedPopup:', targetUnderlayId, targetPopupId);
-    const userInfoUnderlay = document.getElementById(targetUnderlayId);
-    while (userInfoUnderlay && userInfoUnderlay.classList.contains('hidden')) {
-        userInfoUnderlay.classList.remove('hidden');
-    }
-    const userInfoPopup = document.getElementById(targetPopupId);
-    while (userInfoPopup && userInfoPopup.classList.contains('hidden')) {
-        userInfoPopup.classList.remove('hidden');
-    }
-}
-
-function hideScopedPopup(targetUnderlayId, targetPopupId) {
-    console.log('hideScopedPopup:', targetUnderlayId, targetPopupId);
-    const userInfoPopup = document.getElementById(targetPopupId);
-    if (userInfoPopup && !userInfoPopup.classList.contains('hidden')) {
-        userInfoPopup.classList.add('hidden');
-    }
-    const userInfoUnderlay = document.getElementById(targetUnderlayId);
-    if (userInfoUnderlay && !userInfoUnderlay.classList.contains('hidden')) {
-        userInfoUnderlay.classList.add('hidden');
-    }
-}

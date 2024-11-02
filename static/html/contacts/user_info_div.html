@@ -1,12 +1,9 @@
 <div id="info-card-{{ .UserId }}"
-    onkeydown="escFocus(event)"
-    onfocusout="TODO()"
-    class="absolute flex flex-col 
-      bg-black bg-opacity-100
+    class="pointer-events-auto absolute flex flex-col 
+      bg-black bg-opacity-70
         top-0 left-0 w-64 max-h-64 
         overflow-x-hidden overflow-y-auto m-2 rounded-lg 
-        border-b-4 border-green-500 shadow-lg shadow-green-500
-        pointer-events-auto">
+        border-b-4 border-green-500 shadow-lg shadow-green-500">
     <div class="flex flex-col">
         <div id="info-card-{{ .UserId }}-user-info" class="flex justify-between">
             <div class="m-2">
@@ -27,9 +24,7 @@
             <h3>{{len .SharedChats}} Shared Chats</h3>
             <ul>
                 {{ range $index, $chat := .SharedChats }}
-                <li class="my-2">
                     {{ template "chat_li.html" $chat }}
-                </li>
                 {{ end }}
             </ul>
         </div>

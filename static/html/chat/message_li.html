@@ -82,7 +82,7 @@
     title="show user info card"
     hx-get="/infocard?userid={{ .AuthorId }}" 
     hx-trigger="mousedown"
-    hx-target="#user-info-card-{{ .AuthorId }}-{{ .IntermediateId }}"
+    hx-target="#user-info-card-chat-{{ .ChatId }}"
     hx-swap="innerHTML"
     DIS_hx-indicator="TODO"
     class="flex flex-row 
@@ -91,7 +91,7 @@
         shadow shadow-green-800
         hover:shadow-green-500
         hover:text-green-500">
-        <div id="user-info-card-{{ .AuthorId }}-{{ .IntermediateId }}" class="hidden"></div>
+        
     <div class="w-[1.5em] h-[1.5em] ml-0 mr-1">
         {{ template "avatar_div.html" .AuthorAvatar }}
     </div>
@@ -99,59 +99,4 @@
         [{{ .AuthorName }}]
     </div>
 </div>
-<script>
-(function() {
-    const hideScopedPopupTimeoutMs = 60/*sec*/ * 1000/*ms*/;
-    const clearCooldownTimeoutMs = 3/*sec*/ * 1000/*ms*/;
-    let hideTimeout = setTimeout(() => {}, 0);
-    let cooldownTimeout = setTimeout(() => {}, 0);
-    let onCooldown = false;
-    const hideTimerClear = () => {
-        if (hideTimeout) {
-            // TODO popup only ever disappears after initial timeout
-            clearTimeout(hideTimeout);
-        }
-    }
-    const cooldownClear = () => {
-        if (cooldownTimeout) {
-            clearTimeout(cooldownTimeout);
-        }
-        onCooldown = false;
-    }
-    document.body.addEventListener('focusleave', event => {
-        if (event?.detail?.target?.id === 'user-info-card-{{ .AuthorId }}-{{ .IntermediateId }}') {
-            hideTimerClear();
-            hideTimeout = setTimeout(
-                () => hideScopedPopup('user-info-card-{{ .AuthorId }}-{{ .IntermediateId }}'), 
-                hideScopedPopupTimeoutMs);
-        }
-    });
-    document.body.addEventListener('focusenter', event => {
-        if (event?.detail?.target?.id === 'user-info-card-{{ .AuthorId }}-{{ .IntermediateId }}' ||
-            event?.detail?.target?.id === 'msg-author-{{ .AuthorId }}-info-{{ .IntermediateId }}' ||
-            event?.detail?.target?.id === 'info-card-1-{{ .AuthorId }}') {
-            hideTimerClear()
-        }
-    });
-    document.body.addEventListener('htmx:beforeinput', event => {
-        if (event?.detail?.target?.id === 'msg-author-{{ .AuthorId }}-info-{{ .IntermediateId }}') {
-            if (onCooldown) { 
-                event.preventDefault(); 
-                return
-            } 
-            onCooldown = true;
-            cooldownTimeout = setTimeout(cooldownClear, clearCooldownTimeoutMs); 
-        }
-    });
-    document.body.addEventListener('htmx:afterSwap', event => {
-        if (event?.detail?.target?.id === 'user-info-card-{{ .AuthorId }}-{{ .IntermediateId }}') {
-            showScopedPopup('user-info-card-{{ .AuthorId }}-{{ .IntermediateId }}');
-            hideTimerClear();
-            hideTimeout = setTimeout(
-                () => hideScopedPopup('user-info-card-{{ .AuthorId }}-{{ .IntermediateId }}'), 
-                hideScopedPopupTimeoutMs);
-        }
-    });
-})();
-</script>
 {{ end }}

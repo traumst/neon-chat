@@ -1,3 +1,8 @@
+<div id="user-info-card-chat-{{ .ChatId }}" 
+    class="absolute hidden z-10"
+    TODO-onkeydown="escFocus(event)"
+    TODO-onfocusout="toggleScopedPopup()"
+></div>
 <ul hx-target=".message-list" 
     sse-swap="{{ .MessageAddEvent }}" 
     hx-swap="beforeend"
@@ -14,20 +19,49 @@
     {{ end }}
 </ul>
 <script>
-    messageListObserver = null;
-    messageListObserver = new MutationObserver(mutations => {
-        mutations.forEach(mutation => {
-            if (mutation.type === 'childList' || mutation.type === 'characterData') {
-                scrollToLastChild(mutation.target);
-            }
-        });
-    });
-    msgList = null;
-    msgList = document.querySelector(".message-list");
-    if (msgList) {
-        messageListObserverOptions = null;
-        messageListObserverOptions = { childList: true, subtree: true, characterData: true };
-        messageListObserver.observe(msgList, messageListObserverOptions);
+document.body.addEventListener('htmx:afterSwap', event => {
+    if (event?.detail?.target?.id === 'user-info-card-chat-{{ .ChatId }}') {
+        toggleScopedPopup(true);
     }
-    scrollToLastChild(msgList);
+});
+function toggleScopedPopup(show) {
+    const element = document.getElementById('user-info-card-chat-{{ .ChatId }}');
+    if (show) {
+        showScopedPopup(element);
+    } else {
+        hideScopedPopup(element);
+    }
+}
+function showScopedPopup(targetPopup) {
+    console.log('showScopedPopup:', targetPopup);
+    while (targetPopup.classList.contains('hidden')) {
+        targetPopup.classList.remove('hidden');
+    }
+    targetPopup.classList.add('flex');
+    setTimeout(() => hideScopedPopup(targetPopup), 3500);
+}
+function hideScopedPopup(targetPopup) {
+    console.log('hideScopedPopup:', targetPopup);
+    while (targetPopup.classList.contains('flex')) {
+        targetPopup.classList.remove('flex');
+    }
+    targetPopup.classList.add('hidden');
+}
+// 
+messageListObserver = null;
+messageListObserver = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+        if (mutation.type === 'childList' || mutation.type === 'characterData') {
+            scrollToLastChild(mutation.target);
+        }
+    });
+});
+msgList = null;
+msgList = document.querySelector(".message-list");
+if (msgList) {
+    messageListObserverOptions = null;
+    messageListObserverOptions = { childList: true, subtree: true, characterData: true };
+    messageListObserver.observe(msgList, messageListObserverOptions);
+}
+scrollToLastChild(msgList);
 </script>
