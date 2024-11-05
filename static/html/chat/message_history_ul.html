@@ -1,8 +1,4 @@
-<div id="user-info-card-chat-{{ .ChatId }}" 
-    class="absolute hidden z-10"
-    TODO-onkeydown="escFocus(event)"
-    TODO-onfocusout="toggleScopedPopup()"
-></div>
+<div id="user-info-card-chat-{{ .ChatId }}" class="absolute hidden z-10"></div>
 <ul hx-target=".message-list" 
     sse-swap="{{ .MessageAddEvent }}" 
     hx-swap="beforeend"
@@ -19,49 +15,99 @@
     {{ end }}
 </ul>
 <script>
-document.body.addEventListener('htmx:afterSwap', event => {
-    if (event?.detail?.target?.id === 'user-info-card-chat-{{ .ChatId }}') {
-        toggleScopedPopup(true);
-    }
-});
-function toggleScopedPopup(show) {
-    const element = document.getElementById('user-info-card-chat-{{ .ChatId }}');
-    if (show) {
-        showScopedPopup(element);
-    } else {
-        hideScopedPopup(element);
-    }
-}
-function showScopedPopup(targetPopup) {
-    console.log('showScopedPopup:', targetPopup);
-    while (targetPopup.classList.contains('hidden')) {
-        targetPopup.classList.remove('hidden');
-    }
-    targetPopup.classList.add('flex');
-    setTimeout(() => hideScopedPopup(targetPopup), 3500);
-}
-function hideScopedPopup(targetPopup) {
-    console.log('hideScopedPopup:', targetPopup);
-    while (targetPopup.classList.contains('flex')) {
-        targetPopup.classList.remove('flex');
-    }
-    targetPopup.classList.add('hidden');
-}
-// 
-messageListObserver = null;
-messageListObserver = new MutationObserver(mutations => {
-    mutations.forEach(mutation => {
-        if (mutation.type === 'childList' || mutation.type === 'characterData') {
-            scrollToLastChild(mutation.target);
+(function () {
+    // tracks previous top- and left- offset of the popup
+    const popupPrevOffsets = [];
+    const popupPrevTimers = [];
+    document.body.addEventListener('htmx:afterSwap', event => {
+        if (event?.detail?.target?.id !== 'user-info-card-chat-{{ .ChatId }}')
+            return;
+
+        const targetPopup = document.getElementById('user-info-card-chat-{{ .ChatId }}');
+        const triggerElement = event.detail.requestConfig.elt;
+        if (targetPopup.id == triggerElement.id){
+            console.error('WTF', "target", targetPopup, "trigger", triggerElement);
         }
+
+        showScopedPopup(targetPopup, triggerElement);
     });
-});
-msgList = null;
-msgList = document.querySelector(".message-list");
-if (msgList) {
-    messageListObserverOptions = null;
-    messageListObserverOptions = { childList: true, subtree: true, characterData: true };
-    messageListObserver.observe(msgList, messageListObserverOptions);
-}
-scrollToLastChild(msgList);
+    function clearPrevPopup(targetPopup) {
+        console.log('clearPrev triggered', targetPopup);
+        while (popupPrevTimers.length > 0) {
+            const prevTimer = popupPrevTimers.pop();
+            console.log('clearPrev clears timer', prevTimer);
+            clearTimeout(prevTimer);
+        }
+        while (popupPrevOffsets.length > 0) {
+            const prevOffset = popupPrevOffsets.pop();
+            console.log('clearPrev removes offset', prevOffset);
+            targetPopup.classList.remove(prevOffset);
+        }
+    }
+    // TODO messed up between targetPopup and triggerElement
+    function showScopedPopup(targetPopup, triggerElement) {
+        clearPrevPopup(targetPopup);
+        while (targetPopup.classList.contains('hidden')) {
+            targetPopup.classList.remove('hidden');
+        }
+
+        // calc offsets to fit popup within the viewport
+        const parentRect = targetPopup.parentElement.getBoundingClientRect();
+        const triggerRect = triggerElement.getBoundingClientRect();
+        const targetRect = targetPopup.childNodes[0].getBoundingClientRect();
+        /*
+        parent 
+        { width: 515, height: 690, top: 80, right: 811, bottom: 771, left: 295 }
+        target 
+        { width: 0, height: 0, top: 88, right: 303, bottom: 88, left: 303 }
+        trigger 
+        { width: 378, height: 23, top: 489, right: 776, bottom: 513, left: 398 }
+        */
+    //    console.log('parent', targetPopup.parentElement);
+    //    console.log('parent', parentRect);
+    //    console.log('trigger', triggerElement);
+    //    console.log('trigger', triggerRect);
+    //    console.log('target', targetPopup);
+    //    console.log('target', targetRect);
+    //    debugger;
+
+    //getComputedStyle(targetPopup.childNodes[0]).bottom.split('px')[0]
+    //"-272px" 
+
+        const leftOffset = triggerRect.left - parentRect.left;
+        const topOffset = triggerRect.top// - parentRect.top;
+
+        const topOffsetClass = `top-[${topOffset}px]`;
+        popupPrevOffsets.push(topOffsetClass);
+        targetPopup.classList.add(topOffsetClass);
+
+        const leftOffsetClass = `left-[${leftOffset}px]`;
+        popupPrevOffsets.push(leftOffsetClass);
+        targetPopup.classList.add(leftOffsetClass);
+
+        popupPrevTimers.push(setTimeout(() => hideScopedPopup(targetPopup), 3500 * 100));
+    }
+    function hideScopedPopup(targetPopup) {
+        console.log('hideScopedPopup triggered', targetPopup);
+        clearPrevPopup(targetPopup);
+        targetPopup.classList.add('hidden');
+    }
+    // 
+    messageListObserver = null;
+    messageListObserver = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                scrollToLastChild(mutation.target);
+            }
+        });
+    });
+    msgList = null;
+    msgList = document.querySelector(".message-list");
+    if (msgList) {
+        messageListObserverOptions = null;
+        messageListObserverOptions = { childList: true, subtree: true, characterData: true };
+        messageListObserver.observe(msgList, messageListObserverOptions);
+    }
+    scrollToLastChild(msgList);
+})();
 </script>
