@@ -34,6 +34,10 @@ func SetSseHeaders(w *http.ResponseWriter) {
 	(*w).Header().Set("Connection", "keep-alive")
 }
 
+func SetGzipHeaders(w *http.ResponseWriter) {
+	(*w).Header().Set("Content-Encoding", "gzip")
+}
+
 func ParseUrlArgs(r *http.Request) map[string]string {
 	args := make(map[string]string)
 	for k, v := range r.URL.Query() {

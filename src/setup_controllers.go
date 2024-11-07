@@ -13,16 +13,32 @@ import (
 func SetupControllers(state *state.State, dbConn *db.DBConn) {
 	withTx := middleware.TransactionMiddleware()
 	authValidate := middleware.AuthValidateMiddleware()
+	accessCtrl := middleware.AccessControlMiddleware()
 	conn := middleware.DBConnMiddleware(dbConn)
 	appState := middleware.AppStateMiddleware(state)
 	authRead := middleware.AuthReadMiddleware(state, dbConn)
 	writer := middleware.StatefulWriterMiddleware()
+	gzip := middleware.GZipMiddleware()
 	stamp := middleware.StampMiddleware()
 	// TODO uncomment for live
 	//recovery := middleware.RecoveryMiddleware()
 
 	// middlewares are loaded in reverse order - lifo
 	minMiddlewareSet := middleware.Middlewares{
+		accessCtrl,
+		conn,
+		appState,
+		authRead,
+		writer,
+		gzip,
+		stamp,
+		//recovery,
+	}
+	// sse hates gzip
+	maxUnzippedMiddleware := middleware.Middlewares{
+		withTx,
+		authValidate,
+		accessCtrl,
 		conn,
 		appState,
 		authRead,
@@ -30,14 +46,16 @@ func SetupControllers(state *state.State, dbConn *db.DBConn) {
 		stamp,
 		//recovery,
 	}
-	// middlewares are loaded in reverse order - lifo
+	// most endpoints need all middlewares
 	maxMiddleware := middleware.Middlewares{
 		withTx,
 		authValidate,
+		accessCtrl,
 		conn,
 		appState,
 		authRead,
 		writer,
+		gzip,
 		stamp,
 		//recovery,
 	}
@@ -54,7 +72,7 @@ func SetupControllers(state *state.State, dbConn *db.DBConn) {
 
 	// live updates
 	log.Println("...live update polling middleware", maxMiddleware)
-	http.Handle("/poll", maxMiddleware.Chain(
+	http.Handle("/poll", maxUnzippedMiddleware.Chain(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.PollUpdates(state, dbConn, w, r)
 		})))

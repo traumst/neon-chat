@@ -169,8 +169,6 @@
                 alert("Action failed!\nresponse details:\n" + 
                     `[${event.detail.xhr.status}:${event.detail.xhr.statusText}]` +
                     `${event.detail.xhr.responseText}`);
-
-                
                 console.error("bad int handleServerError", 
                     event.detail.xhr.responseURL, 
                     event.detail.xhr.status, 
