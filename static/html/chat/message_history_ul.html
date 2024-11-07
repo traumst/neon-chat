@@ -44,38 +44,17 @@
             targetPopup.classList.remove(prevOffset);
         }
     }
-    // TODO messed up between targetPopup and triggerElement
     function showScopedPopup(targetPopup, triggerElement) {
         clearPrevPopup(targetPopup);
         while (targetPopup.classList.contains('hidden')) {
             targetPopup.classList.remove('hidden');
         }
 
-        // calc offsets to fit popup within the viewport
         const parentRect = targetPopup.parentElement.getBoundingClientRect();
         const triggerRect = triggerElement.getBoundingClientRect();
-        const targetRect = targetPopup.childNodes[0].getBoundingClientRect();
-        /*
-        parent 
-        { width: 515, height: 690, top: 80, right: 811, bottom: 771, left: 295 }
-        target 
-        { width: 0, height: 0, top: 88, right: 303, bottom: 88, left: 303 }
-        trigger 
-        { width: 378, height: 23, top: 489, right: 776, bottom: 513, left: 398 }
-        */
-    //    console.log('parent', targetPopup.parentElement);
-    //    console.log('parent', parentRect);
-    //    console.log('trigger', triggerElement);
-    //    console.log('trigger', triggerRect);
-    //    console.log('target', targetPopup);
-    //    console.log('target', targetRect);
-    //    debugger;
-
-    //getComputedStyle(targetPopup.childNodes[0]).bottom.split('px')[0]
-    //"-272px" 
-
         const leftOffset = triggerRect.left - parentRect.left;
-        const topOffset = triggerRect.top// - parentRect.top;
+        const topOffset = triggerRect.top + targetPopup.scrollHeight < window.innerHeight ? 
+            triggerRect.top : window.innerHeight - 1.3 * targetPopup.scrollHeight;
 
         const topOffsetClass = `top-[${topOffset}px]`;
         popupPrevOffsets.push(topOffsetClass);
@@ -85,7 +64,8 @@
         popupPrevOffsets.push(leftOffsetClass);
         targetPopup.classList.add(leftOffsetClass);
 
-        popupPrevTimers.push(setTimeout(() => hideScopedPopup(targetPopup), 3500 * 100));
+        // TODO hide on click outside the popup
+        popupPrevTimers.push(setTimeout(() => hideScopedPopup(targetPopup), 3500));
     }
     function hideScopedPopup(targetPopup) {
         console.log('hideScopedPopup triggered', targetPopup);
