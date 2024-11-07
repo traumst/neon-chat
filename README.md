@@ -17,35 +17,33 @@ This app is being build as an excercise for me to
     <summary>
         <b>Roadmap</b>
     </summary>
+
 ## TODOs
-|-------------------------------------------------------------|
-|---  from: 2024-11-07  --------------------------------------|
-|-------------------------------------------------------------|
-+ gzip responses (1 week)
-+ store sessions in db, keep between restarts (2 days)
-+ add api throttling (1 week)
-+ sanitize user input against XSS attacks (1 week)
-+ need [Regular Maintenance: VACUUM and Analyze] (1 week)
+
++ store sessions in db, keep between restarts
++ add api throttling
++ sanitize user input against XSS attacks
++ need [Regular Maintenance: VACUUM and Analyze]
     + run `PRAGMA incremental_vacuum;` periodically to reclaim space
     + db does not shrink, need to [do a VACUUM](https://www.sqlite.org/lang_vacuum.html)
 + db
-    + add db query-response caching (2 weeks)
-    + consider [conn pool for db](https://github.com/jmoiron/sqlx/issues/300) (1 week)
+    + add db query-response caching
+    + consider [conn pool for db](https://github.com/jmoiron/sqlx/issues/300)
     + add timestamps to every table:
         * created
         * updated
-+ docker setup: pod + persistent storage [1 week]
-+ deployment github action
 
 ### Next up
 
-+ add log trace to all methods (1 day)
-+ logrotate (1 week)
-+ log levels with [slog in GO 1.23](https://pkg.go.dev/log/slog#Debug) (1 week)
-+ change chat title (1 week)
-+ collapsible / resizable left panel (2 weeks)
-+ add contacts page / address book (2 weeks)
++ add log trace to all methods
++ logrotate
++ log levels with [slog in GO 1.23](https://pkg.go.dev/log/slog#Debug)
++ change chat title
++ collapsible / resizable left panel
++ add contacts page / address book
     * limit who can invite add / you
++ docker setup: pod + persistent storage
++ deployment github action
 
 ## Backlog
 
