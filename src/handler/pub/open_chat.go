@@ -18,7 +18,7 @@ func OpenChat(
 ) (*app.Chat, error) {
 	err := state.OpenChat(user.Id, chatId)
 	if err != nil {
-		log.Printf("HandleChatOpen ERROR opening chat[%d] for user[%d], %s\n", chatId, user.Id, err.Error())
+		log.Printf("ERROR HandleChatOpen opening chat[%d] for user[%d], %s\n", chatId, user.Id, err.Error())
 		return nil, fmt.Errorf("opening chat[%d] for user[%d], %s", chatId, user.Id, err.Error())
 	}
 	openChatId := state.GetOpenChat(user.Id)
@@ -27,7 +27,7 @@ func OpenChat(
 	}
 	appChat, err := priv.GetChat(state, dbConn.Conn, user, chatId)
 	if err != nil {
-		log.Printf("HandleChatOpen ERROR opening chat[%d] for user[%d], %s\n", chatId, user.Id, err.Error())
+		log.Printf("ERROR HandleChatOpen opening chat[%d] for user[%d], %s\n", chatId, user.Id, err.Error())
 		return nil, fmt.Errorf("getting chat[%d] for user[%d], %s", chatId, user.Id, err.Error())
 	}
 	return appChat, nil

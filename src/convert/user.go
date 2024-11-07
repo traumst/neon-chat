@@ -29,6 +29,15 @@ func UserDBToApp(user *db.User, avatar *db.Avatar) *app.User {
 	}
 	if avatar != nil {
 		u.Avatar = AvatarDBToApp(avatar)
+	} else {
+		u.Avatar = &app.Avatar{
+			Id:     0,
+			UserId: 0,
+			Title:  "",
+			Size:   "",
+			Image:  []byte{},
+			Mime:   "",
+		}
 	}
 	return u
 }

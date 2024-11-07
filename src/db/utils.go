@@ -18,7 +18,7 @@ func (dbConn *DBConn) TableExists(tableName string) bool {
 		if err == sql.ErrNoRows {
 			return false
 		} else {
-			log.Printf("DBConn.TableExists ERROR checked[%s] found[%s], %s", tableName, tableName, err.Error())
+			log.Printf("ERROR DBConn.TableExists checked[%s] found[%s], %s", tableName, tableName, err.Error())
 			return false
 		}
 	}

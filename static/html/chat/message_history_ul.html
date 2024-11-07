@@ -1,3 +1,4 @@
+<div id="user-info-card-chat-{{ .ChatId }}" class="absolute hidden z-10"></div>
 <ul hx-target=".message-list" 
     sse-swap="{{ .MessageAddEvent }}" 
     hx-swap="beforeend"
@@ -14,6 +15,64 @@
     {{ end }}
 </ul>
 <script>
+(function () {
+    // tracks previous top- and left- offset of the popup
+    const popupPrevOffsets = [];
+    const popupPrevTimers = [];
+    document.body.addEventListener('htmx:afterSwap', event => {
+        if (event?.detail?.target?.id !== 'user-info-card-chat-{{ .ChatId }}')
+            return;
+
+        const targetPopup = document.getElementById('user-info-card-chat-{{ .ChatId }}');
+        const triggerElement = event.detail.requestConfig.elt;
+        if (targetPopup.id == triggerElement.id){
+            console.error('WTF', "target", targetPopup, "trigger", triggerElement);
+        }
+
+        showScopedPopup(targetPopup, triggerElement);
+    });
+    function clearPrevPopup(targetPopup) {
+        console.log('clearPrev triggered', targetPopup);
+        while (popupPrevTimers.length > 0) {
+            const prevTimer = popupPrevTimers.pop();
+            console.log('clearPrev clears timer', prevTimer);
+            clearTimeout(prevTimer);
+        }
+        while (popupPrevOffsets.length > 0) {
+            const prevOffset = popupPrevOffsets.pop();
+            console.log('clearPrev removes offset', prevOffset);
+            targetPopup.classList.remove(prevOffset);
+        }
+    }
+    function showScopedPopup(targetPopup, triggerElement) {
+        clearPrevPopup(targetPopup);
+        while (targetPopup.classList.contains('hidden')) {
+            targetPopup.classList.remove('hidden');
+        }
+
+        const parentRect = targetPopup.parentElement.getBoundingClientRect();
+        const triggerRect = triggerElement.getBoundingClientRect();
+        const leftOffset = triggerRect.left - parentRect.left;
+        const topOffset = triggerRect.top + targetPopup.scrollHeight < window.innerHeight ? 
+            triggerRect.top : window.innerHeight - 1.3 * targetPopup.scrollHeight;
+
+        const topOffsetClass = `top-[${topOffset}px]`;
+        popupPrevOffsets.push(topOffsetClass);
+        targetPopup.classList.add(topOffsetClass);
+
+        const leftOffsetClass = `left-[${leftOffset}px]`;
+        popupPrevOffsets.push(leftOffsetClass);
+        targetPopup.classList.add(leftOffsetClass);
+
+        // TODO hide on click outside the popup
+        popupPrevTimers.push(setTimeout(() => hideScopedPopup(targetPopup), 3500));
+    }
+    function hideScopedPopup(targetPopup) {
+        console.log('hideScopedPopup triggered', targetPopup);
+        clearPrevPopup(targetPopup);
+        targetPopup.classList.add('hidden');
+    }
+    // 
     messageListObserver = null;
     messageListObserver = new MutationObserver(mutations => {
         mutations.forEach(mutation => {
@@ -30,4 +89,5 @@
         messageListObserver.observe(msgList, messageListObserverOptions);
     }
     scrollToLastChild(msgList);
+})();
 </script>

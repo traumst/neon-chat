@@ -18,7 +18,7 @@ func AddMessage(
 	msg string,
 	quoteId uint,
 ) (*app.Chat, *app.Message, error) {
-	log.Printf("HandleMessageAdd TRACE opening current chat for user[%d]\n", author.Id)
+	log.Printf("TRACE HandleMessageAdd opening current chat for user[%d]\n", author.Id)
 	canChat, err := db.UsersCanChat(dbConn.Tx, chatId, author.Id)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to check user[%d] can chat[%d]: %s", author.Id, chatId, err.Error())

@@ -43,7 +43,7 @@ func GetChatMessages(dbConn sqlx.Ext, chatId uint) ([]*app.Message, error) {
 	for _, dbMsg := range dbMsgs {
 		author, ok := appUsers[dbMsg.AuthorId]
 		if !ok {
-			log.Printf("GetChatMessages ERROR author[%d] of message[%d] is not mapped\n", dbMsg.AuthorId, dbMsg.Id)
+			log.Printf("ERROR GetChatMessages author[%d] of message[%d] is not mapped\n", dbMsg.AuthorId, dbMsg.Id)
 			continue
 		}
 		// ignore quote here

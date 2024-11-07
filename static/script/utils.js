@@ -24,7 +24,7 @@ function removeElements({classSelector, idSelectorException}) {
     }
 }
 
-var scrollIntoView = async (elemId) => {
+async function scrollIntoView(elemId) {
     const target = document.querySelectorAll(elemId);
     if (target.length != 1) {
         console.error(
@@ -46,9 +46,9 @@ var scrollIntoView = async (elemId) => {
             target[0].classList.remove('flash-golden');
         }, 4000); // must be longer than animation duration
     }
-};
+}
 
-var scrollToFirstChild = (parent) => {
+function scrollToFirstChild(parent){
     if (!parent || !parent.children.length) {
         return;
     }
@@ -62,9 +62,9 @@ var scrollToFirstChild = (parent) => {
     } else {
         console.error(`scrollToFirstChild: parent ${parent.id} not found`)
     }
-};
+}
 
-var scrollToLastChild = (parent) => {
+function scrollToLastChild(parent) {
     if (!parent || !parent.children.length) {
         return;
     }
@@ -78,4 +78,4 @@ var scrollToLastChild = (parent) => {
     } else {
         console.error('scrollToLastChild: not found parent', parent.id);
     }
-};
+}

@@ -12,9 +12,10 @@ import (
 )
 
 func main() {
-	log.Println("Starting up...")
-	src.SetupGlobalLogger(true, false)
+	log.Println("Reading config...")
 	config := src.ReadEnvConfig()
+	log.Println("Setup logger...")
+	src.SetupGlobalLogger(config.Log.Stdout, config.Log.Dir)
 	log.Println("Connecting db...")
 	db := src.ConnectDB(config.Sqlite)
 	log.Println("Verifying db requirements...")

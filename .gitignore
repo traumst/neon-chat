@@ -18,3 +18,4 @@ neon-chat
 launch.json
 _bugz/
 credentials.dev.json
+*.csv

@@ -29,13 +29,13 @@ func (cl *OpenChats) OpenChat(userId uint, chatId uint) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	if cl.open[userId] == nil {
-		log.Printf("OpenChat TRACE user[%d] has no open chats, opening chat[%d]", userId, chatId)
+		log.Printf("TRACE OpenChat user[%d] has no open chats, opening chat[%d]", userId, chatId)
 		cl.open[userId] = []uint{chatId}
 		return
 	}
 	for _, userChats := range cl.open[userId] {
 		if userChats == chatId {
-			log.Printf("OpenChat INFO user[%d] already has chat[%d] open", userId, chatId)
+			log.Printf("INFO OpenChat user[%d] already has chat[%d] open", userId, chatId)
 			return
 		}
 	}
@@ -47,15 +47,15 @@ func (cl *OpenChats) CloseChat(userId uint, chatId uint) {
 	defer cl.mu.Unlock()
 	openChats := cl.open[userId]
 	if len(openChats) <= 0 {
-		log.Printf("CloseChat TRACE user[%d] has no open chats", userId)
+		log.Printf("TRACE CloseChat user[%d] has no open chats", userId)
 		return
 	}
 	for i, openChat := range openChats {
 		if openChat == chatId {
-			log.Printf("CloseChat INFO user[%d] closes chat[%d]", userId, chatId)
+			log.Printf("INFO CloseChat user[%d] closes chat[%d]", userId, chatId)
 			cl.open[userId] = append(openChats[:i], openChats[i+1:]...)
 			return
 		}
 	}
-	log.Printf("CloseChat INFO user[%d] does not have chat[%d]", userId, chatId)
+	log.Printf("INFO CloseChat user[%d] does not have chat[%d]", userId, chatId)
 }

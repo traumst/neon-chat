@@ -11,7 +11,7 @@ import (
 )
 
 func GetUser(dbConn sqlx.Ext, userId uint) (*app.User, error) {
-	log.Printf("GetUser TRACE user[%d]\n", userId)
+	log.Printf("TRACE GetUser user[%d]\n", userId)
 	dbUser, err := db.GetUser(dbConn, userId)
 	if err != nil {
 		return nil, fmt.Errorf("user[%d] not found: %s", userId, err.Error())

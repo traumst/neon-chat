@@ -15,13 +15,12 @@ import (
 
 func OpenSettings(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("[%s] OpenSettings\n", reqId)
+	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.RequestURI)
 	if r.Method != "GET" {
-		log.Printf("[%s] OpenSettings TRACE auth does not allow %s\n", reqId, r.Method)
+		log.Printf("TRACE [%s] '%s' is not allowed at '%s'\n", reqId, r.Method, r.RequestURI)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-
 	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
@@ -30,12 +29,11 @@ func OpenSettings(w http.ResponseWriter, r *http.Request) {
 	if openChatId > 0 {
 		chat, err := db.GetChat(dbConn.Conn, openChatId)
 		if err != nil || chat == nil {
-			log.Printf("[%s] OpenSettings ERROR retrieving open chat[%d] data %s\n", reqId, openChatId, err)
+			log.Printf("ERROR [%s] retrieving open chat[%d] data %s\n", reqId, openChatId, err)
 		} else {
 			chatOwnerId = chat.OwnerId
 		}
 	}
-
 	var avatarTmpl template.AvatarTemplate
 	if avatar, _ := db.GetAvatar(dbConn.Conn, user.Id); avatar != nil {
 		appAvatar := convert.AvatarDBToApp(avatar)
@@ -51,7 +49,7 @@ func OpenSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	html, err := settings.HTML()
 	if err != nil {
-		log.Printf("[%s] OpenSettings ERROR %s\n", reqId, err)
+		log.Printf("ERROR [%s] failed to template settings: %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to template response"))
 		return
@@ -62,19 +60,17 @@ func OpenSettings(w http.ResponseWriter, r *http.Request) {
 
 func CloseSettings(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("[%s] CloseSettings\n", reqId)
+	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.RequestURI)
 	if r.Method != "GET" {
-		log.Printf("[%s] CloseSettings TRACE auth does not allow %s\n", reqId, r.Method)
+		log.Printf("TRACE [%s] '%s' is not allowed at '%s'\n", reqId, r.Method, r.RequestURI)
 		http.Header.Add(w.Header(), "HX-Refresh", "true")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("User is unauthorized"))
 		return
 	}
-
 	user := r.Context().Value(consts.ActiveUser).(*app.User)
 	state := r.Context().Value(consts.AppState).(*state.State)
 	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
-
 	var html string
 	var err error
 	openChat := shared.TemplateOpenChat(state, dbConn, user)
@@ -84,12 +80,11 @@ func CloseSettings(w http.ResponseWriter, r *http.Request) {
 		html, err = openChat.HTML()
 	}
 	if err != nil {
-		log.Printf("[%s] CloseSettings ERROR failed to template, chat[%t] %s\n", reqId, openChat == nil, err)
+		log.Printf("ERROR [%s] failed to template open chat, wasNull[%t], %s\n", reqId, openChat == nil, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to template response"))
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(html))
 }

@@ -36,7 +36,7 @@ func (n node) Next() (bool, i.Identifiable) {
 
 func NewLinkedList(size int) *DoublyLinkedList {
 	if size < 1 || consts.MaxCacheSize < size {
-		log.Printf("DoublyLinkedList.NewLinkedList WARN overriding stupid size[%d] to default[%d]",
+		log.Printf("WARN DoublyLinkedList.NewLinkedList overriding stupid size[%d] to default[%d]",
 			size, consts.MaxCacheSize)
 		size = consts.MaxCacheSize
 	}
@@ -112,18 +112,18 @@ func (ll *DoublyLinkedList) Bump(node *node) ([]uint, error) {
 	if err == nil {
 		return nil, nil
 	}
-	log.Printf("DoublyLinkedList.Bump WARN failed to re-add node[%d], %s", node.id, err.Error())
+	log.Printf("WARN DoublyLinkedList.Bump failed to re-add node[%d], %s", node.id, err.Error())
 	pruneCount, pruneIds, pruneErr := ll.Prune(0)
 	if pruneErr != nil {
-		log.Printf("DoublyLinkedList.Bump ERROR failed prunned[%d], %s", pruneCount, pruneErr.Error())
+		log.Printf("ERROR DoublyLinkedList.Bump failed prunned[%d], %s", pruneCount, pruneErr.Error())
 		return pruneIds, fmt.Errorf("%s, %s", err.Error(), pruneErr.Error())
 	}
 	retryErr := ll.AddHead(removed)
 	if retryErr != nil {
-		log.Printf("DoublyLinkedList.Bump ERROR failed adding after crop node[%d], %s", node.id, retryErr.Error())
+		log.Printf("ERROR DoublyLinkedList.Bump failed adding after crop node[%d], %s", node.id, retryErr.Error())
 		return pruneIds, fmt.Errorf("%s, %s", err.Error(), retryErr.Error())
 	} else {
-		log.Printf("DoublyLinkedList.Bump TRACE added after crop node[%d]", node.id)
+		log.Printf("TRACE DoublyLinkedList.Bump added after crop node[%d]", node.id)
 		return pruneIds, nil
 	}
 }
@@ -132,7 +132,7 @@ func (ll *DoublyLinkedList) Bump(node *node) ([]uint, error) {
 func (ll *DoublyLinkedList) Prune(drop int) (int, []uint, error) {
 	if drop < 1 || drop > consts.MaxCacheSize {
 		def := 1 + (ll.Size() / 8)
-		log.Printf("DoublyLinkedList.Prune WARN stupid prune size, should fulfill [1 <= %d <= %d], using default[%d]",
+		log.Printf("WARN DoublyLinkedList.Prune stupid prune size, should fulfill [1 <= %d <= %d], using default[%d]",
 			drop, consts.MaxCacheSize, def)
 		drop = def
 	}
@@ -175,11 +175,11 @@ func (ll *DoublyLinkedList) Remove(id uint) *node {
 func (ll *DoublyLinkedList) removeHead() *node {
 	removed := ll.head
 	if ll.head == ll.tail {
-		log.Printf("DoublyLinkedList.removeHead TRACE removing last[%d]", ll.head.id)
+		log.Printf("TRACE DoublyLinkedList.removeHead removing last[%d]", ll.head.id)
 		ll.head = nil
 		ll.tail = nil
 	} else {
-		log.Printf("DoublyLinkedList.removeHead TRACE removing head[%d]", ll.head.id)
+		log.Printf("TRACE DoublyLinkedList.removeHead removing head[%d]", ll.head.id)
 		ll.head = removed.next
 	}
 	return removed
@@ -190,29 +190,29 @@ func (ll *DoublyLinkedList) removeTail() *node {
 	}
 	removed := ll.tail
 	if ll.tail == ll.head {
-		log.Printf("DoublyLinkedList.removeTail TRACE removing last[%d]", ll.head.id)
+		log.Printf("TRACE DoublyLinkedList.removeTail removing last[%d]", ll.head.id)
 		ll.head = nil
 		ll.tail = nil
 	} else {
-		log.Printf("DoublyLinkedList.removeTail TRACE removing tail[%d]", ll.head.id)
+		log.Printf("TRACE DoublyLinkedList.removeTail removing tail[%d]", ll.head.id)
 		ll.tail = removed.prev
 		ll.tail.next = nil
 	}
 	return removed
 }
 func (ll *DoublyLinkedList) removeNode(id uint) *node {
-	log.Printf("DoublyLinkedList.removeNode TRACE any node[%d]", id)
+	log.Printf("TRACE DoublyLinkedList.removeNode any node[%d]", id)
 	current := ll.head
 	for current != nil && current.id != id {
 		if current.id == id {
-			log.Printf("DoublyLinkedList.removeNode TRACE removing node[%d]", id)
+			log.Printf("TRACE DoublyLinkedList.removeNode removing node[%d]", id)
 			if current.prev != nil {
-				log.Printf("DoublyLinkedList.removeNode TRACE node[%d] link prev[%d] to next[%d]",
+				log.Printf("TRACE DoublyLinkedList.removeNode node[%d] link prev[%d] to next[%d]",
 					id, current.prev.id, current.next.id)
 				current.prev.next = current.next
 			}
 			if current.next != nil {
-				log.Printf("DoublyLinkedList.removeNode TRACE node[%d] link next[%d] to prev[%d]",
+				log.Printf("TRACE DoublyLinkedList.removeNode node[%d] link next[%d] to prev[%d]",
 					id, current.next.id, current.prev.id)
 				current.next.prev = current.prev
 			}
@@ -220,6 +220,6 @@ func (ll *DoublyLinkedList) removeNode(id uint) *node {
 		}
 		current = current.next
 	}
-	log.Printf("DoublyLinkedList.removeNode INFO not found node[%d]", id)
+	log.Printf("INFO DoublyLinkedList.removeNode not found node[%d]", id)
 	return current
 }

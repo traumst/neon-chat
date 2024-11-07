@@ -13,8 +13,6 @@ import (
 )
 
 func NavigateHome(w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("TRACE [%s] NavigateHome\n", reqId)
 	user := r.Context().Value(consts.ActiveUser)
 	if user != nil {
 		RenderHome(w, r)
@@ -25,7 +23,7 @@ func NavigateHome(w http.ResponseWriter, r *http.Request) {
 
 func RenderHome(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("TRACE [%s] RenderHome\n", reqId)
+	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.RequestURI)
 	ctx := r.Context()
 	html, err := shared.TemplateHome(
 		ctx.Value(consts.AppState).(*state.State),
@@ -33,7 +31,7 @@ func RenderHome(w http.ResponseWriter, r *http.Request) {
 		ctx.Value(consts.ActiveUser).(*app.User),
 	)
 	if err != nil {
-		log.Printf("[%s] RenderHome ERROR failed to template home, %s\n", reqId, err)
+		log.Printf("ERROR [%s] failed to template home, %s\n", reqId, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to render home page"))
 		return
@@ -43,6 +41,8 @@ func RenderHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func RenderLogin(w http.ResponseWriter, r *http.Request) {
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
+	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.RequestURI)
 	login := template.AuthTemplate{}
 	home := template.HomeTemplate{
 		Chats:         nil,

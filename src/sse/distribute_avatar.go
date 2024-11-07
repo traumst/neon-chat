@@ -56,7 +56,7 @@ func avatarChanged(conns []*state.Conn, user *app.User, avatar *app.Avatar) erro
 	if user == nil || avatar == nil {
 		return fmt.Errorf("arguments were nil, user[%v], avatar[%v]", user, avatar)
 	}
-	log.Printf("avatarChanged TRACE informing target[%d] about subject[%d] new avatar[%d]\n",
+	log.Printf("TRACE avatarChanged informing target[%d] about subject[%d] new avatar[%d]\n",
 		conns[0].User.Id, user.Id, avatar.Id)
 	tmpl := avatar.Template(user)
 	data, err := tmpl.HTML()

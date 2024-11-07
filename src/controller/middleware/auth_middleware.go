@@ -14,9 +14,9 @@ func AuthReadMiddleware(state *state.State, dbConn *db.DBConn) Middleware {
 	return Middleware{
 		Name: "AuthRead",
 		Func: func(next http.Handler) http.Handler {
-			log.Println("TRACE with auth read middleware")
+			//log.Println("TRACE with auth read middleware")
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				log.Println(r.Context().Value(consts.ReqIdKey).(string), "TRACE reading user session auth")
+				log.Printf("TRACE [%s] reading session for '%s' '%s'\n", r.Context().Value(consts.ReqIdKey).(string), r.Method, r.RequestURI)
 				user, _ := pub.ReadSession(state, dbConn, w, r)
 				ctx := r.Context()
 				if user != nil {
@@ -29,13 +29,13 @@ func AuthReadMiddleware(state *state.State, dbConn *db.DBConn) Middleware {
 }
 
 func AuthValidateMiddleware() Middleware {
-	log.Println("TRACE with auth validate middleware")
+	//log.Println("TRACE with auth validate middleware")
 	return Middleware{
 		Name: "AuthValidate",
 		Func: func(next http.Handler) http.Handler {
-			log.Println("TRACE with auth read middleware")
+			//log.Println("TRACE with auth read middleware")
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				log.Println(r.Context().Value(consts.ReqIdKey).(string), "TRACE validating user session auth")
+				log.Printf("TRACE [%s] validating session for '%s' '%s'\n", r.Context().Value(consts.ReqIdKey).(string), r.Method, r.RequestURI)
 				ctx := r.Context()
 				if ctx.Value(consts.ActiveUser) == nil {
 					w.WriteHeader(http.StatusUnauthorized)

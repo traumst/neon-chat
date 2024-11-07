@@ -56,11 +56,13 @@
             </button>
         </form>
         <script>
-            document.body.addEventListener('htmx:afterSwap', event => {
-                const newChatName = document.getElementById('newChatName');
-                if (newChatName) {
-                    newChatName.value = '';
-                }
+            document.addEventListener('load', () => {
+                document.body.addEventListener('htmx:afterSwap', event => {
+                    const newChatName = document.getElementById('newChatName');
+                    if (newChatName) {
+                        newChatName.value = '';
+                    }
+                });
             });
         </script>
     </div>
@@ -93,23 +95,23 @@
         {{ end }}
         </ul>
         <script>
-            chatHeaderObserver = null;
-            chatHeaderObserver = new MutationObserver(mutations => {
-                mutations.forEach(mutation => {
-                    if (mutation.type === 'childList' || mutation.type === 'characterData') {
-                        scrollToFirstChild(mutation.target);
-                    }
+            document.addEventListener('load', () => {
+                const chatHeaderObserver = new MutationObserver(mutations => {
+                    mutations.forEach(mutation => {
+                        if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                            scrollToFirstChild(mutation.target);
+                        }
+                    });
                 });
+                
+                const chatHeaders = document.querySelector(".chat-headers");
+                if (chatHeaders) {
+                    chatHeaderObserverOptions = null;
+                    chatHeaderObserverOptions = { childList: true, subtree: true, characterData: true };
+                    chatHeaderObserver.observe(chatHeaders, chatHeaderObserverOptions);
+                }
+                scrollToFirstChild(chatHeaders);
             });
-
-            chatHeaders = null;
-            chatHeaders = document.querySelector(".chat-headers");
-            if (chatHeaders) {
-                chatHeaderObserverOptions = null;
-                chatHeaderObserverOptions = { childList: true, subtree: true, characterData: true };
-                chatHeaderObserver.observe(chatHeaders, chatHeaderObserverOptions);
-            }
-            scrollToFirstChild(chatHeaders);
         </script>
     </div>
 </div>

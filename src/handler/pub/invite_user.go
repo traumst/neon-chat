@@ -21,24 +21,24 @@ func InviteUser(
 ) (*app.Chat, *app.User, error) {
 	appInvitee, err := searchUser(dbConn.Tx, inviteeName)
 	if err != nil {
-		log.Printf("HandleUserInvite ERROR invitee not found [%s], %s\n", inviteeName, err.Error())
+		log.Printf("ERROR HandleUserInvite invitee not found [%s], %s\n", inviteeName, err.Error())
 		return nil, nil, fmt.Errorf("invitee not found")
 	} else if appInvitee == nil {
-		log.Printf("HandleUserInvite WARN invitee not found [%s]\n", inviteeName)
+		log.Printf("WARN HandleUserInvite invitee not found [%s]\n", inviteeName)
 		return nil, nil, nil
 	}
 	appChat, err := priv.GetChat(state, dbConn.Tx, user, chatId)
 	if err != nil {
-		log.Printf("HandleUserInvite ERROR user[%d] cannot invite into chat[%d], %s\n",
+		log.Printf("ERROR HandleUserInvite user[%d] cannot invite into chat[%d], %s\n",
 			user.Id, chatId, err.Error())
 		return nil, nil, fmt.Errorf("cannot find chat: %s", err.Error())
 	} else if appChat == nil {
-		log.Printf("HandleUserInvite WARN user[%d] cannot invite into chat[%d]\n", user.Id, chatId)
+		log.Printf("WARN HandleUserInvite user[%d] cannot invite into chat[%d]\n", user.Id, chatId)
 		return nil, nil, fmt.Errorf("chat not found")
 	}
 	err = db.AddChatUser(dbConn.Tx, chatId, appInvitee.Id)
 	if err != nil {
-		log.Printf("HandleUserInvite ERROR failed to add user[%d] to chat[%d] in db, %s\n",
+		log.Printf("ERROR HandleUserInvite failed to add user[%d] to chat[%d] in db, %s\n",
 			appInvitee.Id, chatId, err.Error())
 		return nil, nil, fmt.Errorf("failed to add user to chat in db")
 	}
@@ -46,7 +46,7 @@ func InviteUser(
 }
 
 func searchUser(dbConn sqlx.Ext, userName string) (*app.User, error) {
-	log.Printf("FindUser TRACE IN user[%s]\n", userName)
+	log.Printf("TRACE FindUser IN user[%s]\n", userName)
 	dbUser, err := db.SearchUser(dbConn, userName)
 	if err != nil {
 		return nil, fmt.Errorf("user[%s] not found: %s", userName, err.Error())
@@ -56,6 +56,6 @@ func searchUser(dbConn sqlx.Ext, userName string) (*app.User, error) {
 		dbAvatar, _ = db.GetAvatar(dbConn, dbUser.Id)
 	}
 
-	log.Printf("FindUser TRACE OUT user[%s]\n", userName)
+	log.Printf("TRACE FindUser OUT user[%s]\n", userName)
 	return convert.UserDBToApp(dbUser, dbAvatar), nil
 }

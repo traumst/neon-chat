@@ -20,8 +20,8 @@
         hover:shadow-green-500
         hover:text-green-500">
     <div class="chat-message-content 
-        flex flex-col 
-        overflow-hidden">
+            flex flex-col 
+            overflow-hidden">
         {{ with $quote := .Quote }}
             {{ if ne $quote.MsgId 0 }}
                 <div class="flex flex-col
@@ -36,14 +36,9 @@
                 </div>
             {{ end }}
         {{ end }}
-        <div class="flex flex-row m-r-auto">
-            <div class="w-[1.5em] h-[1.5em] ml-0 mr-1">
-                {{ template "avatar_div.html" .AuthorAvatar }}
-            </div>
-            <div class="mr-0">
-                [{{ .AuthorName }}]
-            </div>
-        </div>
+        
+        {{ template "msg-author-details" . }}
+
         <div class="mt-2 ml-1 flex flex-col">
             <div class="break-all">
                 {{ .Text }}
@@ -81,3 +76,27 @@
         </script>
     </div>
 </li>
+
+{{ define "msg-author-details" }}
+<div id="msg-author-{{ .AuthorId }}-info-{{ .IntermediateId }}" 
+    title="show user info card"
+    hx-get="/infocard?userid={{ .AuthorId }}" 
+    hx-trigger="mousedown"
+    hx-target="#user-info-card-chat-{{ .ChatId }}"
+    hx-swap="innerHTML"
+    DIS_hx-indicator="TODO"
+    class="flex flex-row 
+        m-r-auto
+        border-b-4 border-indigo-700 rounded-lg
+        shadow shadow-green-800
+        hover:shadow-green-500
+        hover:text-green-500">
+        
+    <div class="w-[1.5em] h-[1.5em] ml-0 mr-1">
+        {{ template "avatar_div.html" .AuthorAvatar }}
+    </div>
+    <div class="mr-0">
+        [{{ .AuthorName }}]
+    </div>
+</div>
+{{ end }}

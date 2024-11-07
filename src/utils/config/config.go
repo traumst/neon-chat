@@ -5,6 +5,7 @@ import (
 )
 
 type Config struct {
+	Log            LogConfig
 	Port           int
 	Sqlite         string
 	Smtp           SmtpConfig
@@ -13,8 +14,20 @@ type Config struct {
 	TestDataInsert bool
 }
 
-func (a *Config) String() string {
-	return fmt.Sprintf("{Port:%d,Sqlite:%s}", a.Port, a.Sqlite)
+func (config *Config) String() string {
+	acc := fmt.Sprintln("port:", config.Port)
+	acc += fmt.Sprintln("dbfile:", config.Sqlite)
+	acc += fmt.Sprintln("stdout:", config.Log.Stdout)
+	acc += fmt.Sprintln("stdout:", config.Log.Dir)
+	acc += fmt.Sprintln("cache:", config.CacheSize)
+	acc += fmt.Sprintln("testUser:", config.TestUsers)
+	acc += fmt.Sprintln("testDataInsert:", config.TestDataInsert)
+	return acc
+}
+
+type LogConfig struct {
+	Stdout bool
+	Dir    string
 }
 
 type SmtpConfig struct {
@@ -38,4 +51,16 @@ func (tu TestUsers) GetNames() []string {
 		names = append(names, u.Name)
 	}
 	return names
+}
+
+func (tu TestUsers) String() string {
+	acc := "["
+	for _, u := range tu {
+		acc += fmt.Sprintf("\n name:%s,email:%s,pass:%s", u.Name, u.Email, u.Pass)
+	}
+	if len(tu) > 1 {
+		acc += "\n"
+	}
+	acc += "]"
+	return acc
 }

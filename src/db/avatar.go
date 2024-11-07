@@ -73,10 +73,12 @@ func GetAvatar(dbConn sqlx.Ext, userId uint) (*Avatar, error) {
 	if userId <= 0 {
 		return nil, fmt.Errorf("invalid userId[%d]", userId)
 	}
-
 	var avatar Avatar
 	err := sqlx.Get(dbConn, &avatar, `SELECT * FROM avatars WHERE user_id = ?`, userId)
 	if err != nil {
+		if err.Error() == sql.ErrNoRows.Error() {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("error getting avatar for user[%d]: %s", userId, err)
 	}
 	return &avatar, nil

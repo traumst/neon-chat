@@ -12,30 +12,42 @@ import (
 	"time"
 )
 
-func SetupGlobalLogger(toStderr bool, toFile bool) {
-	log.Println("TRACE IN SetupGlobalLogger")
-	now := time.Now()
-	timestamp := now.Format(time.RFC3339)
+func SetupGlobalLogger(stderr bool, dir string) {
+	log.Printf("TRACE SetupGlobalLogger stderr[%t], dir[%s]", stderr, dir)
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile | log.Lmsgprefix)
+	var w io.Writer
+	var logFile *os.File
+	if len(dir) > 0 && stderr {
+		log.Println("INFO Logging to file and stderr")
+		logFile = OpenLogFile(dir)
+		w = io.MultiWriter(os.Stderr, logFile)
+	} else if len(dir) > 0 {
+		log.Println("INFO Logging to file")
+		logFile = OpenLogFile(dir)
+		w = logFile
+	} else if stderr {
+		log.Println("INFO Logging to stderr")
+		w = os.Stderr
+	} else {
+		log.Println("WARN Logging is DISABLED")
+		w = io.Discard
+	}
+	if logFile != nil {
+		defer logFile.Close()
+	}
+	log.SetPrefix("\n\t")
+	log.SetOutput(w)
+}
+
+func OpenLogFile(dir string) *os.File {
+	timestamp := time.Now().Format(time.RFC3339)
 	date := strings.Split(timestamp, "T")[0]
-	logPath := fmt.Sprintf("log/from-%s.log", date)
+	logPath := fmt.Sprintf("%s/from-%s.log", dir, date)
 	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer logFile.Close()
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	// log.SetPrefix("CUSTOM_LOG: ")
-	if toFile && toStderr {
-		log.SetOutput(io.MultiWriter(logFile, os.Stderr))
-		log.Printf("Logging to file [%s] and stderr\n", logPath)
-	} else if toFile {
-		log.SetOutput(logFile)
-		log.Printf("Logging to file [%s]\n", logPath)
-	} else {
-		log.SetOutput(os.Stderr)
-		log.Println("Logging to stderr")
-	}
-	log.Println("TRACE OUT SetupGlobalLogger")
+	return logFile
 }
 
 func ReadEnvConfig() *config.Config {
@@ -46,7 +58,7 @@ func ReadEnvConfig() *config.Config {
 		log.Println(config.ConfigHelp())
 		os.Exit(13)
 	}
-	log.Printf("\tparsed config: %s\n", c)
+	log.Printf("...parsed config\n%s\n", c)
 	return c
 }
 

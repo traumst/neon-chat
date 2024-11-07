@@ -37,9 +37,6 @@ func (m *QuoteTemplate) HTML() (string, error) {
 	if err := m.validate(); err != nil {
 		return "", fmt.Errorf("failed to validate QuoteTemplate, %s", err.Error())
 	}
-	if m.AuthorAvatar.Title == "" {
-		return "", fmt.Errorf("template requires avatar but was [%s]", m.AuthorAvatar.Title)
-	}
 	var buf bytes.Buffer
 	msgTmpl := template.Must(template.ParseFiles(
 		"static/html/chat/message_submit_quote_div.html",

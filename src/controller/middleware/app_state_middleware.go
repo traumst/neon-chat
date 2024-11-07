@@ -12,9 +12,9 @@ func AppStateMiddleware(state *state.State) Middleware {
 	return Middleware{
 		Name: "AppState",
 		Func: func(next http.Handler) http.Handler {
-			log.Println("TRACE with app state middleware")
+			//log.Println("TRACE with app state middleware")
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				log.Println(r.Context().Value(consts.ReqIdKey).(string), "TRACE attaching app state to request context")
+				log.Printf("TRACE [%s] attaching appState to ctx of '%s' '%s'\n", r.Context().Value(consts.ReqIdKey).(string), r.Method, r.RequestURI)
 				ctx := context.WithValue(r.Context(), consts.AppState, state)
 				next.ServeHTTP(w, r.WithContext(ctx))
 			})

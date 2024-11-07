@@ -20,9 +20,7 @@ func ReadSession(
 	r *http.Request,
 ) (*app.User, error) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
-	log.Printf("[%s] ReadSession TRACE IN\n", reqId)
 	cookie, err := h.GetSessionCookie(r)
-	log.Printf("[%s] ReadSession TRACE session cookie[%v], err[%s]\n", reqId, cookie, err)
 	if err != nil {
 		h.ClearSessionCookie(w, 0)
 		return nil, fmt.Errorf("failed to read session cookie, %s", err)
@@ -31,15 +29,13 @@ func ReadSession(
 	dbUser, err1 := db.GetUser(dbConn.Conn, cookie.UserId)
 	if err1 != nil {
 		h.ClearSessionCookie(w, 0)
-		err = fmt.Errorf("failed to get user[%d] from cookie[%v], %s",
-			cookie.UserId, cookie, err1.Error())
+		err = fmt.Errorf("failed to get user[%d] from cookie[%v], %s", cookie.UserId, cookie, err1.Error())
 	} else {
-		log.Printf("[%s] ReadSession TRACE session user[%d][%s], err[%s]\n",
-			reqId, dbUser.Id, dbUser.Name, err1)
+		log.Printf("TRACE [%s] reading session user[%d][%s] from db\n", reqId, dbUser.Id, dbUser.Name)
 		dbAvatar, _ := db.GetAvatar(dbConn.Conn, dbUser.Id)
 		appUser = convert.UserDBToApp(dbUser, dbAvatar)
 	}
 
-	log.Printf("[%s] ReadSession TRACE OUT, success:%t\n", reqId, err == nil)
+	log.Printf("TRACE [%s] user has session:%t\n", reqId, err == nil)
 	return appUser, err
 }
