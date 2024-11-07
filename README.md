@@ -19,9 +19,8 @@ This app is being build as an excercise for me to
     </summary>
 ## TODOs
 |-------------------------------------------------------------|
-|---  from: 2024-10-29  --------------------------------------|
+|---  from: 2024-11-07  --------------------------------------|
 |-------------------------------------------------------------|
-+ user info card (2 weeks)
 + gzip responses (1 week)
 + store sessions in db, keep between restarts (2 days)
 + add api throttling (1 week)
