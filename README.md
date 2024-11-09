@@ -20,7 +20,6 @@ This app is being build as an excercise for me to
 
 ## TODOs
 
-+ store sessions in db, keep between restarts
 + add api throttling
 + sanitize user input against XSS
 + need [Regular Maintenance: VACUUM and Analyze]
