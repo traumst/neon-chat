@@ -31,7 +31,11 @@ func main() {
 	log.Println("Creating state...")
 	app := src.InitAppState(config)
 	log.Println("Setting up controllers...")
-	src.SetupControllers(app, db)
+	src.SetupControllers(
+		app,
+		db,
+		config.AggregateThrottle.RPS,
+		config.AggregateThrottle.Burst)
 	log.Println("Loading previous sessions...")
 	if err := h.LoadSessionsFromFile(sessionFile); err != nil {
 		log.Printf("Could not load sessions: %v", err)

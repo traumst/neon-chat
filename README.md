@@ -21,6 +21,8 @@ This app is being build as an excercise for me to
 ## TODOs
 
 + add api throttling
+    + ~~aggregate number of requests for the server~~
+    + per-user number of requests
 + sanitize user input against XSS
 + need [Regular Maintenance: VACUUM and Analyze]
     + run `PRAGMA incremental_vacuum;` periodically to reclaim space

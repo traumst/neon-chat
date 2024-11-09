@@ -10,58 +10,62 @@ import (
 	"neon-chat/src/state"
 )
 
-func SetupControllers(state *state.State, dbConn *db.DBConn) {
+func SetupControllers(state *state.State, dbConn *db.DBConn, maxRPS int, maxBurst int) {
 	withTx := middleware.TransactionMiddleware()
 	authValidate := middleware.AuthValidateMiddleware()
-	accessCtrl := middleware.AccessControlMiddleware()
 	conn := middleware.DBConnMiddleware(dbConn)
 	appState := middleware.AppStateMiddleware(state)
 	authRead := middleware.AuthReadMiddleware(state, dbConn)
 	writer := middleware.StatefulWriterMiddleware()
 	gzip := middleware.GZipMiddleware()
 	stamp := middleware.StampMiddleware()
+	accessCtrl := middleware.AccessControlMiddleware()
+	throttle := middleware.ThrottlingMiddleware(maxRPS, maxBurst)
 	// TODO uncomment for live
 	//recovery := middleware.RecoveryMiddleware()
 
 	// middlewares are loaded in reverse order - lifo
-	minMiddlewareSet := middleware.Middlewares{
-		accessCtrl,
+	minMiddleware := middleware.Middlewares{
 		conn,
 		appState,
 		authRead,
 		writer,
 		gzip,
 		stamp,
+		accessCtrl,
+		throttle,
 		//recovery,
 	}
 	// sse hates gzip
 	maxUnzippedMiddleware := middleware.Middlewares{
 		withTx,
 		authValidate,
-		accessCtrl,
 		conn,
 		appState,
 		authRead,
 		writer,
 		stamp,
+		accessCtrl,
+		throttle,
 		//recovery,
 	}
 	// most endpoints need all middlewares
 	maxMiddleware := middleware.Middlewares{
 		withTx,
 		authValidate,
-		accessCtrl,
 		conn,
 		appState,
 		authRead,
 		writer,
 		gzip,
 		stamp,
+		accessCtrl,
+		throttle,
 		//recovery,
 	}
 
-	handleStaticFiles(minMiddlewareSet)
-	handleAuth(minMiddlewareSet)
+	handleStaticFiles(minMiddleware)
+	handleAuth(minMiddleware)
 
 	handleContacts(maxMiddleware)
 	handleAvatar(maxMiddleware)
@@ -78,8 +82,8 @@ func SetupControllers(state *state.State, dbConn *db.DBConn) {
 		})))
 
 	// home, default
-	log.Println("...home middleware", minMiddlewareSet)
-	http.Handle("/", minMiddlewareSet.Chain(
+	log.Println("...home middleware", minMiddleware)
+	http.Handle("/", minMiddleware.Chain(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			controller.NavigateHome(w, r)
 		})))

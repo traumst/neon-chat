@@ -5,13 +5,14 @@ import (
 )
 
 type Config struct {
-	Log            LogConfig
-	Port           int
-	Sqlite         string
-	Smtp           SmtpConfig
-	CacheSize      int
-	TestUsers      TestUsers
-	TestDataInsert bool
+	Log               LogConfig
+	Port              int
+	Sqlite            string
+	Smtp              SmtpConfig
+	CacheSize         int
+	AggregateThrottle ThrottlingConfig
+	TestUsers         TestUsers
+	TestDataInsert    bool
 }
 
 func (config *Config) String() string {
@@ -20,6 +21,8 @@ func (config *Config) String() string {
 	acc += fmt.Sprintln("stdout:", config.Log.Stdout)
 	acc += fmt.Sprintln("stdout:", config.Log.Dir)
 	acc += fmt.Sprintln("cache:", config.CacheSize)
+	acc += fmt.Sprintln("maxRPS:", config.AggregateThrottle.RPS)
+	acc += fmt.Sprintln("maxBurst:", config.AggregateThrottle.RPS)
 	acc += fmt.Sprintln("testUser:", config.TestUsers)
 	acc += fmt.Sprintln("testDataInsert:", config.TestDataInsert)
 	return acc
@@ -35,6 +38,11 @@ type SmtpConfig struct {
 	Pass string
 	Host string
 	Port string
+}
+
+type ThrottlingConfig struct {
+	RPS   int
+	Burst int
 }
 
 type TestUser struct {

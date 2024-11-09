@@ -64,8 +64,6 @@ func readEnvFile(scanner *bufio.Scanner) (*Config, error) {
 		switch kv[0] {
 		case "PORT":
 			envConf.Port = parseInt(kv[0], kv[1])
-		case "CACHE_SIZE":
-			envConf.CacheSize = parseInt(kv[0], kv[1])
 		case "SQLITE":
 			envConf.Sqlite = kv[1]
 		case "SMTP_USER":
@@ -76,6 +74,12 @@ func readEnvFile(scanner *bufio.Scanner) (*Config, error) {
 			envConf.Smtp.Host = kv[1]
 		case "SMTP_PORT":
 			envConf.Smtp.Port = kv[1]
+		case "CACHE_SIZE":
+			envConf.CacheSize = parseInt(kv[0], kv[1])
+		case "THROTTLE_RPS":
+			envConf.AggregateThrottle.RPS = parseInt(kv[0], kv[1])
+		case "THROTTLE_BURST":
+			envConf.AggregateThrottle.Burst = parseInt(kv[0], kv[1])
 		case "TEST_DATA_INSERT":
 			envConf.TestDataInsert = kv[1] == "true"
 		case "TEST_USER":
