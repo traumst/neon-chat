@@ -2,8 +2,10 @@ package http
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -28,7 +30,7 @@ func GetSessionCookie(r *http.Request) (*Session, error) {
 	if err != nil {
 		return nil, err
 	}
-	session, err := Decode(cookie.Value)
+	session, err := decode(cookie.Value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse session[%s], %s", cookie.Value, err.Error())
 	}
@@ -53,7 +55,7 @@ func SetSessionCookie(w http.ResponseWriter, user *app.User, auth *app.Auth) Ses
 		Expire:   expiration,
 	}
 	sessions[user.Id] = session
-	cookie := session.Encode()
+	cookie := encode(session)
 	http.SetCookie(w, &http.Cookie{
 		Name:    consts.SessionCookie,
 		Value:   cookie,
@@ -71,12 +73,34 @@ func ClearSessionCookie(w http.ResponseWriter, userId uint) {
 	})
 }
 
-func (s Session) Encode() string {
+func SaveSessionsToFile(filename string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	return encoder.Encode(sessions)
+}
+
+func LoadSessionsFromFile(filename string) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	return decoder.Decode(&sessions)
+}
+
+func encode(s Session) string {
 	cookie := fmt.Sprintf("%d:%s:%s:%s", s.UserId, s.UserType, utils.RandStringBytes(9), s.AuthType)
 	return base64.StdEncoding.EncodeToString([]byte(cookie))
 }
 
-func Decode(s string) (*Session, error) {
+func decode(s string) (*Session, error) {
 	decoded, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
 		return nil, fmt.Errorf("invalid session, %s", err)
