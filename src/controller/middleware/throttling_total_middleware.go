@@ -1,17 +1,36 @@
 package middleware
 
 import (
+	"log"
 	"net/http"
 	"sync"
 	"time"
 )
+
+func ThrottlingTotalMiddleware(rate int, burst int) Middleware {
+	limiter := newRateLimiter(rate, burst)
+
+	return Middleware{
+		Name: "ThrottlingTotal",
+		Func: func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if !limiter.isAllowed() {
+					log.Println("Too Many Total Requests")
+					http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
+					return
+				}
+				next.ServeHTTP(w, r)
+			})
+		}}
+}
 
 type rateLimiter struct {
 	mu sync.Mutex
 	// normal RPS
 	rps int
 	// max burst RPS
-	burst     int
+	burst int
+	// token bucket
 	tokens    int
 	lastCheck time.Time
 }
@@ -25,7 +44,7 @@ func newRateLimiter(rate int, burst int) *rateLimiter {
 	}
 }
 
-func (rl *rateLimiter) throttle() bool {
+func (rl *rateLimiter) isAllowed() bool {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
 
@@ -44,20 +63,4 @@ func (rl *rateLimiter) throttle() bool {
 	}
 
 	return false
-}
-
-func ThrottlingMiddleware(rate int, burst int) Middleware {
-	limiter := newRateLimiter(rate, burst)
-
-	return Middleware{
-		Name: "Stamp",
-		Func: func(next http.Handler) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if !limiter.throttle() {
-					http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
-					return
-				}
-				next.ServeHTTP(w, r)
-			})
-		}}
 }

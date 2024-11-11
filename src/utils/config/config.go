@@ -5,14 +5,14 @@ import (
 )
 
 type Config struct {
-	Log               LogConfig
-	Port              int
-	Sqlite            string
-	Smtp              SmtpConfig
-	CacheSize         int
-	AggregateThrottle ThrottlingConfig
-	TestUsers         TestUsers
-	TestDataInsert    bool
+	Log            LogConfig
+	Port           int
+	Sqlite         string
+	Smtp           SmtpConfig
+	CacheSize      int
+	RateLimit      RpsLimit
+	TestUsers      TestUsers
+	TestDataInsert bool
 }
 
 func (config *Config) String() string {
@@ -21,8 +21,7 @@ func (config *Config) String() string {
 	acc += fmt.Sprintln("stdout:", config.Log.Stdout)
 	acc += fmt.Sprintln("stdout:", config.Log.Dir)
 	acc += fmt.Sprintln("cache:", config.CacheSize)
-	acc += fmt.Sprintln("maxRPS:", config.AggregateThrottle.RPS)
-	acc += fmt.Sprintln("maxBurst:", config.AggregateThrottle.RPS)
+	acc += fmt.Sprintln("rateLimits:", config.RateLimit)
 	acc += fmt.Sprintln("testUser:", config.TestUsers)
 	acc += fmt.Sprintln("testDataInsert:", config.TestDataInsert)
 	return acc
@@ -40,9 +39,15 @@ type SmtpConfig struct {
 	Port string
 }
 
-type ThrottlingConfig struct {
-	RPS   int
-	Burst int
+type RpsLimit struct {
+	TotalRPS   int
+	TotalBurst int
+	UserRPS    int
+	UserBurst  int
+}
+
+func (l RpsLimit) String() string {
+	return fmt.Sprintf("totalRPS:%d,totalBurst:%d,userRPS:%d,userBurst:%d", l.TotalRPS, l.TotalBurst, l.UserRPS, l.UserBurst)
 }
 
 type TestUser struct {

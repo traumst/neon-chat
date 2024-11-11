@@ -8,9 +8,10 @@ import (
 	"neon-chat/src/controller/middleware"
 	"neon-chat/src/db"
 	"neon-chat/src/state"
+	"neon-chat/src/utils/config"
 )
 
-func SetupControllers(state *state.State, dbConn *db.DBConn, maxRPS int, maxBurst int) {
+func SetupControllers(state *state.State, dbConn *db.DBConn, limit config.RpsLimit) {
 	withTx := middleware.TransactionMiddleware()
 	authValidate := middleware.AuthValidateMiddleware()
 	conn := middleware.DBConnMiddleware(dbConn)
@@ -20,7 +21,8 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, maxRPS int, maxBurs
 	gzip := middleware.GZipMiddleware()
 	stamp := middleware.StampMiddleware()
 	accessCtrl := middleware.AccessControlMiddleware()
-	throttle := middleware.ThrottlingMiddleware(maxRPS, maxBurst)
+	throttleTotal := middleware.ThrottlingTotalMiddleware(limit.TotalRPS, limit.TotalBurst)
+	throttleUser := middleware.ThrottlingUserMiddleware(limit.UserRPS, limit.UserBurst)
 	// TODO uncomment for live
 	//recovery := middleware.RecoveryMiddleware()
 
@@ -33,7 +35,8 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, maxRPS int, maxBurs
 		gzip,
 		stamp,
 		accessCtrl,
-		throttle,
+		throttleTotal,
+		throttleUser,
 		//recovery,
 	}
 	// sse hates gzip
@@ -46,7 +49,8 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, maxRPS int, maxBurs
 		writer,
 		stamp,
 		accessCtrl,
-		throttle,
+		throttleTotal,
+		throttleUser,
 		//recovery,
 	}
 	// most endpoints need all middlewares
@@ -60,7 +64,8 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, maxRPS int, maxBurs
 		gzip,
 		stamp,
 		accessCtrl,
-		throttle,
+		throttleTotal,
+		throttleUser,
 		//recovery,
 	}
 
