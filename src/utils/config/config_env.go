@@ -53,7 +53,7 @@ func EnvRead() (*Config, error) {
 }
 
 func readEnvFile(scanner *bufio.Scanner) (*Config, error) {
-	envConf := Config{Smtp: SmtpConfig{}, TestUsers: make([]*TestUser, 0)}
+	envConf := Config{Smtp: SmtpConfig{}, RateLimit: RpsLimit{}, TestUsers: make([]*TestUser, 0)}
 	for scanner.Scan() {
 		line := scanner.Text()
 		kv := strings.Split(line, "=")
@@ -64,8 +64,6 @@ func readEnvFile(scanner *bufio.Scanner) (*Config, error) {
 		switch kv[0] {
 		case "PORT":
 			envConf.Port = parseInt(kv[0], kv[1])
-		case "CACHE_SIZE":
-			envConf.CacheSize = parseInt(kv[0], kv[1])
 		case "SQLITE":
 			envConf.Sqlite = kv[1]
 		case "SMTP_USER":
@@ -76,6 +74,16 @@ func readEnvFile(scanner *bufio.Scanner) (*Config, error) {
 			envConf.Smtp.Host = kv[1]
 		case "SMTP_PORT":
 			envConf.Smtp.Port = kv[1]
+		case "CACHE_SIZE":
+			envConf.CacheSize = parseInt(kv[0], kv[1])
+		case "THROTTLE_TOTAL_RPS":
+			envConf.RateLimit.TotalRPS = parseInt(kv[0], kv[1])
+		case "THROTTLE_TOTAL_BURST":
+			envConf.RateLimit.TotalBurst = parseInt(kv[0], kv[1])
+		case "THROTTLE_USER_RPS":
+			envConf.RateLimit.UserRPS = parseInt(kv[0], kv[1])
+		case "THROTTLE_USER_BURST":
+			envConf.RateLimit.UserBurst = parseInt(kv[0], kv[1])
 		case "TEST_DATA_INSERT":
 			envConf.TestDataInsert = kv[1] == "true"
 		case "TEST_USER":

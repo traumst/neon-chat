@@ -20,7 +20,6 @@ This app is being build as an excercise for me to
 
 ## TODOs
 
-+ add api throttling
 + sanitize user input against XSS
 + need [Regular Maintenance: VACUUM and Analyze]
     + run `PRAGMA incremental_vacuum;` periodically to reclaim space
@@ -87,7 +86,6 @@ This app is being build as an excercise for me to
 - Add ability to ban users from chat
 
 ### User Authentication
-- throttling api actions - 10x exec time
 - provide authType as form input
 - google auth
 - *2FA / MFA*
