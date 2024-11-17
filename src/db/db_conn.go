@@ -34,6 +34,9 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 	}
 	log.Printf("db connects to [%s]", dbPath)
 	conn, err := sqlx.Connect("sqlite3", dbPath)
+	conn.DB.SetMaxOpenConns(1)
+	conn.DB.SetMaxIdleConns(1)
+	conn.DB.SetConnMaxLifetime(0)
 	if err != nil {
 		return nil, fmt.Errorf("error opening db: %s", err)
 	}

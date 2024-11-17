@@ -25,7 +25,6 @@ This app is being build as an excercise for me to
     + db does not shrink, need to [do a VACUUM](https://www.sqlite.org/lang_vacuum.html)
 + db
     + add db query-response caching
-    + consider [conn pool for db](https://github.com/jmoiron/sqlx/issues/300)
     + add timestamps to every table:
         * created
         * updated
