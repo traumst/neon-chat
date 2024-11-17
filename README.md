@@ -23,8 +23,6 @@ This app is being build as an excercise for me to
 + need [Regular Maintenance: VACUUM and Analyze]
     + run `PRAGMA incremental_vacuum;` periodically to reclaim space
     + db does not shrink, need to [do a VACUUM](https://www.sqlite.org/lang_vacuum.html)
-+ db
-    + add db query-response caching
     + add timestamps to every table:
         * created
         * updated
