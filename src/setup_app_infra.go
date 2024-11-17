@@ -68,6 +68,7 @@ func ConnectDB(dbFilePath string) *db.DBConn {
 	if err != nil {
 		log.Fatalf("Error opening db at [%s]: %s", dbFilePath, err)
 	}
+	go db.ScheduleMaintenance()
 	return db
 }
 

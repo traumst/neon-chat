@@ -12,13 +12,17 @@ import (
 	h "neon-chat/src/utils/http"
 )
 
-func PollUpdates(s *state.State, dbConn *db.DBConn, w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(consts.ReqIdKey).(string)
+func PollUpdates(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	reqId := ctx.Value(consts.ReqIdKey).(string)
 	if r.Method != http.MethodGet {
 		log.Printf("TRACE [%s] '%s' does not accept %s\n", reqId, r.RequestURI, r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+	s := ctx.Value(consts.AppState).(*state.State)
+	dbConn := ctx.Value(consts.DBConn).(*db.DBConn)
+
 	user, err := pub.ReadSession(s, dbConn, w, r)
 	if err != nil || user == nil {
 		log.Printf("WARN [%s]  user, %s\n", reqId, err)

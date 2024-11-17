@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -17,6 +18,8 @@ type DBConn struct {
 	Tx *sqlx.Tx
 	// ReqId from original request for tracing
 	TxId string
+	// Is db locked for maintenance
+	underMaintenance bool
 }
 
 const migraitonsFolder string = "./src/db/migrations"
@@ -44,7 +47,7 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 		"PRAGMA journal_mode = WAL;",
 		"PRAGMA synchronous = NORMAL;",
 		"PRAGMA locking_mode = NORMAL;",
-		// "PRAGMA auto_vacuum = INCREMENTAL;",
+		"PRAGMA auto_vacuum = INCREMENTAL;",
 		"PRAGMA foreign_keys = ON;",
 		"PRAGMA journal_size_limit = 67108864;",
 		"PRAGMA page_size = 4096;",
@@ -68,6 +71,44 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 func (dbConn *DBConn) ConnClose() {
 	// TODO count active tx
 	dbConn.Conn.Close()
+}
+
+func (dbConn *DBConn) IsAvailable(timeout time.Duration) bool {
+	for dbConn.underMaintenance {
+		ticker := time.NewTicker(1 * time.Second)
+		defer ticker.Stop()
+		select {
+		case <-ticker.C:
+			return false
+		case <-time.After(timeout):
+			return false
+		default:
+			return true
+		}
+	}
+
+	return true
+}
+
+func (dbConn *DBConn) ScheduleMaintenance() {
+	dbConn.underMaintenance = true
+	defer func() { dbConn.underMaintenance = false }()
+	// TODO wait for all active tx to finish
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+	for {
+		// vacuum requires no other queries running
+		// we allow only 1 concurrent connection,
+		if _, err := dbConn.Conn.Exec("VACUUM"); err != nil {
+			log.Printf("Error running VACUUM: %v", err)
+		}
+		if _, err := dbConn.Conn.Exec("ANALYZE"); err != nil {
+			log.Printf("Error running ANALYZE: %v", err)
+		}
+		// block until next tick
+		// TODO consider running during idle hours
+		<-ticker.C
+	}
 }
 
 func (dbConn *DBConn) init() error {
