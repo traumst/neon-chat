@@ -57,9 +57,13 @@ func SetSessionCookie(w http.ResponseWriter, user *app.User, auth *app.Auth) Ses
 	sessions[user.Id] = session
 	cookie := encode(session)
 	http.SetCookie(w, &http.Cookie{
-		Name:    consts.SessionCookie,
-		Value:   cookie,
-		Expires: expiration,
+		Name:     consts.SessionCookie,
+		Value:    cookie,
+		Expires:  expiration,
+		Path:     "/",
+		HttpOnly: true,
+		//Secure:   true, // send over HTTPS only
+		SameSite: http.SameSiteStrictMode,
 	})
 	return session
 }

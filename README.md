@@ -20,7 +20,6 @@ This app is being build as an excercise for me to
 
 ## TODOs
 
-+ sanitize user input against XSS
 + need [Regular Maintenance: VACUUM and Analyze]
     + run `PRAGMA incremental_vacuum;` periodically to reclaim space
     + db does not shrink, need to [do a VACUUM](https://www.sqlite.org/lang_vacuum.html)
