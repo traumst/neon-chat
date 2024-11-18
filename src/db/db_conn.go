@@ -106,7 +106,6 @@ func (dbConn *DBConn) ScheduleMaintenance() {
 			log.Printf("Error running ANALYZE: %v", err)
 		}
 		// block until next tick
-		// TODO consider running during idle hours
 		<-ticker.C
 	}
 }
