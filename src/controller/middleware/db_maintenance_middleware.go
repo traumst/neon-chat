@@ -3,6 +3,7 @@ package middleware
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"neon-chat/src/consts"
 	"neon-chat/src/db"
@@ -11,6 +12,8 @@ import (
 
 // TODO test
 func DBMaintenanceMiddleware(dbConn *db.DBConn) Middleware {
+	const maxWait = 5 * time.Second
+	const retryAfter = 60
 	return Middleware{
 		Name: "DBMaintenance",
 		Func: func(next http.Handler) http.Handler {

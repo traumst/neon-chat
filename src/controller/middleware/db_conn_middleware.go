@@ -3,14 +3,10 @@ package middleware
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"neon-chat/src/consts"
 	"neon-chat/src/db"
 )
-
-const maxWait = 5 * time.Second
-const retryAfter = 60
 
 func DBConnMiddleware(dbConn *db.DBConn) Middleware {
 	return Middleware{
