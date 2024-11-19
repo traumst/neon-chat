@@ -18,8 +18,6 @@ type DBConn struct {
 	Tx *sqlx.Tx
 	// ReqId from original request for tracing
 	TxId string
-	// Is db locked for maintenance
-	underMaintenance bool
 }
 
 const migraitonsFolder string = "./src/db/migrations"
@@ -73,26 +71,7 @@ func (dbConn *DBConn) ConnClose() {
 	dbConn.Conn.Close()
 }
 
-func (dbConn *DBConn) IsAvailable(timeout time.Duration) bool {
-	for dbConn.underMaintenance {
-		ticker := time.NewTicker(1 * time.Second)
-		defer ticker.Stop()
-		select {
-		case <-ticker.C:
-			return false
-		case <-time.After(timeout):
-			return false
-		default:
-			return true
-		}
-	}
-
-	return true
-}
-
 func (dbConn *DBConn) ScheduleMaintenance() {
-	dbConn.underMaintenance = true
-	defer func() { dbConn.underMaintenance = false }()
 	// TODO wait for all active tx to finish
 	ticker := time.NewTicker(24 * time.Hour)
 	defer ticker.Stop()

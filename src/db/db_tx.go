@@ -13,6 +13,7 @@ func (dbConn *DBConn) OpenTx(txId string) (*sqlx.Tx, string, error) {
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to open transaction, %s", err)
 	}
+	dbConn.txCount += 1
 	dbConn.Tx = tx
 	dbConn.TxId = txId
 	return tx, txId, nil

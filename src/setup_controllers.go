@@ -21,7 +21,6 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, limit config.RpsLim
 	gzip := middleware.GZipMiddleware()
 	stamp := middleware.StampMiddleware()
 	accessCtrl := middleware.AccessControlMiddleware()
-	maintenance := middleware.DBMaintenanceMiddleware(dbConn)
 	throttleTotal := middleware.ThrottlingTotalMiddleware(limit.TotalRPS, limit.TotalBurst)
 	throttleUser := middleware.ThrottlingUserMiddleware(limit.UserRPS, limit.UserBurst)
 	// TODO uncomment for live
@@ -36,7 +35,6 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, limit config.RpsLim
 		gzip,
 		stamp,
 		accessCtrl,
-		maintenance,
 		throttleTotal,
 		throttleUser,
 		//recovery,
@@ -51,7 +49,6 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, limit config.RpsLim
 		writer,
 		stamp,
 		accessCtrl,
-		maintenance,
 		throttleTotal,
 		throttleUser,
 		//recovery,
@@ -67,7 +64,6 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, limit config.RpsLim
 		gzip,
 		stamp,
 		accessCtrl,
-		maintenance,
 		throttleTotal,
 		throttleUser,
 		//recovery,
