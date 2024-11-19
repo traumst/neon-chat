@@ -20,9 +20,18 @@ This app is being build as an excercise for me to
 
 ## TODOs
 
-+ need [Regular Maintenance: VACUUM and Analyze]
-    + run `PRAGMA incremental_vacuum;` periodically to reclaim space
-    + db does not shrink, need to [do a VACUUM](https://www.sqlite.org/lang_vacuum.html)
++ err500 + retry-after header
+    + throttling
+    + db maintenance
++ tweak db
+    + count open tx
+    + graceful shutdown
+        + prevent new tx
+        + wait open tx to close
+    + periodic VACUUM and Analyze
+        + include `PRAGMA incremental_vacuum;`
+        + reclaim space with [VACUUM](https://www.sqlite.org/lang_vacuum.html)
+        + vacuum exclusive operation - no concurrent tx
     + add timestamps to every table:
         * created
         * updated
