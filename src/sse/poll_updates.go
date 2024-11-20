@@ -3,15 +3,12 @@ package sse
 import (
 	"log"
 	"neon-chat/src/state"
-	"time"
 )
 
 // TODO queue mechanism for delta updates
 func PollUpdates(state *state.State, conn *state.Conn, pollingUserId uint) {
 	log.Printf("TRACE [%s] Live updates triggered by user[%d]\n", conn.Origin, conn.User.Id)
 	done := false
-	ticker := time.NewTicker(30 * time.Second)
-	defer ticker.Stop()
 
 	for !done {
 		select {

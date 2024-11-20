@@ -33,7 +33,7 @@ func TransactionMiddleware() Middleware {
 				ctx = context.WithValue(ctx, consts.DBConn, &dbConn)
 				defer func() {
 					if p := recover(); p != nil {
-						log.Printf("FATAL [%s] TransactionMiddleware Failed to open transaction: %v", reqId, p)
+						log.Printf("FATAL [%s] TransactionMiddleware failed while opening transaction: %v", reqId, p)
 						dbConn.CloseTx(fmt.Errorf("panic: %v", p), false)
 						panic(p) // re-throw the panic after rollback
 					} else if code := w.(*h.StatefulWriter).Status(); code >= http.StatusBadRequest {
