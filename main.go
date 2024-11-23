@@ -28,6 +28,10 @@ func main() {
 	db := src.ConnectDB(config.Sqlite)
 	log.Println("Verifying db requirements...")
 	initTestData(db, config.TestDataInsert, config.TestUsers)
+
+	// WIP should return mutex and run proc inside
+	// maintenanceLock := db.ScheduleMaintenance()
+
 	log.Println("Creating state...")
 	app := src.InitAppState(config)
 	log.Println("Setting up controllers...")

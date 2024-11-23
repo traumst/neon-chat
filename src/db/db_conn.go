@@ -72,21 +72,24 @@ func (dbConn *DBConn) ConnClose() {
 }
 
 func (dbConn *DBConn) ScheduleMaintenance() {
-	// TODO wait for all active tx to finish
-	ticker := time.NewTicker(24 * time.Hour)
-	defer ticker.Stop()
-	for {
-		// vacuum requires no other queries running
-		// we allow only 1 concurrent connection,
-		if _, err := dbConn.Conn.Exec("VACUUM"); err != nil {
-			log.Printf("Error running VACUUM: %v", err)
+	// WIP, should be once every 24 hours
+	go func() {
+		ticker := time.NewTicker(1 * time.Minute)
+		defer ticker.Stop()
+		for {
+			log.Printf("TRACE running incremental_vacuum at %s", time.Now().Format(time.RFC3339))
+			if _, err := dbConn.Conn.Exec("PRAGMA incremental_vacuum;"); err != nil {
+				log.Printf("ERROR running incremental_vacuum: %v", err)
+			}
+			log.Printf("TRACE running ANALYZE at %s", time.Now().Format(time.RFC3339))
+			if _, err := dbConn.Conn.Exec("ANALYZE"); err != nil {
+				log.Printf("ERROR running ANALYZE: %v", err)
+			}
+			log.Printf("TRACE maintenance done at %s", time.Now().Format(time.RFC3339))
+			// block until next tick
+			<-ticker.C
 		}
-		if _, err := dbConn.Conn.Exec("ANALYZE"); err != nil {
-			log.Printf("Error running ANALYZE: %v", err)
-		}
-		// block until next tick
-		<-ticker.C
-	}
+	}()
 }
 
 func (dbConn *DBConn) init() error {
