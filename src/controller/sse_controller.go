@@ -28,6 +28,14 @@ func PollUpdates(w http.ResponseWriter, r *http.Request) {
 		log.Printf("WARN [%s]  user, %s\n", reqId, err)
 		return
 	}
+	// WIP consider instead
+	//dbConn := ctx.Value(consts.DBConn).(*db.DBConn)
+	//user, err := pub.ReadSession(s, dbConn, w, r)
+	// user := ctx.Value(consts.ActiveUser).(*app.User)
+	// if user == nil {
+	// 	log.Printf("WARN [%s] user is nil\n", reqId)
+	// 	return
+	// }
 	log.Printf("TRACE [%s] polling updates for user[%d]\n", reqId, user.Id)
 	conn := s.AddConn(w, *r, user, nil)
 	if conn == nil {

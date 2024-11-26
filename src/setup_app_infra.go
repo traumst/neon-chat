@@ -58,7 +58,7 @@ func ReadEnvConfig() *config.Config {
 		log.Println(config.ConfigHelp())
 		os.Exit(13)
 	}
-	log.Printf("...parsed config\n%s\n", c)
+	//log.Printf("...parsed config\n%s\n", c)
 	return c
 }
 

@@ -110,7 +110,7 @@ func parseInt(key string, val string) int {
 
 // TEST_USER="name:ABCDE;email:abcd@gmail.com;pass:123456"
 func parseTestUser(rawUser string) *TestUser {
-	log.Printf("...digesting raw test user data [%s]", rawUser)
+	//log.Printf("...digesting raw test user data [%s]", rawUser)
 	testUser := TestUser{}
 	rawUser = strings.Trim(rawUser, "\"")
 	props := strings.Split(rawUser, ";")

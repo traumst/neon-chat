@@ -33,8 +33,11 @@ This app is being build as an excercise for me to
         + reclaim space with [VACUUM](https://www.sqlite.org/lang_vacuum.html)
         + vacuum exclusive operation - no concurrent tx
     + add timestamps to every table:
-        * created
-        * updated
+        + created
+        + updated
++ controllers
+    + simplify http.HandlerFunc delegate
+    + sse poll error in firefox
 
 ### Next up
 

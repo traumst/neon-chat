@@ -29,8 +29,8 @@ func main() {
 	log.Println("Verifying db requirements...")
 	initTestData(db, config.TestDataInsert, config.TestUsers)
 
-	// WIP should return mutex and run proc inside
-	// maintenanceLock := db.ScheduleMaintenance()
+	// WIP
+	//go db.ScheduleMaintenance()
 
 	log.Println("Creating state...")
 	app := src.InitAppState(config)
@@ -62,6 +62,16 @@ func main() {
 		log.Printf("Could not save sessions: %v", err)
 	}
 
+	// WIP
+	// log.Println("Waiting for users to leave...")
+	// if !utils.MaintenanceManager.WaitUsersLeave(3 * time.Second) {
+	// 	log.Printf("ERROR users did not leave")
+	// }
+
+	log.Println("Closing db connection...")
+	db.ConnClose(5 * time.Second)
+
+	log.Println("Shutting down server...")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
