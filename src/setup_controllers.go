@@ -22,8 +22,7 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, limit config.RpsLim
 	accessCtrl := middleware.AccessControlMiddleware()
 	throttleTotal := middleware.ThrottlingTotalMiddleware(limit.TotalRPS, limit.TotalBurst)
 	throttleUser := middleware.ThrottlingUserMiddleware(limit.UserRPS, limit.UserBurst)
-	// WIP
-	//maintenance := middleware.MaintenanceMiddleware()
+	maintenance := middleware.MaintenanceMiddleware()
 	// TODO uncomment for live
 	//recovery := middleware.RecoveryMiddleware()
 
@@ -38,7 +37,7 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, limit config.RpsLim
 		accessCtrl,
 		throttleTotal,
 		throttleUser,
-		//maintenance,
+		maintenance,
 		//recovery,
 	}
 	// sse hates gzip
@@ -53,7 +52,7 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, limit config.RpsLim
 		accessCtrl,
 		throttleTotal,
 		throttleUser,
-		//maintenance,
+		maintenance,
 		//recovery,
 	}
 	// most endpoints need all middlewares
@@ -69,7 +68,7 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, limit config.RpsLim
 		accessCtrl,
 		throttleTotal,
 		throttleUser,
-		//maintenance,
+		maintenance,
 		//recovery,
 	}
 

@@ -28,6 +28,11 @@ func (m *maintenanceManager) ClearFlag() {
 	atomic.StoreInt32(&m.inMaintenance, 0)
 }
 
+func (m *maintenanceManager) IsInMaintenance() bool {
+	log.Println("TRACE IsInMaintenance called")
+	return atomic.LoadInt32(&m.inMaintenance) == 1
+}
+
 func (m *maintenanceManager) IncrUserCount() error {
 	log.Println("TRACE IncrUserCount called")
 	if atomic.LoadInt32(&m.inMaintenance) == 1 {

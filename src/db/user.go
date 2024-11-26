@@ -116,7 +116,6 @@ func SearchUsers(dbConn sqlx.Ext, terms []string) ([]*User, error) {
 
 func GetUser(dbConn sqlx.Ext, id uint) (*User, error) {
 	var user User
-	log.Printf("XXXXXXXXXXXXXXXX")
 	err := sqlx.Get(dbConn, &user, `SELECT * FROM users WHERE id = ?`, id)
 	if err != nil {
 		return nil, fmt.Errorf("userId[%d] not found: %s", id, err)

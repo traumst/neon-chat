@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"log"
+	"neon-chat/src/utils"
 	"os"
 	"strings"
 	"time"
@@ -64,53 +65,51 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 }
 
 func (dbConn *DBConn) ConnClose(timeout time.Duration) {
-	// WIP
-	// if !utils.MaintenanceManager.WaitUsersLeave(timeout) {
-	// 	log.Println("WARN ConnClose aborts some active users after timeout", timeout)
-	// }
+	if !utils.MaintenanceManager.WaitUsersLeave(timeout) {
+		log.Println("WARN ConnClose aborts some active users after timeout", timeout)
+	}
 	dbConn.Conn.Close()
 }
 
-// func (dbConn *DBConn) ScheduleMaintenance() {
-// 	err := doMaintenance(dbConn)
-// 	if err != nil {
-// 		log.Fatalf("ERROR startup maintenance failed to run, %s", err)
-// 	}
+func (dbConn *DBConn) ScheduleMaintenance() {
+	err := doMaintenance(dbConn)
+	if err != nil {
+		log.Fatalf("ERROR startup maintenance failed to run, %s", err)
+	}
 
-// 	// WIP, should be once every 24 hours
-// 	ticker := time.NewTicker(5 * time.Minute)
-// 	defer ticker.Stop()
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
 
-// 	for range ticker.C {
-// 		err = doMaintenance(dbConn)
-// 		if err != nil {
-// 			log.Printf("ERROR maintenance failed to run, %s", err)
-// 		}
-// 	}
-// }
+	for range ticker.C {
+		err = doMaintenance(dbConn)
+		if err != nil {
+			log.Printf("ERROR maintenance failed to run, %s", err)
+		}
+	}
+}
 
-// func doMaintenance(dbConn *DBConn) error {
-// 	log.Println("TRACE maintenance about to start")
-// 	if err := utils.MaintenanceManager.RaiseFlag(); err != nil {
-// 		log.Printf("TRACE maintenance will not run, %s", err)
-// 	}
-// 	defer utils.MaintenanceManager.ClearFlag()
+func doMaintenance(dbConn *DBConn) error {
+	log.Println("TRACE maintenance about to start")
+	if err := utils.MaintenanceManager.RaiseFlag(); err != nil {
+		log.Printf("TRACE maintenance will not run, %s", err)
+	}
+	defer utils.MaintenanceManager.ClearFlag()
 
-// 	if !utils.MaintenanceManager.WaitUsersLeave(1 * time.Minute) {
-// 		return fmt.Errorf("failed while waiting for users to leave")
-// 	}
+	if !utils.MaintenanceManager.WaitUsersLeave(1 * time.Minute) {
+		return fmt.Errorf("failed while waiting for users to leave")
+	}
 
-// 	log.Println("TRACE running incremental_vacuum")
-// 	if _, err := dbConn.Conn.Exec("PRAGMA incremental_vacuum"); err != nil {
-// 		log.Printf("ERROR running incremental_vacuum: %v", err)
-// 	}
-// 	log.Println("TRACE running analyze")
-// 	if _, err := dbConn.Conn.Exec("ANALYZE"); err != nil {
-// 		log.Printf("ERROR running ANALYZE: %v", err)
-// 	}
-// 	log.Println("TRACE maintenance done")
-// 	return nil
-// }
+	log.Println("TRACE running incremental_vacuum")
+	if _, err := dbConn.Conn.Exec("PRAGMA incremental_vacuum"); err != nil {
+		log.Printf("ERROR running incremental_vacuum: %v", err)
+	}
+	log.Println("TRACE running analyze")
+	if _, err := dbConn.Conn.Exec("ANALYZE"); err != nil {
+		log.Printf("ERROR running ANALYZE: %v", err)
+	}
+	log.Println("TRACE maintenance done")
+	return nil
+}
 
 func (dbConn *DBConn) init() error {
 	shouldMigrate, err := dbConn.createTables()

@@ -13,6 +13,7 @@ import (
 	"neon-chat/src"
 	test "neon-chat/src/_test"
 	"neon-chat/src/db"
+	"neon-chat/src/utils"
 	"neon-chat/src/utils/config"
 	h "neon-chat/src/utils/http"
 )
@@ -29,8 +30,7 @@ func main() {
 	log.Println("Verifying db requirements...")
 	initTestData(db, config.TestDataInsert, config.TestUsers)
 
-	// WIP
-	//go db.ScheduleMaintenance()
+	go db.ScheduleMaintenance()
 
 	log.Println("Creating state...")
 	app := src.InitAppState(config)
@@ -62,11 +62,10 @@ func main() {
 		log.Printf("Could not save sessions: %v", err)
 	}
 
-	// WIP
-	// log.Println("Waiting for users to leave...")
-	// if !utils.MaintenanceManager.WaitUsersLeave(3 * time.Second) {
-	// 	log.Printf("ERROR users did not leave")
-	// }
+	log.Println("Waiting for users to leave...")
+	if !utils.MaintenanceManager.WaitUsersLeave(5 * time.Second) {
+		log.Printf("ERROR users did not leave")
+	}
 
 	log.Println("Closing db connection...")
 	db.ConnClose(5 * time.Second)
