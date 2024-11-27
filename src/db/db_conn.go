@@ -65,8 +65,11 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 }
 
 func (dbConn *DBConn) ConnClose(timeout time.Duration) {
-	if !utils.MaintenanceManager.WaitUsersLeave(timeout) {
-		log.Println("WARN ConnClose aborts some active users after timeout", timeout)
+	activeCount := utils.MaintenanceManager.WaitUsersLeave(timeout)
+	if activeCount != 0 {
+		log.Printf("WARN ConnClose aborts [%d] active users after timeout %s", activeCount, timeout.String())
+	} else {
+		log.Printf("INFO ConnClose waited for users to leave")
 	}
 	dbConn.Conn.Close()
 }
@@ -95,8 +98,9 @@ func doMaintenance(dbConn *DBConn) error {
 	}
 	defer utils.MaintenanceManager.ClearFlag()
 
-	if !utils.MaintenanceManager.WaitUsersLeave(1 * time.Minute) {
-		return fmt.Errorf("failed while waiting for users to leave")
+	activeCount := utils.MaintenanceManager.WaitUsersLeave(1 * time.Minute)
+	if activeCount != 0 {
+		return fmt.Errorf("failed while waiting for [%d] users to leave", activeCount)
 	}
 
 	log.Println("TRACE running incremental_vacuum")

@@ -34,6 +34,7 @@ func PollUpdates(w http.ResponseWriter, r *http.Request) {
 	// 	log.Printf("WARN [%s] user is nil\n", reqId)
 	// 	return
 	// }
+
 	log.Printf("TRACE [%s] polling updates for user[%d]\n", reqId, user.Id)
 	conn := s.AddConn(w, *r, user, nil)
 	if conn == nil {
@@ -45,9 +46,11 @@ func PollUpdates(w http.ResponseWriter, r *http.Request) {
 	h.SetSseHeaders(&conn.Writer)
 	log.Printf("TRACE [%s] sse initiated for user[%d]\n", reqId, user.Id)
 
-	isDone := sse.PollUpdates(ctx, s, conn, user.Id)
+	isDone := sse.PollUpdates(s, conn, user.Id)
 	if !isDone {
+		log.Printf("WARN [%s] live update consumption stopped for user[%d]\n", reqId, user.Id)
 		w.Write([]byte("Under Maintenance"))
 	}
 	log.Printf("TRACE [%s] live update consumption stopped for user[%d] isDone[%t]\n", reqId, user.Id, isDone)
+	w.Write([]byte("Server Stopped"))
 }

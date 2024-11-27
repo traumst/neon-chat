@@ -1,20 +1,20 @@
 package sse
 
 import (
-	"context"
 	"log"
 	"neon-chat/src/state"
 	"neon-chat/src/utils"
 	"time"
 )
 
+// TODO signal to stop polling
 // TODO queue mechanism for delta updates
-func PollUpdates(ctx context.Context, state *state.State, conn *state.Conn, pollingUserId uint) bool {
+func PollUpdates(state *state.State, conn *state.Conn, pollingUserId uint) bool {
 	log.Printf("TRACE [%s] Live updates triggered by user[%d]\n", conn.Origin, conn.User.Id)
 	done := false
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(1 * time.Second)
 
-	for !done && !utils.MaintenanceManager.IsInMaintenance() && ctx.Err() == nil {
+	for !done && !utils.MaintenanceManager.IsInMaintenance() {
 		select {
 		case <-conn.Reader.Context().Done():
 			log.Printf("TRACE [%s] user[%d] disconnects as done:[%t]\n", conn.Origin, conn.User.Id, done)

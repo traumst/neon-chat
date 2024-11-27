@@ -29,7 +29,7 @@ func (m *maintenanceManager) ClearFlag() {
 }
 
 func (m *maintenanceManager) IsInMaintenance() bool {
-	log.Println("TRACE IsInMaintenance called")
+	//log.Println("TRACE IsInMaintenance called")
 	return atomic.LoadInt32(&m.inMaintenance) == 1
 }
 
@@ -47,9 +47,9 @@ func (m *maintenanceManager) DecrUserCount() {
 	atomic.AddInt32(&m.activeUsers, -1)
 }
 
-func (m *maintenanceManager) WaitUsersLeave(timeout time.Duration) bool {
+func (m *maintenanceManager) WaitUsersLeave(timeout time.Duration) int {
 	log.Println("TRACE WaitUsersLeave called, current count", atomic.LoadInt32(&m.activeUsers))
-	probe := time.NewTicker(100 * time.Millisecond)
+	probe := time.NewTicker(1 * time.Second)
 	abort := time.NewTicker(timeout)
 	defer func() {
 		probe.Stop()
@@ -60,10 +60,10 @@ func (m *maintenanceManager) WaitUsersLeave(timeout time.Duration) bool {
 		select {
 		case <-probe.C:
 			if atomic.LoadInt32(&m.activeUsers) == 0 {
-				return true
+				return 0
 			}
 		case <-abort.C:
-			return false
+			return int(atomic.LoadInt32(&m.activeUsers))
 		}
 	}
 }
