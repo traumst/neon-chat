@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	h "neon-chat/src/utils/http"
 )
 
 func ThrottlingUserMiddleware(rate int, burst int) Middleware {
@@ -21,6 +23,7 @@ func ThrottlingUserMiddleware(rate int, burst int) Middleware {
 				}
 				if !limiter.isAllowed(key) {
 					log.Println("Too Many User Requests", key)
+					h.SetRetryAfterHeader(&w, 5)
 					http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
 					return
 				}

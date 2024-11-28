@@ -99,11 +99,6 @@ func SearchUsers(dbConn sqlx.Ext, terms []string) ([]*User, error) {
 	if len(terms) <= 0 {
 		return nil, fmt.Errorf("name was not provided")
 	}
-	//err := sqlx.Select(dbConn, &users, `SELECT * FROM users WHERE name IN (?) or email IN (?)`, terms, terms)
-	//if err != nil {
-	//	return nil, fmt.Errorf("user not found: %s", err)
-	//}
-	//return users, nil
 
 	query, args, err := sqlx.In(`SELECT * FROM users WHERE name IN (?) or email IN (?)`, terms, terms)
 	if err != nil {

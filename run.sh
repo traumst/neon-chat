@@ -16,7 +16,7 @@ echo "Running tests..."
 time go test ./...
 echo "Logging metrics..."
 ./metrics/db-size-over-time.sh
-# WIP
+# TODO
 #./metrics/project-size-over-time.sh
 
 # echo "Backing up db file..."
@@ -26,8 +26,9 @@ echo "Logging metrics..."
 #   echo "Database backup failed"
 #   exit 1
 # fi
+
+# echo "Dropping db file..."
 # if [ -f chat.db ]; then 
-#     echo "Dropping db file..."
 #     rm chat.db
 #     (ls chat.db && echo "...Dropped db successfully.") || echo "...Data not dropped."
 # else 

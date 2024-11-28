@@ -20,25 +20,20 @@ This app is being build as an excercise for me to
 
 ## TODOs
 
-+ need [Regular Maintenance: VACUUM and Analyze]
-    + run `PRAGMA incremental_vacuum;` periodically to reclaim space
-    + db does not shrink, need to [do a VACUUM](https://www.sqlite.org/lang_vacuum.html)
-+ db
-    + add db query-response caching
-    + consider [conn pool for db](https://github.com/jmoiron/sqlx/issues/300)
-    + add timestamps to every table:
-        * created
-        * updated
++ controllers
+    + sse poll error in firefox
++ after restart sse connects, but does not update UI
+    + store open chat with session
 
 ### Next up
 
-+ add log trace to all methods
-+ logrotate
 + log levels with [slog in GO 1.23](https://pkg.go.dev/log/slog#Debug)
++ logrotate
++ add log trace to all methods
 + change chat title
 + collapsible / resizable left panel
 + add contacts page / address book
-    * limit who can invite add / you
+    * limit who can invite / add you
 + docker setup: pod + persistent storage
 + deployment github action
 

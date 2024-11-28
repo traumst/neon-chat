@@ -3,8 +3,10 @@ package db
 import (
 	"fmt"
 	"log"
+	"neon-chat/src/utils"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -41,7 +43,7 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 		"PRAGMA journal_mode = WAL;",
 		"PRAGMA synchronous = NORMAL;",
 		"PRAGMA locking_mode = NORMAL;",
-		// "PRAGMA auto_vacuum = INCREMENTAL;",
+		"PRAGMA auto_vacuum = INCREMENTAL;",
 		"PRAGMA foreign_keys = ON;",
 		"PRAGMA journal_size_limit = 67108864;",
 		"PRAGMA page_size = 4096;",
@@ -62,9 +64,55 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 	return &dbConn, err
 }
 
-func (dbConn *DBConn) ConnClose() {
-	// TODO count active tx
+func (dbConn *DBConn) ConnClose(timeout time.Duration) {
+	activeCount := utils.MaintenanceManager.WaitUsersLeave(timeout)
+	if activeCount != 0 {
+		log.Printf("WARN ConnClose aborts [%d] active users after timeout %s", activeCount, timeout.String())
+	} else {
+		log.Printf("INFO ConnClose waited for users to leave")
+	}
 	dbConn.Conn.Close()
+}
+
+func (dbConn *DBConn) ScheduleMaintenance() {
+	err := doMaintenance(dbConn)
+	if err != nil {
+		log.Fatalf("ERROR startup maintenance failed to run, %s", err)
+	}
+
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		err = doMaintenance(dbConn)
+		if err != nil {
+			log.Printf("ERROR maintenance failed to run, %s", err)
+		}
+	}
+}
+
+func doMaintenance(dbConn *DBConn) error {
+	log.Println("TRACE maintenance about to start")
+	if err := utils.MaintenanceManager.RaiseFlag(); err != nil {
+		log.Printf("TRACE maintenance will not run, %s", err)
+	}
+	defer utils.MaintenanceManager.ClearFlag()
+
+	activeCount := utils.MaintenanceManager.WaitUsersLeave(1 * time.Minute)
+	if activeCount != 0 {
+		return fmt.Errorf("failed while waiting for [%d] users to leave", activeCount)
+	}
+
+	log.Println("TRACE running incremental_vacuum")
+	if _, err := dbConn.Conn.Exec("PRAGMA incremental_vacuum"); err != nil {
+		log.Printf("ERROR running incremental_vacuum: %v", err)
+	}
+	log.Println("TRACE running analyze")
+	if _, err := dbConn.Conn.Exec("ANALYZE"); err != nil {
+		log.Printf("ERROR running ANALYZE: %v", err)
+	}
+	log.Println("TRACE maintenance done")
+	return nil
 }
 
 func (dbConn *DBConn) init() error {

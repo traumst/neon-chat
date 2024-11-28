@@ -12,18 +12,29 @@ import (
 	h "neon-chat/src/utils/http"
 )
 
-func PollUpdates(s *state.State, dbConn *db.DBConn, w http.ResponseWriter, r *http.Request) {
-	reqId := r.Context().Value(consts.ReqIdKey).(string)
+func PollUpdates(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	reqId := ctx.Value(consts.ReqIdKey).(string)
 	if r.Method != http.MethodGet {
 		log.Printf("TRACE [%s] '%s' does not accept %s\n", reqId, r.RequestURI, r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+	s := ctx.Value(consts.AppState).(*state.State)
+	dbConn := ctx.Value(consts.DBConn).(*db.DBConn)
+
 	user, err := pub.ReadSession(s, dbConn, w, r)
 	if err != nil || user == nil {
 		log.Printf("WARN [%s]  user, %s\n", reqId, err)
 		return
 	}
+	// WIP consider instead
+	// user := ctx.Value(consts.ActiveUser).(*app.User)
+	// if user == nil {
+	// 	log.Printf("WARN [%s] user is nil\n", reqId)
+	// 	return
+	// }
+
 	log.Printf("TRACE [%s] polling updates for user[%d]\n", reqId, user.Id)
 	conn := s.AddConn(w, *r, user, nil)
 	if conn == nil {
@@ -35,6 +46,11 @@ func PollUpdates(s *state.State, dbConn *db.DBConn, w http.ResponseWriter, r *ht
 	h.SetSseHeaders(&conn.Writer)
 	log.Printf("TRACE [%s] sse initiated for user[%d]\n", reqId, user.Id)
 
-	sse.PollUpdates(s, conn, user.Id)
-	log.Printf("TRACE [%s] live update consumption stopped for user[%d]\n", reqId, user.Id)
+	isDone := sse.PollUpdates(s, conn, user.Id)
+	if !isDone {
+		log.Printf("WARN [%s] live update consumption stopped for user[%d]\n", reqId, user.Id)
+		w.Write([]byte("Under Maintenance"))
+	}
+	log.Printf("TRACE [%s] live update consumption stopped for user[%d] isDone[%t]\n", reqId, user.Id, isDone)
+	w.Write([]byte("Server Stopped"))
 }

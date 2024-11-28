@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"strconv"
 
 	"neon-chat/src/consts"
 	"neon-chat/src/utils"
@@ -36,6 +37,10 @@ func SetSseHeaders(w *http.ResponseWriter) {
 
 func SetGzipHeaders(w *http.ResponseWriter) {
 	(*w).Header().Set("Content-Encoding", "gzip")
+}
+
+func SetRetryAfterHeader(w *http.ResponseWriter, seconds int) {
+	(*w).Header().Set("Retry-After", strconv.Itoa(seconds))
 }
 
 func ParseUrlArgs(r *http.Request) map[string]string {

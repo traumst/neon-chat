@@ -1,7 +1,6 @@
 package src
 
 import (
-	"log"
 	"net/http"
 
 	"neon-chat/src/controller"
@@ -23,6 +22,7 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, limit config.RpsLim
 	accessCtrl := middleware.AccessControlMiddleware()
 	throttleTotal := middleware.ThrottlingTotalMiddleware(limit.TotalRPS, limit.TotalBurst)
 	throttleUser := middleware.ThrottlingUserMiddleware(limit.UserRPS, limit.UserBurst)
+	maintenance := middleware.MaintenanceMiddleware()
 	// TODO uncomment for live
 	//recovery := middleware.RecoveryMiddleware()
 
@@ -37,6 +37,7 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, limit config.RpsLim
 		accessCtrl,
 		throttleTotal,
 		throttleUser,
+		maintenance,
 		//recovery,
 	}
 	// sse hates gzip
@@ -51,6 +52,7 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, limit config.RpsLim
 		accessCtrl,
 		throttleTotal,
 		throttleUser,
+		maintenance,
 		//recovery,
 	}
 	// most endpoints need all middlewares
@@ -66,6 +68,7 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, limit config.RpsLim
 		accessCtrl,
 		throttleTotal,
 		throttleUser,
+		maintenance,
 		//recovery,
 	}
 
@@ -80,156 +83,98 @@ func SetupControllers(state *state.State, dbConn *db.DBConn, limit config.RpsLim
 	handleSettings(maxMiddleware)
 
 	// live updates
-	log.Println("...live update polling middleware", maxMiddleware)
+	//log.Println("...live update polling middleware", maxMiddleware)
 	http.Handle("/poll", maxUnzippedMiddleware.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.PollUpdates(state, dbConn, w, r)
-		})))
+		http.HandlerFunc(controller.PollUpdates)))
 
 	// home, default
-	log.Println("...home middleware", minMiddleware)
+	//log.Println("...home middleware", minMiddleware)
 	http.Handle("/", minMiddleware.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.NavigateHome(w, r)
-		})))
+		http.HandlerFunc(controller.NavigateHome)))
 }
 
 func handleContacts(mw middleware.Middlewares) {
-	log.Println("...contacts middleware", mw)
+	//log.Println("...contacts middleware", mw)
 	http.Handle("/infocard", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.GetUserInfo(w, r)
-		})))
+		http.HandlerFunc(controller.GetUserInfo)))
 }
 
 func handleStaticFiles(mw middleware.Middlewares) {
-	log.Println("...static files middleware", mw)
+	//log.Println("...static files middleware", mw)
 	http.Handle("/favicon.ico", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.FavIcon(w, r)
-		})))
+		http.HandlerFunc(controller.FavIcon)))
 	http.Handle("/favicon.svg", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.FavIcon(w, r)
-		})))
+		http.HandlerFunc(controller.FavIcon)))
 	http.Handle("/icon/", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.ServeFile(w, r)
-		})))
+		http.HandlerFunc(controller.ServeFile)))
 	http.Handle("/script/", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.ServeFile(w, r)
-		})))
+		http.HandlerFunc(controller.ServeFile)))
 	http.Handle("/css/", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.ServeFile(w, r)
-		})))
+		http.HandlerFunc(controller.ServeFile)))
 }
 
 func handleSettings(mw middleware.Middlewares) {
-	log.Println("...settings middleware", mw)
+	//log.Println("...settings middleware", mw)
 	http.Handle("/settings", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.OpenSettings(w, r)
-		})))
+		http.HandlerFunc(controller.OpenSettings)))
 	http.Handle("/settings/close", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.CloseSettings(w, r)
-		})))
+		http.HandlerFunc(controller.CloseSettings)))
 }
 
 func handleMsgs(mw middleware.Middlewares) {
-	log.Println("...message middleware", mw)
+	//log.Println("...message middleware", mw)
 	http.Handle("/message/delete", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.DeleteMessage(w, r)
-		})))
+		http.HandlerFunc(controller.DeleteMessage)))
 	http.Handle("/message", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.AddMessage(w, r)
-		})))
+		http.HandlerFunc(controller.AddMessage)))
 	http.Handle("/message/quote", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.QuoteMessage(w, r)
-		})))
+		http.HandlerFunc(controller.QuoteMessage)))
 }
 
 func handleChat(mw middleware.Middlewares) {
-	log.Println("...chat middleware", mw)
+	//log.Println("...chat middleware", mw)
 	http.Handle("/chat/welcome", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.Welcome(w, r)
-		})))
+		http.HandlerFunc(controller.Welcome)))
 	http.Handle("/chat/delete", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.DeleteChat(w, r)
-		})))
+		http.HandlerFunc(controller.DeleteChat)))
 	http.Handle("/chat/close", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.CloseChat(w, r)
-		})))
+		http.HandlerFunc(controller.CloseChat)))
 	http.Handle("/chat/", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.OpenChat(w, r)
-		})))
+		http.HandlerFunc(controller.OpenChat)))
 	http.Handle("/chat", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.AddChat(w, r)
-		})))
+		http.HandlerFunc(controller.AddChat)))
 }
 
 func handleUser(mw middleware.Middlewares) {
-	log.Println("...user middleware", mw)
+	//log.Println("...user middleware", mw)
 	http.Handle("/user/invite", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.InviteUser(w, r)
-		})))
+		http.HandlerFunc(controller.InviteUser)))
 	http.Handle("/user/expel", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.ExpelUser(w, r)
-		})))
+		http.HandlerFunc(controller.ExpelUser)))
 	http.Handle("/user/leave", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.LeaveChat(w, r)
-		})))
+		http.HandlerFunc(controller.LeaveChat)))
 	http.Handle("/user/change", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.ChangeUser(w, r)
-		})))
+		http.HandlerFunc(controller.ChangeUser)))
 	http.Handle("/user/search", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.SearchUsers(w, r)
-		})))
+		http.HandlerFunc(controller.SearchUsers)))
 }
 
 func handleAuth(mw middleware.Middlewares) {
-	log.Println("...auth middleware", mw)
+	//log.Println("...auth middleware", mw)
 	http.Handle("/login", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.Login(w, r)
-		})))
+		http.HandlerFunc(controller.Login)))
 	http.Handle("/signup", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.SignUp(w, r)
-		})))
+		http.HandlerFunc(controller.SignUp)))
 	http.Handle("/signup-confirm", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.ConfirmEmail(w, r)
-		})))
+		http.HandlerFunc(controller.ConfirmEmail)))
 	http.Handle("/logout", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.Logout(w, r)
-		})))
+		http.HandlerFunc(controller.Logout)))
 }
 
 func handleAvatar(mw middleware.Middlewares) {
-	log.Println("...avatar middleware", mw)
+	//log.Println("...avatar middleware", mw)
 	http.Handle("/avatar/add", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.AddAvatar(w, r)
-		})))
+		http.HandlerFunc(controller.AddAvatar)))
 	http.Handle("/avatar", mw.Chain(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			controller.GetAvatar(w, r)
-		})))
+		http.HandlerFunc(controller.GetAvatar)))
 }
