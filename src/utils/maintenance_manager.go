@@ -14,6 +14,8 @@ type maintenanceManager struct {
 	inMaintenance int32
 }
 
+const maxConcurrentCount = 3000
+
 func (m *maintenanceManager) RaiseFlag() error {
 	log.Println("TRACE RaiseFlag called")
 	if atomic.LoadInt32(&m.inMaintenance) == 1 {
@@ -38,18 +40,25 @@ func (m *maintenanceManager) IncrUserCount() error {
 	if atomic.LoadInt32(&m.inMaintenance) == 1 {
 		return fmt.Errorf("maintenance flag is up")
 	}
+	count := atomic.LoadInt32(&m.activeUsers)
+	if count >= maxConcurrentCount {
+		return fmt.Errorf("max concurrent users reached")
+	}
 	atomic.AddInt32(&m.activeUsers, 1)
 	return nil
 }
 
 func (m *maintenanceManager) DecrUserCount() {
 	log.Println("TRACE DecrUserCount called")
+	if atomic.LoadInt32(&m.activeUsers) == 0 {
+		panic("count was already 0 on call to decrement")
+	}
 	atomic.AddInt32(&m.activeUsers, -1)
 }
 
 func (m *maintenanceManager) WaitUsersLeave(timeout time.Duration) int {
 	log.Println("TRACE WaitUsersLeave called, current count", atomic.LoadInt32(&m.activeUsers))
-	probe := time.NewTicker(1 * time.Second)
+	probe := time.NewTicker(100 * time.Millisecond)
 	abort := time.NewTicker(timeout)
 	defer func() {
 		probe.Stop()
