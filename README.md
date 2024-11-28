@@ -20,10 +20,6 @@ This app is being build as an excercise for me to
 
 ## TODOs
 
-+ tweak db
-    + add timestamps to every table:
-        + created
-        + updated
 + controllers
     + sse poll error in firefox
 + after restart sse connects, but does not update UI
@@ -31,13 +27,13 @@ This app is being build as an excercise for me to
 
 ### Next up
 
-+ add log trace to all methods
-+ logrotate
 + log levels with [slog in GO 1.23](https://pkg.go.dev/log/slog#Debug)
++ logrotate
++ add log trace to all methods
 + change chat title
 + collapsible / resizable left panel
 + add contacts page / address book
-    * limit who can invite add / you
+    * limit who can invite / add you
 + docker setup: pod + persistent storage
 + deployment github action
 
