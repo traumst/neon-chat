@@ -53,7 +53,12 @@ func EnvRead() (*Config, error) {
 }
 
 func readEnvFile(scanner *bufio.Scanner) (*Config, error) {
-	envConf := Config{Smtp: SmtpConfig{}, RateLimit: RpsLimit{}, TestUsers: make([]*TestUser, 0)}
+	envConf := Config{
+		Smtp:         SmtpConfig{},
+		RateLimit:    RpsLimit{},
+		TestUsers:    make([]*TestUser, 0),
+		BackupConfig: BackupConfig{},
+	}
 	for scanner.Scan() {
 		line := scanner.Text()
 		kv := strings.Split(line, "=")
@@ -93,6 +98,10 @@ func readEnvFile(scanner *bufio.Scanner) (*Config, error) {
 			envConf.Log.Stdout = kv[1] == "true"
 		case "LOG_DIR":
 			envConf.Log.Dir = kv[1]
+		case "BACKUP_SESSIONS_FILE":
+			envConf.BackupConfig.SessionFilePath = kv[1]
+		case "BACKUP_USER_CHAT_FILE":
+			envConf.BackupConfig.UserChatFilePath = kv[1]
 		default:
 			log.Printf("unknown env config [%s]\n", line)
 		}
