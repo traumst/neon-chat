@@ -21,7 +21,6 @@ This app is being build as an excercise for me to
 ## TODOs
 
 + sse poll error in firefox
-+ ensure maintenance completes before exit
 
 ### Next up
 
