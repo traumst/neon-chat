@@ -70,6 +70,26 @@ func TestClearFlagRepeatCall(t *testing.T) {
 	go mm.ClearFlag()
 }
 
+func TestWaitMaintenanceComplete(t *testing.T) {
+	mm := &maintenanceManager{}
+	mm.RaiseFlag()
+	go func() {
+		time.Sleep(200 * time.Millisecond)
+		mm.ClearFlag()
+	}()
+	if !mm.WaitMaintenanceComplete(500 * time.Millisecond) {
+		t.Errorf("expected true, got false")
+	}
+}
+
+func TestWaitMaintenanceCompleteNotYet(t *testing.T) {
+	mm := &maintenanceManager{}
+	mm.RaiseFlag()
+	if mm.WaitMaintenanceComplete(100 * time.Millisecond) {
+		t.Errorf("expected false, got true")
+	}
+}
+
 func TestIncrUserCount(t *testing.T) {
 	mm := &maintenanceManager{}
 	var err error

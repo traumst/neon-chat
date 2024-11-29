@@ -13,6 +13,7 @@ type Config struct {
 	RateLimit      RpsLimit
 	TestUsers      TestUsers
 	TestDataInsert bool
+	BackupConfig   BackupConfig
 }
 
 func (config *Config) String() string {
@@ -24,6 +25,7 @@ func (config *Config) String() string {
 	acc += fmt.Sprintln("rateLimits:", config.RateLimit)
 	acc += fmt.Sprintln("testUser:", config.TestUsers)
 	acc += fmt.Sprintln("testDataInsert:", config.TestDataInsert)
+	acc += fmt.Sprintln("backups:", config.BackupConfig)
 	return acc
 }
 
@@ -76,4 +78,13 @@ func (tu TestUsers) String() string {
 	}
 	acc += "]"
 	return acc
+}
+
+type BackupConfig struct {
+	SessionFilePath  string
+	UserChatFilePath string
+}
+
+func (bc BackupConfig) String() string {
+	return fmt.Sprintf("sessions:%s,userChats:%s", bc.SessionFilePath, bc.UserChatFilePath)
 }

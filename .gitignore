@@ -20,3 +20,4 @@ _bugz/
 credentials.dev.json
 *.csv
 sessions.json
+user_chat.json

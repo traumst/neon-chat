@@ -20,10 +20,7 @@ This app is being build as an excercise for me to
 
 ## TODOs
 
-+ controllers
-    + sse poll error in firefox
-+ after restart sse connects, but does not update UI
-    + store open chat with session
++ sse poll error in firefox
 
 ### Next up
 

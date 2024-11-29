@@ -35,6 +35,27 @@ func (m *maintenanceManager) IsInMaintenance() bool {
 	return atomic.LoadInt32(&m.inMaintenance) == 1
 }
 
+func (m *maintenanceManager) WaitMaintenanceComplete(timeout time.Duration) bool {
+	log.Println("TRACE WaitMaintenanceComplete called, current count", atomic.LoadInt32(&m.activeUsers))
+	probe := time.NewTicker(100 * time.Millisecond)
+	abort := time.NewTicker(timeout)
+	defer func() {
+		probe.Stop()
+		abort.Stop()
+	}()
+
+	for {
+		select {
+		case <-probe.C:
+			if atomic.LoadInt32(&m.inMaintenance) == 0 {
+				return true
+			}
+		case <-abort.C:
+			return false
+		}
+	}
+}
+
 func (m *maintenanceManager) IncrUserCount() error {
 	log.Println("TRACE IncrUserCount called")
 	if atomic.LoadInt32(&m.inMaintenance) == 1 {
