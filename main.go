@@ -72,8 +72,14 @@ func gracefulShutdown(
 	log.Println("Waiting for users to leave...")
 	err := utils.MaintenanceManager.RaiseFlag()
 	if err != nil {
-		log.Fatalf("ERROR failed to raise maintenance flag: %s", err)
-		// TODO wait
+		log.Printf("ERROR failed to raise maintenance flag: %s", err)
+		res := utils.MaintenanceManager.WaitMaintenanceComplete(30 * time.Second)
+		if !res {
+			log.Printf("ERROR server stuck in maintenance, data may become corrupted")
+		} else {
+			log.Printf("INFO no maintenance now, safe to shutdown")
+		}
+		_ = utils.MaintenanceManager.RaiseFlag()
 	}
 	activeCount := utils.MaintenanceManager.WaitUsersLeave(3 * time.Second)
 	if activeCount != 0 {
