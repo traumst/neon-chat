@@ -86,5 +86,10 @@ func InitAppState(c *config.Config) *state.State {
 		},
 		TestUsers: c.TestUsers[:],
 	})
+	if err := app.LoadFromFile(c.BackupConfig.UserChatFilePath); err != nil {
+		log.Printf("WARN could not load user chats from [%s]: %s", c.BackupConfig.UserChatFilePath, err)
+	} else {
+		log.Printf("INFO backup user open chat loaded from [%s]: %s", c.BackupConfig.UserChatFilePath, err)
+	}
 	return app
 }
