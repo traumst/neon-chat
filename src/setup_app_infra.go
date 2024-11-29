@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"neon-chat/src/db"
-	"neon-chat/src/state"
-	"neon-chat/src/utils/config"
 	"os"
 	"strings"
 	"time"
+
+	test "neon-chat/src/_test"
+	"neon-chat/src/db"
+	"neon-chat/src/state"
+	"neon-chat/src/utils/config"
 )
 
 func SetupGlobalLogger(stderr bool, dir string) {
@@ -62,12 +64,38 @@ func ReadEnvConfig() *config.Config {
 	return c
 }
 
-func ConnectDB(dbFilePath string) *db.DBConn {
+func InitDBConn(dbFilePath string, insertTestData bool, testUsers config.TestUsers) *db.DBConn {
 	log.Println("connecting db...")
 	db, err := db.ConnectDB(dbFilePath)
 	if err != nil {
 		log.Fatalf("Error opening db at [%s]: %s", dbFilePath, err)
 	}
+	// log.Println("inserting testData...")
+	if insertTestData {
+		log.Println("Inserting test users...")
+		userCount, err := test.CreateTestUsers(db, testUsers)
+		if err != nil || userCount < 0 {
+			log.Fatalf("ERROR failed to create [%d] of [%d] test users: %s", userCount, len(testUsers), err)
+		} else if userCount == 0 {
+			log.Printf("created none of [%d] specified test users", len(testUsers))
+		} else /* if userCount > 0 */ {
+			log.Printf("created [%d] out of [%d] specified test users", userCount, len(testUsers))
+		}
+		log.Println("Inserting test auth...")
+		authCount, err := test.CreateTestAuth(db, testUsers)
+		if err != nil || authCount < 0 {
+			log.Fatalf("ERROR failed to create test auth: %s", err)
+		} else if authCount == 0 {
+			log.Println("created none of specified test auth")
+		} else /* if authCount > 0 */ {
+			log.Println("created specified test auth")
+		}
+		if userCount != authCount {
+			log.Fatalf("ERROR created users count [%d] does not match created auth count [%d]", userCount, authCount)
+		}
+	}
+	// log.Printf("scheduling db maintenance...")
+	go db.ScheduleMaintenance()
 	return db
 }
 

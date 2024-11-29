@@ -64,14 +64,14 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 	return &dbConn, err
 }
 
-func (dbConn *DBConn) ConnClose(timeout time.Duration) {
+func (dbConn *DBConn) ConnClose(timeout time.Duration) error {
 	activeCount := utils.MaintenanceManager.WaitUsersLeave(timeout)
 	if activeCount != 0 {
 		log.Printf("WARN ConnClose aborts [%d] active users after timeout %s", activeCount, timeout.String())
 	} else {
 		log.Printf("INFO ConnClose waited for users to leave")
 	}
-	dbConn.Conn.Close()
+	return dbConn.Conn.Close()
 }
 
 func (dbConn *DBConn) ScheduleMaintenance() {
