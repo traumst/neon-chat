@@ -7,7 +7,6 @@ import (
 	"time"
 )
 
-// TODO signal to stop polling
 // TODO queue mechanism for delta updates
 func PollUpdates(state *state.State, conn *state.Conn, pollingUserId uint) bool {
 	log.Printf("TRACE [%s] Live updates triggered by user[%d]\n", conn.Origin, conn.User.Id)
