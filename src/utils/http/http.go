@@ -33,6 +33,8 @@ func SetSseHeaders(w *http.ResponseWriter) {
 	(*w).Header().Set("Content-Type", "text/event-stream")
 	(*w).Header().Set("Cache-Control", "no-cache")
 	(*w).Header().Set("Connection", "keep-alive")
+	// (*w).Header().Set("Content-Encoding", "identity")
+	// (*w).Header().Set("Transfer-Encoding", "chunked")
 }
 
 func SetGzipHeaders(w *http.ResponseWriter) {

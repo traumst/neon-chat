@@ -18,10 +18,6 @@ This app is being build as an excercise for me to
         <b>Roadmap</b>
     </summary>
 
-## TODOs
-
-+ sse poll error in firefox
-
 ### Next up
 
 + log levels with [slog in GO 1.23](https://pkg.go.dev/log/slog#Debug)
