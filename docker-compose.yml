@@ -1,0 +1,16 @@
+volumes:
+  neon-vol:
+    driver: local
+
+services:
+  neon-chat:
+    container_name: neon-chat-container
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: neon-chat-container
+    image: neon-chat:v1
+    ports:
+      - "8080:8080"
+    volumes:
+      - neon-vol:/app
