@@ -20,14 +20,11 @@ This app is being build as an excercise for me to
 
 ### Next up
 
-+ log levels with [slog in GO 1.23](https://pkg.go.dev/log/slog#Debug)
-+ logrotate
-+ add log trace to all methods
++ consensus sync db
 + change chat title
 + collapsible / resizable left panel
 + add contacts page / address book
     * limit who can invite / add you
-+ docker setup: pod + persistent storage
 + deployment github action
 
 ## Backlog
@@ -280,30 +277,3 @@ sqlite3 chat.db  -header -column  "select * from users;"
 ```
 
 With this, all of queries are executed in a single session, we can find it in the history, and both `-cmd`s values are cleaned up for the next query. Semicolon is also not required for a single query. No global setting to mess with running code later.
-
-## System requirements
-
-I don't normally specify such info, because this is absolutely subjective and could probably work "fine" on less that half of minimal requirements. But then we start testing the limits of garbage collection and resource allocation. This is russian roulette and I love it! Test it out and report the lowest resource consumption you are able to achieve while serving a hot steamy load.
-
-### Pre-measure estimates
-
-What **I** think a good measure is 
-* ~1000 active/concurrent users 
-* 100-300 mixed calls per second
-* responses always under 200ms
-
-#### Minimal Requirements
-
-Obviously our machine is expected to be bottlenecked by the CPU the most here, expect occasional hang or reboot.
-
-* 1 CORE    - with arbitrary performance
-* 256MB RAM - for app memory and db caches with ~30% spair
-* 2GB DISK  - for dependencies, db file, logs with ~60% spair
-
-#### Recommended Requirements
-
-Here we should not cross ~85% cpu anymore, memory should be at max ~50% in use
-
-* 2+ CORES   - to better utilize go concurrency
-* 512MB+ RAM - lower % usage = faster RAM lookup
-* 4GB+ DISK  - same as RAM for SSD, otherwise it's only log space for HHD
