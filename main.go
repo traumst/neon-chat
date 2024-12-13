@@ -13,9 +13,9 @@ import (
 	"neon-chat/src"
 	"neon-chat/src/db"
 	"neon-chat/src/state"
-	"neon-chat/src/utils"
 	"neon-chat/src/utils/config"
 	h "neon-chat/src/utils/http"
+	m "neon-chat/src/utils/maintenance"
 )
 
 func main() {
@@ -70,18 +70,18 @@ func gracefulShutdown(
 	conf *config.Config,
 ) {
 	log.Println("Waiting for users to leave...")
-	err := utils.MaintenanceManager.RaiseFlag()
+	err := m.MaintenanceManager.RaiseFlag()
 	if err != nil {
 		log.Printf("ERROR failed to raise maintenance flag: %s", err)
-		res := utils.MaintenanceManager.WaitMaintenanceComplete(30 * time.Second)
+		res := m.MaintenanceManager.WaitMaintenanceComplete(30 * time.Second)
 		if !res {
 			log.Printf("ERROR server stuck in maintenance, data may become corrupted")
 		} else {
 			log.Printf("INFO no maintenance now, safe to shutdown")
 		}
-		_ = utils.MaintenanceManager.RaiseFlag()
+		_ = m.MaintenanceManager.RaiseFlag()
 	}
-	activeCount := utils.MaintenanceManager.WaitUsersLeave(3 * time.Second)
+	activeCount := m.MaintenanceManager.WaitUsersLeave(3 * time.Second)
 	if activeCount != 0 {
 		log.Printf("ERROR [%d] users did not leave", activeCount)
 	}

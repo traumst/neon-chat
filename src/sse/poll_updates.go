@@ -2,9 +2,10 @@ package sse
 
 import (
 	"log"
-	"neon-chat/src/state"
-	"neon-chat/src/utils"
 	"time"
+
+	"neon-chat/src/state"
+	m "neon-chat/src/utils/maintenance"
 )
 
 // TODO queue mechanism for delta updates
@@ -13,7 +14,7 @@ func PollUpdates(state *state.State, conn *state.Conn, pollingUserId uint) bool 
 	done := false
 	ticker := time.NewTicker(1 * time.Second)
 
-	for !done && !utils.MaintenanceManager.IsInMaintenance() {
+	for !done && !m.MaintenanceManager.IsInMaintenance() {
 		select {
 		case <-conn.Reader.Context().Done():
 			log.Printf("TRACE [%s] user[%d] disconnects as done:[%t]\n", conn.Origin, conn.User.Id, done)

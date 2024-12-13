@@ -3,13 +3,14 @@ package db
 import (
 	"fmt"
 	"log"
-	"neon-chat/src/utils"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
+
+	m "neon-chat/src/utils/maintenance"
 )
 
 type DBConn struct {
@@ -65,7 +66,7 @@ func ConnectDB(dbPath string) (*DBConn, error) {
 }
 
 func (dbConn *DBConn) ConnClose(timeout time.Duration) error {
-	activeCount := utils.MaintenanceManager.WaitUsersLeave(timeout)
+	activeCount := m.MaintenanceManager.WaitUsersLeave(timeout)
 	if activeCount != 0 {
 		log.Printf("WARN ConnClose aborts [%d] active users after timeout %s", activeCount, timeout.String())
 	} else {
@@ -93,12 +94,12 @@ func (dbConn *DBConn) ScheduleMaintenance() {
 
 func doMaintenance(dbConn *DBConn) error {
 	log.Println("TRACE maintenance about to start")
-	if err := utils.MaintenanceManager.RaiseFlag(); err != nil {
+	if err := m.MaintenanceManager.RaiseFlag(); err != nil {
 		log.Printf("TRACE maintenance will not run, %s", err)
 	}
-	defer utils.MaintenanceManager.ClearFlag()
+	defer m.MaintenanceManager.ClearFlag()
 
-	activeCount := utils.MaintenanceManager.WaitUsersLeave(1 * time.Minute)
+	activeCount := m.MaintenanceManager.WaitUsersLeave(1 * time.Minute)
 	if activeCount != 0 {
 		return fmt.Errorf("failed while waiting for [%d] users to leave", activeCount)
 	}
