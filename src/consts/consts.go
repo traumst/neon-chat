@@ -10,6 +10,7 @@ const (
 	TxChangesKey       CtxKey = "X-Tx-Changes"
 	SessionCookie      string = "session"
 	LetterBytes        string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	Timestamp          string = "2006-01-02T15:04:05Z"
 	Byte                      = 1
 	KB                        = 1024 * Byte
 	MB                        = 1024 * KB
@@ -19,5 +20,4 @@ const (
 	MaxUploadBytesSize int64  = 50 * KB
 	MaxCacheSize       int    = 1024
 	MaxSharedChats     int    = 20
-	ErrKeyNotFound            = "key not found"
 )
