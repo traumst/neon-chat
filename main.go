@@ -57,6 +57,8 @@ func serverStartup() (
 	if err := h.LoadSessionsFromFile(conf.BackupConfig.SessionFilePath); err != nil {
 		log.Printf("Could not load sessions: %s", err)
 	}
+	log.Println("Connecting quorum...")
+	src.SetupQuorum(conf)
 	server = &http.Server{
 		Addr: fmt.Sprintf(":%d", conf.Port),
 	}

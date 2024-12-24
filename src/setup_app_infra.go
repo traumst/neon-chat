@@ -1,6 +1,7 @@
 package src
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -10,6 +11,7 @@ import (
 
 	test "neon-chat/src/_test"
 	"neon-chat/src/db"
+	"neon-chat/src/quorum"
 	"neon-chat/src/state"
 	"neon-chat/src/utils/config"
 )
@@ -120,4 +122,10 @@ func InitAppState(c *config.Config) *state.State {
 		log.Printf("INFO backup user open chat loaded from [%s]: %s", c.BackupConfig.UserChatFilePath, err)
 	}
 	return app
+}
+
+func SetupQuorum(c *config.Config) {
+	ctx := context.Background()
+	conn := quorum.NewRedis(c.PubSub)
+	node := quorum.NewNode()
 }
