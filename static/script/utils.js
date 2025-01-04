@@ -79,3 +79,20 @@ function scrollToLastChild(parent) {
         console.error('scrollToLastChild: not found parent', parent.id);
     }
 }
+
+function flagFormToggle(chatId, msgId) {
+    const form = document.getElementById(`flagForm-chat-${chatId}-msg-${msgId}`);
+    form.style.display = 'block';
+    setTimeout(() => form.classList.add('show'), 10);
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            form.classList.remove('show');
+            setTimeout(() => { 
+                form.style.display = 'none';
+            }, 300);
+        } else if (event.ctrlKey && event.key === 'Enter') {
+            form.submit();
+        }
+    });
+}

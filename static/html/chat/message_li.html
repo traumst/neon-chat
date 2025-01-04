@@ -65,6 +65,39 @@
                 [delete]
             </div>
             {{ end }}
+            {{ if eq .OwnerId .ViewerId }}
+            <div title="flag this message">
+                <button id="flagButton-chat-{{ .ChatId }}-msg-{{ .MsgId }}" 
+                    onclick="flagFormToggle('{{ .ChatId }}', '{{ .MsgId }}')"
+                >
+                    [flag]
+                </button>
+                <!-- TODO load on click -->
+                <form id="flagForm-chat-{{ .ChatId }}-msg-{{ .MsgId }}"
+                    class="flag-form" 
+                    style="display: none;"
+                    hx-post="/message/flag"
+                    hx-validate="true"
+                    hx-trigger="submit,click[ctrlKey&&enterKey]"
+                    hx-swap="innerHTML" 
+                    hx-headers='{"Content-Type": "application/x-www-form-urlencoded"}'
+                    hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
+                    hx-include="[name='msgid'],[name='chatid'],[name='type'],[name='subText']"
+                    hx-indicator=".htmx-indicator"
+                >
+                    <input name="msgid" value="{{.MsgId}}" type="hidden" />
+                    <input name="chatid" value="{{.ChatId}}" type="hidden" />
+                    <input name="userid" value="{{.AuthorId}}" type="hidden" />
+                    <input name="sub" type="text" minlength="4" maxlength="120" />
+                    <select name="type">
+                        {{ range $index, $element := .Sentiments }}
+                        <option value="{{$element}}">\t{{$index}}. {{$element}}</option>
+                        {{ end }}
+                    </select>
+                    <button type="submit">Send</button>
+                </form>
+            </div>
+            {{ end }}
         </div>
         <script>
             document.addEventListener('htmx:afterOnLoad', function(evt) {
