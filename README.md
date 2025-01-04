@@ -18,24 +18,33 @@ This app is being build as an excercise for me to
         <b>Roadmap</b>
     </summary>
 
-### Next up
+## TODO
 
-+ consensus sync db
-+ change chat title
-+ collapsible / resizable left panel
+### Moderation
++ allow users to flag messages
++ allow users to mute/report other users
++ allow owners to ban users from chat
 + add contacts page / address book
     * limit who can invite / add you
-+ deployment github action
+
+### State Replication
++ split api from db service
+    + connect via gRPC?
++ make db service query llm
+    + llm should be accessible via fastapi
++ manage event log
+    + snapshot, rotate by cron job
++ event log replication
++ consensus for write lead
 
 ## Backlog
 
-### Research
-- stress test a bufferred vs unbuffered channel
+- allow change chat title
 
 ### Message Broadcasting:
-- msg should distribute to user connection, even if chat is closed
 - pagination, track user deltas in chats and messages
 - buffer outgoing events for unstable connection/s
+- msg should distribute to user connection, even if chat is closed
 
 ### User Notifications
 - new chat invite
@@ -65,10 +74,6 @@ This app is being build as an excercise for me to
 - extend unit tests
 - add integration tests
 
-### Moderation
-- Add ability for users to mute/report other users
-- Add ability to ban users from chat
-
 ### User Authentication
 - provide authType as form input
 - google auth
@@ -91,6 +96,7 @@ This app is being build as an excercise for me to
 - bottom controls
     * status 🟢🟡🔴
     * light/dark mode switch
++ collapsible / resizable left panel
 - collapsible sub menus
     * active user - logout, setting
     * open chat - close, delete
