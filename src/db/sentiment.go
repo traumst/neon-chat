@@ -6,21 +6,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type SentimentType string
-
-const (
-	NeutralSentimentType     SentimentType = "neutral"
-	PositiveSentimentType    SentimentType = "positive"
-	NegativeSentimentType    SentimentType = "negative"
-	ExcitingSentimentType    SentimentType = "exctiting"
-	SupportiveSentimentType  SentimentType = "supportive"
-	InformativeSentimentType SentimentType = "informative"
-	ProvocativeSentimentType SentimentType = "provocative"
-	ViolentSentimentType     SentimentType = "violent"
-	AbuseSentimentType       SentimentType = "abuse"
-	ScamSentimentType        SentimentType = "scam"
-)
-
 type Sentiment struct {
 	ItemType string        `db:"item_type"`
 	ItemId   uint          `db:"item_id"`
