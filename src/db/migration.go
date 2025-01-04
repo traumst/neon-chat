@@ -11,6 +11,14 @@ import (
 	"neon-chat/src/utils"
 )
 
+// TODO meta-migrate, ie migrations migration
+// type MigrationVersion struct {
+// 	// latest available version
+// 	latest string
+// 	// currently active version
+// 	current string
+// }
+
 type Migration struct {
 	Id    uint      `db:"id"`
 	Title string    `db:"title"`
@@ -29,58 +37,62 @@ func (dbConn *DBConn) MigrationsTableExists() bool {
 	return dbConn.TableExists("_migrations")
 }
 
-func (dbConn *DBConn) ApplyMigrations() error {
+func (dbConn *DBConn) TryApplyMigrations() (applied int64, err error) {
 	log.Printf("TRACE applyMigrations IN")
 	//utils.LS()
 	// TODO load "latest" subset
 	files, err := utils.GetFilenamesIn(migraitonsFolder)
 	if err != nil {
-		return fmt.Errorf("DBConn.ApplyMigrations failed to list migrations[%s], %s", migraitonsFolder, err.Error())
+		return 0, fmt.Errorf("failed to list migrations[%s], %s", migraitonsFolder, err.Error())
 	}
 
-	for _, filename := range files {
-		err := applyMigration(dbConn, filename)
+	for count, filename := range files {
+		log.Printf("DEBUG applying %dth migration out of %d", count, len(files))
+		isApplied, err := applyMigration(dbConn, filename)
 		if err != nil {
-			log.Printf("DBConn.ApplyMigrations fail while applying migrations, %s", err)
-			return fmt.Errorf("fail to apply migration[%s]", filename)
+			log.Printf("TryApplyMigrations fail while applying migrations, %s", err)
+			return applied, fmt.Errorf("fail to apply migration[%s]", filename)
+		}
+		if isApplied {
+			applied += 1
 		}
 	}
-	log.Printf("TRACE applyMigrations OUT")
-	return nil
+
+	return applied, nil
 }
 
-func applyMigration(dbConn *DBConn, filename string) error {
+func applyMigration(dbConn *DBConn, filename string) (isApplied bool, err error) {
 	log.Printf("TRACE applyMigration now on [%s]", filename)
 	path := strings.Split(filename, ".")
 	if len(path) != 2 {
-		return fmt.Errorf("migration title[%s] is not *.sql", filename)
+		return false, fmt.Errorf("migration title[%s] is not *.sql", filename)
 	}
 	title := path[0]
 	if title == "" {
 		log.Printf("WARN applyMigration blank title [%s]", filename)
-		return nil
+		return false, nil
 	}
 	if ext := path[1]; ext != "sql" {
 		log.Printf("TRACE applyMigration skip non-sql [%s]", title)
-		return nil
+		return false, nil
 	}
-	log.Printf("TRACE applyMigration check if already applied [%s]", title)
-	isApplied, err := isMigrationApplied(dbConn, title)
+	isApplied, err = isMigrationApplied(dbConn, title)
 	if err == nil && isApplied {
-		return nil
+		log.Printf("TRACE applyMigration already applied [%s]", title)
+		return false, nil
 	}
-	log.Printf("TRACE applyMigration reading [%s]", title)
 	bytes, err := os.ReadFile(migraitonsFolder + "/" + filename)
 	if err != nil {
-		return fmt.Errorf("failed to read migration file content[%s]", title)
+		log.Printf("TRACE applyMigration reading [%s]", title)
+		return false, fmt.Errorf("failed to read migration file content[%s]", title)
 	}
 	log.Printf("TRACE applyMigration storing migration [%s]", title)
 	migration, err := addMigration(dbConn, string(bytes[:]), title)
 	if err != nil || migration.Id < 1 {
-		return fmt.Errorf("failed to apply migration[%s], %s", title, err)
+		return false, fmt.Errorf("failed to apply migration[%s], %s", title, err)
 	}
 	log.Printf("TRACE applyMigration applied[%d][%s]", migration.Id, migration.Title)
-	return nil
+	return true, nil
 }
 
 func addMigration(dbConn *DBConn, migrate string, title string) (*Migration, error) {

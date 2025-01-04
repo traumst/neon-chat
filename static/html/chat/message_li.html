@@ -44,38 +44,47 @@
                 {{ .Text }}
             </div>
         </div>
-        <div class="chat-msg-options flex text-xs ml-auto">
-            <div title="respond to this message" 
-                hx-get="/message/quote?chatid={{ .ChatId }}&msgid={{ .MsgId }}" 
-                hx-trigger="click" 
-                hx-swap="afterbegin" 
-                hx-target="#chat-{{.ChatId}}-msg-form"
-                class="hover:text-green-800">
-                [reply]
-            </div>
-            {{ if or (eq .AuthorId .ViewerId) (eq .OwnerId .ViewerId) }}
-            <div title="delete this message" 
-                hx-post="/message/delete"
-                hx-trigger="click" 
-                hx-swap="innerHTML" 
-                hx-headers='{"Content-Type": "application/x-www-form-urlencoded"}'
-                hx-vals='{"chatid":{{ .ChatId }},"msgid":{{ .MsgId }}}'
-                hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
-                class="hover:text-amber-700">
-                [delete]
-            </div>
-            {{ end }}
-        </div>
-        <script>
-            document.addEventListener('htmx:afterOnLoad', function(evt) {
-                if (!evt.detail.target.id === 'chat-{{.ChatId}}-msg-form') {
-                    return
-                }
-                evt.detail.target.querySelector('input[type="text"], textarea')?.focus();
-            });
-        </script>
+        
+        {{ template "msg-options" . }}
     </div>
 </li>
+
+{{ define "msg-options" }}
+<div class="chat-msg-options flex text-xs ml-auto">
+    <div title="respond to this message" 
+        hx-get="/message/quote?chatid={{ .ChatId }}&msgid={{ .MsgId }}" 
+        hx-trigger="click" 
+        hx-swap="afterbegin" 
+        hx-target="#chat-{{.ChatId}}-msg-form"
+        class="hover:text-green-800">
+        [reply]
+    </div>
+    {{ if or (eq .AuthorId .ViewerId) (eq .OwnerId .ViewerId) }}
+    <div title="delete this message" 
+        hx-post="/message/delete"
+        hx-trigger="click" 
+        hx-swap="innerHTML" 
+        hx-headers='{"Content-Type": "application/x-www-form-urlencoded"}'
+        hx-vals='{"chatid":{{ .ChatId }},"msgid":{{ .MsgId }}}'
+        hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
+        class="hover:text-amber-700">
+        [delete]
+    </div>
+    {{ end }}
+    {{ if eq .OwnerId .ViewerId }}
+    <div title="flag this message"
+        hx-post="/message/flag"
+        hx-trigger="click" 
+        hx-swap="innerHTML" 
+        hx-headers='{"Content-Type": "application/x-www-form-urlencoded"}'
+        hx-vals='{"userid":{{ .AuthorId }},"chatid":{{ .ChatId }},"msgid":{{ .MsgId }},"type":"neutral","subText":"{{ .Text }}"}'
+        hx-target="#chat-{{ .ChatId }}-msg-{{ .MsgId }}"
+        class="hover:text-crazy-200">
+        [flag]
+    </div>
+    {{ end }}
+</div>
+{{ end }}
 
 {{ define "msg-author-details" }}
 <div id="msg-author-{{ .AuthorId }}-info-{{ .IntermediateId }}" 

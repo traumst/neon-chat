@@ -19,6 +19,7 @@ type MessageTemplate struct {
 	Text             string
 	TextIntro        string
 	MessageDropEvent string
+	Sentiments       []string
 }
 
 func (m *MessageTemplate) GetId() uint {
@@ -69,6 +70,9 @@ func (m *MessageTemplate) validate() error {
 	}
 	if len(m.MessageDropEvent) < 1 {
 		return fmt.Errorf("MessageTemplate requires MessageDropEvent but is [%s]", m.MessageDropEvent)
+	}
+	if len(m.Sentiments) < 1 {
+		return fmt.Errorf("MessageTemplate requires Sentiments but is %v", m.Sentiments)
 	}
 	return nil
 }

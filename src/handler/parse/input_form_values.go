@@ -2,9 +2,10 @@ package parse
 
 import (
 	"fmt"
-	"neon-chat/src/utils"
 	"net/http"
 	"strconv"
+
+	"neon-chat/src/utils"
 )
 
 func ReadFormValueUint(r *http.Request, key string) (uint, error) {

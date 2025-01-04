@@ -15,6 +15,65 @@ import (
 	h "neon-chat/src/utils/http"
 )
 
+func FlagMessage(w http.ResponseWriter, r *http.Request) {
+	reqId := r.Context().Value(consts.ReqIdKey).(string)
+	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.RequestURI)
+	if r.Method != "POST" {
+		log.Printf("TRACE [%s] method '%s' not allowed at '%s'\n", reqId, r.Method, r.RequestURI)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("action not allowed"))
+		return
+	}
+	userId, err := parse.ReadFormValueUint(r, "userid")
+	if err != nil || userId < 1 {
+		log.Printf("WARN [%s] AddMessage bad argument - userid\n", reqId)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid user id"))
+		return
+	}
+	chatId, err := parse.ReadFormValueUint(r, "chatid")
+	if err != nil || chatId < 1 {
+		log.Printf("WARN [%s] AddMessage bad argument - chatid\n", reqId)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid chat id"))
+		return
+	}
+	msgId, err := parse.ReadFormValueUint(r, "msgid")
+	if err != nil || msgId < 1 {
+		log.Printf("WARN [%s] AddMessage bad argument - msg\n", reqId)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid msg id"))
+		return
+	}
+	sentiment, err := parse.ReadFormValueString(r, "type")
+	if err != nil || sentiment == "" {
+		log.Printf("WARN [%s] AddMessage bad argument - sentiment\n", reqId)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid sentiment type"))
+		return
+	}
+	subText, err := parse.ReadFormValueString(r, "subText")
+	if err != nil || msgId < 1 {
+		log.Printf("WARN [%s] AddMessage bad argument - subText\n", reqId)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid sub-string value"))
+		return
+	}
+	dbConn := r.Context().Value(consts.DBConn).(*db.DBConn)
+	active := r.Context().Value(consts.ActiveUser).(*app.User)
+	err = pub.AddSentiment(dbConn, active, userId, chatId, msgId, sentiment, subText)
+	if err != nil {
+		log.Printf("ERROR [%s] FlagMessage processed, %s\n", reqId, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Something went wrong. Please, check input and try again later."))
+		return
+	}
+	log.Printf("TRACE [%s] FlagMessage processed without error\n", reqId)
+	w.(*h.StatefulWriter).IndicateChanges()
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Thanks for submitting your report!"))
+}
+
 func QuoteMessage(w http.ResponseWriter, r *http.Request) {
 	reqId := r.Context().Value(consts.ReqIdKey).(string)
 	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.RequestURI)
@@ -66,13 +125,12 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 	log.Printf("TRACE [%s] '%s' '%s'\n", reqId, r.Method, r.RequestURI)
 	if r.Method != "POST" {
 		log.Printf("TRACE [%s] method '%s' not allowed at '%s'\n", reqId, r.Method, r.RequestURI)
-		log.Printf("ERROR [%s] AddMessage request method\n", reqId)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("action not allowed"))
 		return
 	}
 	chatId, err := parse.ReadFormValueUint(r, "chatid")
-	if err != nil {
+	if err != nil || chatId < 1 {
 		log.Printf("WARN [%s] AddMessage bad argument - chatid\n", reqId)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("invalid chat id"))

@@ -129,6 +129,8 @@ func handleMsgs(mw middleware.Middlewares) {
 		http.HandlerFunc(controller.AddMessage)))
 	http.Handle("/message/quote", mw.Chain(
 		http.HandlerFunc(controller.QuoteMessage)))
+	http.Handle("/message/flag", mw.Chain(
+		http.HandlerFunc(controller.FlagMessage)))
 }
 
 func handleChat(mw middleware.Middlewares) {
