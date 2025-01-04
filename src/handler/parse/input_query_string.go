@@ -3,9 +3,10 @@ package parse
 import (
 	"fmt"
 	"log"
-	"neon-chat/src/consts"
 	"net/http"
 	"strconv"
+
+	"neon-chat/src/consts"
 )
 
 type QueryArgs struct {
