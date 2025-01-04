@@ -116,133 +116,66 @@ func doMaintenance(dbConn *DBConn) error {
 }
 
 func (dbConn *DBConn) init() error {
-	shouldMigrate, err := dbConn.createTables()
+	tables, index := dbConn.concatSchema()
+	var total int64
+
+	rows, err := dbConn.createTables(tables)
 	if err != nil {
-		log.Printf("ERROR DBConn.init failed to create schema, %s", err)
-		return fmt.Errorf("failed to create schema")
+		log.Printf("ERROR DBConn.init failed to create tables %s", tables)
+		return fmt.Errorf("failed to create tables, %s", err)
+	} else {
+		log.Printf("INFO DBConn.init created %d tables", rows)
+		total += rows
 	}
-	if shouldMigrate {
-		err = dbConn.ApplyMigrations()
-		if err != nil {
-			log.Printf("ERROR DBConn.init failed to apply migrations, %s", err)
-			return fmt.Errorf("failed to apply migrations")
-		}
-	}
-	err = dbConn.createIndex()
+
+	rows, err = dbConn.createIndex(index)
 	if err != nil {
-		log.Printf("ERROR DBConn.init failed to create schema, %s", err)
-		return fmt.Errorf("failed to create schema")
+		log.Printf("ERROR DBConn.init failed to create index %s", index)
+		return fmt.Errorf("failed to create index, %s", err)
+	} else {
+		log.Printf("INFO DBConn.init created %d indexes", rows)
+		total += rows
+	}
+
+	rows, err = dbConn.TryApplyMigrations()
+	if err != nil {
+		log.Printf("ERROR DBConn.init failed to apply migrations, %s", err)
+		return fmt.Errorf("failed to apply migrations")
+	} else {
+		log.Printf("INFO DBConn.init applied %d migrations", rows)
 	}
 
 	return nil
 }
 
-func (dbConn *DBConn) createIndex() (err error) {
-	// Note: update when adding new tables
-	indecies := MigrationIndex +
-		UserIndex + AuthIndex + AvatarSchema + ReservationIndex +
-		ChatIndex + ChatUserIndex + MessageIndex + QuoteIndex
-	if indecies == "" {
-		log.Println("TRACE createIndex no indexes to create")
-		return nil
-	}
-
-	_, err = dbConn.Conn.Exec(strings.TrimRight(indecies, "\n"))
-	if err != nil {
-		log.Printf("ERROR createSchema failed to create indexes, %s", err.Error())
-		return fmt.Errorf("failed to create indexes")
-	}
-	return nil
-}
-
-func (dbConn *DBConn) createTables() (shouldMigrate bool, err error) {
-	schema, shouldMigrate := dbConn.concatSchema()
+func (dbConn *DBConn) createTables(schema string) (int64, error) {
 	if schema == "" {
 		log.Println("TRACE createTables no tables to create")
-		return true, nil
+		return 0, nil
 	}
-
-	_, err = dbConn.Conn.Exec(strings.TrimRight(schema, "\n"))
+	res, err := dbConn.Conn.Exec(strings.TrimRight(schema, "\n"))
 	if err != nil {
-		log.Printf("ERROR createTables failed to create schema, %s", err.Error())
-		err = fmt.Errorf("failed to create schema")
+		return 0, fmt.Errorf("failed to create tables, %s", err)
 	}
-	return shouldMigrate, err
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return rowsAffected, fmt.Errorf("failed to get rows affected, %s", err)
+	}
+	return rowsAffected, nil
 }
 
-// Note: update when adding new tables
-func (dbConn *DBConn) concatSchema() (schema string, shouldMigrate bool) {
-	if dbConn.MigrationsTableExists() {
-		log.Println("TRACE concatSchema migration table exists")
-		// TODO meta-migrate, ie migrations migration
-	} else {
-		log.Println("TRACE concatSchema migration table will be created")
-		schema += MigrationSchema + "\n"
+func (dbConn *DBConn) createIndex(index string) (int64, error) {
+	if index == "" {
+		log.Println("TRACE createIndex no indexes to create")
+		return 0, nil
 	}
-
-	if dbConn.UserTableExists() {
-		log.Println("TRACE concatSchema user table exists")
-		shouldMigrate = true
-	} else {
-		log.Println("TRACE concatSchema user table will be created")
-		schema += UserSchema + "\n"
+	res, err := dbConn.Conn.Exec(strings.TrimRight(index, "\n"))
+	if err != nil {
+		return 0, fmt.Errorf("failed to create indexes, %s", err)
 	}
-
-	if dbConn.AuthTableExists() {
-		log.Println("TRACE concatSchema auth table exists")
-		shouldMigrate = true
-	} else {
-		log.Println("TRACE concatSchema auth table will be created")
-		schema += AuthSchema + "\n"
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return rowsAffected, fmt.Errorf("failed to get rows affected, %s", err)
 	}
-
-	if dbConn.AvatarTableExists() {
-		log.Println("TRACE concatSchema avatar table exists")
-		shouldMigrate = true
-	} else {
-		log.Println("TRACE concatSchema avatar table will be created")
-		schema += AvatarSchema + "\n"
-	}
-
-	if dbConn.ReservationTableExists() {
-		log.Println("TRACE concatSchema reservation table exists")
-		shouldMigrate = true
-	} else {
-		log.Println("TRACE concatSchema reservation table will be created")
-		schema += ReservationSchema + "\n"
-	}
-
-	if dbConn.ChatTableExists() {
-		log.Println("TRACE concatSchema chat table exists")
-		shouldMigrate = true
-	} else {
-		log.Println("TRACE concatSchema chat table will be created")
-		schema += ChatSchema + "\n"
-	}
-
-	if dbConn.ChatUserTableExists() {
-		log.Println("TRACE concatSchema chat_user table exists")
-		shouldMigrate = true
-	} else {
-		log.Println("TRACE concatSchema chat_user table will be created")
-		schema += ChatUserSchema + "\n"
-	}
-
-	if dbConn.MessageTableExists() {
-		log.Println("TRACE concatSchema messages table exists")
-		shouldMigrate = true
-	} else {
-		log.Println("TRACE concatSchema messages table will be created")
-		schema += MessageSchema + "\n"
-	}
-
-	if dbConn.QuoteTableExists() {
-		log.Println("TRACE concatSchema quotes table exists")
-		shouldMigrate = true
-	} else {
-		log.Println("TRACE concatSchema quotes table will be created")
-		schema += QuoteSchema + "\n"
-	}
-
-	return schema, shouldMigrate
+	return rowsAffected, nil
 }
