@@ -38,14 +38,26 @@ func (dbConn *DBConn) SentimentTableExists() bool {
 	return dbConn.TableExists("sentiment")
 }
 
-func AddSentiment(dbConn sqlx.Ext, fragment Sentiment) (*Sentiment, error) {
+func AddSentiment(dbConn sqlx.Ext, fragment Sentiment) error {
 	if fragment.ItemType == "" {
-		return nil, fmt.Errorf("sentiment is missing itemType")
+		return fmt.Errorf("sentiment is missing itemType")
 	} else if fragment.ItemId == 0 {
-		return nil, fmt.Errorf("sentiment is missing itemId")
+		return fmt.Errorf("sentiment is missing itemId")
 	} else if fragment.Type == "" {
-		return nil, fmt.Errorf("sentiment is missing scoreType")
+		return fmt.Errorf("sentiment is missing scoreType")
 	}
 
-	return nil, nil
+	result, err := dbConn.Exec(`INSERT INTO sentiment (item_type, item_id, chat_id, user_id, score_type, score_value) VALUES (?, ?, ?, ?, ?, ?)`,
+		fragment.ItemType, fragment.ItemId, fragment.ChatId, fragment.UserId, fragment.Type, fragment.Value)
+	if err != nil {
+		return fmt.Errorf("error adding sentiment: %s", err)
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("error getting last insert id: %s", err)
+	} else if rows == 0 {
+		return fmt.Errorf("0 rows affected")
+	}
+
+	return nil
 }

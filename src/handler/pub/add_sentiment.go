@@ -47,7 +47,7 @@ func AddSentiment(
 	if err != nil || sentimentType == "" {
 		return fmt.Errorf("unexpected sentiment type[%s], %s", sentiment, err)
 	}
-	_, err = db.AddSentiment(dbConn.Tx, db.Sentiment{
+	err = db.AddSentiment(dbConn.Tx, db.Sentiment{
 		ItemType: "message",
 		ItemId:   msgId,
 		ChatId:   chatId,

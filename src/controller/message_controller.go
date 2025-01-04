@@ -69,6 +69,7 @@ func FlagMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("TRACE [%s] FlagMessage processed without error\n", reqId)
+	w.(*h.StatefulWriter).IndicateChanges()
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Thanks for submitting your report!"))
 }
