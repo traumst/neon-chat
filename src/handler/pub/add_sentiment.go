@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"neon-chat/src/app"
+	"neon-chat/src/consts"
 	"neon-chat/src/db"
 )
 
@@ -42,7 +43,7 @@ func AddSentiment(
 	if !canChat {
 		return fmt.Errorf("user is not in chat")
 	}
-	sentimentType, err := db.ParseSentimentType(sentiment)
+	sentimentType, err := consts.ParseSentimentType(sentiment)
 	if err != nil || sentimentType == "" {
 		return fmt.Errorf("unexpected sentiment type[%s], %s", sentiment, err)
 	}

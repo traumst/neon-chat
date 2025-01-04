@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"log"
+	"neon-chat/src/consts"
 	"neon-chat/src/event"
 	"neon-chat/src/template"
 	"neon-chat/src/utils"
@@ -57,6 +58,7 @@ func (m *Message) Template(
 	if avatarTmpl.Title == "" {
 		log.Printf("WARN message avatar title is empty: %v", m.Author.Avatar)
 	}
+	sentiments := consts.PossibleSentiments()
 	return template.MessageTemplate{
 		IntermediateId:   utils.RandStringBytes(5),
 		ChatId:           m.ChatId,
@@ -67,6 +69,7 @@ func (m *Message) Template(
 		AuthorId:         m.Author.Id,
 		AuthorName:       m.Author.Name,
 		AuthorAvatar:     avatarTmpl,
+		Sentiments:       sentiments,
 		Text:             m.Text,
 		TextIntro:        utils.Shorten(m.Text, 69),
 		MessageDropEvent: event.MessageDrop.FormatEventName(m.ChatId, m.Author.Id, m.Id),

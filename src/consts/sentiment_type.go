@@ -1,4 +1,4 @@
-package db
+package consts
 
 import "fmt"
 
@@ -28,6 +28,24 @@ var sentimentMap = map[string]SentimentType{
 	string(ViolentSentimentType):     ViolentSentimentType,
 	string(AbuseSentimentType):       AbuseSentimentType,
 	string(ScamSentimentType):        ScamSentimentType,
+}
+
+var possibleSentiments []string
+
+func PossibleSentiments() []string {
+	if possibleSentiments != nil {
+		return possibleSentiments
+	}
+
+	possible := make([]string, len(sentimentMap))
+	i := 0
+	for k := range sentimentMap {
+		possible[i] = k
+		i += 1
+	}
+
+	possibleSentiments = possible
+	return possibleSentiments
 }
 
 func ParseSentimentType(s string) (SentimentType, error) {

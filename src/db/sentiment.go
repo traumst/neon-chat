@@ -3,16 +3,18 @@ package db
 import (
 	"fmt"
 
+	"neon-chat/src/consts"
+
 	"github.com/jmoiron/sqlx"
 )
 
 type Sentiment struct {
-	ItemType string        `db:"item_type"`
-	ItemId   uint          `db:"item_id"`
-	ChatId   uint          `db:"chat_id"`
-	UserId   uint          `db:"user_id"`
-	Type     SentimentType `db:"score_type"`
-	Value    float64       `db:"score_value"`
+	ItemType string               `db:"item_type"`
+	ItemId   uint                 `db:"item_id"`
+	ChatId   uint                 `db:"chat_id"`
+	UserId   uint                 `db:"user_id"`
+	Type     consts.SentimentType `db:"score_type"`
+	Value    float64              `db:"score_value"`
 }
 
 const SentimentSchema = `
